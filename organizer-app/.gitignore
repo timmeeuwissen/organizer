@@ -1,0 +1,97 @@
+# Nuxt & Vue build output
+.nuxt
+dist
+.output
+.nitro
+
+# Node.js dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnp.*
+.yarn/*
+
+# Environment variables (contain sensitive information)
+.env
+.env.*
+!.env.example
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+firebase-export/
+firestore-export/
+firebaserc
+firebase.json
+serviceAccount.json
+
+# IDE and editor files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+*.sublime-workspace
+
+# Log files
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+/coverage
+.nyc_output
+/playwright/results/
+/cypress/screenshots/
+/cypress/videos/
+/cypress/downloads/
+/test-results/
+/playwright-report/
+
+# Build artifacts
+.cache/
+.temp/
+dist-ssr
+*.local
+
+# Local development certificates
+*.pem
+*.key
+*.crt
+*.cer
+
+# Miscellaneous
+.thumbs.db
+*.sqlite
+*.db
+*.bak
+*.swp
+*.swo
+tmp/
+.tmp/
+.history/
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

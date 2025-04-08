@@ -1,0 +1,61 @@
+# Meeting Categories
+categories:
+  - id: standup
+    name: "Standup"
+    description: "Daily team meeting to discuss progress and blockers"
+    color: "#4CAF50"
+    icon: "mdi-account-group"
+    
+  - id: planning
+    name: "Planning"
+    description: "Project planning and roadmap meetings"
+    color: "#2196F3"
+    icon: "mdi-chart-timeline"
+    
+  - id: review
+    name: "Review"
+    description: "Code reviews, design reviews, or project reviews"
+    color: "#FF9800"
+    icon: "mdi-eye-check"
+    
+  - id: retrospective
+    name: "Retrospective"
+    description: "Team reflection on what went well and what needs improvement"
+    color: "#9C27B0"
+    icon: "mdi-reflection"
+    
+  - id: one_on_one
+    name: "One-on-One"
+    description: "Individual meetings with team members"
+    color: "#607D8B"
+    icon: "mdi-account-voice"
+    
+  - id: client_meeting
+    name: "Client Meeting"
+    description: "Meetings with clients or stakeholders"
+    color: "#F44336"
+    icon: "mdi-account-tie"
+    
+  - id: workshop
+    name: "Workshop"
+    description: "Interactive sessions for learning or problem-solving"
+    color: "#009688"
+    icon: "mdi-school"
+    
+  - id: interview
+    name: "Interview"
+    description: "Candidate interviews or user research interviews"
+    color: "#795548"
+    icon: "mdi-account-question"
+    
+  - id: demo
+    name: "Demo"
+    description: "Product demonstrations or presentations"
+    color: "#3F51B5"
+    icon: "mdi-presentation"
+    
+  - id: brainstorming
+    name: "Brainstorming"
+    description: "Creative sessions to generate ideas"
+    color: "#FF5722"
+    icon: "mdi-lightbulb-group"
