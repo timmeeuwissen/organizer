@@ -21,7 +21,7 @@ help: ## Show this help message
 
 install: ## Install dependencies
 	@echo "${COLOR_GREEN}Installing dependencies...${COLOR_RESET}"
-	npm install
+	npm install --legacy-peer-deps
 
 dev: ## Start development server
 	@echo "${COLOR_GREEN}Starting development server...${COLOR_RESET}"
