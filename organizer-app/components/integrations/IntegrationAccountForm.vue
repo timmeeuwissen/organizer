@@ -147,9 +147,9 @@ v-form(ref="form" v-model="formValid")
         dot-size="25"
       )
   
-  v-row(class="mt-4 mb-4") // Added mb-4 to ensure proper spacing
+  v-row(class="mt-4 mb-4")
     template(v-if="!isConnected")
-      v-col(cols="12" sm="6")
+      v-col(cols="12")
         v-btn(
           color="primary"
           block
@@ -159,17 +159,6 @@ v-form(ref="form" v-model="formValid")
         ) 
           v-icon(start) mdi-connection
           | {{ $t('settings.testConnection') }}
-      
-      v-col(cols="12" sm="6") // Changed to full width on small screens
-        v-btn(
-          color="success"
-          block
-          :loading="isLoading"
-          :disabled="!formValid || isLoading"
-          @click="connectAccount"
-        ) 
-          v-icon(start) mdi-link
-          | {{ $t('settings.connectAccount') }}
     
     template(v-else)
       v-col(cols="12" sm="6")
@@ -303,18 +292,26 @@ watch(() => props.account, () => {
 
 // Methods
 function getAccountData() {
+  // Filter out undefined values to prevent Firestore errors
+  const removeUndefined = (obj) => {
+    const result = {};
+    Object.keys(obj).forEach(key => {
+      if (obj[key] !== undefined) {
+        result[key] = obj[key];
+      }
+    });
+    return result;
+  };
+
   // Create a new account object with default values if this is a new account
   if (!props.account) {
-    return {
+    const accountData = {
       id: uuidv4(),
       name: accountName.value || `${accountType.value} Account`,
       type: accountType.value,
       email: email.value,
-      server: accountType.value === 'exchange' ? server.value : undefined,
       username: username.value,
-      password: password.value || undefined, // Only include if provided
       connected: isConnected.value,
-      lastSync: lastSync.value,
       syncCalendar: syncCalendar.value,
       syncMail: syncMail.value,
       syncTasks: syncTasks.value,
@@ -326,20 +323,32 @@ function getAccountData() {
       color: color.value,
       createdAt: new Date(),
       updatedAt: new Date()
+    };
+    
+    // Add optional fields only if they have values
+    if (accountType.value === 'exchange' && server.value) {
+      accountData.server = server.value;
     }
+    
+    if (password.value) {
+      accountData.password = password.value;
+    }
+    
+    if (lastSync.value) {
+      accountData.lastSync = lastSync.value;
+    }
+    
+    return removeUndefined(accountData);
   }
   
   // Update existing account
-  return {
+  const accountData = {
     ...props.account,
     name: accountName.value,
     type: accountType.value,
     email: email.value,
-    server: accountType.value === 'exchange' ? server.value : undefined,
     username: username.value,
-    password: password.value || props.account.password, // Keep existing password if not changed
     connected: isConnected.value,
-    lastSync: lastSync.value,
     syncCalendar: syncCalendar.value,
     syncMail: syncMail.value,
     syncTasks: syncTasks.value,
@@ -350,7 +359,24 @@ function getAccountData() {
     showInContacts: showInContacts.value && syncContacts.value,
     color: color.value,
     updatedAt: new Date()
+  };
+  
+  // Add optional fields only if they have values
+  if (accountType.value === 'exchange' && server.value) {
+    accountData.server = server.value;
   }
+  
+  if (password.value) {
+    accountData.password = password.value;
+  } else if (props.account.password) {
+    accountData.password = props.account.password;
+  }
+  
+  if (lastSync.value) {
+    accountData.lastSync = lastSync.value;
+  }
+  
+  return removeUndefined(accountData);
 }
 
 async function testConnection() {

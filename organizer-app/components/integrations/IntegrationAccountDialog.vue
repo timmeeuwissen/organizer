@@ -11,12 +11,11 @@ v-dialog(
       v-btn(icon @click="close")
         v-icon mdi-close
     
-    // Fixed position alerts that stay visible even when scrolling
     v-alert(
       v-if="errorMsg" 
       type="error" 
       class="ma-4"
-      style="position: sticky; top: 0; z-index: 5;"
+      style="position: relative; z-index: 5; width: 100%;"
       closable
       @click:close="errorMsg = ''"
     ) {{ errorMsg }}
@@ -25,7 +24,7 @@ v-dialog(
       v-if="successMsg" 
       type="success" 
       class="ma-4"
-      style="position: sticky; top: 0; z-index: 5;"
+      style="position: relative; z-index: 5; width: 100%;"
       closable
       @click:close="successMsg = ''"
     ) {{ successMsg }}
@@ -47,10 +46,10 @@ v-dialog(
       v-btn(color="error" variant="text" @click="close") {{ $t('common.cancel') }}
       v-btn(
         color="primary"
-        @click="saveAccount"
+        @click="connectAndClose"
         :disabled="!hasChanges || isSaving"
         :loading="isSaving"
-      ) {{ $t('common.save') }}
+      ) {{ $t('common.done') }}
 </template>
 
 <script setup>
@@ -184,6 +183,64 @@ function handleDisconnect(account) {
   }, 3000)
 }
 
+async function connectAndClose() {
+  if (!currentAccount.value) return
+  
+  isSaving.value = true
+  errorMsg.value = ''
+  successMsg.value = ''
+  
+  try {
+    // Make sure we have a valid account object with all required fields
+    if (!currentAccount.value.id) {
+      console.error('Missing account ID')
+      throw new Error('Account ID is required')
+    }
+    
+    if (!currentAccount.value.name || !currentAccount.value.email || !currentAccount.value.type) {
+      console.error('Missing required account fields')
+      throw new Error('Name, email and account type are required')
+    }
+    
+    // Always ensure connected status is set to true when saving
+    currentAccount.value.connected = true
+    
+    // Set lastSync if it doesn't exist
+    if (!currentAccount.value.lastSync) {
+      currentAccount.value.lastSync = new Date()
+    }
+    
+    // Brief delay to simulate saving
+    await new Promise(resolve => setTimeout(resolve, 800))
+    
+    // Filter out any undefined values that might cause Firestore errors
+    const safeAccount = { ...currentAccount.value }
+    Object.keys(safeAccount).forEach(key => {
+      if (safeAccount[key] === undefined) {
+        delete safeAccount[key]
+      }
+    })
+    
+    // Send the cleaned account data to parent component
+    emit('save', safeAccount)
+    
+    // Show success message
+    successMsg.value = isEditMode.value
+      ? 'Integration account updated successfully'
+      : 'Integration account added successfully'
+    
+    // Briefly show success message before closing
+    setTimeout(() => {
+      dialogVisible.value = false
+    }, 1000)
+  } catch (err) {
+    console.error('Error saving account:', err)
+    errorMsg.value = err.message || 'Error saving account'
+  } finally {
+    isSaving.value = false
+  }
+}
+
 async function saveAccount() {
   if (!currentAccount.value) return
   
@@ -206,16 +263,13 @@ async function saveAccount() {
     // Brief delay to simulate saving
     await new Promise(resolve => setTimeout(resolve, 800))
     
+    // Send the account data to parent component
     emit('save', currentAccount.value)
     
+    // Show success message but keep dialog open until parent confirms save
     successMsg.value = isEditMode.value
       ? 'Integration account updated successfully'
       : 'Integration account added successfully'
-    
-    // Close dialog after a brief delay to show success message
-    setTimeout(() => {
-      close()
-    }, 1500)
   } catch (err) {
     console.error('Error saving account:', err)
     errorMsg.value = err.message || 'Error saving account'
