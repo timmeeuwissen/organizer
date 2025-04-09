@@ -147,7 +147,7 @@ v-form(ref="form" v-model="formValid")
         dot-size="25"
       )
   
-  v-row(class="mt-4")
+  v-row(class="mt-4 mb-4") // Added mb-4 to ensure proper spacing
     template(v-if="!isConnected")
       v-col(cols="12" sm="6")
         v-btn(
@@ -160,7 +160,7 @@ v-form(ref="form" v-model="formValid")
           v-icon(start) mdi-connection
           | {{ $t('settings.testConnection') }}
       
-      v-col(cols="6" sm="3")
+      v-col(cols="12" sm="6") // Changed to full width on small screens
         v-btn(
           color="success"
           block

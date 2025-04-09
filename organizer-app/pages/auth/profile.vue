@@ -343,7 +343,26 @@ function getAccountTypeName(type) {
 }
 
 function showAddIntegrationDialog() {
-  selectedIntegrationAccount.value = null
+  // Create a new account template with reasonable defaults
+  selectedIntegrationAccount.value = {
+    id: null, // Will be generated in the form
+    name: '',
+    type: 'google', // Default to Google
+    email: user.value?.email || '',
+    username: user.value?.email || '',
+    connected: false,
+    syncCalendar: true,
+    syncMail: true,
+    syncTasks: true,
+    syncContacts: true,
+    showInCalendar: true,
+    showInMail: true,
+    showInTasks: true,
+    showInContacts: true,
+    color: '#2196F3', // Default blue
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
   showIntegrationDialog.value = true
 }
 

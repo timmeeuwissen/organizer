@@ -11,10 +11,26 @@ v-dialog(
       v-btn(icon @click="close")
         v-icon mdi-close
     
+    // Fixed position alerts that stay visible even when scrolling
+    v-alert(
+      v-if="errorMsg" 
+      type="error" 
+      class="ma-4"
+      style="position: sticky; top: 0; z-index: 5;"
+      closable
+      @click:close="errorMsg = ''"
+    ) {{ errorMsg }}
+    
+    v-alert(
+      v-if="successMsg" 
+      type="success" 
+      class="ma-4"
+      style="position: sticky; top: 0; z-index: 5;"
+      closable
+      @click:close="successMsg = ''"
+    ) {{ successMsg }}
+    
     v-card-text
-      v-alert(v-if="errorMsg" type="error" class="mb-4") {{ errorMsg }}
-      v-alert(v-if="successMsg" type="success" class="mb-4") {{ successMsg }}
-      
       integration-account-form(
         ref="accountForm"
         :account="currentAccount"
