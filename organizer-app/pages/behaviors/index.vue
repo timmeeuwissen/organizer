@@ -2,7 +2,7 @@
 v-container(fluid)
   v-row
     v-col(cols="12")
-      h1.text-h4.mb-4 {{ $t('behaviors.title') }}
+      h1.text-h4.mb-4(data-test="behaviors-heading") {{ $t('behaviors.title') }}
       
   v-row
     v-col(cols="12" md="4")
@@ -13,13 +13,14 @@ v-container(fluid)
         v-card-text(v-else-if="doWellBehaviors.length === 0") 
           v-alert(type="info" variant="tonal") {{ $t('behaviors.noBehaviors') }}
         v-card-text(v-else)
-          v-list
+          v-list(data-test="behaviors-list")
             v-list-item(
               v-for="behavior in doWellBehaviors" 
               :key="behavior.id"
               :title="behavior.title"
               :subtitle="behavior.rationale"
               @click="openBehavior(behavior)"
+              data-test="behavior-item"
             )
               template(v-slot:prepend)
                 v-avatar(color="primary" size="36")
@@ -31,6 +32,7 @@ v-container(fluid)
             color="primary"
             variant="text"
             @click="openAddBehavior('doWell')"
+            data-test="add-behavior-btn"
           ) {{ $t('behaviors.add') }}
     
     v-col(cols="12" md="4")
@@ -48,6 +50,7 @@ v-container(fluid)
               :title="behavior.title"
               :subtitle="behavior.rationale"
               @click="openBehavior(behavior)"
+              data-test="behavior-item"
             )
               template(v-slot:prepend)
                 v-avatar(color="info" size="36")
@@ -59,6 +62,7 @@ v-container(fluid)
             color="info"
             variant="text"
             @click="openAddBehavior('wantToDoBetter')"
+            data-test="add-behavior-btn"
           ) {{ $t('behaviors.add') }}
     
     v-col(cols="12" md="4")
@@ -76,6 +80,7 @@ v-container(fluid)
               :title="behavior.title"
               :subtitle="behavior.rationale"
               @click="openBehavior(behavior)"
+              data-test="behavior-item"
             )
               template(v-slot:prepend)
                 v-avatar(color="warning" size="36")
@@ -87,10 +92,11 @@ v-container(fluid)
             color="warning"
             variant="text"
             @click="openAddBehavior('needToImprove')"
+            data-test="add-behavior-btn"
           ) {{ $t('behaviors.add') }}
 
   // View/Edit Dialog
-  v-dialog(v-model="behaviorDialog" max-width="600px")
+  v-dialog(v-model="behaviorDialog" max-width="600px" data-test="behavior-dialog")
     behavior-form(
       v-if="behaviorDialog"
       :behavior="selectedBehavior"
@@ -101,7 +107,7 @@ v-container(fluid)
     )
   
   // Add Dialog
-  v-dialog(v-model="addDialog" max-width="600px")
+  v-dialog(v-model="addDialog" max-width="600px" data-test="add-behavior-dialog")
     behavior-form(
       v-if="addDialog"
       :loading="formLoading"
@@ -110,12 +116,15 @@ v-container(fluid)
     )
 
   // Action Plan section
-  v-row(v-if="selectedBehavior")
+  v-row(v-if="selectedBehavior" data-test="action-plans-section")
     v-col(cols="12")
       v-card
         v-card-title {{ $t('behaviors.actionPlan') }} - {{ selectedBehavior.title }}
         v-card-text
-          v-expansion-panels(v-if="selectedBehavior.actionPlans && selectedBehavior.actionPlans.length")
+          v-expansion-panels(
+            v-if="selectedBehavior.actionPlans && selectedBehavior.actionPlans.length"
+            data-test="action-plans-list"
+          )
             v-expansion-panel(
               v-for="plan in selectedBehavior.actionPlans"
               :key="plan.id"
@@ -150,6 +159,7 @@ v-container(fluid)
             color="primary"
             prepend-icon="mdi-plus"
             @click="openAddActionPlan"
+            data-test="add-action-plan-btn"
           ) {{ $t('behaviors.addActionPlan') }}
 </template>
 

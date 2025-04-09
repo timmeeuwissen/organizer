@@ -383,15 +383,23 @@ export const useTasksStore = defineStore('tasks', {
       this.error = null
       
       try {
-        const newComment: Comment = {
-          id: crypto.randomUUID(),
-          userId: authStore.user.id,
-          content,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-        
-        const comments = [...task.comments, newComment]
+      const newComment: Comment = {
+        id: crypto.randomUUID(),
+        userId: authStore.user.id,
+        content,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      
+      // Convert to the Task interface field 'text'
+      const commentForTask = {
+        id: newComment.id,
+        userId: newComment.userId,
+        text: newComment.content,
+        createdAt: newComment.createdAt
+      };
+      
+      const comments = task.comments ? [...task.comments, commentForTask] : [commentForTask]
         
         await this.updateTask(taskId, { comments })
         
@@ -408,6 +416,11 @@ export const useTasksStore = defineStore('tasks', {
       const task = this.getById(taskId)
       if (!task) {
         this.error = 'Task not found'
+        return
+      }
+      
+      if (!task.comments) {
+        this.error = 'Task has no comments'
         return
       }
       
@@ -448,7 +461,12 @@ export const useTasksStore = defineStore('tasks', {
       this.error = null
       
       try {
-        const updatedComments = task.comments.filter(c => c.id !== commentId)
+        if (!task.comments || task.comments.length === 0) {
+        this.error = 'Task has no comments'
+        return
+      }
+      
+      const updatedComments = task.comments.filter(c => c.id !== commentId)
         
         await this.updateTask(taskId, { comments: updatedComments })
       } catch (error: any) {

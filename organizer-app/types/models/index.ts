@@ -46,15 +46,29 @@ export interface Project {
   userId: string;
   title: string;
   description: string;
-  status: 'notStarted' | 'inProgress' | 'onHold' | 'completed' | 'cancelled';
+  status: 'notStarted' | 'inProgress' | 'onHold' | 'completed' | 'cancelled' | 'active' | 'planning';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   dueDate?: Date;
   startDate?: Date;
   completedDate?: Date;
   teamMembers?: string[]; // Person IDs
-  tasks?: string[]; // Task IDs
+  members: string[]; // Alias for teamMembers (for backward compatibility)
+  tasks: string[]; // Task IDs
+  meetings?: string[]; // Meeting IDs
+  pages: string[]; // Page IDs (references to ProjectPage)
   progress: number; // 0-100
   notes?: string;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProjectPage {
+  id: string;
+  projectId: string;
+  title: string;
+  content: string;
+  order: number;
   tags?: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -67,20 +81,33 @@ export interface Task {
   description?: string;
   status: 'todo' | 'inProgress' | 'completed' | 'delegated' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  type?: 'personal' | 'work' | 'delegated' | 'recurring' | 'routine' | 'delegation' | 'followUp' | 'task';
   dueDate?: Date;
   completedDate?: Date;
+  completedAt?: Date; // Alternative to completedDate for backward compatibility
   assignee?: string; // Person ID
+  assignedTo?: string; // Alias for assignee (for backward compatibility)
   delegatedTo?: string; // Person ID
   projectId?: string; // Project ID
   parent?: string; // Parent task ID
-  subtasks?: string[]; // Task IDs
+  parentTask?: string; // Alias for parent (for backward compatibility)
+  subtasks: string[]; // Task IDs
+  relatedProjects: string[]; // Project IDs
+  relatedMeetings: string[]; // Meeting IDs
+  relatedBehaviors: string[]; // Behavior IDs
+  comments: {
+    id: string;
+    userId: string;
+    text: string;
+    createdAt: Date;
+  }[];
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
     interval: number;
     endDate?: Date;
   };
   notes?: string;
-  tags?: string[];
+  tags: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -100,6 +127,14 @@ export interface Meeting {
   category?: string;
   notes?: string;
   tags?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Comment {
+  id: string;
+  userId: string;
+  content: string;
   createdAt: Date;
   updatedAt: Date;
 }

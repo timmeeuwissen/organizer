@@ -3,6 +3,7 @@ v-form(
   ref="form"
   v-model="valid"
   @submit.prevent="submit"
+  data-test="behavior-form"
 )
   v-card
     v-card-title {{ isEdit ? $t('behaviors.edit') : $t('behaviors.add') }}
@@ -22,6 +23,7 @@ v-form(
         item-value="value"
         :rules="[rules.required]"
         required
+        data-test="behavior-type"
       )
       
       v-text-field(
@@ -29,6 +31,7 @@ v-form(
         :label="$t('behaviors.title')"
         :rules="[rules.required]"
         required
+        data-test="behavior-title"
       )
       
       v-textarea(
@@ -37,6 +40,7 @@ v-form(
         :rules="[rules.required]"
         required
         rows="3"
+        data-test="behavior-rationale"
       )
       
       v-combobox(
@@ -47,6 +51,7 @@ v-form(
         closable-chips
         hint="Enter examples and press Enter"
         persistent-hint
+        data-test="behavior-examples"
       )
       
       v-combobox(
@@ -57,6 +62,7 @@ v-form(
         closable-chips
         hint="Enter categories and press Enter"
         persistent-hint
+        data-test="behavior-categories"
       )
     
     v-card-actions
@@ -67,12 +73,14 @@ v-form(
         variant="text"
         :loading="loading"
         @click="$emit('delete')"
+        data-test="delete-behavior-btn"
       ) {{ $t('common.delete') }}
       v-btn(
         color="primary"
         :loading="loading"
         :disabled="!valid || loading"
         @click="submit"
+        data-test="save-behavior-btn"
       ) {{ isEdit ? $t('common.update') : $t('common.save') }}
 </template>
 

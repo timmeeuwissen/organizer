@@ -7,7 +7,9 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test": "vitest",
+    "test": "vitest --config vitest.config.js",
+    "test:unit": "vitest run --config vitest.config.js",
+    "test:unit:watch": "vitest watch --config vitest.config.js",
     "test:e2e": "cypress open",
     "lint": "eslint --ext .ts,.js,.vue .",
     "lint:fix": "eslint --ext .ts,.js,.vue . --fix"
