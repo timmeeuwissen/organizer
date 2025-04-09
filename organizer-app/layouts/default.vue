@@ -1,13 +1,13 @@
 <template lang="pug">
 v-app
-  v-navigation-drawer(v-model="drawer" app)
+  v-navigation-drawer(v-if="isAuthenticated" v-model="drawer" app)
     v-list
-      v-list-item(prepend-avatar="/favicon.ico" :title="$t('common.appName')" to="/")
+      v-list-item(prepend-avatar="/favicon.ico" :title="$t('common.appName')" to="/dashboard")
       v-divider
       v-list-item(v-for="(item, i) in navItems" :key="i" :to="item.to" :prepend-icon="item.icon" :title="$t(item.title)")
   
   v-app-bar(app)
-    v-app-bar-nav-icon(@click.stop="drawer = !drawer")
+    v-app-bar-nav-icon(v-if="isAuthenticated" @click.stop="drawer = !drawer")
     v-app-bar-title {{ $t('common.appName') }}
     v-spacer
     v-btn(icon @click="toggleTheme")
@@ -21,8 +21,11 @@ v-app
           v-list-item-title English
         v-list-item(@click="changeLocale('nl')")
           v-list-item-title Nederlands
-    v-btn(icon to="/auth/profile")
-      v-icon mdi-account-circle
+    template(v-if="isAuthenticated")
+      v-btn(icon to="/auth/profile")
+        v-icon mdi-account-circle
+      v-btn(icon @click="logout" title="Logout")
+        v-icon mdi-logout
   
   v-main
     v-container(fluid)
@@ -39,12 +42,17 @@ v-app
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTheme } from 'vuetify'
+import { useAuthStore } from '~/stores/auth'
+import { useRouter } from 'vue-router'
 
 const i18n = useI18n()
 const theme = useTheme()
+const authStore = useAuthStore()
+const router = useRouter()
 
-const drawer = ref(true)
+const drawer = ref(false)
 const isDarkTheme = computed(() => theme.global.current.value.dark)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 const navItems = [
   { title: 'dashboard.title', icon: 'mdi-view-dashboard', to: '/dashboard' },
@@ -65,5 +73,14 @@ const toggleTheme = () => {
 
 const changeLocale = (locale: string) => {
   i18n.locale.value = locale
+}
+
+const logout = async () => {
+  try {
+    await authStore.logout()
+    router.push('/auth/login')
+  } catch (error) {
+    console.error('Logout failed:', error)
+  }
 }
 </script>

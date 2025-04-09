@@ -1,0 +1,147 @@
+// Main SCSS file for the Organizer App
+
+// Variables
+$primary-color: #007bff;
+$secondary-color: #6c757d;
+$success-color: #28a745;
+$danger-color: #dc3545;
+$warning-color: #ffc107;
+$info-color: #17a2b8;
+$light-color: #f8f9fa;
+$dark-color: #343a40;
+
+// Global styles
+body {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+}
+
+// Custom utility classes
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// Page transitions
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.3s;
+}
+.page-enter,
+.page-leave-to {
+  opacity: 0;
+}
+
+// Card customizations
+.task-card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Network graph customizations
+.vis-network {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  
+  .vis-node {
+    opacity: 0.9;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+// Calendar customizations
+.v-calendar-daily__day {
+  border-left: 1px solid #e0e0e0;
+}
+
+// Project and task priority indicators
+.priority {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+  
+  &--low {
+    background-color: $info-color;
+  }
+  
+  &--medium {
+    background-color: $warning-color;
+  }
+  
+  &--high {
+    background-color: $danger-color;
+  }
+  
+  &--urgent {
+    background-color: $danger-color;
+    animation: pulse 1s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+// Task status indicators
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  
+  &--todo {
+    background-color: $light-color;
+    color: $dark-color;
+  }
+  
+  &--in-progress {
+    background-color: $info-color;
+    color: white;
+  }
+  
+  &--completed {
+    background-color: $success-color;
+    color: white;
+  }
+  
+  &--delegated {
+    background-color: $warning-color;
+    color: $dark-color;
+  }
+  
+  &--cancelled {
+    background-color: $secondary-color;
+    color: white;
+  }
+}
+
+// Card with hover effect for dashboard items
+.dashboard-card {
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    transform: scale(1.02);
+  }
+}

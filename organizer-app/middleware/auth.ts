@@ -6,9 +6,10 @@ export default defineNuxtRouteMiddleware((to, from) => {
   
   const authStore = useAuthStore()
   const publicRoutes = ['/auth/login', '/auth/register', '/auth/forgot-password']
+  const authRoutes = ['/auth/profile'] // Routes that require auth but are in the auth directory
   
   // If route requires auth and user is not authenticated
-  if (!publicRoutes.includes(to.path) && !authStore.isAuthenticated) {
+  if (!publicRoutes.includes(to.path) && (authRoutes.includes(to.path) || !to.path.startsWith('/auth/')) && !authStore.isAuthenticated) {
     // If the auth state is still being determined, we can wait for it
     if (authStore.loading) {
       // This will block navigation until auth store is initialized

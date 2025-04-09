@@ -1,8 +1,41 @@
+export interface IntegrationAccount {
+  id: string;
+  name: string;
+  type: 'exchange' | 'google' | 'office365';
+  email: string;
+  server?: string; // Required for Exchange
+  username: string; 
+  password?: string; // Stored securely and used only when needed
+  connected: boolean;
+  lastSync?: Date;
+  syncCalendar: boolean;
+  syncMail: boolean;
+  syncTasks: boolean;
+  syncContacts: boolean;
+  showInCalendar: boolean;
+  showInMail: boolean;
+  showInTasks: boolean;
+  showInContacts: boolean;
+  color: string; // Color for visual identification in UI
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserSettings {
+  defaultLanguage: string;
+  darkMode: boolean;
+  emailNotifications: boolean;
+  calendarSync: boolean;
+  integrationAccounts: IntegrationAccount[];
+}
+
 export interface User {
   id: string;
   email: string;
   displayName?: string;
   photoURL?: string;
+  lastLogin?: Date;
+  settings?: UserSettings;
   createdAt: Date;
   updatedAt: Date;
 }
