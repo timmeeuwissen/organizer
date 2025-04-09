@@ -43,7 +43,7 @@ v-container(fluid)
             v-btn(
               v-for="view in calendarViews"
               :key="view.value"
-              :color="currentView === view.value ? 'primary' : ''"
+              :color="getViewButtonColor(view.value)"
               @click="currentView = view.value"
             ) {{ $t(view.title) }}
           v-spacer
@@ -64,12 +64,7 @@ v-container(fluid)
                 .calendar-week(v-for="week in calendarDays")
                   .calendar-day(
                     v-for="day in week"
-                    :class="{
-                      'current-month': day.currentMonth,
-                      'today': day.isToday,
-                      'selected': day.isSelected,
-                      'has-events': day.hasEvents
-                    }"
+                    :class="getDayClasses(day)"
                     @click="selectDay(day.date)"
                   )
                     span.day-number {{ day.dayNumber }}
@@ -77,7 +72,7 @@ v-container(fluid)
                       .calendar-event(
                         v-for="event in day.events.slice(0, 3)"
                         :key="event.id"
-                        :class="event.type"
+                        :class="getEventTypeClass(event)"
                       )
                         span {{ event.title }}
                       .calendar-event-more(v-if="day.events.length > 3")
@@ -88,7 +83,7 @@ v-container(fluid)
               .calendar-week-header
                 .calendar-week-time
                 .calendar-week-days
-                  .calendar-week-day(v-for="day in weekViewDays" :class="{ 'today': day.isToday }")
+                  .calendar-week-day(v-for="day in weekViewDays" :class="getWeekDayClasses(day)")
                     .day-name {{ day.dayName }}
                     .day-number {{ day.dayNumber }}
               .calendar-week-body
@@ -97,16 +92,13 @@ v-container(fluid)
                   .calendar-week-slots
                     .calendar-week-slot(
                       v-for="day in weekViewDays"
-                      :class="{ 'today': day.isToday }"
+                      :class="getWeekDayClasses(day)"
                     )
                       .calendar-event(
                         v-for="event in getEventsForHour(day.date, hour)"
                         :key="event.id"
-                        :class="event.type"
-                        :style="{
-                          height: `${event.durationHours * 60}px`,
-                          top: `${event.minutesFromHourStart}px`,
-                        }"
+                        :class="getEventTypeClass(event)"
+                        :style="getEventStyle(event)"
                       )
                         span {{ event.title }}
                   
@@ -121,11 +113,8 @@ v-container(fluid)
                     .calendar-event(
                       v-for="event in getEventsForHour(selectedDate, hour)"
                       :key="event.id"
-                      :class="event.type"
-                      :style="{
-                        height: `${event.durationHours * 60}px`,
-                        top: `${event.minutesFromHourStart}px`,
-                      }"
+                      :class="getEventTypeClass(event)"
+                      :style="getEventStyle(event)"
                     )
                       span {{ event.title }}
                   
@@ -140,7 +129,7 @@ v-container(fluid)
                   v-list-item(
                     v-for="event in selectedDateEvents"
                     :key="event.id"
-                    :class="`event-${event.type}`"
+                    :class="getEventClass(event)"
                   )
                     template(v-slot:prepend)
                       v-icon(:icon="getEventIcon(event.type)")
@@ -324,8 +313,16 @@ const calendarDays = computed(() => {
     nextMonth.setMonth(nextMonth.getMonth() + 1)
     week = []
     
+    // Check if the last week and its last day exist and have a dayNumber
+    const lastWeek = weeks[weeks.length - 1];
+    const lastDayOfLastWeek = lastWeek && lastWeek[6];
+    const lastDayNumber = lastDayOfLastWeek && lastDayOfLastWeek.dayNumber;
+    
+    // If we can't get the last day's number, use the first day of next month as fallback
+    const startDayNumber = lastDayNumber !== undefined ? lastDayNumber + 1 : 1;
+    
     for (let i = 0; i < 7; i++) {
-      const nextMonthDay = weeks[weeks.length - 1][6].dayNumber + i + 1
+      const nextMonthDay = startDayNumber + i;
       const dayDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonthDay)
       
       week.push({
@@ -386,6 +383,44 @@ const isToday = (date) => {
   return isSameDay(date, today)
 }
 
+// Style and class calculations
+const getDayClasses = (day) => {
+  if (!day) return {}
+  
+  return {
+    'current-month': day.currentMonth,
+    'today': day.isToday,
+    'selected': day.isSelected,
+    'has-events': day.hasEvents
+  }
+}
+
+const getWeekDayClasses = (day) => {
+  if (!day) return {}
+  
+  return {
+    'today': day.isToday
+  }
+}
+
+const getViewButtonColor = (viewValue) => {
+  return currentView.value === viewValue ? 'primary' : ''
+}
+
+const getEventStyle = (event) => {
+  if (!event || typeof event.durationHours === 'undefined' || typeof event.minutesFromHourStart === 'undefined') {
+    return {
+      height: '0px',
+      top: '0px'
+    }
+  }
+  
+  return {
+    height: `${event.durationHours * 60}px`,
+    top: `${event.minutesFromHourStart}px`
+  }
+}
+
 const isSameDay = (date1, date2) => {
   return date1.getFullYear() === date2.getFullYear() &&
     date1.getMonth() === date2.getMonth() &&
@@ -398,7 +433,7 @@ const formatSelectedDate = () => {
 }
 
 const formatEventTime = (event) => {
-  if (!event.startTime) return ''
+  if (!event || !event.startTime) return ''
   
   let timeStr = event.startTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
   
@@ -409,7 +444,19 @@ const formatEventTime = (event) => {
   return timeStr
 }
 
+const getEventTypeClass = (event) => {
+  if (!event || !event.type) return ''
+  return event.type
+}
+
+const getEventClass = (event) => {
+  if (!event || !event.type) return ''
+  return `event-${event.type}`
+}
+
 const getEventIcon = (type) => {
+  if (!type) return 'mdi-calendar'
+  
   switch (type) {
     case 'meeting': return 'mdi-account-group'
     case 'task': return 'mdi-checkbox-marked-outline'
@@ -418,6 +465,8 @@ const getEventIcon = (type) => {
 }
 
 const getEventLink = (event) => {
+  if (!event || !event.type || !event.id) return '#'
+  
   if (event.type === 'meeting') {
     return `/meetings/${event.id}`
   } else if (event.type === 'task') {
@@ -512,18 +561,31 @@ const updateEvents = () => {
 }
 
 const getEventsForDay = (date) => {
+  if (!date || !events.value) return []
+  
   return events.value.filter(event => {
-    const eventDate = new Date(event.date)
-    return isSameDay(eventDate, date)
+    if (!event || !event.date) return false
+    try {
+      const eventDate = new Date(event.date)
+      return isSameDay(eventDate, date)
+    } catch (e) {
+      return false
+    }
   })
 }
 
 const getEventsForHour = (date, hour) => {
+  if (!date || hour === undefined || !events.value) return []
+  
   return events.value.filter(event => {
-    if (!event.startTime) return false
+    if (!event || !event.date || !event.startTime) return false
     
-    const eventDate = new Date(event.date)
-    return isSameDay(eventDate, date) && event.startTime.getHours() === hour
+    try {
+      const eventDate = new Date(event.date)
+      return isSameDay(eventDate, date) && event.startTime.getHours() === hour
+    } catch (e) {
+      return false
+    }
   }).map(event => {
     // Calculate position and size in the hour slot
     const startTime = event.startTime
