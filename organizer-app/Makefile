@@ -90,6 +90,10 @@ ha-run: ## Run Home Assistant add-on locally
 	@echo "${COLOR_GREEN}Running Home Assistant add-on locally...${COLOR_RESET}"
 	docker run -p 8099:8099 organizer-ha-addon
 
+firebase-setup: ## Set up Firebase project and Firestore database
+	@echo "${COLOR_GREEN}Setting up Firebase and Firestore...${COLOR_RESET}"
+	node scripts/firebase-setup.js
+
 firebase-deploy: ## Deploy to Firebase
 	@echo "${COLOR_GREEN}Deploying to Firebase...${COLOR_RESET}"
 	firebase deploy
@@ -101,6 +105,18 @@ firebase-rules: ## Deploy Firebase security rules
 firebase-emulate: ## Run Firebase emulators
 	@echo "${COLOR_GREEN}Running Firebase emulators...${COLOR_RESET}"
 	firebase emulators:start
+
+firebase-init-db-legacy: ## Initialize Firestore database structure (requires firebase-admin)
+	@echo "${COLOR_GREEN}Initializing Firestore database structure...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This will create the necessary collections and documents for the app.${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}Installing required dependencies first...${COLOR_RESET}"
+	npm install firebase-admin dotenv uuid --no-save
+	node scripts/firebase-admin-modules.js initializeDatabase
+
+firebase-init-db: ## Create sample database structure (no dependencies required)
+	@echo "${COLOR_GREEN}Creating sample database structure...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This will create a JSON file with sample data for Firestore.${COLOR_RESET}"
+	node scripts/simple-db-init.js
 
 init: ## Initialize the project
 	@echo "${COLOR_GREEN}Initializing project...${COLOR_RESET}"

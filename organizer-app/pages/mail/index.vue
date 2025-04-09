@@ -4,7 +4,21 @@ v-container(fluid)
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('mail.title') }}
   
-  v-row
+  template(v-if="connectedAccounts.length === 0")
+    v-row(justify="center" align="center" class="mt-4")
+      v-col(cols="12" md="8")
+        v-card
+          v-card-text(class="text-center pa-6")
+            v-icon(size="x-large" color="primary" class="mb-4") mdi-email-off
+            h3.text-h5.mb-4 {{ $t('mail.noEmailIntegrations') }}
+            p.text-body-1.mb-4 {{ $t('mail.connectEmailIntegration') }}
+            v-btn(
+              color="primary"
+              :to="'/auth/profile'"
+              prepend-icon="mdi-account-cog"
+            ) {{ $t('mail.goToProfile') }}
+  
+  v-row(v-else)
     v-col(cols="12" md="3")
       v-card(class="mb-4")
         v-card-title {{ $t('mail.folders') }}
@@ -20,6 +34,19 @@ v-container(fluid)
           )
             template(v-slot:append)
               v-chip(size="x-small" v-if="getUnreadCount(folder.id) > 0") {{ getUnreadCount(folder.id) }}
+      
+      v-card(class="mb-4" v-if="connectedAccounts.length > 0")
+        v-card-title {{ $t('mail.accounts') }}
+        v-list(density="compact")
+          v-list-item(
+            v-for="account in connectedAccounts"
+            :key="account.id"
+            :title="account.name"
+            :subtitle="account.email"
+          )
+            template(v-slot:prepend)
+              v-avatar(size="32" :color="account.color")
+                span {{ getInitialsFromString(account.name) }}
       
       v-card
         v-card-title {{ $t('mail.contacts') }}
@@ -237,54 +264,21 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { usePeopleStore } from '~/stores/people'
-import type { Person } from '~/types/models'
-
-// Mock email types
-interface EmailPerson {
-  name: string
-  email: string
-}
-
-interface EmailAttachment {
-  name: string
-  size: number
-  url: string
-}
-
-interface Email {
-  id: string
-  subject: string
-  from: EmailPerson
-  to: EmailPerson[]
-  cc?: EmailPerson[]
-  body: string
-  date: Date
-  read: boolean
-  folder: string
-  attachments?: EmailAttachment[]
-  labels?: string[]
-}
-
-interface MailFolder {
-  id: string
-  name: string
-  icon: string
-}
+import { useMailStore } from '~/stores/mail'
+import { useAuthStore } from '~/stores/auth'
+import type { Person, IntegrationAccount } from '~/types/models'
+import type { Email, MailFolder, EmailPerson, EmailAttachment } from '~/stores/mail'
 
 // Stores
 const peopleStore = usePeopleStore()
+const mailStore = useMailStore()
+const authStore = useAuthStore()
 
 // State
-const emails = ref<Email[]>([])
 const selectedEmail = ref<Email | null>(null)
 const selectedFolder = ref('inbox')
-const mailFolders = ref<MailFolder[]>([
-  { id: 'inbox', name: 'Inbox', icon: 'mdi-inbox' },
-  { id: 'sent', name: 'Sent', icon: 'mdi-send' },
-  { id: 'drafts', name: 'Drafts', icon: 'mdi-file-document-outline' },
-  { id: 'trash', name: 'Trash', icon: 'mdi-delete' },
-  { id: 'spam', name: 'Spam', icon: 'mdi-alert-circle' },
-])
+const mailFolders = computed(() => mailStore.folders)
+const connectedAccounts = computed(() => mailStore.getConnectedAccounts)
 
 // Table config
 const emailHeaders = [
@@ -313,7 +307,7 @@ const composeForm = ref(null)
 
 // Computed
 const filteredEmails = computed(() => {
-  let result = emails.value.filter(email => email.folder === selectedFolder.value)
+  let result = mailStore.emails.filter(email => email.folder === selectedFolder.value)
   
   if (emailSearch.value) {
     const searchTerm = emailSearch.value.toLowerCase()
@@ -345,131 +339,23 @@ const filteredContacts = computed(() => {
   return result.slice(0, 10) // Limit to 10 for performance
 })
 
-// Load mock data
+// Load data
 onMounted(async () => {
-  await peopleStore.fetchPeople()
-  generateMockEmails()
+  // Load people and mail data when component mounts
+  await Promise.all([
+    peopleStore.fetchPeople(),
+    mailStore.fetchEmails()
+  ])
+  
+  // Display integrated accounts info if available
+  if (connectedAccounts.value.length > 0) {
+    console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`)
+  }
 })
-
-const generateMockEmails = () => {
-  // Create mock emails from contacts
-  const mockEmails: Email[] = []
-  
-  peopleStore.people.slice(0, 20).forEach((person, index) => {
-    // Random emails from each person
-    if (!person.email) return
-    
-    const numEmails = 1 + Math.floor(Math.random() * 3)
-    
-    for (let i = 0; i < numEmails; i++) {
-      const id = `email-${index}-${i}`
-      const isRead = Math.random() > 0.3
-      const date = new Date()
-      date.setDate(date.getDate() - Math.floor(Math.random() * 14)) // Random date within last 2 weeks
-      
-      mockEmails.push({
-        id,
-        subject: `Sample email ${i+1} from ${person.firstName}`,
-        from: {
-          name: `${person.firstName} ${person.lastName}`,
-          email: person.email || `${person.firstName.toLowerCase()}@example.com`
-        },
-        to: [{
-          name: 'Me',
-          email: 'me@example.com'
-        }],
-        body: generateRandomEmailBody(person),
-        date,
-        read: isRead,
-        folder: 'inbox',
-        attachments: Math.random() > 0.7 ? [
-          {
-            name: 'document.pdf',
-            size: 1024 * 1024 * (1 + Math.random() * 10), // 1-10MB
-            url: '#'
-          }
-        ] : undefined
-      })
-    }
-  })
-  
-  // Add sent emails
-  for (let i = 0; i < 5; i++) {
-    const id = `sent-${i}`
-    const randomPerson = peopleStore.people[Math.floor(Math.random() * peopleStore.people.length)]
-    if (!randomPerson) continue
-    
-    const date = new Date()
-    date.setDate(date.getDate() - Math.floor(Math.random() * 10))
-    
-    mockEmails.push({
-      id,
-      subject: `RE: Regarding our meeting on ${formatDate(date)}`,
-      from: {
-        name: 'Me',
-        email: 'me@example.com'
-      },
-      to: [{
-        name: `${randomPerson.firstName} ${randomPerson.lastName}`,
-        email: randomPerson.email || `${randomPerson.firstName.toLowerCase()}@example.com`
-      }],
-      body: "Hi there,<br><br>Thanks for your email. I've reviewed the documents and everything looks good to proceed.<br><br>Best regards,<br>Me",
-      date,
-      read: true,
-      folder: 'sent'
-    })
-  }
-  
-  // Add draft emails
-  for (let i = 0; i < 2; i++) {
-    const id = `draft-${i}`
-    const randomPerson = peopleStore.people[Math.floor(Math.random() * peopleStore.people.length)]
-    if (!randomPerson) continue
-    
-    const date = new Date()
-    date.setHours(date.getHours() - Math.floor(Math.random() * 12))
-    
-    mockEmails.push({
-      id,
-      subject: i === 0 ? 'Project update' : '',
-      from: {
-        name: 'Me',
-        email: 'me@example.com'
-      },
-      to: [{
-        name: `${randomPerson.firstName} ${randomPerson.lastName}`,
-        email: randomPerson.email || `${randomPerson.firstName.toLowerCase()}@example.com`
-      }],
-      body: i === 0 ? "Here's an update on our project status:<br><br>- Task 1: Completed<br>- Task 2: In progress<br>- Task 3: Not started<br><br>Let me know if you have any questions." : "",
-      date,
-      read: true,
-      folder: 'drafts'
-    })
-  }
-  
-  // Sort by date
-  mockEmails.sort((a, b) => b.date.getTime() - a.date.getTime())
-  
-  emails.value = mockEmails
-}
-
-const generateRandomEmailBody = (person: Person) => {
-  const templates = [
-    `<p>Hello,</p><p>I wanted to follow up on our previous conversation about the project. We're making good progress, but there are a few things I'd like to discuss.</p><p>Could we schedule a meeting sometime this week?</p><p>Best regards,<br>${person.firstName}</p>`,
-    
-    `<p>Hi there,</p><p>I'm reaching out to share some updates on the ${Math.random() > 0.5 ? 'marketing' : 'development'} initiative we discussed. The team has been working hard, and we've made significant progress.</p><p>I've attached some documents for your review.</p><p>Looking forward to your feedback,<br>${person.firstName} ${person.lastName}</p>`,
-    
-    `<p>Greetings,</p><p>Just a quick note to confirm our meeting on ${new Date(Date.now() + 86400000 * Math.floor(Math.random() * 7)).toLocaleDateString()} at ${Math.floor(Math.random() * 12) + 1}:${Math.random() > 0.5 ? '00' : '30'} ${Math.random() > 0.5 ? 'AM' : 'PM'}.</p><p>Please let me know if you need to reschedule.</p><p>Regards,<br>${person.firstName}</p>`,
-    
-    `<p>Dear Team,</p><p>I'm pleased to announce that we've reached a major milestone in our project. The client has approved our proposal and we're ready to move forward with the next phase.</p><p>Thank you all for your hard work and dedication.</p><p>Sincerely,<br>${person.firstName} ${person.lastName}<br>${person.role || 'Team Lead'}</p>`
-  ]
-  
-  return templates[Math.floor(Math.random() * templates.length)]
-}
 
 // Methods
 const getUnreadCount = (folderId: string) => {
-  return emails.value.filter(email => email.folder === folderId && !email.read).length
+  return mailStore.getUnreadCountByFolder(folderId)
 }
 
 const formatDate = (date: Date) => {
@@ -513,9 +399,11 @@ const handleEmailClick = (event: any, { item }: { item: Email }) => {
 }
 
 const markAsRead = (email: Email) => {
-  const index = emails.value.findIndex(e => e.id === email.id)
-  if (index !== -1) {
-    emails.value[index].read = !emails.value[index].read
+  mailStore.markEmailAsRead(email.id, !email.read)
+  
+  // Update selectedEmail if it's the same email
+  if (selectedEmail.value?.id === email.id) {
+    selectedEmail.value = { ...selectedEmail.value, read: !selectedEmail.value.read }
   }
 }
 
@@ -523,29 +411,27 @@ const deleteEmail = (email?: Email) => {
   const emailToDelete = email || selectedEmail.value
   if (!emailToDelete) return
   
-  const index = emails.value.findIndex(e => e.id === emailToDelete.id)
-  if (index !== -1) {
-    // Move to trash or permanently delete from trash
-    if (emailToDelete.folder === 'trash') {
-      emails.value.splice(index, 1)
-    } else {
-      emails.value[index].folder = 'trash'
-    }
-    
-    if (selectedEmail.value?.id === emailToDelete.id) {
-      selectedEmail.value = null
-    }
+  mailStore.deleteEmail(emailToDelete.id)
+  
+  if (selectedEmail.value?.id === emailToDelete.id) {
+    selectedEmail.value = null
   }
 }
 
-const refreshEmails = () => {
-  // In a real app, this would fetch emails from the server
-  // For demo purposes, just regenerate mock emails
-  generateMockEmails()
+const refreshEmails = async () => {
+  await mailStore.fetchEmails()
 }
 
 const getContactInitials = (contact: Person) => {
   return `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`
+}
+
+const getInitialsFromString = (name: string) => {
+  const parts = name.split(' ')
+  if (parts.length >= 2) {
+    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`
+  }
+  return name.substring(0, 2).toUpperCase()
 }
 
 const getInitialsFromEmail = (emailPerson: EmailPerson) => {
@@ -604,9 +490,7 @@ const forwardEmail = () => {
 }
 
 const sendEmail = () => {
-  // In a real app, this would send the email to the server
-  // For demo purposes, add it to the sent folder
-  
+  // Create email from form data
   const newEmail: Email = {
     id: `sent-${Date.now()}`,
     subject: composeData.value.subject || '(No subject)',
@@ -633,7 +517,8 @@ const sendEmail = () => {
     folder: 'sent'
   }
   
-  emails.value.unshift(newEmail)
+  // Use mail store to send the email
+  mailStore.sendEmail(newEmail)
   showComposeDialog.value = false
   
   // Reset compose data
@@ -647,9 +532,7 @@ const sendEmail = () => {
 }
 
 const saveDraft = () => {
-  // In a real app, this would save the draft to the server
-  // For demo purposes, add it to the drafts folder
-  
+  // Create draft email from form data
   const newEmail: Email = {
     id: `draft-${Date.now()}`,
     subject: composeData.value.subject || '(No subject)',
@@ -676,7 +559,8 @@ const saveDraft = () => {
     folder: 'drafts'
   }
   
-  emails.value.unshift(newEmail)
+  // Use mail store to save the draft
+  mailStore.saveDraft(newEmail)
   showComposeDialog.value = false
   
   // Reset compose data

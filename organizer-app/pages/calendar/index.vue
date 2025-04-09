@@ -4,7 +4,21 @@ v-container(fluid)
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('calendar.title') }}
       
-  v-row
+  template(v-if="!hasCalendarIntegrations")
+    v-row(justify="center" align="center" class="mt-4")
+      v-col(cols="12" md="8")
+        v-card
+          v-card-text(class="text-center pa-6")
+            v-icon(size="x-large" color="primary" class="mb-4") mdi-calendar-blank-off
+            h3.text-h5.mb-4 {{ $t('calendar.noCalendarIntegrations') }}
+            p.text-body-1.mb-4 {{ $t('calendar.connectCalendarIntegration') }}
+            v-btn(
+              color="primary"
+              :to="'/auth/profile'"
+              prepend-icon="mdi-account-cog"
+            ) {{ $t('calendar.goToProfile') }}
+  
+  v-row(v-else)
     v-col(cols="12" md="3")
       v-card(class="mb-4")
         v-card-title {{ $t('calendar.today') }}
@@ -163,12 +177,22 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
+import { useAuthStore } from '~/stores/auth'
 // The meetings store would be imported here when implemented
 // import { useMeetingsStore } from '~/stores/meetings'
 
 // Stores
 const tasksStore = useTasksStore()
+const authStore = useAuthStore()
 // const meetingsStore = useMeetingsStore()
+
+// Check if user has connected calendar integrations
+const hasCalendarIntegrations = computed(() => {
+  const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
+  return integrationAccounts.some(account => 
+    account.connected && account.syncCalendar && account.showInCalendar
+  )
+})
 
 // State
 const selectedDate = ref(new Date().toISOString().slice(0, 10))

@@ -181,6 +181,7 @@ import { useNetworkStatus } from '~/composables/useNetworkStatus'
 import { getAuth, updateProfile } from 'firebase/auth'
 import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import IntegrationAccountDialog from '~/components/integrations/IntegrationAccountDialog.vue'
+import { v4 as uuidv4 } from 'uuid'
 
 // Component state
 const isLoading = ref(true)
@@ -345,7 +346,7 @@ function getAccountTypeName(type) {
 function showAddIntegrationDialog() {
   // Create a new account template with reasonable defaults
   selectedIntegrationAccount.value = {
-    id: null, // Will be generated in the form
+    id: uuidv4(), // Generate a unique ID using imported function
     name: '',
     type: 'google', // Default to Google
     email: user.value?.email || '',
@@ -431,16 +432,23 @@ async function saveIntegrationAccount(account) {
       integrationAccounts.value.push(account)
     }
     
-    // Update settings
+    // Update settings - wait for this to complete before closing dialog
     await updateUserSettings()
     
+    // Display success message
     integrationSuccessMsg.value = existingIndex >= 0
       ? 'Integration account updated successfully'
       : 'Integration account added successfully'
     
+    // Keep success message visible for a moment then close dialog
     setTimeout(() => {
-      integrationSuccessMsg.value = ''
-    }, 3000)
+      showIntegrationDialog.value = false
+      
+      // Clear the message after dialog closes
+      setTimeout(() => {
+        integrationSuccessMsg.value = ''
+      }, 1000)
+    }, 1500)
   } catch (err) {
     console.error('Error saving account:', err)
     integrationErrorMsg.value = err.message || 'Error saving integration account'
