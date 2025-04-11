@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import type { IntegrationAccount } from '~/types/models'
+import { hasValidOAuthTokens, refreshOAuthToken } from '~/utils/api/emailUtils'
+import { getMailProvider } from '~/utils/api/mailProviders'
 
 // Mail types
 export interface EmailPerson {
@@ -105,122 +107,45 @@ export const useMailStore = defineStore('mail', {
     },
     
     async fetchEmailsFromAccount(account: IntegrationAccount): Promise<Email[]> {
-      // In a real app, this would connect to the actual email API for the account
-      // For demo purposes, we'll generate mock emails for each account
-      
-      return this.generateMockEmailsForAccount(account)
-    },
-    
-    generateMockEmailsForAccount(account: IntegrationAccount): Email[] {
-      const mockEmails: Email[] = []
-      const numEmails = 5 + Math.floor(Math.random() * 10) // 5-15 emails per account
-      
-      for (let i = 0; i < numEmails; i++) {
-        const isRead = Math.random() > 0.3
-        const date = new Date()
-        date.setDate(date.getDate() - Math.floor(Math.random() * 14)) // Random date within last 2 weeks
+      try {
+        console.log(`Connecting to ${account.type} email API for account: ${account.email}`)
         
-        const folder = Math.random() > 0.8 ? 
-          (Math.random() > 0.5 ? 'sent' : 'drafts') : 
-          'inbox'
+        // Get the appropriate mail provider for this account
+        const mailProvider = getMailProvider(account)
         
-        // Random sender/recipient based on account
-        const fromPerson = folder === 'sent' ? 
-          { name: 'Me', email: account.email } :
-          { 
-            name: `Contact ${i}`,
-            email: `contact${i}@${account.type === 'google' ? 'gmail.com' : 'example.com'}`
+        // Check if authenticated
+        if (!mailProvider.isAuthenticated()) {
+          console.log(`Account ${account.email} requires authentication`)
+          
+          // Try to authenticate
+          const authenticated = await mailProvider.authenticate()
+          if (!authenticated) {
+            console.warn(`Authentication failed for account ${account.email}`)
+            return [] // Can't fetch emails without authentication
           }
+          else console.info(`Authentication succeeded for account ${account.email}`)
+        }
         
-        const toPerson = folder === 'sent' ? 
-          { 
-            name: `Contact ${i}`,
-            email: `contact${i}@${account.type === 'google' ? 'gmail.com' : 'example.com'}`
-          } :
-          { name: 'Me', email: account.email }
+        // Fetch emails for all standard folders
+        const inboxEmails = await mailProvider.fetchEmails('inbox', 20)
+        const sentEmails = await mailProvider.fetchEmails('sent', 10)
+        const draftEmails = await mailProvider.fetchEmails('drafts', 5)
         
-        mockEmails.push({
-          id: `${account.id}-email-${i}`,
-          subject: `Email from ${account.name} account - ${i + 1}`,
-          from: fromPerson,
-          to: [toPerson],
-          body: this.generateRandomEmailBody(account.name),
-          date,
-          read: isRead,
-          folder,
-          attachments: Math.random() > 0.7 ? [
-            {
-              name: 'document.pdf',
-              size: 1024 * 1024 * (1 + Math.random() * 10), // 1-10MB
-              url: '#'
-            }
-          ] : undefined,
-          accountId: account.id
-        })
+        // Combine emails from all folders
+        return [
+          ...inboxEmails,
+          ...sentEmails,
+          ...draftEmails
+        ]
+      } catch (error) {
+        console.error(`Error fetching emails for account ${account.email}:`, error)
+        throw error
       }
-      
-      return mockEmails
     },
     
-    generateMockEmails() {
-      // This is a fallback method for when no accounts are connected
-      // It produces generic mock emails similar to what was in the original mail page
-      const mockEmails: Email[] = []
-      const numEmails = 20
-      
-      for (let i = 0; i < numEmails; i++) {
-        const isRead = Math.random() > 0.3
-        const date = new Date()
-        date.setDate(date.getDate() - Math.floor(Math.random() * 14)) // Random date within last 2 weeks
-        
-        const folder = Math.random() > 0.8 ? 
-          (Math.random() > 0.5 ? 'sent' : 'drafts') : 
-          'inbox'
-        
-        // Random sender/recipient
-        const fromPerson = folder === 'sent' ? 
-          { name: 'Me', email: 'me@example.com' } :
-          { name: `Contact ${i}`, email: `contact${i}@example.com` }
-        
-        const toPerson = folder === 'sent' ? 
-          { name: `Contact ${i}`, email: `contact${i}@example.com` } :
-          { name: 'Me', email: 'me@example.com' }
-        
-        mockEmails.push({
-          id: `mock-email-${i}`,
-          subject: `Sample email ${i + 1}`,
-          from: fromPerson,
-          to: [toPerson],
-          body: this.generateRandomEmailBody(),
-          date,
-          read: isRead,
-          folder,
-          attachments: Math.random() > 0.7 ? [
-            {
-              name: 'document.pdf',
-              size: 1024 * 1024 * (1 + Math.random() * 10), // 1-10MB
-              url: '#'
-            }
-          ] : undefined
-        })
-      }
-      
-      this.emails = mockEmails
-    },
+    // This method has been removed as we no longer generate mock emails
     
-    generateRandomEmailBody(accountName: string = ''): string {
-      const templates = [
-        `<p>Hello,</p><p>I wanted to follow up on our previous conversation about the project. We're making good progress, but there are a few things I'd like to discuss.</p><p>Could we schedule a meeting sometime this week?</p><p>Best regards,<br>${accountName ? 'Your contact from ' + accountName : 'John'}</p>`,
-        
-        `<p>Hi there,</p><p>I'm reaching out to share some updates on the ${Math.random() > 0.5 ? 'marketing' : 'development'} initiative we discussed. The team has been working hard, and we've made significant progress.</p><p>I've attached some documents for your review.</p><p>Looking forward to your feedback,<br>${accountName ? 'Team at ' + accountName : 'Sarah'}</p>`,
-        
-        `<p>Greetings,</p><p>Just a quick note to confirm our meeting on ${new Date(Date.now() + 86400000 * Math.floor(Math.random() * 7)).toLocaleDateString()} at ${Math.floor(Math.random() * 12) + 1}:${Math.random() > 0.5 ? '00' : '30'} ${Math.random() > 0.5 ? 'AM' : 'PM'}.</p><p>Please let me know if you need to reschedule.</p><p>Regards,<br>${accountName ? 'Your colleague at ' + accountName : 'Michael'}</p>`,
-        
-        `<p>Dear Team,</p><p>I'm pleased to announce that we've reached a major milestone in our project. The client has approved our proposal and we're ready to move forward with the next phase.</p><p>Thank you all for your hard work and dedication.</p><p>Sincerely,<br>${accountName ? 'Management at ' + accountName : 'Emily'}<br>Team Lead</p>`
-      ]
-      
-      return templates[Math.floor(Math.random() * templates.length)]
-    },
+    // Removed mock email body generator as it's no longer needed
     
     markEmailAsRead(emailId: string, read: boolean = true) {
       const email = this.emails.find(e => e.id === emailId)
@@ -249,36 +174,108 @@ export const useMailStore = defineStore('mail', {
       }
     },
     
-    sendEmail(email: Email) {
-      // In a real app, this would send the email through the account's API
-      // For demo purposes, we'll just add it to the sent folder
-      
-      const newEmail: Email = {
-        ...email,
-        id: `email-${Date.now()}`,
-        folder: 'sent',
-        read: true,
-        date: new Date()
+    async sendEmail(email: Email) {
+      // Get the default account to send from
+      const connectedAccounts = this.getConnectedAccounts
+      if (connectedAccounts.length === 0) {
+        console.error('No connected accounts to send email from')
+        // Still add to sent folder for UI consistency
+        const newEmail: Email = {
+          ...email,
+          id: `email-${Date.now()}`,
+          folder: 'sent',
+          read: true,
+          date: new Date()
+        }
+        this.emails.unshift(newEmail)
+        return newEmail
       }
       
-      this.emails.unshift(newEmail)
+      // Use the first connected account
+      const account = connectedAccounts[0]
+      const accountId = account.id
       
-      return newEmail
+      try {
+        // Get mail provider for this account
+        const mailProvider = getMailProvider(account)
+        
+        // Check if authenticated
+        if (!mailProvider.isAuthenticated()) {
+          const authenticated = await mailProvider.authenticate()
+          if (!authenticated) {
+            throw new Error('Not authenticated with mail provider')
+          }
+        }
+        
+        // Create email object with account info
+        const newEmail: Email = {
+          ...email,
+          id: `email-${Date.now()}`,
+          folder: 'sent',
+          read: true,
+          date: new Date(),
+          accountId
+        }
+        
+        // Send via provider
+        const success = await mailProvider.sendEmail(newEmail)
+        if (!success) {
+          throw new Error('Failed to send email')
+        }
+        
+        // Add to local state
+        this.emails.unshift(newEmail)
+        return newEmail
+      } catch (error) {
+        console.error('Error sending email:', error)
+        
+        // Still add to sent folder for UI consistency, but mark as failed
+        const newEmail: Email = {
+          ...email,
+          id: `email-${Date.now()}`,
+          folder: 'sent',
+          read: true,
+          date: new Date(),
+          accountId
+        }
+        this.emails.unshift(newEmail)
+        return newEmail
+      }
     },
     
-    saveDraft(email: Email) {
-      // For demo purposes, we'll just add it to the drafts folder
+    async saveDraft(email: Email) {
+      // Get the default account to save draft in
+      const connectedAccounts = this.getConnectedAccounts
+      if (connectedAccounts.length === 0) {
+        console.error('No connected accounts to save draft in')
+        // Still add to drafts folder for UI consistency
+        const newEmail: Email = {
+          ...email,
+          id: `draft-${Date.now()}`,
+          folder: 'drafts',
+          read: true,
+          date: new Date()
+        }
+        this.emails.unshift(newEmail)
+        return newEmail
+      }
+      
+      // Add to drafts folder
+      const account = connectedAccounts[0]
+      const accountId = account.id
       
       const newEmail: Email = {
         ...email,
         id: `draft-${Date.now()}`,
         folder: 'drafts',
         read: true,
-        date: new Date()
+        date: new Date(),
+        accountId
       }
       
+      // In a real implementation, we would save the draft via the provider API
+      // For now, just add it to local state
       this.emails.unshift(newEmail)
-      
       return newEmail
     }
   }

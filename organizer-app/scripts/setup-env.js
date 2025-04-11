@@ -154,6 +154,15 @@ function generateEnvFile(firebaseConfig, xaiApiKey, appName, defaultLang, apiUrl
   envContent += `# Development Configuration\n`;
   envContent += `DEBUG_MODE=false\n`;
   envContent += `MOCK_DATA=${!firebaseConfig.apiKey ? 'true' : 'false'}\n`;
+  envContent += `VITE_AUTH_BYPASS=false\n\n`;
+  
+  // Firebase Emulator configuration
+  envContent += `# Firebase Emulator Configuration\n`;
+  envContent += `FIREBASE_USE_EMULATOR=false\n`;
+  envContent += `FIREBASE_EMULATOR_HOST=localhost\n`;
+  envContent += `FIREBASE_AUTH_EMULATOR_PORT=9099\n`;
+  envContent += `FIREBASE_FIRESTORE_EMULATOR_PORT=8080\n`;
+  envContent += `FIREBASE_STORAGE_EMULATOR_PORT=9199\n`;
   
   // Write the env file
   fs.writeFileSync(envFilePath, envContent);

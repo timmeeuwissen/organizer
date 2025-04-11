@@ -17,6 +17,17 @@ export interface IntegrationAccount {
   showInTasks: boolean;
   showInContacts: boolean;
   color: string; // Color for visual identification in UI
+  
+  // OAuth-related fields
+  accessToken?: string; // OAuth access token
+  refreshToken?: string; // OAuth refresh token
+  tokenExpiry?: Date; // When the access token expires
+  
+  // Additional auth-related data
+  clientId?: string; // For storing app-specific client ID if needed
+  clientSecret?: string; // For storing app-specific client secret if needed
+  scope?: string; // OAuth scopes that were granted
+  
   createdAt: Date;
   updatedAt: Date;
 }

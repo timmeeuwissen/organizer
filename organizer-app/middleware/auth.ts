@@ -4,6 +4,36 @@ export default defineNuxtRouteMiddleware((to, from) => {
   // Skip on server-side as we're using SPA mode with Firebase auth
   if (process.server) return
   
+  // Check if we're in development mode
+  const isDev = import.meta.env.DEV
+  
+  // Check for localStorage demo mode setting first (takes precedence over env variable)
+  let bypassAuth = false
+  
+  // Only run this code in browser environment
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    const storedDemoMode = localStorage.getItem('demoMode')
+    if (storedDemoMode !== null) {
+      bypassAuth = storedDemoMode === 'true'
+    } else {
+      // Use env variable as fallback
+      bypassAuth = isDev && import.meta.env.VITE_AUTH_BYPASS === 'true'
+    }
+  } else {
+    // In SSR context, use env variable
+    bypassAuth = isDev && import.meta.env.VITE_AUTH_BYPASS === 'true'
+  }
+  
+  // If we're bypassing auth in development, allow all routes
+  if (bypassAuth) {
+    console.log('Auth middleware: Using demo mode, bypassing authentication')
+    // If trying to access login pages in bypass mode, redirect to dashboard
+    if (to.path.includes('/auth/login') || to.path.includes('/auth/register')) {
+      return navigateTo('/dashboard')
+    }
+    return
+  }
+  
   const authStore = useAuthStore()
   const publicRoutes = ['/auth/login', '/auth/register', '/auth/forgot-password']
   const authRoutes = ['/auth/profile'] // Routes that require auth but are in the auth directory

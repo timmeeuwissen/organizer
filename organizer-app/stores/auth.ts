@@ -30,43 +30,70 @@ export const useAuthStore = defineStore('auth', {
         return Promise.resolve(this.user)
       }
       
+      // In development mode, we can bypass authentication for demo purposes
+      if (import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true') {
+        await this.createDemoUser()
+        return Promise.resolve(this.user)
+      }
+      
       return this.init()
+    },
+    
+    // Create a demo user with demo email accounts for development
+    async createDemoUser() {
     },
 
     async init() {
-      const auth = getAuth()
-      this.loading = true
-      this.error = null
-      
-      return new Promise<User | null>((resolve, reject) => {
-        const unsubscribe = onAuthStateChanged(auth, 
-          async (firebaseUser) => {
-            try {
-              if (firebaseUser) {
-                await this.setUser(firebaseUser)
-                resolve(this.user)
-              } else {
-                this.user = null
-                resolve(null)
+      try {
+        // Check if we're in development mode with auth bypass
+        const isDev = import.meta.env.DEV
+        const bypassAuth = isDev && import.meta.env.VITE_AUTH_BYPASS === 'true'
+        
+        if (bypassAuth) {
+          console.log('Development mode with auth bypass - creating demo user without Firebase')
+          const result = await this.createDemoUser()
+          return result ? this.user : null
+        }
+        
+        const auth = getAuth()
+        this.loading = true
+        this.error = null
+        
+        return new Promise<User | null>((resolve, reject) => {
+          const unsubscribe = onAuthStateChanged(auth, 
+            async (firebaseUser) => {
+              try {
+                if (firebaseUser) {
+                  await this.setUser(firebaseUser)
+                  resolve(this.user)
+                } else {
+                  this.user = null
+                  resolve(null)
+                }
+              } catch (error: any) {
+                console.error('Auth state change error:', error)
+                this.error = error.message || 'Authentication failed'
+                reject(error)
+              } finally {
+                this.loading = false
+                unsubscribe()
               }
-            } catch (error: any) {
-              console.error('Auth state change error:', error)
-              this.error = error.message || 'Authentication failed'
-              reject(error)
-            } finally {
+            },
+            (error) => {
               this.loading = false
+              this.error = error.message || 'Authentication failed'
+              console.error('Auth state change error:', error)
+              reject(error)
               unsubscribe()
             }
-          },
-          (error) => {
-            this.loading = false
-            this.error = error.message || 'Authentication failed'
-            console.error('Auth state change error:', error)
-            reject(error)
-            unsubscribe()
-          }
-        )
-      })
+          )
+        })
+      } catch (error: any) {
+        console.error('Failed to initialize auth:', error)
+        this.error = error.message || 'Failed to initialize auth'
+        this.loading = false
+        return null
+      }
     },
 
     async setUser(firebaseUser: FirebaseUser) {

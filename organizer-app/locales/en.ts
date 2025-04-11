@@ -81,7 +81,18 @@ export default {
     showInContacts: 'Show in Contacts',
     accountColor: 'Account Color',
     noIntegrations: 'No integrations added yet',
-    addYourFirstIntegration: 'Add your first integration account'
+    addYourFirstIntegration: 'Add your first integration account',
+    // OAuth related translations
+    useOAuth: 'Use OAuth Authentication',
+    office365OAuthRecommended: 'OAuth is recommended for Office 365',
+    oauthInstructions: 'OAuth Authentication Setup',
+    runMakeCommand: 'Run this command in your terminal to set up OAuth credentials',
+    oauthStep1: 'Run the command in your terminal to start the OAuth setup process',
+    oauthStep2: 'Follow the instructions to create credentials in Google Cloud Console or Microsoft Azure Portal',
+    oauthStep3: 'Authorize the access to your account in the browser that opens',
+    oauthStep4: 'Copy the client ID, client secret, and refresh token from the output into the fields below',
+    enterOAuthCredentials: 'Enter OAuth Credentials',
+    oauthConfigured: 'OAuth Configured'
   },
   behaviors: {
     title: 'Behaviors',

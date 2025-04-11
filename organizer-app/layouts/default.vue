@@ -29,6 +29,7 @@ v-app
   
   v-main
     v-container(fluid)
+      DemoModeToggle(v-if="authBypassEnabled")
       slot
   
   v-footer(app padless)
@@ -44,6 +45,7 @@ import { useI18n } from 'vue-i18n'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+import DemoModeToggle from '~/components/auth/DemoModeToggle.vue'
 
 const i18n = useI18n()
 const theme = useTheme()
@@ -53,6 +55,7 @@ const router = useRouter()
 const drawer = ref(false)
 const isDarkTheme = computed(() => theme.global.current.value.dark)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const authBypassEnabled = computed(() => import.meta.env.VITE_AUTH_BYPASS === 'true')
 
 const navItems = [
   { title: 'dashboard.title', icon: 'mdi-view-dashboard', to: '/dashboard' },

@@ -18,6 +18,37 @@ v-container(fluid)
               prepend-icon="mdi-account-cog"
             ) {{ $t('mail.goToProfile') }}
   
+  template(v-else-if="mailStore.emails && mailStore.emails.length === 0 && !loading")
+    v-row(justify="center" align="center" class="mt-4")
+      v-col(cols="12" md="8")
+        v-card
+          v-card-text(class="text-center pa-6")
+            v-icon(size="x-large" color="primary" class="mb-4") mdi-email-search
+            h3.text-h5.mb-4 No emails found in connected accounts
+            p.text-body-1.mb-4 Your accounts are connected, but no emails were found. This could be because:
+            
+            ul.text-left.mt-3.mb-4
+              li Your email connection needs to be authenticated with proper OAuth permissions
+              li The access tokens for your email accounts may have expired
+              li You need to complete the OAuth flow for each email provider
+            v-divider(class="my-4")
+            p.text-body-2
+              | For Gmail accounts, you'll need to authorize access with the Google OAuth flow. 
+              | For Office 365 and Exchange accounts, you'll need Microsoft OAuth permissions.
+            div.d-flex.justify-center.mt-4
+              v-btn(
+                color="primary"
+                @click="refreshEmails"
+                prepend-icon="mdi-refresh"
+                class="mx-2"
+              ) Try Again
+              v-btn(
+                color="secondary"
+                :to="'/auth/profile'"
+                prepend-icon="mdi-account-cog"
+                class="mx-2"
+              ) Manage Email Accounts
+  
   v-row(v-else)
     v-col(cols="12" md="3")
       v-card(class="mb-4")
@@ -47,6 +78,12 @@ v-container(fluid)
             template(v-slot:prepend)
               v-avatar(size="32" :color="account.color")
                 span {{ getInitialsFromString(account.name) }}
+            
+            template(v-slot:append)
+              v-chip(
+                size="small"
+                :color="getAccountStatusColor(account)"
+              ) {{ getAccountStatusMessage(account) }}
       
       v-card
         v-card-title {{ $t('mail.contacts') }}
@@ -268,6 +305,7 @@ import { useMailStore } from '~/stores/mail'
 import { useAuthStore } from '~/stores/auth'
 import type { Person, IntegrationAccount } from '~/types/models'
 import type { Email, MailFolder, EmailPerson, EmailAttachment } from '~/stores/mail'
+import { getAccountStatusMessage, getAccountStatusColor } from '~/utils/api/emailUtils'
 
 // Stores
 const peopleStore = usePeopleStore()
@@ -279,6 +317,7 @@ const selectedEmail = ref<Email | null>(null)
 const selectedFolder = ref('inbox')
 const mailFolders = computed(() => mailStore.folders)
 const connectedAccounts = computed(() => mailStore.getConnectedAccounts)
+const loading = computed(() => mailStore.loading)
 
 // Table config
 const emailHeaders = [
@@ -307,6 +346,12 @@ const composeForm = ref(null)
 
 // Computed
 const filteredEmails = computed(() => {
+  // Check if mailStore.emails exists to avoid "Cannot read properties of undefined" error
+  if (!mailStore.emails) {
+    console.log('Mail store emails array is undefined')
+    return []
+  }
+  
   let result = mailStore.emails.filter(email => email.folder === selectedFolder.value)
   
   if (emailSearch.value) {
@@ -320,6 +365,7 @@ const filteredEmails = computed(() => {
     )
   }
   
+  console.log(`Filtered ${result.length} emails for folder ${selectedFolder.value}`)
   return result
 })
 

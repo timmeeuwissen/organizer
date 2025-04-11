@@ -31,7 +31,7 @@ v-form(ref="form" v-model="formValid")
         :disabled="isConnected || isLoading"
       )
     
-    v-col(cols="12" v-if="accountType === 'exchange'")
+    v-col(cols="12" v-if="accountType === 'exchange' && !useOAuth")
       v-text-field(
         v-model="server"
         :label="$t('settings.integrationServer')"
@@ -41,27 +41,73 @@ v-form(ref="form" v-model="formValid")
         placeholder="outlook.office365.com"
       )
     
-    v-col(cols="12")
-      v-text-field(
-        v-model="username"
-        :label="$t('settings.integrationUsername')"
-        prepend-icon="mdi-account"
-        :rules="[rules.required]"
+    v-col(cols="12" v-if="accountType === 'exchange' && server")
+      v-switch(
+        v-model="useOAuth"
+        :label="$t('settings.useOAuth')"
+        color="primary"
         :disabled="isConnected || isLoading"
-        :placeholder="usernameHint"
+        :hint="server && server.includes('office365') ? $t('settings.office365OAuthRecommended') : ''"
+        persistent-hint
       )
     
-    v-col(cols="12" v-if="!isConnected")
-      v-text-field(
-        v-model="password"
-        :label="$t('settings.integrationPassword')"
-        prepend-icon="mdi-lock"
-        :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-        :type="showPassword ? 'text' : 'password'"
-        :rules="[rules.required]"
-        :disabled="isLoading"
-        @click:append="showPassword = !showPassword"
-      )
+    // Basic Auth (username/password) section
+    template(v-if="!useOAuth")
+      v-col(cols="12")
+        v-text-field(
+          v-model="username"
+          :label="$t('settings.integrationUsername')"
+          prepend-icon="mdi-account"
+          :rules="[rules.required]"
+          :disabled="isConnected || isLoading"
+          :placeholder="usernameHint"
+        )
+      
+      v-col(cols="12" v-if="!isConnected")
+        v-text-field(
+          v-model="password"
+          :label="$t('settings.integrationPassword')"
+          prepend-icon="mdi-lock"
+          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="showPassword ? 'text' : 'password'"
+          :rules="[rules.required]"
+          :disabled="isLoading"
+          @click:append="showPassword = !showPassword"
+        )
+    
+    // OAuth section
+    template(v-else)
+      v-col(cols="12")
+        v-card(variant="outlined" class="pa-3 mb-3")
+          v-card-title(class="px-0 text-subtitle-1") 
+            v-icon(color="info" class="mr-2") mdi-information-outline
+            | {{ $t('settings.oauthInstructions') }}
+          
+          v-card-text(class="px-0")
+            p {{ $t('settings.runMakeCommand') }}:
+            v-sheet(
+              color="grey-lighten-4" 
+              rounded
+              class="pa-2 mb-3 font-monospace"
+            ) {{ `make oauth-${accountType === 'office365' || (accountType === 'exchange' && server?.includes('office365')) ? 'ms' : accountType}-setup` }}
+            
+            v-expansion-panels(variant="accordion")
+              v-expansion-panel(title="View Detailed Instructions")
+                v-expansion-panel-text
+                  ol
+                    li {{ $t('settings.oauthStep1') }}
+                    li {{ $t('settings.oauthStep2') }}
+                    li {{ $t('settings.oauthStep3') }}
+                    li {{ $t('settings.oauthStep4') }}
+          v-card-actions(class="px-0")
+            v-spacer  
+            o-auth-authorize-button(
+              :provider="getOAuthProvider"
+              :color="isOAuthConfigured ? 'success' : 'primary'"
+              :text="isOAuthConfigured ? $t('settings.oauthConfigured') : $t('settings.enterOAuthCredentials')"
+              :icon="isOAuthConfigured ? 'mdi-check' : 'mdi-key'"
+              @tokens-updated="handleTokensUpdated"
+            )
     
     v-col(cols="12" v-if="isConnected && lastSync")
       v-alert(type="info" variant="tonal")
@@ -189,6 +235,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNetworkStatus } from '~/composables/useNetworkStatus'
 import { v4 as uuidv4 } from 'uuid'
+import OAuthAuthorizeButton from './OAuthAuthorizeButton.vue'
 
 // Props
 const props = defineProps({
@@ -219,6 +266,7 @@ const email = ref('')
 const server = ref('')
 const username = ref('')
 const password = ref('')
+const useOAuth = ref(true) // Default to OAuth for Google and Office 365
 const syncCalendar = ref(true)
 const syncMail = ref(true)
 const syncTasks = ref(true)
@@ -230,6 +278,14 @@ const showInContacts = ref(true)
 const color = ref('#1976D2') // Default blue
 const lastSync = ref(null)
 const isConnected = ref(false)
+
+// OAuth-related fields
+const clientId = ref('')
+const clientSecret = ref('')
+const refreshToken = ref('')
+const accessToken = ref('')
+const tokenExpiry = ref(null)
+const oauthScope = ref('')
 
 // Validation rules
 const rules = {
@@ -268,6 +324,22 @@ const usernameHint = computed(() => {
   }
 })
 
+// Get the OAuth provider based on account type
+const getOAuthProvider = computed(() => {
+  if (accountType.value === 'office365') {
+    return 'microsoft'
+  } else if (accountType.value === 'exchange' && server.value?.includes('office365')) {
+    return 'microsoft'
+  } else {
+    return accountType.value
+  }
+})
+
+// Check if OAuth is already configured
+const isOAuthConfigured = computed(() => {
+  return !!clientId.value && !!clientSecret.value && !!refreshToken.value
+})
+
 // Load account data if in edit mode
 watch(() => props.account, () => {
   if (props.account) {
@@ -287,8 +359,46 @@ watch(() => props.account, () => {
     color.value = props.account.color || '#1976D2'
     lastSync.value = props.account.lastSync || null
     isConnected.value = props.account.connected || false
+    
+    // Load OAuth-related fields if available
+    clientId.value = props.account.clientId || ''
+    clientSecret.value = props.account.clientSecret || ''
+    refreshToken.value = props.account.refreshToken || ''
+    accessToken.value = props.account.accessToken || ''
+    tokenExpiry.value = props.account.tokenExpiry || null
+    oauthScope.value = props.account.scope || ''
+    
+    // Set OAuth switch based on account type and available tokens
+    useOAuth.value = 
+      accountType.value === 'google' || 
+      accountType.value === 'office365' || 
+      (accountType.value === 'exchange' && server.value?.includes('office365')) ||
+      (!!clientId.value && !!refreshToken.value)
   }
 }, { immediate: true })
+
+// Handle tokens updated from OAuth button
+function handleTokensUpdated(tokens) {
+  console.log('OAuth tokens updated:', tokens)
+  
+  // Update local state
+  clientId.value = tokens.clientId
+  clientSecret.value = tokens.clientSecret
+  refreshToken.value = tokens.refreshToken
+  
+  // Prepare account data with tokens
+  const updatedAccount = getAccountData()
+  updatedAccount.clientId = tokens.clientId
+  updatedAccount.clientSecret = tokens.clientSecret 
+  updatedAccount.refreshToken = tokens.refreshToken
+  updatedAccount.connected = true
+  
+  // Mark as connected
+  isConnected.value = true
+  
+  // Emit success
+  emit('test', updatedAccount)
+}
 
 // Methods
 function getAccountData() {
@@ -387,15 +497,105 @@ async function testConnection() {
   isLoading.value = true
   
   try {
-    // Mock a connection test
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Emit test event with account data
-    emit('test', getAccountData())
+    // Different auth flow based on account type
+    if (accountType.value === 'google') {
+      // Start OAuth flow for Google
+      await initiateGoogleOAuth()
+    } else if (accountType.value === 'office365') {
+      // Start OAuth flow for Office 365
+      await initiateOffice365OAuth()
+    } else if (accountType.value === 'exchange') {
+      // Exchange can use basic auth or OAuth, depending on the server
+      if (server.value && server.value.includes('office365')) {
+        await initiateOffice365OAuth()
+      } else {
+        // Simple connection test for regular Exchange servers
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        emit('test', getAccountData())
+      }
+    }
   } catch (err) {
     console.error('Error testing connection:', err)
   } finally {
     isLoading.value = false
+  }
+}
+
+// OAuth implementation for Google
+async function initiateGoogleOAuth() {
+  try {
+    // In a real app, this would:
+    // 1. Open a popup window to Google's OAuth consent screen
+    // 2. User would grant permissions
+    // 3. Google would redirect to your callback URL with an auth code
+    // 4. You'd exchange the auth code for tokens
+    
+    console.log('Initiating Google OAuth flow...')
+    
+    // For now, we'll simulate a successful authentication
+    const mockSuccessfulAuth = await new Promise(resolve => {
+      setTimeout(() => {
+        resolve({
+          accessToken: 'google-mock-access-token-' + Date.now(),
+          refreshToken: 'google-mock-refresh-token-' + Date.now(),
+          expiresIn: 3600,
+          scope: 'https://www.googleapis.com/auth/gmail.readonly'
+        })
+      }, 2000)
+    })
+    
+    // Update account with tokens
+    const updatedAccount = getAccountData()
+    updatedAccount.accessToken = mockSuccessfulAuth.accessToken
+    updatedAccount.refreshToken = mockSuccessfulAuth.refreshToken
+    updatedAccount.tokenExpiry = new Date(Date.now() + (mockSuccessfulAuth.expiresIn * 1000))
+    updatedAccount.scope = mockSuccessfulAuth.scope
+    updatedAccount.connected = true
+    
+    // Emit success
+    emit('test', updatedAccount)
+  } catch (error) {
+    console.error('Google OAuth error:', error)
+    throw error
+  }
+}
+
+// OAuth implementation for Office 365
+async function initiateOffice365OAuth() {
+  try {
+    // In a real app, this would:
+    // 1. Open a popup window to Microsoft's OAuth consent screen
+    // 2. User would grant permissions
+    // 3. Microsoft would redirect to your callback URL with an auth code
+    // 4. You'd exchange the auth code for tokens
+    
+    console.log('Initiating Office 365 OAuth flow...')
+    
+    // For now, we'll simulate a successful authentication
+    const mockSuccessfulAuth = await new Promise(resolve => {
+      setTimeout(() => {
+        resolve({
+          accessToken: 'ms-mock-access-token-' + Date.now(),
+          refreshToken: 'ms-mock-refresh-token-' + Date.now(),
+          expiresIn: 3600,
+          scope: 'Mail.Read User.Read'
+        })
+      }, 2000)
+    })
+    
+    // Update account with tokens
+    const updatedAccount = getAccountData()
+    updatedAccount.accessToken = mockSuccessfulAuth.accessToken
+    updatedAccount.refreshToken = mockSuccessfulAuth.refreshToken
+    updatedAccount.tokenExpiry = new Date(Date.now() + (mockSuccessfulAuth.expiresIn * 1000))
+    updatedAccount.scope = mockSuccessfulAuth.scope
+    updatedAccount.connected = true
+    
+    // Emit success
+    emit('test', updatedAccount)
+  } catch (error) {
+    console.error('Microsoft OAuth error:', error)
+    throw error
   }
 }
 

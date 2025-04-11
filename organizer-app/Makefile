@@ -118,6 +118,45 @@ firebase-init-db: ## Create sample database structure (no dependencies required)
 	@echo "${COLOR_YELLOW}This will create a JSON file with sample data for Firestore.${COLOR_RESET}"
 	node scripts/simple-db-init.js
 
+# OAuth Integration Setup Targets
+oauth-google-setup: ## Set up Google OAuth for Gmail, Calendar, and People APIs
+	@echo "${COLOR_GREEN}Setting up Google OAuth for API Integration...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This is a one-time setup process to configure access to:${COLOR_RESET}"
+	@echo "- Gmail API (for email access)"
+	@echo "- Google Calendar API (for calendar events and appointments)"
+	@echo "- Google People API (for contacts)"
+	@echo ""
+	@echo "${COLOR_CYAN}Prerequisites:${COLOR_RESET}"
+	@echo "1. Google account with access to Google Cloud Console"
+	@echo "2. Basic understanding of OAuth 2.0 authorization flow"
+	@echo "3. Permission to create OAuth credentials for your Google account"
+	@echo ""
+	@echo "${COLOR_YELLOW}Follow these steps:${COLOR_RESET}"
+	@echo "1. First time: Run the setup script to create credentials and obtain tokens"
+	@echo "2. Save the credentials from the script output in your Organizer App profile"
+	@echo "3. Configure which services to sync (mail, calendar, contacts)"
+	@echo ""
+	@echo "${COLOR_GREEN}Run this command in a temporary directory to avoid dependency conflicts:${COLOR_RESET}"
+	@echo "  TMP_DIR=\$$(mktemp -d) && cd \$$TMP_DIR && npm init -y && npm pkg set type=module && npm install axios express open && cp $(PWD)/scripts/setup-google-oauth-esm.js . && node setup-google-oauth-esm.js"
+	@echo ""
+	@echo "${COLOR_YELLOW}After completing the setup, the script will provide detailed instructions on how to add the integration to your Organizer App.${COLOR_RESET}"
+	@echo ""
+
+oauth-ms-setup: ## Set up Microsoft OAuth for Outlook/Office 365 integration
+	@echo "${COLOR_GREEN}Setting up Microsoft OAuth for Outlook/Office 365 integration...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This feature is coming soon...${COLOR_RESET}"
+	@echo "${COLOR_CYAN}For now, please use the Google OAuth setup as a reference.${COLOR_RESET}"
+
+oauth-setup: ## Guide through setting up all OAuth integrations
+	@echo "${COLOR_GREEN}OAuth Integration Setup Guide${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This will guide you through setting up OAuth for email services.${COLOR_RESET}"
+	@echo ""
+	@echo "Available integrations:"
+	@echo "  1. Google (Gmail) - Run 'make oauth-google-setup'"
+	@echo "  2. Microsoft (Outlook/Office 365) - Run 'make oauth-ms-setup'"
+	@echo ""
+	@echo "${COLOR_YELLOW}After completing the OAuth setup, use the refresh tokens in your integration account settings.${COLOR_RESET}"
+
 init: ## Initialize the project
 	@echo "${COLOR_GREEN}Initializing project...${COLOR_RESET}"
 	@echo "${COLOR_YELLOW}Step 1: Installing dependencies${COLOR_RESET}"

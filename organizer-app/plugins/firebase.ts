@@ -6,6 +6,26 @@ import { defineNuxtPlugin } from '#app'
 export default defineNuxtPlugin(async (nuxtApp) => {
   const config = useRuntimeConfig()
   
+  // Check if we're in development mode
+  const isDev = import.meta.env.DEV
+  
+  // Check for localStorage demo mode setting first (takes precedence over env variable)
+  let bypassAuth = false
+  
+  // Only run this code in browser environment
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    const storedDemoMode = localStorage.getItem('demoMode')
+    if (storedDemoMode !== null) {
+      bypassAuth = storedDemoMode === 'true'
+    } else {
+      // Use env variable as fallback
+      bypassAuth = isDev && import.meta.env.VITE_AUTH_BYPASS === 'true'
+    }
+  } else {
+    // In SSR context, use env variable
+    bypassAuth = isDev && import.meta.env.VITE_AUTH_BYPASS === 'true'
+  }
+  
   // Log Firebase configuration (without sensitive values)
   console.log('Firebase config:', {
     authDomain: config.public.firebase.authDomain,
@@ -15,9 +35,57 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     measurementId: config.public.firebase.measurementId,
     apiKey: config.public.firebase.apiKey ? '***** (set)' : '***** (not set)',
     appId: config.public.firebase.appId ? '***** (set)' : '***** (not set)',
+    devMode: isDev,
+    authBypass: bypassAuth,
+    demoModeSetting: typeof window !== 'undefined' ? localStorage.getItem('demoMode') : 'unavailable in SSR'
   });
   
-  // Initialize Firebase with the config from runtime config
+  // For development with auth bypass, use mock Firebase services
+  if (bypassAuth) {
+    console.log('Using mock Firebase services in development mode with auth bypass')
+    
+    // Create mock Firebase services
+    const mockApp = { name: '[DEFAULT]', options: {}, automaticDataCollectionEnabled: false }
+    
+    // Mock Auth service
+    const mockAuth = {
+      currentUser: null,
+      onAuthStateChanged: (callback: any) => {
+        // Immediately trigger the callback with null (not authenticated)
+        callback(null)
+        // Return a function that does nothing when called (unsubscribe)
+        return () => {}
+      },
+      signOut: () => Promise.resolve(),
+      signInWithEmailAndPassword: () => Promise.resolve({ user: null }),
+      createUserWithEmailAndPassword: () => Promise.resolve({ user: null }),
+      signInWithPopup: () => Promise.resolve({ user: null })
+    }
+    
+    // Mock Firestore service with in-memory storage
+    const mockDB = {
+      collection: () => ({
+        doc: () => ({
+          get: () => Promise.resolve({ exists: false, data: () => ({}) }),
+          set: () => Promise.resolve()
+        })
+      }),
+      doc: () => ({
+        get: () => Promise.resolve({ exists: false, data: () => ({}) }),
+        set: () => Promise.resolve()
+      })
+    }
+    
+    // Provide mock services to the app
+    nuxtApp.provide('firebase', mockApp)
+    nuxtApp.provide('auth', mockAuth)
+    nuxtApp.provide('firestore', mockDB)
+    
+    console.log('Mock Firebase initialized for development')
+    return
+  }
+  
+  // Real Firebase initialization for production or when bypass is not enabled
   const firebaseConfig = {
     apiKey: config.public.firebase.apiKey,
     authDomain: config.public.firebase.authDomain,
