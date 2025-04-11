@@ -82,6 +82,24 @@ k8s-delete: ## Delete Kubernetes deployment
 	kubectl delete -f k8s/service.yaml
 	kubectl delete -f k8s/deployment.yaml
 
+feedback-rules: ## Deploy Firestore rules to enable feedback functionality
+	@echo "${COLOR_GREEN}Deploying Firestore rules for feedback system...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This will update security rules to allow the feedback system to work.${COLOR_RESET}"
+	@echo ""
+	firebase deploy --only firestore:rules
+
+feedback-review: ## Review user feedback and take action for Claude integration
+	@echo "${COLOR_GREEN}Opening feedback review interface...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This will show all user feedback submissions and allow you to select ones for Claude to act on.${COLOR_RESET}"
+	@echo ""
+	npm run dev -- --open=feedback
+
+feedback-to-claude: ## Process approved feedback with Claude
+	@echo "${COLOR_GREEN}Processing approved feedback with Claude...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This will take approved feedback items and send them to VSCode with Claude.${COLOR_RESET}"
+	@echo ""
+	node scripts/feedback-to-claude.js
+
 ha-addon: ## Build Home Assistant add-on
 	@echo "${COLOR_GREEN}Building Home Assistant add-on...${COLOR_RESET}"
 	cd ha-addon && docker build -t organizer-ha-addon .

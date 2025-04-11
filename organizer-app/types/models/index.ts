@@ -209,3 +209,17 @@ export interface Statistics {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface Feedback {
+  id: string;
+  userId: string;
+  message: string;
+  screenshot: string; // Base64 encoded image
+  consoleMessages: string;
+  timestamp: Date;
+  seen: boolean;
+  userAction?: 'yes' | 'no';
+  page: string; // The page where feedback was submitted
+  createdAt: Date;
+  updatedAt: Date;
+}

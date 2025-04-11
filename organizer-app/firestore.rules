@@ -1,22 +1,35 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Lock down by default
-    match /{document=**} {
-      allow read, write: if false;
+    // Match authenticated requests
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow profile updates
+      match /profile/{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
-    // User profiles
-    match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && request.auth.uid == userId;
+    // Feedback rules
+    match /feedbacks/{feedback} {
+      // Users can read and create their own feedback
+      allow read, create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       
-      // Allow management of integration accounts
-      match /settings/integrationAccounts {
-        allow read: if request.auth != null && request.auth.uid == userId;
-        allow write: if request.auth != null && request.auth.uid == userId;
-      }
+      // Allow updating own feedback
+      allow update: if request.auth != null && 
+                     resource.data.userId == request.auth.uid && 
+                     request.resource.data.userId == request.auth.uid;
+                     
+      // For testing purposes in development, allow any authenticated user to read all feedback
+      // Consider removing this in production
+      allow read: if request.auth != null;
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -31,6 +31,9 @@ v-app
     v-container(fluid)
       DemoModeToggle(v-if="authBypassEnabled")
       slot
+      
+    // Feedback button that appears on all pages when authenticated
+    FeedbackButton(v-if="isAuthenticated")
   
   v-footer(app padless)
     v-container
@@ -46,6 +49,7 @@ import { useTheme } from 'vuetify'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
 import DemoModeToggle from '~/components/auth/DemoModeToggle.vue'
+import FeedbackButton from '~/components/feedback/FeedbackButton.vue'
 
 const i18n = useI18n()
 const theme = useTheme()
@@ -68,6 +72,7 @@ const navItems = [
   { title: 'mail.title', icon: 'mdi-email', to: '/mail' },
   { title: 'statistics.title', icon: 'mdi-chart-bar', to: '/statistics' },
   { title: 'network.title', icon: 'mdi-graph', to: '/network' },
+  { title: 'feedback.adminTitle', icon: 'mdi-message-text-outline', to: '/feedback' },
 ]
 
 const toggleTheme = () => {
