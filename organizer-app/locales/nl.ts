@@ -343,10 +343,25 @@ export default {
     tabs: {
       new: 'Ongezien',
       all: 'Alle feedback',
-      approved: 'Goedgekeurd'
+      approved: 'Goedgekeurd',
+      improved: 'Verbeterd',
+      archived: 'Geschiedenis'
     },
     noFeedback: 'Nog geen feedbackinzendingen',
     noUnseenFeedback: 'Geen ongeziene feedback',
-    noApprovedFeedback: 'Geen goedgekeurde feedback'
+    noApprovedFeedback: 'Geen goedgekeurde feedback',
+    noImprovedFeedback: 'Geen verbeterde feedback',
+    noArchivedFeedback: 'Geen gearchiveerde feedback',
+    improvedQuestion: 'Is deze feedback verholpen?',
+    markAsImproved: 'Markeren als verbeterd',
+    markedAsImproved: 'Gemarkeerd als verbeterd',
+    improvedAt: 'Verbeterd op',
+    archive: 'Archiveren',
+    unarchive: 'Herstellen',
+    archiveQuestion: 'Deze feedback archiveren?',
+    archivedAt: 'Gearchiveerd op',
+    history: 'Feedbackgeschiedenis',
+    processedByClaude: 'Verwerkt door Claude',
+    processedAt: 'Verwerkt op'
   }
 };

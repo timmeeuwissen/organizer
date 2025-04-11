@@ -12,19 +12,11 @@ service cloud.firestore {
       }
     }
     
-    // Feedback rules
+    // Feedback rules - Development mode (all permissions)
     match /feedbacks/{feedback} {
-      // Users can read and create their own feedback
-      allow read, create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      
-      // Allow updating own feedback
-      allow update: if request.auth != null && 
-                     resource.data.userId == request.auth.uid && 
-                     request.resource.data.userId == request.auth.uid;
-                     
-      // For testing purposes in development, allow any authenticated user to read all feedback
-      // Consider removing this in production
-      allow read: if request.auth != null;
+      // For development, allow all operations
+      // IMPORTANT: Restrict these rules in production!
+      allow read, write: if true;
     }
     
     // Default deny

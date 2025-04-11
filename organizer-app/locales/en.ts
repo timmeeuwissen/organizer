@@ -344,10 +344,25 @@ export default {
     tabs: {
       new: 'Unseen',
       all: 'All Feedback',
-      approved: 'Approved'
+      approved: 'Approved',
+      improved: 'Improved',
+      archived: 'History'
     },
     noFeedback: 'No feedback submissions yet',
     noUnseenFeedback: 'No unseen feedback',
-    noApprovedFeedback: 'No approved feedback'
+    noApprovedFeedback: 'No approved feedback',
+    noImprovedFeedback: 'No improved feedback',
+    noArchivedFeedback: 'No archived feedback',
+    improvedQuestion: 'Has this feedback been addressed?',
+    markAsImproved: 'Mark as improved',
+    markedAsImproved: 'Marked as improved',
+    improvedAt: 'Improved at',
+    archive: 'Archive',
+    unarchive: 'Restore',
+    archiveQuestion: 'Archive this feedback?',
+    archivedAt: 'Archived at',
+    history: 'Feedback History',
+    processedByClaude: 'Processed by Claude',
+    processedAt: 'Processed at'
   }
 };

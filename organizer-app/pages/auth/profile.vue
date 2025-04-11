@@ -39,7 +39,7 @@ v-container
               
               v-divider(class="my-4")
               
-              v-subheader {{ $t('auth.settings') }}
+              div.text-subtitle-1.pa-2 {{ $t('auth.settings') }}
               
               v-switch(
                 v-model="darkModeInput"

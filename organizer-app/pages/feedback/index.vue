@@ -11,6 +11,8 @@ v-container
         v-tab(value="new") {{ $t('feedback.tabs.new') }}
         v-tab(value="all") {{ $t('feedback.tabs.all') }}
         v-tab(value="approved") {{ $t('feedback.tabs.approved') }}
+        v-tab(value="improved") {{ $t('feedback.tabs.improved') }}
+        v-tab(value="archived") {{ $t('feedback.tabs.archived') }}
       
       v-window(v-model="activeTab")
         v-window-item(value="new")
@@ -63,6 +65,40 @@ v-container
             
             template(v-slot:item.actions="{ item }")
               v-btn(size="small" @click="viewFeedback(item)" color="primary") {{ $t('feedback.view') }}
+                
+        v-window-item(value="improved")
+          v-data-table(
+            :items="feedbackStore.improvedFeedbacks"
+            :headers="headers"
+            :loading="feedbackStore.loading"
+            density="comfortable"
+            class="elevation-1"
+          )
+            template(v-slot:no-data)
+              div.pa-4.text-center {{ $t('feedback.noImprovedFeedback') }}
+              
+            template(v-slot:item.timestamp="{ item }")
+              | {{ formatDate(item.timestamp) }}
+            
+            template(v-slot:item.actions="{ item }")
+              v-btn(size="small" @click="viewFeedback(item)" color="primary") {{ $t('feedback.view') }}
+                
+        v-window-item(value="archived")
+          v-data-table(
+            :items="feedbackStore.archivedFeedbacks"
+            :headers="headers"
+            :loading="feedbackStore.loading"
+            density="comfortable"
+            class="elevation-1"
+          )
+            template(v-slot:no-data)
+              div.pa-4.text-center {{ $t('feedback.noArchivedFeedback') }}
+              
+            template(v-slot:item.timestamp="{ item }")
+              | {{ formatDate(item.timestamp) }}
+            
+            template(v-slot:item.actions="{ item }")
+              v-btn(size="small" @click="viewFeedback(item)" color="primary") {{ $t('feedback.view') }}
 
   // Feedback Detail Dialog
   v-dialog(v-model="showDetailDialog" max-width="800px")
@@ -106,7 +142,40 @@ v-container
               v-chip(
                 :color="selectedFeedback.userAction === 'yes' ? 'success' : 'error'"
                 text-color="white"
+                class="mr-2"
               ) {{ selectedFeedback.userAction === 'yes' ? $t('feedback.markedForAction') : $t('feedback.markedAsIgnored') }}
+              
+            div.mt-4(v-if="selectedFeedback.userAction === 'yes'")
+              p.text-h6 {{ $t('feedback.improvedQuestion') }}
+              v-switch(
+                v-model="isImproved"
+                :label="isImproved ? $t('feedback.markedAsImproved') : $t('feedback.markAsImproved')"
+                color="success"
+                @update:model-value="handleImprovedChange"
+                :disabled="handleImprovedLoading"
+              )
+              div(v-if="selectedFeedback.improved")
+                p.text-caption {{ $t('feedback.improvedAt') }}: {{ formatDate(selectedFeedback.improvedAt) }}
+                
+            div.mt-6
+              p.text-h6 {{ $t('feedback.archiveQuestion') }}
+              v-switch(
+                v-model="isArchived"
+                :label="isArchived ? $t('feedback.unarchive') : $t('feedback.archive')"
+                color="warning"
+                @update:model-value="handleArchiveChange"
+                :disabled="archiveLoading"
+              )
+              div(v-if="selectedFeedback.archived")
+                p.text-caption {{ $t('feedback.archivedAt') }}: {{ formatDate(selectedFeedback.archivedAt) }}
+              
+            div.mt-4(v-if="selectedFeedback.processedByClaude")
+              v-chip(
+                color="purple"
+                text-color="white"
+                class="mr-2"
+              ) {{ $t('feedback.processedByClaude') }}
+              p.text-caption {{ $t('feedback.processedAt') }}: {{ formatDate(selectedFeedback.processedAt) }}
                 
       v-card-actions
         v-spacer
@@ -114,7 +183,7 @@ v-container
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useFeedbackStore } from '~/stores/feedback'
 import { useAuthStore } from '~/stores/auth'
@@ -199,6 +268,71 @@ async function handleFeedbackAction(action: 'yes' | 'no') {
     }
   } catch (error) {
     console.error('Error handling feedback action:', error)
+  }
+}
+
+// Handle improved state toggle
+const isImproved = ref(false)
+const handleImprovedLoading = ref(false)
+
+// Handle archive toggle
+const isArchived = ref(false)
+const archiveLoading = ref(false)
+
+// Set initial states when feedback is selected
+watch(() => selectedFeedback.value, (feedback) => {
+  if (feedback) {
+    isImproved.value = !!feedback.improved
+    isArchived.value = !!feedback.archived
+  }
+})
+
+async function handleImprovedChange(value: boolean) {
+  if (!selectedFeedback.value) return
+  
+  handleImprovedLoading.value = true
+  try {
+    await feedbackStore.markAsImproved(selectedFeedback.value.id, value)
+    
+    // Update the selected feedback to reflect the changes
+    selectedFeedback.value = {
+      ...selectedFeedback.value,
+      improved: value,
+      improvedAt: value ? new Date() : undefined
+    }
+  } catch (error) {
+    console.error('Error updating improved state:', error)
+    // Revert switch if there was an error
+    isImproved.value = !value
+  } finally {
+    handleImprovedLoading.value = false
+  }
+}
+
+async function handleArchiveChange(value: boolean) {
+  if (!selectedFeedback.value) return
+  
+  archiveLoading.value = true
+  try {
+    await feedbackStore.archiveFeedback(selectedFeedback.value.id, value)
+    
+    // Update the selected feedback to reflect the changes
+    selectedFeedback.value = {
+      ...selectedFeedback.value,
+      archived: value,
+      archivedAt: value ? new Date() : undefined
+    }
+    
+    // If archiving, redirect to the feedback list
+    if (value) {
+      showDetailDialog.value = false
+    }
+  } catch (error) {
+    console.error('Error updating archive state:', error)
+    // Revert switch if there was an error
+    isArchived.value = !value
+  } finally {
+    archiveLoading.value = false
   }
 }
 </script>

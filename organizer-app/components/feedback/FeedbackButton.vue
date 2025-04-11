@@ -103,6 +103,52 @@ function setupConsoleCapture() {
   originalConsoleWarn = console.warn
   originalConsoleInfo = console.info
   
+  // Helper function to safely stringify objects, avoiding circular references
+  function safeStringify(obj: any): string {
+    if (obj === null || obj === undefined) return String(obj);
+    
+    if (typeof obj !== 'object') return String(obj);
+    
+    try {
+      // Use a WeakSet to track visited objects and avoid circular references
+      const seen = new WeakSet();
+      
+      const stringified = JSON.stringify(obj, (key, value) => {
+        // Skip functions
+        if (typeof value === 'function') return '[Function]';
+        
+        // Handle DOM nodes
+        if (value instanceof Node) return `[${value.nodeName}]`;
+        
+        // If it's an object, check for circular references
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return '[Circular Reference]';
+          }
+          seen.add(value);
+        }
+        
+        return value;
+      }, 2);
+      
+      return stringified;
+    } catch (err) {
+      // If anything goes wrong, return a simple description
+      return `[${Object.prototype.toString.call(obj)}]`;
+    }
+  }
+  
+  // Safe stringifier for console arguments
+  function formatLogArgs(args: any[]): string {
+    return args.map(arg => {
+      try {
+        return typeof arg === 'object' ? safeStringify(arg) : String(arg);
+      } catch (e) {
+        return '[Unstringifiable Object]';
+      }
+    }).join(' ');
+  }
+  
   // Override console.log
   console.log = function() {
     // Call the original function
@@ -110,9 +156,7 @@ function setupConsoleCapture() {
     
     // Store in our cache
     const args = Array.from(arguments)
-    const logString = args.map(arg => 
-      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-    ).join(' ')
+    const logString = formatLogArgs(args)
     
     addToConsoleCache(`[LOG] ${logString}`)
   }
@@ -124,9 +168,7 @@ function setupConsoleCapture() {
     
     // Store in our cache
     const args = Array.from(arguments)
-    const logString = args.map(arg => 
-      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-    ).join(' ')
+    const logString = formatLogArgs(args)
     
     addToConsoleCache(`[ERROR] ${logString}`)
   }
@@ -138,9 +180,7 @@ function setupConsoleCapture() {
     
     // Store in our cache
     const args = Array.from(arguments)
-    const logString = args.map(arg => 
-      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-    ).join(' ')
+    const logString = formatLogArgs(args)
     
     addToConsoleCache(`[WARN] ${logString}`)
   }
@@ -152,9 +192,7 @@ function setupConsoleCapture() {
     
     // Store in our cache
     const args = Array.from(arguments)
-    const logString = args.map(arg => 
-      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-    ).join(' ')
+    const logString = formatLogArgs(args)
     
     addToConsoleCache(`[INFO] ${logString}`)
   }
@@ -275,7 +313,12 @@ async function submitFeedback() {
       screenshot: includeScreenshot.value && screenshotPreview.value ? screenshotPreview.value : '',
       consoleMessages: consoleLogs,
       timestamp: new Date(),
-      page: route.fullPath
+      page: route.fullPath,
+      // Ensure these required fields are set
+      archived: false,
+      seen: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
     
     // Save to store/backend

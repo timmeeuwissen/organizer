@@ -100,6 +100,19 @@ feedback-to-claude: ## Process approved feedback with Claude
 	@echo ""
 	node scripts/feedback-to-claude.js
 
+feedback-diagnostic: ## Run diagnostic tests on the feedback system
+	@echo "${COLOR_GREEN}Running feedback system diagnostics...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This will check Firestore connection and feedback collection status.${COLOR_RESET}"
+	@echo ""
+	node scripts/feedback-diagnostic.js
+
+feedback-demo-mode: ## Force demo mode for feedback without Firebase authentication
+	@echo "${COLOR_GREEN}Enabling demo mode for feedback system...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This will patch files to use demo data without Firebase authentication.${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}Use this when you want to test the feedback system without Firebase.${COLOR_RESET}"
+	@echo ""
+	node scripts/force-demo-auth.js
+
 ha-addon: ## Build Home Assistant add-on
 	@echo "${COLOR_GREEN}Building Home Assistant add-on...${COLOR_RESET}"
 	cd ha-addon && docker build -t organizer-ha-addon .
@@ -119,6 +132,12 @@ firebase-deploy: ## Deploy to Firebase
 firebase-rules: ## Deploy Firebase security rules
 	@echo "${COLOR_GREEN}Deploying Firebase security rules...${COLOR_RESET}"
 	firebase deploy --only firestore:rules
+
+firebase-fix: ## Fix Firebase permission issues
+	@echo "${COLOR_GREEN}Running Firebase permission fix helper...${COLOR_RESET}"
+	@echo "${COLOR_YELLOW}This interactive script will help diagnose and fix Firebase permission issues.${COLOR_RESET}"
+	@echo ""
+	node scripts/firebase-permission-fix.js
 
 firebase-emulate: ## Run Firebase emulators
 	@echo "${COLOR_GREEN}Running Firebase emulators...${COLOR_RESET}"

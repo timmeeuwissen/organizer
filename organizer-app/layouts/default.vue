@@ -62,7 +62,8 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
 const authBypassEnabled = computed(() => import.meta.env.VITE_AUTH_BYPASS === 'true')
 
 const navItems = [
-  { title: 'dashboard.title', icon: 'mdi-view-dashboard', to: '/dashboard' },
+  // Dashboard is already linked at the top of the nav drawer, so this avoids the duplicate ID error
+  // { title: 'dashboard.title', icon: 'mdi-view-dashboard', to: '/dashboard' },
   { title: 'behaviors.title', icon: 'mdi-account-cog', to: '/behaviors' },
   { title: 'people.title', icon: 'mdi-account-group', to: '/people' },
   { title: 'projects.title', icon: 'mdi-folder-multiple', to: '/projects' },

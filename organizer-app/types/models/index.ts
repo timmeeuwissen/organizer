@@ -220,6 +220,12 @@ export interface Feedback {
   seen: boolean;
   userAction?: 'yes' | 'no';
   page: string; // The page where feedback was submitted
+  improved?: boolean; // Marked when feedback is processed and fixed
+  improvedAt?: Date; // When the improvement was marked
+  archived?: boolean; // Whether this feedback is archived (preserves history)
+  archivedAt?: Date; // When the feedback was archived
+  processedByClaude?: boolean; // Whether this was sent to Claude
+  processedAt?: Date; // When it was processed
   createdAt: Date;
   updatedAt: Date;
 }
