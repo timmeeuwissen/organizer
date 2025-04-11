@@ -286,8 +286,43 @@ class GmailProvider implements MailProvider {
   }
   
   isAuthenticated(): boolean {
-    return !!this.account.accessToken && 
-      (!this.account.tokenExpiry || new Date(this.account.tokenExpiry) > new Date())
+    console.log(`GmailProvider.isAuthenticated check for ${this.account.email}:`, {
+      hasAccessToken: !!this.account.accessToken,
+      tokenExpiry: this.account.tokenExpiry,
+      currentTime: new Date(),
+      isTokenExpired: this.account.tokenExpiry && new Date(this.account.tokenExpiry) < new Date(),
+      scope: this.account.scope
+    });
+    
+    // Check access token
+    if (!this.account.accessToken) {
+      console.log(`${this.account.email}: No access token found`);
+      return false;
+    }
+    
+    // Check token expiry
+    if (this.account.tokenExpiry && new Date(this.account.tokenExpiry) < new Date()) {
+      console.log(`${this.account.email}: Token expired`);
+      return false;
+    }
+    
+    // Verify proper Gmail scopes if scope is specified
+    if (this.account.scope) {
+      const hasGmailScope = 
+        this.account.scope.includes('gmail.readonly') || 
+        this.account.scope.includes('gmail.send') || 
+        this.account.scope.includes('gmail.modify') || 
+        this.account.scope.includes('gmail.labels') ||
+        this.account.scope.includes('https://www.googleapis.com/auth/gmail.readonly');
+        
+      if (!hasGmailScope) {
+        console.warn(`${this.account.email}: Gmail account missing required scopes:`, this.account.scope);
+        return false;
+      }
+    }
+    
+    console.log(`${this.account.email}: Authentication valid`);
+    return true;
   }
   
   async authenticate(): Promise<boolean> {

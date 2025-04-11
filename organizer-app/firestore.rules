@@ -19,6 +19,44 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
+    // People collection rules
+    match /people/{personId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Tasks collection rules
+    match /tasks/{taskId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Projects collection rules
+    match /projects/{projectId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Project Pages collection rules
+    match /projectPages/{pageId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid || 
+                         request.auth != null && 
+                         get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Meetings collection rules
+    match /meetings/{meetingId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Behaviors collection rules
+    match /behaviors/{behaviorId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
     // Default deny
     match /{document=**} {
       allow read, write: if false;

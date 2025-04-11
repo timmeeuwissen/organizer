@@ -21,6 +21,7 @@ export default {
     done: 'Done',
     offlineWarning: 'You are currently offline. Some features may not be available.',
     onlineNotification: 'You are back online. All features are now available.',
+    or: 'or',
   },
   auth: {
     login: 'Login',
@@ -92,7 +93,10 @@ export default {
     oauthStep3: 'Authorize the access to your account in the browser that opens',
     oauthStep4: 'Copy the client ID, client secret, and refresh token from the output into the fields below',
     enterOAuthCredentials: 'Enter OAuth Credentials',
-    oauthConfigured: 'OAuth Configured'
+    oauthConfigured: 'OAuth Configured',
+    googlePopupAuth: 'Use Google Popup Authentication',
+    manualOAuth: 'Manual OAuth Setup',
+    authOptions: 'Authentication Options'
   },
   behaviors: {
     title: 'Behaviors',

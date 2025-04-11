@@ -78,36 +78,76 @@ v-form(ref="form" v-model="formValid")
     // OAuth section
     template(v-else)
       v-col(cols="12")
-        v-card(variant="outlined" class="pa-3 mb-3")
-          v-card-title(class="px-0 text-subtitle-1") 
-            v-icon(color="info" class="mr-2") mdi-information-outline
-            | {{ $t('settings.oauthInstructions') }}
-          
-          v-card-text(class="px-0")
-            p {{ $t('settings.runMakeCommand') }}:
-            v-sheet(
-              color="grey-lighten-4" 
-              rounded
-              class="pa-2 mb-3 font-monospace"
-            ) {{ `make oauth-${accountType === 'office365' || (accountType === 'exchange' && server?.includes('office365')) ? 'ms' : accountType}-setup` }}
+        // Google-specific options section
+        template(v-if="accountType === 'google'")
+          v-card(variant="outlined" class="pa-3 mb-3")
+            v-card-title(class="px-0 text-subtitle-1") 
+              v-icon(color="info" class="mr-2") mdi-google
+              | {{ $t('settings.authOptions') }}
             
-            v-expansion-panels(variant="accordion")
-              v-expansion-panel(title="View Detailed Instructions")
-                v-expansion-panel-text
-                  ol
-                    li {{ $t('settings.oauthStep1') }}
-                    li {{ $t('settings.oauthStep2') }}
-                    li {{ $t('settings.oauthStep3') }}
-                    li {{ $t('settings.oauthStep4') }}
-          v-card-actions(class="px-0")
-            v-spacer  
-            o-auth-authorize-button(
-              :provider="getOAuthProvider"
-              :color="isOAuthConfigured ? 'success' : 'primary'"
-              :text="isOAuthConfigured ? $t('settings.oauthConfigured') : $t('settings.enterOAuthCredentials')"
-              :icon="isOAuthConfigured ? 'mdi-check' : 'mdi-key'"
-              @tokens-updated="handleTokensUpdated"
-            )
+            v-card-text(class="px-0")
+              v-row
+                v-col(cols="12")
+                  v-divider(class="mb-4")
+                
+                // Google Popup Auth Button
+                v-col(cols="12" md="6" class="d-flex align-center justify-center flex-column")
+                  google-auth-button(
+                    color="error"
+                    :text="$t('settings.googlePopupAuth')"
+                    block
+                    @auth-success="handleGoogleAuthSuccess"
+                    @auth-error="handleGoogleAuthError"
+                  )
+                
+                v-col(cols="12" class="d-flex align-items-center justify-center my-2")
+                  v-divider(class="mx-4")
+                  span.text-overline {{ $t('common.or').toUpperCase() }}
+                  v-divider(class="mx-4")
+                
+                // Manual OAuth option
+                v-col(cols="12" md="6" class="d-flex align-center justify-center flex-column")
+                  o-auth-authorize-button(
+                    :provider="getOAuthProvider"
+                    :color="isOAuthConfigured ? 'success' : 'primary'"
+                    :text="isOAuthConfigured ? $t('settings.oauthConfigured') : $t('settings.manualOAuth')"
+                    :icon="isOAuthConfigured ? 'mdi-check' : 'mdi-key'"
+                    block
+                    @tokens-updated="handleTokensUpdated"
+                  )
+
+        // Other OAuth providers (Exchange, Office 365)
+        template(v-else)
+          v-card(variant="outlined" class="pa-3 mb-3")
+            v-card-title(class="px-0 text-subtitle-1") 
+              v-icon(color="info" class="mr-2") mdi-information-outline
+              | {{ $t('settings.oauthInstructions') }}
+            
+            v-card-text(class="px-0")
+              p {{ $t('settings.runMakeCommand') }}:
+              v-sheet(
+                color="grey-lighten-4" 
+                rounded
+                class="pa-2 mb-3 font-monospace"
+              ) {{ `make oauth-${accountType === 'office365' || (accountType === 'exchange' && server?.includes('office365')) ? 'ms' : accountType}-setup` }}
+              
+              v-expansion-panels(variant="accordion")
+                v-expansion-panel(title="View Detailed Instructions")
+                  v-expansion-panel-text
+                    ol
+                      li {{ $t('settings.oauthStep1') }}
+                      li {{ $t('settings.oauthStep2') }}
+                      li {{ $t('settings.oauthStep3') }}
+                      li {{ $t('settings.oauthStep4') }}
+            v-card-actions(class="px-0")
+              v-spacer  
+              o-auth-authorize-button(
+                :provider="getOAuthProvider"
+                :color="isOAuthConfigured ? 'success' : 'primary'"
+                :text="isOAuthConfigured ? $t('settings.oauthConfigured') : $t('settings.enterOAuthCredentials')"
+                :icon="isOAuthConfigured ? 'mdi-check' : 'mdi-key'"
+                @tokens-updated="handleTokensUpdated"
+              )
     
     v-col(cols="12" v-if="isConnected && lastSync")
       v-alert(type="info" variant="tonal")
@@ -236,6 +276,7 @@ import { useI18n } from 'vue-i18n'
 import { useNetworkStatus } from '~/composables/useNetworkStatus'
 import { v4 as uuidv4 } from 'uuid'
 import OAuthAuthorizeButton from './OAuthAuthorizeButton.vue'
+import GoogleAuthButton from './GoogleAuthButton.vue'
 
 // Props
 const props = defineProps({
@@ -339,6 +380,41 @@ const getOAuthProvider = computed(() => {
 const isOAuthConfigured = computed(() => {
   return !!clientId.value && !!clientSecret.value && !!refreshToken.value
 })
+
+// Handle Google auth success from popup
+function handleGoogleAuthSuccess(tokens) {
+  console.log('Google popup auth success:', tokens)
+  
+  // Update account with tokens
+  const updatedAccount = getAccountData()
+  updatedAccount.accessToken = tokens.accessToken
+  updatedAccount.refreshToken = tokens.refreshToken || null
+  updatedAccount.userId = tokens.userId
+  updatedAccount.email = tokens.email
+  updatedAccount.connected = true
+  
+  // If no refresh token was provided (common with Firebase), create a note
+  if (!tokens.refreshToken) {
+    console.warn('No refresh token provided from Google auth popup. This is normal for Firebase auth.')
+  }
+  
+  // Mark as connected
+  isConnected.value = true
+  
+  // Set email if not already set
+  if (!email.value && tokens.email) {
+    email.value = tokens.email
+  }
+  
+  // Emit success
+  emit('test', updatedAccount)
+}
+
+// Handle Google auth error from popup
+function handleGoogleAuthError(error) {
+  console.error('Google popup auth error:', error)
+  // No specific handling needed - the button component will show its own error state
+}
 
 // Load account data if in edit mode
 watch(() => props.account, () => {

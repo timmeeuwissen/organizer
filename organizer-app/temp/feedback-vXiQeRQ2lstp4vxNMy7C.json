@@ -1,0 +1,7 @@
+{
+  "message": "I've pressed the profile icon, but it didn't bring me to the profile page",
+  "screenshot": "Included (base64 encoded - truncated for readability)",
+  "consoleMessages": "[ERROR] Error adding feedback: {\"code\":\"permission-denied\",\"name\":\"FirebaseError\"}\n[LOG] 🍍 \"behaviors\" store installed 🆕\n[ERROR] Error fetching behaviors: {\"code\":\"permission-denied\",\"name\":\"FirebaseError\"}",
+  "page": "/auth/profile",
+  "timestamp": "2025-04-11T07:23:52.682Z"
+}

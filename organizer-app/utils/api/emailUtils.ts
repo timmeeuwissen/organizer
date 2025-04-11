@@ -48,7 +48,8 @@ export function getAccountStatusMessage(account: IntegrationAccount): string {
     if (!account.scope.includes('gmail.readonly') && 
         !account.scope.includes('gmail.send') && 
         !account.scope.includes('gmail.modify') && 
-        !account.scope.includes('gmail.labels')) {
+        !account.scope.includes('gmail.labels') &&
+        !account.scope.includes('https://www.googleapis.com/auth/gmail.readonly')) {
       return 'Gmail permissions required'
     }
   } else if ((account.type === 'office365' || account.type === 'exchange') && account.scope) {
@@ -79,7 +80,8 @@ export function getAccountStatusColor(account: IntegrationAccount): string {
     if (!account.scope.includes('gmail.readonly') && 
         !account.scope.includes('gmail.send') && 
         !account.scope.includes('gmail.modify') && 
-        !account.scope.includes('gmail.labels')) {
+        !account.scope.includes('gmail.labels') && 
+        !account.scope.includes('https://www.googleapis.com/auth/gmail.readonly')) {
       return 'warning'
     }
   } else if ((account.type === 'office365' || account.type === 'exchange') && account.scope) {
