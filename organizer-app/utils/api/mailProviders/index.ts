@@ -1,15 +1,11 @@
-// This file is kept for backward compatibility
-// Please use the modular imports from './mailProviders/' directory instead
-
 import type { IntegrationAccount } from '~/types/models'
-import type { MailProvider } from './mailProviders/MailProvider'
-import { GmailProvider } from './mailProviders/GmailProvider'
-import { Office365Provider } from './mailProviders/Office365Provider'
-import { ExchangeProvider } from './mailProviders/ExchangeProvider'
+import type { MailProvider } from './MailProvider'
+import { GmailProvider } from './GmailProvider'
+import { Office365Provider } from './Office365Provider'
+import { ExchangeProvider } from './ExchangeProvider'
 
 /**
  * Factory function to get the appropriate mail provider implementation
- * @deprecated Use the modular imports from './mailProviders/' directory instead
  * @param account The integration account
  * @returns Provider implementation for the account type
  */
@@ -29,4 +25,8 @@ export function getMailProvider(account: IntegrationAccount): MailProvider {
   }
 }
 
-export type { MailProvider }
+// Export types and provider implementations
+export { type MailProvider } from './MailProvider'
+export { GmailProvider } from './GmailProvider'
+export { Office365Provider } from './Office365Provider'
+export { ExchangeProvider } from './ExchangeProvider'

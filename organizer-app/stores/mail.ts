@@ -113,34 +113,8 @@ export const useMailStore = defineStore('mail', {
         // Create a copy of the account object to avoid modifying the original
         let workingAccount = { ...account };
         
-        // Special handling for hobbyboertim@gmail.com
-        if (account.email === 'hobbyboertim@gmail.com') {
-          console.log('Using hobbyboertim@gmail.com account - providing mock credentials');
-          
-          // For debugging the account data before modification
-          console.log('Original account data:', {
-            hasAccessToken: !!account.accessToken,
-            hasRefreshToken: !!account.refreshToken,
-            tokenExpiry: account.tokenExpiry,
-            scope: account.scope
-          });
-          
-          // Add mock credentials to ensure the account is considered authenticated
-          workingAccount = {
-            ...workingAccount,
-            accessToken: 'mock-access-token-' + Date.now(),
-            refreshToken: 'mock-refresh-token',
-            tokenExpiry: new Date(Date.now() + 3600 * 1000), // 1 hour from now
-            scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify',
-          };
-          
-          console.log('Modified account data:', {
-            hasAccessToken: !!workingAccount.accessToken,
-            hasRefreshToken: !!workingAccount.refreshToken,
-            tokenExpiry: workingAccount.tokenExpiry,
-            scope: workingAccount.scope
-          });
-        }
+        // No special account handling - use actual credentials from the account
+        console.log(`Using real integration for ${account.email}`);
         
         // Get the appropriate mail provider with possibly modified account
         const mailProvider = getMailProvider(workingAccount)
@@ -158,26 +132,59 @@ export const useMailStore = defineStore('mail', {
           else console.info(`Authentication succeeded for account ${account.email}`)
         }
         
-        // Fetch emails for all standard folders
-        const inboxEmails = await mailProvider.fetchEmails('inbox', 20)
-        const sentEmails = await mailProvider.fetchEmails('sent', 10)
-        const draftEmails = await mailProvider.fetchEmails('drafts', 5)
+        // Array to collect any errors
+        const errors: string[] = [];
+        
+        // Fetch emails for all standard folders with error handling
+        let inboxEmails: Email[] = [];
+        let sentEmails: Email[] = [];
+        let draftEmails: Email[] = [];
+        
+        try {
+          console.log(`Fetching inbox emails for ${account.email}`);
+          inboxEmails = await mailProvider.fetchEmails('inbox', 20);
+        } catch (error: any) {
+          console.error(`Error fetching inbox for ${account.email}:`, error);
+          errors.push(`Inbox: ${error.message || 'Unknown error'}`);
+        }
+        
+        try {
+          console.log(`Fetching sent emails for ${account.email}`);
+          sentEmails = await mailProvider.fetchEmails('sent', 10);
+        } catch (error: any) {
+          console.error(`Error fetching sent folder for ${account.email}:`, error);
+          errors.push(`Sent: ${error.message || 'Unknown error'}`);
+        }
+        
+        try {
+          console.log(`Fetching drafts for ${account.email}`);
+          draftEmails = await mailProvider.fetchEmails('drafts', 5);
+        } catch (error: any) {
+          console.error(`Error fetching drafts for ${account.email}:`, error);
+          errors.push(`Drafts: ${error.message || 'Unknown error'}`);
+        }
+        
+        // If we have errors but no emails, throw an error
+        if (errors.length > 0 && inboxEmails.length === 0 && sentEmails.length === 0 && draftEmails.length === 0) {
+          throw new Error(`Failed to fetch any emails: ${errors.join('; ')}`);
+        }
+        
+        // If we have errors but still got some emails, just log the errors
+        if (errors.length > 0) {
+          console.warn(`Some folders failed to load for ${account.email}: ${errors.join('; ')}`);
+        }
         
         // Combine emails from all folders
         return [
           ...inboxEmails,
           ...sentEmails,
           ...draftEmails
-        ]
+        ];
       } catch (error) {
         console.error(`Error fetching emails for account ${account.email}:`, error)
         throw error
       }
     },
-    
-    // This method has been removed as we no longer generate mock emails
-    
-    // Removed mock email body generator as it's no longer needed
     
     markEmailAsRead(emailId: string, read: boolean = true) {
       const email = this.emails.find(e => e.id === emailId)

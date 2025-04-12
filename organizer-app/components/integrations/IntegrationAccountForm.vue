@@ -157,7 +157,7 @@ v-form(ref="form" v-model="formValid")
       v-divider
       
     v-col(cols="12")
-      v-subheader {{ $t('settings.syncSettings') }}
+      span {{ $t('settings.syncSettings') }}
     
     v-col(cols="6")
       v-switch(
@@ -388,14 +388,30 @@ function handleGoogleAuthSuccess(tokens) {
   // Update account with tokens
   const updatedAccount = getAccountData()
   updatedAccount.accessToken = tokens.accessToken
-  updatedAccount.refreshToken = tokens.refreshToken || null
   updatedAccount.userId = tokens.userId
   updatedAccount.email = tokens.email
   updatedAccount.connected = true
   
-  // If no refresh token was provided (common with Firebase), create a note
-  if (!tokens.refreshToken) {
-    console.warn('No refresh token provided from Google auth popup. This is normal for Firebase auth.')
+  // Capture the refresh token - this is critical for reconnecting later
+  if (tokens.refreshToken) {
+    console.log('Refresh token received from Google auth, storing it...')
+    updatedAccount.refreshToken = tokens.refreshToken
+    
+    // Store scopes as well
+    updatedAccount.scope = [
+      'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/gmail.modify',
+      'https://www.googleapis.com/auth/gmail.labels',
+      'https://www.googleapis.com/auth/gmail.send'
+    ].join(' ')
+  } else {
+    console.warn('⚠️ No refresh token provided from Google auth popup. This will prevent reconnecting in the future.')
+    // Log more details for debugging
+    console.log('Token details:', {
+      hasAccessToken: !!tokens.accessToken,
+      hasRefreshToken: !!tokens.refreshToken,
+      email: tokens.email
+    })
   }
   
   // Mark as connected
@@ -405,6 +421,9 @@ function handleGoogleAuthSuccess(tokens) {
   if (!email.value && tokens.email) {
     email.value = tokens.email
   }
+  
+  // Store the refresh token in our component state too
+  refreshToken.value = tokens.refreshToken || ''
   
   // Emit success
   emit('test', updatedAccount)

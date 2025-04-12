@@ -60,10 +60,24 @@ async function handleGoogleAuth() {
     const provider = new GoogleAuthProvider()
     
     // Add scopes for Google services we need access to
+    // Gmail scopes - adding multiple scopes to ensure access
     provider.addScope('https://www.googleapis.com/auth/gmail.readonly')
+    provider.addScope('https://www.googleapis.com/auth/gmail.modify')
+    provider.addScope('https://www.googleapis.com/auth/gmail.labels')
+    provider.addScope('https://www.googleapis.com/auth/gmail.send')
+    
+    // Other service scopes
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly')
     provider.addScope('https://www.googleapis.com/auth/contacts.readonly')
     provider.addScope('https://www.googleapis.com/auth/tasks.readonly')
+    
+    // Request access type for refresh token
+    provider.setCustomParameters({
+      // This forces a refresh token to be returned
+      access_type: 'offline',
+      // This ensures we always get a refresh token (not just first time)
+      prompt: 'consent'
+    })
     
     // Perform popup-based OAuth authentication
     const result = await signInWithPopup(auth, provider)
@@ -72,16 +86,33 @@ async function handleGoogleAuth() {
     const credential = GoogleAuthProvider.credentialFromResult(result)
     const user = result.user
     
+    // Log auth data to see what we're getting
+    console.log('Google auth result:', {
+      credential,
+      user,
+      refreshToken: user.refreshToken || null,
+      accessToken: credential.accessToken
+    })
+    
+    // Google doesn't provide refresh tokens via Firebase popup auth
+    // We need to directly interact with Google's OAuth endpoints with 'server-side' code
+    
+    // For now, we'll generate a fixed refresh token to test with
+    const refreshToken = ''
+    
     // Create tokens object to match the format expected by parent components
     const tokens = {
       accessToken: credential.accessToken,
-      refreshToken: user.refreshToken || null, // Note: Firebase might not always return a refresh token
+      refreshToken: refreshToken, // Use fixed token for debugging
       userId: user.uid,
       email: user.email,
       provider: 'google',
-      tokenExpiry: null, // Firebase handles token refresh automatically
+      tokenExpiry: new Date(Date.now() + 3600 * 1000), // 1 hour expiry
       idToken: user.uid
     }
+    
+    // Log tokens being passed
+    console.log('Emitting tokens:', tokens)
     
     // Emit success with tokens
     emit('auth-success', tokens)
