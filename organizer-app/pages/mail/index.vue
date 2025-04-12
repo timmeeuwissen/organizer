@@ -127,6 +127,7 @@ v-container(fluid)
               bg-color="primary-lighten-1"
               class="mx-2"
               style="max-width: 300px"
+              @keyup.enter="performSearch"
             )
           template(v-else)
             v-btn(icon @click="selectedEmail = null")
@@ -140,7 +141,7 @@ v-container(fluid)
               v-icon mdi-delete
         
         template(v-if="!selectedEmail")
-          v-card-title(:class="{ 'pa-0': true }") 
+          v-card-title(:class="{ 'pa-0': true }")
             v-data-table-virtual(
               v-model:items-per-page="itemsPerPage"
               :headers="emailHeaders"
@@ -171,6 +172,34 @@ v-container(fluid)
                   v-icon(size="small") {{ item.read ? 'mdi-email' : 'mdi-email-open' }}
                 v-btn(icon variant="text" @click.stop="deleteEmail(item)")
                   v-icon(size="small") mdi-delete
+              
+              template(v-slot:bottom)
+                div.d-flex.align-center.justify-center.my-3(v-if="mailStore.loading")
+                  v-progress-circular(indeterminate color="primary")
+                  span.ml-2 Loading emails...
+                
+                div.d-flex.align-center.justify-space-between.px-4.py-2(v-else)
+                  div.text-caption 
+                    span Showing {{ filteredEmails.length }} of {{ paginationInfo.totalEmails }} emails
+                  
+                  div.d-flex.align-center
+                    v-btn(
+                      variant="text"
+                      size="small"
+                      :disabled="paginationInfo.currentPage <= 0 || mailStore.loading"
+                      @click="loadPreviousPage"
+                      prepend-icon="mdi-chevron-left"
+                    ) Previous
+                    
+                    span.mx-2 Page {{ paginationInfo.currentPage + 1 }} of {{ Math.max(1, paginationInfo.totalPages) }}
+                    
+                    v-btn(
+                      variant="text"
+                      size="small"
+                      :disabled="!paginationInfo.hasMoreEmails || mailStore.loading"
+                      @click="loadNextPage"
+                      append-icon="mdi-chevron-right"
+                    ) Next
         
         template(v-else)
           v-card-text
@@ -299,7 +328,7 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { usePeopleStore } from '~/stores/people'
 import { useMailStore } from '~/stores/mail'
 import { useAuthStore } from '~/stores/auth'
@@ -327,7 +356,7 @@ const emailHeaders = [
   { title: 'Date', key: 'date', sortable: true, width: '150px' },
   { title: 'Actions', key: 'actions', sortable: false, width: '100px' },
 ]
-const itemsPerPage = ref(15)
+const itemsPerPage = ref(20) // Match this with store's pageSize for consistency
 
 // Search and filters
 const emailSearch = ref('')
@@ -365,9 +394,11 @@ const filteredEmails = computed(() => {
     )
   }
   
-  console.log(`Filtered ${result.length} emails for folder ${selectedFolder.value}`)
+  console.log(`Filtered ${result.length} emails for folder ${selectedFolder.value} (page ${mailStore.currentPage + 1}, total: ${mailStore.totalEmails})`)
   return result
 })
+
+const paginationInfo = computed(() => mailStore.paginationInfo)
 
 const filteredContacts = computed(() => {
   let result = peopleStore.people
@@ -385,12 +416,21 @@ const filteredContacts = computed(() => {
   return result.slice(0, 10) // Limit to 10 for performance
 })
 
+// Watch for folder changes to reload emails
+watch(selectedFolder, (newFolder) => {
+  // Reset pagination and fetch emails for the new folder
+  mailStore.fetchEmails({ folder: newFolder })
+})
+
 // Load data
 onMounted(async () => {
   // Load people and mail data when component mounts
   await Promise.all([
     peopleStore.fetchPeople(),
-    mailStore.fetchEmails()
+    // First load folder counts (faster) to populate sidebar with unread counts
+    mailStore.loadFolderCounts(),
+    // Then fetch the actual emails for the current folder
+    mailStore.fetchEmails({ folder: selectedFolder.value })
   ])
   
   // Display integrated accounts info if available
@@ -465,7 +505,39 @@ const deleteEmail = (email?: Email) => {
 }
 
 const refreshEmails = async () => {
-  await mailStore.fetchEmails()
+  // Reset to page 0 and refresh emails
+  await mailStore.fetchEmails({ folder: selectedFolder.value })
+}
+
+const loadNextPage = async () => {
+  console.log("Loading next page...")
+  selectedEmail.value = null // Clear selection before page change
+  await mailStore.fetchNextPage()
+  console.log(`After fetchNextPage: page ${mailStore.currentPage + 1}, ${mailStore.emails.length} emails`)
+}
+
+const loadPreviousPage = async () => {
+  if (mailStore.currentPage <= 0) return
+  
+  console.log("Loading previous page...")
+  selectedEmail.value = null // Clear selection before page change
+  const prevPage = mailStore.currentPage - 1
+  await mailStore.fetchEmails(
+    mailStore.currentQuery || { folder: selectedFolder.value },
+    { page: prevPage, pageSize: mailStore.pageSize }
+  )
+  console.log(`After loadPreviousPage: page ${mailStore.currentPage + 1}, ${mailStore.emails.length} emails`)
+}
+
+const performSearch = async () => {
+  // Build search query
+  const query = {
+    folder: selectedFolder.value,
+    query: emailSearch.value || undefined
+  }
+  
+  // Reset to page 0 with the search query
+  await mailStore.fetchEmails(query)
 }
 
 const getContactInitials = (contact: Person) => {

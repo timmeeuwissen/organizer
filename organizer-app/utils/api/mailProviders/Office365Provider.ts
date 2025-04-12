@@ -1,7 +1,7 @@
 import type { IntegrationAccount } from '~/types/models'
 import type { Email, EmailPerson } from '~/stores/mail'
 import { refreshOAuthToken } from '~/utils/api/emailUtils'
-import type { MailProvider } from './MailProvider'
+import type { MailProvider, EmailQuery, EmailPagination, EmailFetchResult } from './MailProvider'
 
 /**
  * Microsoft Office 365 provider implementation using direct fetch API
@@ -49,32 +49,64 @@ export class Office365Provider implements MailProvider {
     }
   }
   
-  async fetchEmails(folder: string = 'inbox', maxResults: number = 50): Promise<Email[]> {
+  /**
+   * Fetch emails with pagination and search support
+   */
+  async fetchEmails(query?: EmailQuery, pagination?: EmailPagination): Promise<EmailFetchResult> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
         console.error('Not authenticated with Office 365')
-        return []
+        return {
+          emails: [],
+          totalCount: 0,
+          page: pagination?.page || 0,
+          pageSize: pagination?.pageSize || 20,
+          hasMore: false
+        }
       }
     }
     
     try {
+      // Default values
+      const folder = query?.folder || 'inbox';
+      const pageSize = pagination?.pageSize || 20;
+      const page = pagination?.page || 0;
+      
       // Using Microsoft Graph API directly with fetch
-      console.log(`[Office 365] Fetching ${maxResults} emails from ${folder} folder for ${this.account.email}`)
+      console.log(`[Office 365] Fetching emails from ${folder} folder (page ${page}, pageSize ${pageSize}) for ${this.account.email}`)
       
       // Map our folder names to Microsoft Graph folder names
       const graphFolder = this.mapFolderToOffice365Folder(folder)
       console.log(`[Office 365] Using folder: ${graphFolder}`)
+      
+      // Get total count for pagination info first
+      const totalCount = await this.countEmails(query);
       
       // Prepare API endpoint for Microsoft Graph
       const endpoint = `https://graph.microsoft.com/v1.0/me/mailFolders/${graphFolder}/messages`
       
       // Prepare query parameters
       const params = new URLSearchParams({
-        '$top': maxResults.toString(),
+        '$top': pageSize.toString(),
+        '$skip': (page * pageSize).toString(),
         '$orderby': 'receivedDateTime desc',
-        '$select': 'id,subject,from,toRecipients,ccRecipients,receivedDateTime,body,bodyPreview,isRead'
-      })
+        '$select': 'id,subject,from,toRecipients,ccRecipients,receivedDateTime,body,bodyPreview,isRead',
+        '$count': 'true'
+      });
+      
+      // Add filters based on query
+      if (query?.query) {
+        params.append('$search', `"${query.query}"`);
+      }
+      
+      if (query?.unreadOnly) {
+        params.append('$filter', 'isRead eq false');
+      }
+      
+      if (query?.from) {
+        params.append('$filter', `from/emailAddress/address eq '${query.from}'`);
+      }
       
       // Prepare headers with authentication
       const headers = {
@@ -118,6 +150,10 @@ export class Office365Provider implements MailProvider {
       
       console.log(`[Office 365] Retrieved ${data?.value?.length || 0} messages`);
       
+      // Get the next page token if it exists
+      const nextPageToken = data['@odata.nextLink'];
+      const hasMore = !!nextPageToken || (page + 1) * pageSize < totalCount;
+      
       // Process the messages
       const emails: Email[] = (data?.value || []).map((message: any) => {
         return {
@@ -144,10 +180,209 @@ export class Office365Provider implements MailProvider {
       });
       
       console.log(`[Office 365] Successfully processed ${emails.length} emails`);
-      return emails;
+      
+      return {
+        emails,
+        totalCount,
+        page,
+        pageSize,
+        hasMore
+      };
     } catch (error) {
       console.error('[Office 365] Error fetching emails:', error)
-      return []
+      return {
+        emails: [],
+        totalCount: 0,
+        page: pagination?.page || 0,
+        pageSize: pagination?.pageSize || 20,
+        hasMore: false
+      }
+    }
+  }
+  
+  /**
+   * Count emails in a folder or matching a query
+   */
+  async countEmails(query?: EmailQuery): Promise<number> {
+    if (!this.isAuthenticated()) {
+      const authenticated = await this.authenticate();
+      if (!authenticated) {
+        console.error('Not authenticated with Office 365');
+        return 0;
+      }
+    }
+    
+    try {
+      // Use folder if provided, otherwise default to inbox
+      const folder = query?.folder || 'inbox';
+      
+      // Map our folder names to Microsoft Graph folder names
+      const graphFolder = this.mapFolderToOffice365Folder(folder);
+      
+      // Prepare API endpoint for Microsoft Graph
+      const endpoint = `https://graph.microsoft.com/v1.0/me/mailFolders/${graphFolder}/messages/$count`;
+      
+      // Prepare headers with authentication
+      const headers = {
+        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Accept': 'application/json',
+        'ConsistencyLevel': 'eventual' // Required for $count
+      };
+      
+      // Build query parameters if needed
+      const params = new URLSearchParams();
+      
+      if (query?.query) {
+        params.append('$search', `"${query.query}"`);
+      }
+      
+      if (query?.unreadOnly) {
+        params.append('$filter', 'isRead eq false');
+      }
+      
+      // Make the request
+      console.log(`[Office 365] Counting emails in ${folder}`);
+      const url = `${endpoint}${params.toString() ? '?' + params.toString() : ''}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      // Check for HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Office 365] Count error:', errorText);
+        throw new Error(`Microsoft Graph API error: ${response.status} ${response.statusText}`);
+      }
+      
+      // Parse the response - should be a plain number
+      const count = await response.json();
+      
+      console.log(`[Office 365] Found ${count} emails in ${folder}`);
+      return count;
+    } catch (error) {
+      console.error('[Office 365] Error counting emails:', error);
+      
+      // Alternative approach: if $count endpoint is not available, we'll fetch just the IDs with a large page size
+      try {
+        const folder = query?.folder || 'inbox';
+        const graphFolder = this.mapFolderToOffice365Folder(folder);
+        
+        const endpoint = `https://graph.microsoft.com/v1.0/me/mailFolders/${graphFolder}/messages`;
+        
+        const params = new URLSearchParams({
+          '$select': 'id', // Only get IDs to minimize data transfer
+          '$top': '1000' // Get a large number to estimate total count
+        });
+        
+        if (query?.query) {
+          params.append('$search', `"${query.query}"`);
+        }
+        
+        if (query?.unreadOnly) {
+          params.append('$filter', 'isRead eq false');
+        }
+        
+        const headers = {
+          'Authorization': `Bearer ${this.account.accessToken}`,
+          'Accept': 'application/json'
+        };
+        
+        const response = await fetch(`${endpoint}?${params.toString()}`, {
+          method: 'GET',
+          headers: headers
+        });
+        
+        if (!response.ok) {
+          return 0; // If this fails too, just return 0
+        }
+        
+        const data = await response.json();
+        return data.value?.length || 0;
+      } catch (fallbackError) {
+        console.error('[Office 365] Error in count fallback method:', fallbackError);
+        return 0;
+      }
+    }
+  }
+  
+  /**
+   * Get folder counts without fetching email content
+   */
+  async getFolderCounts(): Promise<Record<string, number>> {
+    if (!this.isAuthenticated()) {
+      const authenticated = await this.authenticate();
+      if (!authenticated) {
+        console.error('Not authenticated with Office 365');
+        return {};
+      }
+    }
+    
+    try {
+      // Standard folders to get counts for
+      const standardFolders = ['inbox', 'sent', 'drafts', 'trash', 'spam'];
+      const result: Record<string, number> = {};
+      
+      // Map Office 365 folder names to our app's folder names
+      const folderMap: Record<string, string> = {
+        'inbox': 'inbox',
+        'sentitems': 'sent',
+        'drafts': 'drafts',
+        'deleteditems': 'trash',
+        'junkemail': 'spam'
+      };
+      
+      // Get all mail folders with their counts in one request
+      const endpoint = 'https://graph.microsoft.com/v1.0/me/mailFolders';
+      
+      // Include child folders and counts
+      const params = new URLSearchParams({
+        '$select': 'displayName,childFolderCount,totalItemCount',
+        '$top': '25'
+      });
+      
+      // Prepare headers with authentication
+      const headers = {
+        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Accept': 'application/json'
+      };
+      
+      // Make the request
+      console.log(`[Office 365] Getting folder counts`);
+      const response = await fetch(`${endpoint}?${params.toString()}`, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      // Check for HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Office 365] Get folders error:', errorText);
+        throw new Error(`Microsoft Graph API error: ${response.status} ${response.statusText}`);
+      }
+      
+      // Parse the response
+      const data = await response.json();
+      
+      // Extract folder counts
+      for (const folder of data.value || []) {
+        // Find if this folder name maps to one of our standard folders
+        const officeFolderName = folder.displayName.toLowerCase().replace(/\s+/g, '');
+        
+        for (const [graphName, appName] of Object.entries(folderMap)) {
+          if (officeFolderName === graphName || officeFolderName.includes(graphName)) {
+            result[appName] = folder.totalItemCount || 0;
+            break;
+          }
+        }
+      }
+      
+      console.log('[Office 365] Folder counts:', result);
+      return result;
+    } catch (error) {
+      console.error('[Office 365] Error getting folder counts:', error);
+      return {};
     }
   }
   

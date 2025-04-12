@@ -1,13 +1,14 @@
 import type { IntegrationAccount } from '~/types/models'
 import type { Email, EmailPerson } from '~/stores/mail'
 import { refreshOAuthToken } from '~/utils/api/emailUtils'
-import type { MailProvider } from './MailProvider'
+import type { MailProvider, EmailQuery, EmailPagination, EmailFetchResult } from './MailProvider'
 
 /**
  * Gmail provider implementation
  */
 export class GmailProvider implements MailProvider {
   private account: IntegrationAccount
+  private pageTokens: Record<number, string> = {}
   
   constructor(account: IntegrationAccount) {
     this.account = account
@@ -119,6 +120,48 @@ export class GmailProvider implements MailProvider {
     }
   }
   
+  // Build Gmail search query from EmailQuery object
+  private buildSearchQuery(query: EmailQuery): string {
+    const parts: string[] = [];
+    
+    // Add folder constraint
+    if (query.folder) {
+      parts.push(`in:${this.mapFolderToGmailLabel(query.folder)}`);
+    }
+    
+    // Add text search
+    if (query.query) {
+      // Simple text search - Gmail will search in subject and body
+      parts.push(query.query);
+    }
+    
+    // Add date constraints
+    if (query.fromDate) {
+      parts.push(`after:${query.fromDate.toISOString().split('T')[0]}`);
+    }
+    
+    if (query.toDate) {
+      parts.push(`before:${query.toDate.toISOString().split('T')[0]}`);
+    }
+    
+    // Add unread filter
+    if (query.unreadOnly) {
+      parts.push('is:unread');
+    }
+    
+    // Add from filter
+    if (query.from) {
+      parts.push(`from:${query.from}`);
+    }
+    
+    // Add to filter
+    if (query.to) {
+      parts.push(`to:${query.to}`);
+    }
+    
+    return parts.join(' ');
+  }
+  
   isAuthenticated(): boolean {
     console.log(`GmailProvider.isAuthenticated check for ${this.account.email}:`, {
       hasAccessToken: !!this.account.accessToken,
@@ -184,34 +227,36 @@ export class GmailProvider implements MailProvider {
     return false;
   }
   
-  async fetchEmails(folder: string = 'inbox', maxResults: number = 50): Promise<Email[]> {
+  /**
+   * Count emails in a folder or matching a query
+   */
+  async countEmails(query?: EmailQuery): Promise<number> {
     if (!this.isAuthenticated()) {
-      const authenticated = await this.authenticate()
+      const authenticated = await this.authenticate();
       if (!authenticated) {
-        console.error('Not authenticated with Gmail')
-        return []
+        console.error('Not authenticated with Gmail');
+        return 0;
       }
     }
     
     try {
-      // Using Gmail API via direct fetch
-      console.log(`[Gmail] Fetching ${maxResults} emails from ${folder} folder for ${this.account.email}`)
+      // Use folder if provided, otherwise default to inbox
+      const folder = query?.folder || 'inbox';
       
-      // Map our folder names to Gmail labels
-      console.log(`[Gmail] folder is ${folder}`)
-      const labelId = this.mapFolderToGmailLabel(folder)
-      console.log(`[Gmail] label ID is: ${labelId}`)
+      // Build search query
+      const searchQuery = query ? this.buildSearchQuery(query) : `in:${this.mapFolderToGmailLabel(folder)}`;
       
       // API endpoint for Gmail
       const endpoint = `https://gmail.googleapis.com/gmail/v1/users/me/messages`;
       
-      // Prepare query parameters
+      // Prepare query parameters - we only need the count, not the actual messages
       const params = new URLSearchParams({
-        maxResults: maxResults.toString(),
-        q: `in:${labelId}`
+        q: searchQuery,
+        // Just get message IDs, not content
+        fields: 'resultSizeEstimate'
       });
       
-      // Fetch message IDs first
+      // Prepare headers with authentication
       const headers = {
         'Authorization': `Bearer ${this.account.accessToken}`,
         'Content-Type': 'application/json',
@@ -219,92 +264,280 @@ export class GmailProvider implements MailProvider {
       };
       
       const url = `${endpoint}?${params.toString()}`;
-      console.log(`[Gmail] Making API request to: ${url}`);
-      
-      // Safely log a portion of the access token for debugging
-      const tokenPreview = this.account.accessToken 
-        ? `Bearer ${this.account.accessToken.substring(0, 10)}...` 
-        : 'Missing access token';
-      console.log('[Gmail] Authorization header:', tokenPreview);
+      console.log(`[Gmail] Counting emails with query: ${searchQuery}`);
       
       // Make the request
-      let data;
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: headers,
-        });
-        
-        console.log('[Gmail] Response status:', response.status);
-        
-        // Check for HTTP errors
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[Gmail] HTTP error response:', errorText);
-          throw new Error(`Gmail API error: ${response.status} ${response.statusText}`);
-        }
-        
-        // Parse the response
-        data = await response.json();
-      } catch (fetchError) {
-        console.error('[Gmail] Fetch error:', fetchError);
-        throw fetchError;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      // Check for HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Gmail] Count error:', errorText);
+        throw new Error(`Gmail API error: ${response.status} ${response.statusText}`);
       }
       
-      console.log(`[Gmail] Retrieved ${data?.messages?.length || 0} message IDs`);
+      // Parse the response
+      const data = await response.json();
+      const count = data.resultSizeEstimate || 0;
       
-      const messageIds = data?.messages?.map((msg: any) => msg.id) || [];
+      console.log(`[Gmail] Found ${count} emails matching query`);
+      return count;
+    } catch (error) {
+      console.error('[Gmail] Error counting emails:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Get counts for all folders without fetching email content
+   */
+  async getFolderCounts(): Promise<Record<string, number>> {
+    if (!this.isAuthenticated()) {
+      const authenticated = await this.authenticate();
+      if (!authenticated) {
+        console.error('Not authenticated with Gmail');
+        return {};
+      }
+    }
+    
+    try {
+      // Standard folders to get counts for
+      const standardFolders = ['inbox', 'sent', 'drafts', 'trash', 'spam'];
+      const result: Record<string, number> = {};
+      
+      // Get counts for each folder in parallel
+      const countPromises = standardFolders.map(async (folder) => {
+        const count = await this.countEmails({ folder });
+        return { folder, count };
+      });
+      
+      const counts = await Promise.all(countPromises);
+      
+      // Convert array of results to record object
+      counts.forEach(({ folder, count }) => {
+        result[folder] = count;
+      });
+      
+      console.log('[Gmail] Folder counts:', result);
+      return result;
+    } catch (error) {
+      console.error('[Gmail] Error getting folder counts:', error);
+      return {};
+    }
+  }
+  
+  /**
+   * Fetch emails with pagination and search support
+   * Gmail API's pagination uses page tokens rather than page numbers
+   */
+  async fetchEmails(query?: EmailQuery, pagination?: EmailPagination): Promise<EmailFetchResult> {
+    if (!this.isAuthenticated()) {
+      const authenticated = await this.authenticate();
+      if (!authenticated) {
+        console.error('Not authenticated with Gmail');
+        return {
+          emails: [],
+          totalCount: 0,
+          page: 0,
+          pageSize: 20,
+          hasMore: false
+        };
+      }
+    }
+    
+    try {
+      // Default values
+      const folder = query?.folder || 'inbox';
+      const pageSize = pagination?.pageSize || 20;
+      const page = pagination?.page || 0;
+      
+      // Build search query
+      const searchQuery = query ? this.buildSearchQuery(query) : `in:${this.mapFolderToGmailLabel(folder)}`;
+      
+      // Get total count for pagination info
+      const totalCount = await this.countEmails(query);
+      
+      // API endpoint for Gmail
+      const endpoint = `https://gmail.googleapis.com/gmail/v1/users/me/messages`;
+      
+      // Prepare query parameters
+      const params = new URLSearchParams({
+        q: searchQuery,
+        maxResults: pageSize.toString()
+      });
+      
+      // For Gmail, we need to handle pagination differently since it uses page tokens
+      // We'll manage page tokens in store state
+      if (page > 0 && this.pageTokens && this.pageTokens[page - 1]) {
+        params.append('pageToken', this.pageTokens[page - 1]);
+      } else if (page > 0) {
+        // If we don't have a token for the requested page but page > 0,
+        // we need to start from page 0 and work our way up
+        console.log(`[Gmail] No token for page ${page}, starting from page 0`);
+        return this.fetchEmailsFromStart(query, pagination);
+      }
+      
+      // Prepare headers with authentication
+      const headers = {
+        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+      
+      const url = `${endpoint}?${params.toString()}`;
+      console.log(`[Gmail] Fetching emails with query: ${searchQuery}, page: ${page}, pageSize: ${pageSize}`);
+      
+      // Make the request to get message IDs
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      // Check for HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Gmail] Fetch error:', errorText);
+        throw new Error(`Gmail API error: ${response.status} ${response.statusText}`);
+      }
+      
+      // Parse the response
+      const data = await response.json();
+      const messageIds: string[] = data.messages?.map((msg: any) => msg.id) || [];
+      const nextPageToken = data.nextPageToken;
+      
+      // Store the next page token for future use
+      if (nextPageToken) {
+        if (!this.pageTokens) this.pageTokens = {};
+        this.pageTokens[page] = nextPageToken;
+      }
+      
+      console.log(`[Gmail] Retrieved ${messageIds.length} message IDs, nextPageToken: ${nextPageToken || 'none'}`);
+      
+      // If no messages, return empty result
       if (messageIds.length === 0) {
-        console.log(`[Gmail] No messages found in ${folder}`);
-        return [];
+        return {
+          emails: [],
+          totalCount,
+          page,
+          pageSize,
+          hasMore: false
+        };
       }
       
-      // Now fetch each message's details
+      // Now fetch each message's details (in parallel for better performance)
       const emails: Email[] = [];
+      const fetchPromises = messageIds.map(messageId => this.fetchSingleEmail(messageId, folder, headers));
+      const emailResults = await Promise.all(fetchPromises);
       
-      // Limit to 20 emails for performance
-      const messagesToFetch = messageIds.slice(0, Math.min(messageIds.length, 20));
-      
-      for (const messageId of messagesToFetch) {
-        try {
-          const messageResponse = await fetch(`${endpoint}/${messageId}?format=full`, {
-            method: 'GET',
-            headers: headers
-          });
-          
-          if (!messageResponse.ok) {
-            console.error(`[Gmail] Failed to fetch message ${messageId}:`, 
-              messageResponse.status, messageResponse.statusText);
-            continue;
-          }
-          
-          const msgData = await messageResponse.json();
-          
-          // Convert Gmail message to Email object
-          const email: Email = {
-            id: msgData.id || `gmail-${Date.now()}`,
-            subject: this.extractHeader(msgData.payload, 'Subject') || '(No subject)',
-            from: this.parseEmailAddress(this.extractHeader(msgData.payload, 'From') || ''),
-            to: [this.parseEmailAddress(this.extractHeader(msgData.payload, 'To') || '')],
-            body: this.extractBody(msgData.payload) || '',
-            date: new Date(parseInt(msgData.internalDate || Date.now().toString())),
-            read: !msgData.labelIds?.includes('UNREAD'),
-            folder,
-            accountId: this.account.id
-          };
-          
+      // Filter out failed fetches and add successful ones to the result
+      for (const email of emailResults) {
+        if (email) {
           emails.push(email);
-        } catch (messageError) {
-          console.error(`[Gmail] Error fetching message ${messageId}:`, messageError);
         }
       }
       
       console.log(`[Gmail] Successfully processed ${emails.length} emails`);
-      return emails;
+      
+      // Return result with pagination info
+      return {
+        emails,
+        totalCount,
+        page,
+        pageSize,
+        hasMore: !!nextPageToken
+      };
     } catch (error) {
       console.error('[Gmail] Error fetching emails:', error);
-      return [];
+      return {
+        emails: [],
+        totalCount: 0,
+        page: pagination?.page || 0,
+        pageSize: pagination?.pageSize || 20,
+        hasMore: false
+      };
     }
+  }
+  
+  /**
+   * Helper to fetch a single email by ID
+   */
+  private async fetchSingleEmail(messageId: string, folder: string, headers: Record<string, string>): Promise<Email | null> {
+    const endpoint = `https://gmail.googleapis.com/gmail/v1/users/me/messages`;
+    
+    try {
+      const messageResponse = await fetch(`${endpoint}/${messageId}?format=full`, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      if (!messageResponse.ok) {
+        console.error(`[Gmail] Failed to fetch message ${messageId}:`, 
+          messageResponse.status, messageResponse.statusText);
+        return null;
+      }
+      
+      const msgData = await messageResponse.json();
+      
+      // Convert Gmail message to Email object
+      return {
+        id: msgData.id || `gmail-${Date.now()}`,
+        subject: this.extractHeader(msgData.payload, 'Subject') || '(No subject)',
+        from: this.parseEmailAddress(this.extractHeader(msgData.payload, 'From') || ''),
+        to: [this.parseEmailAddress(this.extractHeader(msgData.payload, 'To') || '')],
+        body: this.extractBody(msgData.payload) || '',
+        date: new Date(parseInt(msgData.internalDate || Date.now().toString())),
+        read: !msgData.labelIds?.includes('UNREAD'),
+        folder,
+        accountId: this.account.id
+      };
+    } catch (error) {
+      console.error(`[Gmail] Error fetching message ${messageId}:`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Fetch emails from page 0 and sequentially get tokens
+   * until we reach the desired page
+   */
+  private async fetchEmailsFromStart(query?: EmailQuery, pagination?: EmailPagination): Promise<EmailFetchResult> {
+    const targetPage = pagination?.page || 0;
+    
+    // If target is page 0, just do a normal fetch
+    if (targetPage === 0) {
+      return this.fetchEmails(query, { page: 0, pageSize: pagination?.pageSize || 20 });
+    }
+    
+    // Start from page 0
+    let currentPage = 0;
+    let result: EmailFetchResult;
+    
+    // Reset page tokens
+    this.pageTokens = {};
+    
+    // Keep fetching pages until we reach the target page
+    do {
+      // Fetch current page
+      result = await this.fetchEmails(query, { 
+        page: currentPage, 
+        pageSize: pagination?.pageSize || 20 
+      });
+      
+      // Move to next page if there is one
+      if (result.hasMore) {
+        currentPage++;
+      } else {
+        // No more pages available, return last page
+        return result;
+      }
+      
+    } while (currentPage < targetPage);
+    
+    // Now fetch the target page with the correct token
+    return this.fetchEmails(query, pagination);
   }
   
   async sendEmail(email: Email): Promise<boolean> {

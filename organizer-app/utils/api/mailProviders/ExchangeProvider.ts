@@ -1,7 +1,7 @@
 import type { IntegrationAccount } from '~/types/models'
 import type { Email, EmailPerson } from '~/stores/mail'
 import { refreshOAuthToken } from '~/utils/api/emailUtils'
-import type { MailProvider } from './MailProvider'
+import type { MailProvider, EmailQuery, EmailPagination, EmailFetchResult } from './MailProvider'
 
 /**
  * Exchange provider implementation
@@ -37,18 +37,32 @@ export class ExchangeProvider implements MailProvider {
     return false
   }
   
-  async fetchEmails(folder: string = 'inbox', maxResults: number = 50): Promise<Email[]> {
+  /**
+   * Fetch emails with pagination and search support
+   */
+  async fetchEmails(query?: EmailQuery, pagination?: EmailPagination): Promise<EmailFetchResult> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
         console.error('Not authenticated with Exchange')
-        return []
+        return {
+          emails: [],
+          totalCount: 0,
+          page: pagination?.page || 0,
+          pageSize: pagination?.pageSize || 20,
+          hasMore: false
+        }
       }
     }
     
     try {
+      // Default values
+      const folder = query?.folder || 'inbox';
+      const pageSize = pagination?.pageSize || 20;
+      const page = pagination?.page || 0;
+      
       // Using Exchange Web Services API
-      console.log(`[Exchange] Fetching ${maxResults} emails from ${folder} folder for ${this.account.email}`)
+      console.log(`[Exchange] Fetching emails from ${folder} folder (page ${page}, pageSize ${pageSize}) for ${this.account.email}`)
       
       // Check if we have proper configuration
       if (!this.account.server) {
@@ -78,10 +92,25 @@ export class ExchangeProvider implements MailProvider {
       
       // Build query parameters
       const params = new URLSearchParams({
-        '$top': maxResults.toString(),
+        '$top': pageSize.toString(),
+        '$skip': (page * pageSize).toString(),
         '$orderby': 'receivedDateTime DESC',
-        '$select': 'id,subject,from,toRecipients,receivedDateTime,bodyPreview,isRead,body'
-      })
+        '$select': 'id,subject,from,toRecipients,receivedDateTime,bodyPreview,isRead,body',
+        '$count': 'true'
+      });
+      
+      // Add filters based on query
+      if (query?.query) {
+        params.append('$search', `"${query.query}"`);
+      }
+      
+      if (query?.unreadOnly) {
+        params.append('$filter', 'isRead eq false');
+      }
+      
+      if (query?.from) {
+        params.append('$filter', `from/emailAddress/address eq '${query.from}'`);
+      }
       
       // Make the request
       console.log(`[Exchange] Requesting: ${endpoint}?${params.toString()}`);
@@ -103,6 +132,9 @@ export class ExchangeProvider implements MailProvider {
         // Parse the response
         const data = await response.json();
         console.log(`[Exchange] Retrieved ${data.value?.length || 0} messages`);
+        
+        // Get total count for pagination (from @odata.count or count via another call)
+        const totalCount = data['@odata.count'] || await this.countEmails(query);
         
         // Convert Exchange messages to our Email interface
         const emails: Email[] = (data.value || []).map((message: any) => {
@@ -126,14 +158,174 @@ export class ExchangeProvider implements MailProvider {
         });
         
         console.log(`[Exchange] Successfully processed ${emails.length} emails`);
-        return emails;
+        
+        // Check if there are more pages
+        const hasMore = (page + 1) * pageSize < totalCount;
+        
+        return {
+          emails,
+          totalCount,
+          page,
+          pageSize,
+          hasMore
+        };
       } catch (fetchError) {
         console.error('[Exchange] Fetch error:', fetchError);
         throw fetchError;
       }
     } catch (error) {
       console.error('Error fetching Exchange emails:', error)
-      return []
+      return {
+        emails: [],
+        totalCount: 0,
+        page: pagination?.page || 0,
+        pageSize: pagination?.pageSize || 20,
+        hasMore: false
+      }
+    }
+  }
+  
+  /**
+   * Count emails in a folder or matching a query
+   */
+  async countEmails(query?: EmailQuery): Promise<number> {
+    if (!this.isAuthenticated()) {
+      const authenticated = await this.authenticate();
+      if (!authenticated) {
+        console.error('Not authenticated with Exchange');
+        return 0;
+      }
+    }
+    
+    try {
+      // Check if we have proper configuration
+      if (!this.account.server) {
+        throw new Error('Exchange server URL is required');
+      }
+      
+      // Use folder if provided, otherwise default to inbox
+      const folder = query?.folder || 'inbox';
+      
+      // Prepare API endpoint for the folder
+      const endpoint = `${this.account.server}/api/v2.0/me/mailFolders/${folder}/messages/$count`;
+      
+      // Prepare headers with authentication
+      const headers = {
+        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Accept': 'application/json'
+      };
+      
+      // Build query parameters if needed
+      const params = new URLSearchParams();
+      
+      if (query?.query) {
+        params.append('$search', `"${query.query}"`);
+      }
+      
+      if (query?.unreadOnly) {
+        params.append('$filter', 'isRead eq false');
+      }
+      
+      // Make the request
+      console.log(`[Exchange] Counting emails in ${folder}`);
+      const url = `${endpoint}${params.toString() ? '?' + params.toString() : ''}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      // Check for HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Exchange] Count error:', errorText);
+        throw new Error(`Exchange API error: ${response.status} ${response.statusText}`);
+      }
+      
+      // Parse the response - Exchange returns the count directly as a number
+      const count = await response.json();
+      
+      console.log(`[Exchange] Found ${count} emails in ${folder}`);
+      return count;
+    } catch (error) {
+      console.error('[Exchange] Error counting emails:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Get folder counts without fetching email content
+   */
+  async getFolderCounts(): Promise<Record<string, number>> {
+    if (!this.isAuthenticated()) {
+      const authenticated = await this.authenticate();
+      if (!authenticated) {
+        console.error('Not authenticated with Exchange');
+        return {};
+      }
+    }
+    
+    try {
+      // Standard folders to get counts for
+      const standardFolders = ['inbox', 'sentitems', 'drafts', 'deleteditems', 'junkemail'];
+      const result: Record<string, number> = {};
+      
+      // Map Exchange folder names to our app's folder names
+      const folderMap: Record<string, string> = {
+        'inbox': 'inbox',
+        'sentitems': 'sent',
+        'drafts': 'drafts',
+        'deleteditems': 'trash',
+        'junkemail': 'spam'
+      };
+      
+      // Check if we have proper configuration
+      if (!this.account.server) {
+        throw new Error('Exchange server URL is required');
+      }
+      
+      // Get all mail folders with their message counts in one request
+      const endpoint = `${this.account.server}/api/v2.0/me/mailFolders`;
+      
+      // Prepare headers with authentication
+      const headers = {
+        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Accept': 'application/json'
+      };
+      
+      // Make the request
+      console.log(`[Exchange] Getting folder counts`);
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      // Check for HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Exchange] Get folders error:', errorText);
+        throw new Error(`Exchange API error: ${response.status} ${response.statusText}`);
+      }
+      
+      // Parse the response
+      const data = await response.json();
+      
+      // Extract folder counts
+      for (const folder of data.value || []) {
+        const exchangeFolderName = folder.displayName.toLowerCase().replace(/\s/g, '');
+        
+        // If this is a standard folder we care about, add it to the result
+        if (standardFolders.includes(exchangeFolderName)) {
+          const appFolderName = folderMap[exchangeFolderName] || exchangeFolderName;
+          result[appFolderName] = folder.totalItemCount || 0;
+        }
+      }
+      
+      console.log('[Exchange] Folder counts:', result);
+      return result;
+    } catch (error) {
+      console.error('[Exchange] Error getting folder counts:', error);
+      return {};
     }
   }
   
