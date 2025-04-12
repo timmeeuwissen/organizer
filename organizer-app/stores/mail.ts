@@ -159,14 +159,23 @@ export const useMailStore = defineStore('mail', {
               if (!authenticated) continue;
             }
             
-            // Check each folder for unread count
-            for (const folder of this.folders) {
+            // Check each folder for unread count - we'll do this in parallel for better performance
+            const unreadCountPromises = this.folders.map(async folder => {
               const unreadCount = await mailProvider.countEmails({
                 folder: folder.id,
                 unreadOnly: true
               });
               
-              unreadCounts[folder.id] = (unreadCounts[folder.id] || 0) + unreadCount;
+              return { folder: folder.id, count: unreadCount };
+            });
+            
+            // Wait for all unread counts to complete
+            const folderUnreadCounts = await Promise.all(unreadCountPromises);
+            
+            // Add the counts to our running total
+            for (const { folder, count } of folderUnreadCounts) {
+              unreadCounts[folder] = (unreadCounts[folder] || 0) + count;
+              console.log(`[Mail] Folder ${folder} unread count: ${count} (total now: ${unreadCounts[folder]})`);
             }
           } catch (error) {
             console.error(`Error getting unread counts for ${account.email}:`, error);

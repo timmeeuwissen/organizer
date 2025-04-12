@@ -328,7 +328,7 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { usePeopleStore } from '~/stores/people'
 import { useMailStore } from '~/stores/mail'
 import { useAuthStore } from '~/stores/auth'
@@ -375,26 +375,27 @@ const composeForm = ref(null)
 
 // Computed
 const filteredEmails = computed(() => {
-  // Check if mailStore.emails exists to avoid "Cannot read properties of undefined" error
+  // If there are no emails in the store, return empty array
   if (!mailStore.emails) {
-    console.log('Mail store emails array is undefined')
     return []
   }
   
-  let result = mailStore.emails.filter(email => email.folder === selectedFolder.value)
+  // Just return the emails from the store - filtering will be done at the provider level
+  // when search is performed, so we don't need to filter them again here
+  let result = mailStore.emails
   
-  if (emailSearch.value) {
-    const searchTerm = emailSearch.value.toLowerCase()
-    result = result.filter(
-      email => 
-        email.subject.toLowerCase().includes(searchTerm) ||
-        email.from.name.toLowerCase().includes(searchTerm) ||
-        email.from.email.toLowerCase().includes(searchTerm) ||
-        email.body.toLowerCase().includes(searchTerm)
-    )
+  // Minimize reactive dependencies in this function
+  const count = result.length
+  const page = mailStore.currentPage
+  const total = mailStore.totalEmails
+  
+  // Use a non-reactive timer to log so we don't create circular dependencies
+  if (count > 0) {
+    setTimeout(() => {
+      console.log(`Displaying ${count} emails for ${selectedFolder.value} (page ${page + 1}, total: ${total})`)
+    }, 0)
   }
   
-  console.log(`Filtered ${result.length} emails for folder ${selectedFolder.value} (page ${mailStore.currentPage + 1}, total: ${mailStore.totalEmails})`)
   return result
 })
 
@@ -424,24 +425,44 @@ watch(selectedFolder, (newFolder) => {
 
 // Load data
 onMounted(async () => {
-  // Load people and mail data when component mounts
-  await Promise.all([
-    peopleStore.fetchPeople(),
-    // First load folder counts (faster) to populate sidebar with unread counts
-    mailStore.loadFolderCounts(),
-    // Then fetch the actual emails for the current folder
-    mailStore.fetchEmails({ folder: selectedFolder.value })
-  ])
+  // Load people data
+  await peopleStore.fetchPeople();
+  
+  // First load folder counts (faster) to populate sidebar with unread counts
+  console.log('Loading folder counts for sidebar...');
+  await mailStore.loadFolderCounts();
+  
+  // Then fetch the actual emails for the current folder
+  console.log('Fetching emails for current folder...');
+  await mailStore.fetchEmails({ folder: selectedFolder.value });
   
   // Display integrated accounts info if available
   if (connectedAccounts.value.length > 0) {
-    console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`)
+    console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`);
   }
-})
+});
+
+// Refresh unread counts periodically but less frequently
+const refreshUnreadCountsTimer = setInterval(() => {
+  if (connectedAccounts.value.length > 0) {
+    // Use setTimeout to prevent Vue from tracking this as a reactive dependency
+    setTimeout(async () => {
+      console.log('Refreshing unread counts...');
+      await mailStore.loadFolderCounts();
+    }, 0);
+  }
+}, 300000); // refresh every 5 minutes instead of every minute
+
+// Clean up timer on component unmount
+onUnmounted(() => {
+  clearInterval(refreshUnreadCountsTimer);
+});
 
 // Methods
 const getUnreadCount = (folderId: string) => {
-  return mailStore.getUnreadCountByFolder(folderId)
+  // Don't log here - this method is called frequently from the template
+  // and can cause reactive update issues
+  return mailStore.getUnreadCountByFolder(folderId);
 }
 
 const formatDate = (date: Date) => {
@@ -536,6 +557,8 @@ const performSearch = async () => {
     query: emailSearch.value || undefined
   }
   
+  console.log('Performing search at provider level:', query)
+  
   // Reset to page 0 with the search query
   await mailStore.fetchEmails(query)
 }
@@ -629,7 +652,7 @@ const sendEmail = () => {
         email: recipient.trim()
       }
     }),
-    body: composeData.value.body,
+    body: composeData.value.body || '',
     date: new Date(),
     read: true,
     folder: 'sent'
@@ -671,7 +694,7 @@ const saveDraft = () => {
         email: recipient.trim()
       }
     }),
-    body: composeData.value.body,
+    body: composeData.value.body || '',
     date: new Date(),
     read: true,
     folder: 'drafts'

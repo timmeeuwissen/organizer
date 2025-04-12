@@ -378,7 +378,7 @@ export class ExchangeProvider implements MailProvider {
           subject: email.subject,
           body: {
             contentType: 'HTML',
-            content: email.body
+            content: email.body || ''
           },
           toRecipients: toRecipients,
           ccRecipients: ccRecipients

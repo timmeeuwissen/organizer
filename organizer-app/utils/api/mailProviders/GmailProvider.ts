@@ -573,7 +573,7 @@ export class GmailProvider implements MailProvider {
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=utf-8',
         '',
-        email.body
+        email.body || ''
       ].filter(Boolean).join('\r\n');
       
       // In browser, we need to use TextEncoder
