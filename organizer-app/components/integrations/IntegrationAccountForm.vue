@@ -1,16 +1,21 @@
 <template lang="pug">
 v-form(ref="form" v-model="formValid")
   v-row
-    v-col(cols="12")
-      v-text-field(
-        v-model="accountName"
-        :label="$t('settings.accountName')"
-        :rules="[rules.required]"
-        prepend-icon="mdi-tag"
-        :disabled="isLoading"
-      )
-    
-    v-col(cols="12")
+    // Display provider account info
+    v-col(cols="12" v-if="isConnected")
+      v-alert(type="info" variant="tonal" class="mb-4")
+        div.text-subtitle-1.mb-1 {{ name || $t('settings.provider.info') }}
+        div {{ email }}
+        v-chip(
+          :color="isConnected ? 'success' : 'error'"
+          size="small"
+          class="mt-2"
+          density="comfortable"
+        ) {{ isConnected ? $t('settings.connected') : $t('settings.disconnected') }}
+        div.text-caption.mt-2(v-if="lastSync") {{ $t('settings.lastSync') }}: {{ formatDate(lastSync) }}
+
+    // Account type selection (only for new accounts)
+    v-col(cols="12" v-if="!isConnected")
       v-select(
         v-model="accountType"
         :items="accountTypes"
@@ -22,16 +27,8 @@ v-form(ref="form" v-model="formValid")
         :disabled="isConnected || isLoading"
       )
     
-    v-col(cols="12")
-      v-text-field(
-        v-model="email"
-        :label="$t('settings.integrationEmail')"
-        prepend-icon="mdi-email"
-        :rules="[rules.required, rules.email]"
-        :disabled="isConnected || isLoading"
-      )
-    
-    v-col(cols="12" v-if="accountType === 'exchange' && !useOAuth")
+    // Server field for Exchange accounts
+    v-col(cols="12" v-if="accountType === 'exchange' && !useOAuth && !isConnected")
       v-text-field(
         v-model="server"
         :label="$t('settings.integrationServer')"
@@ -41,7 +38,8 @@ v-form(ref="form" v-model="formValid")
         placeholder="outlook.office365.com"
       )
     
-    v-col(cols="12" v-if="accountType === 'exchange' && server")
+    // OAuth switch for Exchange
+    v-col(cols="12" v-if="accountType === 'exchange' && server && !isConnected")
       v-switch(
         v-model="useOAuth"
         :label="$t('settings.useOAuth')"
@@ -51,8 +49,8 @@ v-form(ref="form" v-model="formValid")
         persistent-hint
       )
     
-    // Basic Auth (username/password) section
-    template(v-if="!useOAuth")
+    // Basic Auth section - only visible when creating new non-OAuth accounts
+    template(v-if="!useOAuth && !isConnected")
       v-col(cols="12")
         v-text-field(
           v-model="username"
@@ -63,7 +61,7 @@ v-form(ref="form" v-model="formValid")
           :placeholder="usernameHint"
         )
       
-      v-col(cols="12" v-if="!isConnected")
+      v-col(cols="12")
         v-text-field(
           v-model="password"
           :label="$t('settings.integrationPassword')"
@@ -75,10 +73,10 @@ v-form(ref="form" v-model="formValid")
           @click:append="showPassword = !showPassword"
         )
     
-    // OAuth section
-    template(v-else)
+    // OAuth section - only visible when creating new accounts
+    template(v-if="useOAuth && !isConnected")
       v-col(cols="12")
-        // Google-specific options section
+        // Google-specific options
         template(v-if="accountType === 'google'")
           v-card(variant="outlined" class="pa-3 mb-3")
             v-card-title(class="px-0 text-subtitle-1") 
@@ -116,7 +114,7 @@ v-form(ref="form" v-model="formValid")
                     @tokens-updated="handleTokensUpdated"
                   )
 
-        // Other OAuth providers (Exchange, Office 365)
+        // Other OAuth providers
         template(v-else)
           v-card(variant="outlined" class="pa-3 mb-3")
             v-card-title(class="px-0 text-subtitle-1") 
@@ -148,10 +146,6 @@ v-form(ref="form" v-model="formValid")
                 :icon="isOAuthConfigured ? 'mdi-check' : 'mdi-key'"
                 @tokens-updated="handleTokensUpdated"
               )
-    
-    v-col(cols="12" v-if="isConnected && lastSync")
-      v-alert(type="info" variant="tonal")
-        | {{ $t('settings.lastSync') }}: {{ formatDate(lastSync) }}
     
     v-col(cols="12")
       v-divider
@@ -300,10 +294,14 @@ const showPassword = ref(false)
 const isSyncing = ref(false)
 const isLoading = ref(false)
 
-// Form fields
-const accountName = ref('')
-const accountType = ref('google')
+// Properties for display 
+const name = ref('')
 const email = ref('')
+const isConnected = ref(false)
+const lastSync = ref(null)
+
+// Form fields
+const accountType = ref('google')
 const server = ref('')
 const username = ref('')
 const password = ref('')
@@ -317,8 +315,6 @@ const showInMail = ref(true)
 const showInTasks = ref(true)
 const showInContacts = ref(true)
 const color = ref('#1976D2') // Default blue
-const lastSync = ref(null)
-const isConnected = ref(false)
 
 // OAuth-related fields
 const clientId = ref('')
@@ -385,20 +381,16 @@ const isOAuthConfigured = computed(() => {
 function handleGoogleAuthSuccess(tokens) {
   console.log('Google popup auth success:', tokens)
   
-  // Update account with tokens
-  const updatedAccount = getAccountData()
-  updatedAccount.accessToken = tokens.accessToken
-  updatedAccount.userId = tokens.userId
-  updatedAccount.email = tokens.email
-  updatedAccount.connected = true
+  // Set local state values for OAuth data
+  accessToken.value = tokens.accessToken
   
   // Capture the refresh token - this is critical for reconnecting later
   if (tokens.refreshToken) {
     console.log('Refresh token received from Google auth, storing it...')
-    updatedAccount.refreshToken = tokens.refreshToken
+    refreshToken.value = tokens.refreshToken
     
     // Store scopes as well
-    updatedAccount.scope = [
+    oauthScope.value = [
       'https://www.googleapis.com/auth/gmail.readonly',
       'https://www.googleapis.com/auth/gmail.modify',
       'https://www.googleapis.com/auth/gmail.labels',
@@ -414,19 +406,14 @@ function handleGoogleAuthSuccess(tokens) {
     })
   }
   
-  // Mark as connected
+  // Set display info from the provider
+  name.value = tokens.displayName || 'Google Account'
+  email.value = tokens.email || ''
   isConnected.value = true
+  lastSync.value = new Date()
   
-  // Set email if not already set
-  if (!email.value && tokens.email) {
-    email.value = tokens.email
-  }
-  
-  // Store the refresh token in our component state too
-  refreshToken.value = tokens.refreshToken || ''
-  
-  // Emit success
-  emit('test', updatedAccount)
+  // Emit success with the updated account data
+  emit('test', getAccountData())
 }
 
 // Handle Google auth error from popup
@@ -435,14 +422,13 @@ function handleGoogleAuthError(error) {
   // No specific handling needed - the button component will show its own error state
 }
 
-// Load account data if in edit mode
+// Load account data if present
 watch(() => props.account, () => {
   if (props.account) {
-    accountName.value = props.account.name || ''
     accountType.value = props.account.type || 'google'
-    email.value = props.account.email || ''
     server.value = props.account.server || ''
-    username.value = props.account.username || ''
+    
+    // Load sync settings
     syncCalendar.value = props.account.syncCalendar ?? true
     syncMail.value = props.account.syncMail ?? true
     syncTasks.value = props.account.syncTasks ?? true
@@ -452,16 +438,35 @@ watch(() => props.account, () => {
     showInTasks.value = props.account.showInTasks ?? true
     showInContacts.value = props.account.showInContacts ?? true
     color.value = props.account.color || '#1976D2'
-    lastSync.value = props.account.lastSync || null
-    isConnected.value = props.account.connected || false
     
-    // Load OAuth-related fields if available
-    clientId.value = props.account.clientId || ''
-    clientSecret.value = props.account.clientSecret || ''
-    refreshToken.value = props.account.refreshToken || ''
-    accessToken.value = props.account.accessToken || ''
-    tokenExpiry.value = props.account.tokenExpiry || null
-    oauthScope.value = props.account.scope || ''
+    // Handle OAuth data if available
+    if (props.account.oauthData) {
+      name.value = props.account.oauthData.name || ''
+      email.value = props.account.oauthData.email || ''
+      isConnected.value = props.account.oauthData.connected || false
+      lastSync.value = props.account.oauthData.lastSync || null
+      
+      // OAuth credentials
+      clientId.value = props.account.oauthData.clientId || ''
+      clientSecret.value = props.account.oauthData.clientSecret || ''
+      refreshToken.value = props.account.oauthData.refreshToken || ''
+      accessToken.value = props.account.oauthData.accessToken || ''
+      tokenExpiry.value = props.account.oauthData.tokenExpiry || null
+      oauthScope.value = props.account.oauthData.scope || ''
+    } else {
+      // Backward compatibility
+      name.value = props.account.name || ''
+      email.value = props.account.email || ''
+      isConnected.value = props.account.connected || false
+      lastSync.value = props.account.lastSync || null
+      
+      clientId.value = props.account.clientId || ''
+      clientSecret.value = props.account.clientSecret || ''
+      refreshToken.value = props.account.refreshToken || ''
+      accessToken.value = props.account.accessToken || ''
+      tokenExpiry.value = props.account.tokenExpiry || null
+      oauthScope.value = props.account.scope || ''
+    }
     
     // Set OAuth switch based on account type and available tokens
     useOAuth.value = 
@@ -481,23 +486,18 @@ function handleTokensUpdated(tokens) {
   clientSecret.value = tokens.clientSecret
   refreshToken.value = tokens.refreshToken
   
-  // Prepare account data with tokens
-  const updatedAccount = getAccountData()
-  updatedAccount.clientId = tokens.clientId
-  updatedAccount.clientSecret = tokens.clientSecret 
-  updatedAccount.refreshToken = tokens.refreshToken
-  updatedAccount.connected = true
-  
-  // Mark as connected
+  // Set provider info
+  name.value = name.value || `${accountType.value} Account`
   isConnected.value = true
+  lastSync.value = new Date()
   
-  // Emit success
-  emit('test', updatedAccount)
+  // Emit success with updated account data
+  emit('test', getAccountData())
 }
 
 // Methods
 function getAccountData() {
-  // Filter out undefined values to prevent Firestore errors
+  // Helper to remove undefined values to prevent Firestore errors
   const removeUndefined = (obj) => {
     const result = {};
     Object.keys(obj).forEach(key => {
@@ -508,52 +508,25 @@ function getAccountData() {
     return result;
   };
 
-  // Create a new account object with default values if this is a new account
-  if (!props.account) {
-    const accountData = {
-      id: uuidv4(),
-      name: accountName.value || `${accountType.value} Account`,
-      type: accountType.value,
-      email: email.value,
-      username: username.value,
-      connected: isConnected.value,
-      syncCalendar: syncCalendar.value,
-      syncMail: syncMail.value,
-      syncTasks: syncTasks.value,
-      syncContacts: syncContacts.value,
-      showInCalendar: showInCalendar.value && syncCalendar.value,
-      showInMail: showInMail.value && syncMail.value,
-      showInTasks: showInTasks.value && syncTasks.value,
-      showInContacts: showInContacts.value && syncContacts.value,
-      color: color.value,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    // Add optional fields only if they have values
-    if (accountType.value === 'exchange' && server.value) {
-      accountData.server = server.value;
-    }
-    
-    if (password.value) {
-      accountData.password = password.value;
-    }
-    
-    if (lastSync.value) {
-      accountData.lastSync = lastSync.value;
-    }
-    
-    return removeUndefined(accountData);
-  }
-  
-  // Update existing account
-  const accountData = {
-    ...props.account,
-    name: accountName.value,
-    type: accountType.value,
-    email: email.value,
-    username: username.value,
+  // Prepare OAuth data
+  const oAuthData = {
+    name: name.value || `${accountType.value} Account`,
+    email: email.value || '',
     connected: isConnected.value,
+    lastSync: lastSync.value,
+    refreshToken: refreshToken.value,
+    accessToken: accessToken.value,
+    tokenExpiry: tokenExpiry.value,
+    clientId: clientId.value,
+    clientSecret: clientSecret.value,
+    scope: oauthScope.value
+  };
+
+  // Create a new account object with the new structure
+  const now = new Date();
+  const baseAccountData = {
+    id: props.account?.id || uuidv4(),
+    type: accountType.value,
     syncCalendar: syncCalendar.value,
     syncMail: syncMail.value,
     syncTasks: syncTasks.value,
@@ -563,25 +536,17 @@ function getAccountData() {
     showInTasks: showInTasks.value && syncTasks.value,
     showInContacts: showInContacts.value && syncContacts.value,
     color: color.value,
-    updatedAt: new Date()
+    createdAt: props.account?.createdAt || now,
+    updatedAt: now,
+    oauthData: removeUndefined(oAuthData)
   };
   
-  // Add optional fields only if they have values
+  // Add optional server field for Exchange accounts
   if (accountType.value === 'exchange' && server.value) {
-    accountData.server = server.value;
+    baseAccountData.server = server.value;
   }
   
-  if (password.value) {
-    accountData.password = password.value;
-  } else if (props.account.password) {
-    accountData.password = props.account.password;
-  }
-  
-  if (lastSync.value) {
-    accountData.lastSync = lastSync.value;
-  }
-  
-  return removeUndefined(accountData);
+  return removeUndefined(baseAccountData);
 }
 
 async function testConnection() {
@@ -634,21 +599,25 @@ async function initiateGoogleOAuth() {
           accessToken: 'google-mock-access-token-' + Date.now(),
           refreshToken: 'google-mock-refresh-token-' + Date.now(),
           expiresIn: 3600,
-          scope: 'https://www.googleapis.com/auth/gmail.readonly'
+          scope: 'https://www.googleapis.com/auth/gmail.readonly',
+          name: 'Google Account',
+          email: email.value || 'user@gmail.com'
         })
       }, 2000)
     })
     
-    // Update account with tokens
-    const updatedAccount = getAccountData()
-    updatedAccount.accessToken = mockSuccessfulAuth.accessToken
-    updatedAccount.refreshToken = mockSuccessfulAuth.refreshToken
-    updatedAccount.tokenExpiry = new Date(Date.now() + (mockSuccessfulAuth.expiresIn * 1000))
-    updatedAccount.scope = mockSuccessfulAuth.scope
-    updatedAccount.connected = true
+    // Set local state with OAuth data
+    accessToken.value = mockSuccessfulAuth.accessToken;
+    refreshToken.value = mockSuccessfulAuth.refreshToken;
+    tokenExpiry.value = new Date(Date.now() + (mockSuccessfulAuth.expiresIn * 1000));
+    oauthScope.value = mockSuccessfulAuth.scope;
+    name.value = mockSuccessfulAuth.name;
+    email.value = mockSuccessfulAuth.email;
+    isConnected.value = true;
+    lastSync.value = new Date();
     
-    // Emit success
-    emit('test', updatedAccount)
+    // Emit success with updated account data
+    emit('test', getAccountData())
   } catch (error) {
     console.error('Google OAuth error:', error)
     throw error
@@ -673,21 +642,25 @@ async function initiateOffice365OAuth() {
           accessToken: 'ms-mock-access-token-' + Date.now(),
           refreshToken: 'ms-mock-refresh-token-' + Date.now(),
           expiresIn: 3600,
-          scope: 'Mail.Read User.Read'
+          scope: 'Mail.Read User.Read',
+          name: 'Microsoft Account',
+          email: email.value || 'user@outlook.com'
         })
       }, 2000)
     })
     
-    // Update account with tokens
-    const updatedAccount = getAccountData()
-    updatedAccount.accessToken = mockSuccessfulAuth.accessToken
-    updatedAccount.refreshToken = mockSuccessfulAuth.refreshToken
-    updatedAccount.tokenExpiry = new Date(Date.now() + (mockSuccessfulAuth.expiresIn * 1000))
-    updatedAccount.scope = mockSuccessfulAuth.scope
-    updatedAccount.connected = true
+    // Set local state with OAuth data
+    accessToken.value = mockSuccessfulAuth.accessToken;
+    refreshToken.value = mockSuccessfulAuth.refreshToken;
+    tokenExpiry.value = new Date(Date.now() + (mockSuccessfulAuth.expiresIn * 1000));
+    oauthScope.value = mockSuccessfulAuth.scope;
+    name.value = mockSuccessfulAuth.name;
+    email.value = mockSuccessfulAuth.email;
+    isConnected.value = true;
+    lastSync.value = new Date();
     
-    // Emit success
-    emit('test', updatedAccount)
+    // Emit success with updated account data
+    emit('test', getAccountData())
   } catch (error) {
     console.error('Microsoft OAuth error:', error)
     throw error
@@ -772,8 +745,9 @@ function formatDate(date) {
 }
 
 // Watch for form changes to update the parent component
-watch([accountName, accountType, email, server, username, syncCalendar, syncMail, syncTasks, syncContacts, 
-       showInCalendar, showInMail, showInTasks, showInContacts, color, isConnected], () => {
+watch([accountType, email, server, username, syncCalendar, syncMail, syncTasks, syncContacts, 
+       showInCalendar, showInMail, showInTasks, showInContacts, color, isConnected, 
+       name, lastSync, accessToken, refreshToken, clientId, clientSecret], () => {
   emit('update:account', getAccountData())
 }, { deep: true })
 </script>

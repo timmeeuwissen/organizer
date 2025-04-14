@@ -96,7 +96,16 @@ export default {
     oauthConfigured: 'OAuth Configured',
     googlePopupAuth: 'Use Google Popup Authentication',
     manualOAuth: 'Manual OAuth Setup',
-    authOptions: 'Authentication Options'
+    authOptions: 'Authentication Options',
+    // New integration dialog translations
+    connectIntegration: 'Connect Integration',
+    selectAuthMethod: 'Select Authentication Method',
+    connectGoogle: 'Connect Google',
+    connectMicrosoft: 'Connect Microsoft',
+    changeColor: 'Change Color',
+    provider: {
+      info: 'Provider Information'
+    }
   },
   behaviors: {
     title: 'Behaviors',

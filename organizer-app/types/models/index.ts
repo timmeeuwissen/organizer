@@ -1,13 +1,22 @@
-export interface IntegrationAccount {
-  id: string;
-  name: string;
-  type: 'exchange' | 'google' | 'office365';
-  email: string;
-  server?: string; // Required for Exchange
-  username: string; 
-  password?: string; // Stored securely and used only when needed
+export interface IntegrationOAuthData {
+  accessToken?: string; // OAuth access token
+  refreshToken?: string; // OAuth refresh token
+  tokenExpiry?: Date; // When the access token expires
+  clientId?: string; // For storing app-specific client ID if needed
+  clientSecret?: string; // For storing app-specific client secret if needed
+  scope?: string; // OAuth scopes that were granted
   connected: boolean;
   lastSync?: Date;
+  email: string; // Email from the provider
+  name: string; // Account name from the provider
+}
+
+export interface IntegrationAccount {
+  id: string;
+  type: 'exchange' | 'google' | 'office365';
+  color: string; // Color for visual identification in UI
+  
+  // Application-specific preferences
   syncCalendar: boolean;
   syncMail: boolean;
   syncTasks: boolean;
@@ -16,17 +25,9 @@ export interface IntegrationAccount {
   showInMail: boolean;
   showInTasks: boolean;
   showInContacts: boolean;
-  color: string; // Color for visual identification in UI
   
-  // OAuth-related fields
-  accessToken?: string; // OAuth access token
-  refreshToken?: string; // OAuth refresh token
-  tokenExpiry?: Date; // When the access token expires
-  
-  // Additional auth-related data
-  clientId?: string; // For storing app-specific client ID if needed
-  clientSecret?: string; // For storing app-specific client secret if needed
-  scope?: string; // OAuth scopes that were granted
+  // OAuth connection data stored separately
+  oauthData: IntegrationOAuthData;
   
   createdAt: Date;
   updatedAt: Date;

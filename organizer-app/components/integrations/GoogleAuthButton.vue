@@ -93,7 +93,6 @@ async function handleGoogleAuth() {
     
     // Extract relevant authentication information
     const credential = GoogleAuthProvider.credentialFromResult(result)
-    console.log('DEBUG TIM', auth, result, credential)
     const user = result.user
     
     // Log auth data to see what we're getting
@@ -107,13 +106,10 @@ async function handleGoogleAuth() {
     // Google doesn't provide refresh tokens via Firebase popup auth
     // We need to directly interact with Google's OAuth endpoints with 'server-side' code
     
-    // For now, we'll generate a fixed refresh token to test with
-    const refreshToken = ''
-    
     // Create tokens object to match the format expected by parent components
     const tokens = {
       accessToken: credential.accessToken,
-      refreshToken: refreshToken, // Use fixed token for debugging
+      refreshToken: user.refreshToken, // Use fixed token for debugging
       userId: user.uid,
       email: user.email,
       provider: 'google',

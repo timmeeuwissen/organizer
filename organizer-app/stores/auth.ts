@@ -40,7 +40,25 @@ export const useAuthStore = defineStore('auth', {
     },
     
     // Create a demo user with demo email accounts for development
-    async createDemoUser() {
+    async createDemoUser(): Promise<boolean> {
+      // Create a demo user with hardcoded values (no Firebase interaction)
+      this.user = {
+        id: 'demo-user-id',
+        email: 'demo@example.com',
+        displayName: 'Demo User',
+        photoURL: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLogin: new Date(),
+        settings: {
+          defaultLanguage: 'en',
+          darkMode: false,
+          emailNotifications: true,
+          calendarSync: false,
+          integrationAccounts: []
+        }
+      };
+      return true;
     },
 
     async init() {
@@ -51,8 +69,8 @@ export const useAuthStore = defineStore('auth', {
         
         if (bypassAuth) {
           console.log('Development mode with auth bypass - creating demo user without Firebase')
-          const result = await this.createDemoUser()
-          return result ? this.user : null
+          await this.createDemoUser()
+          return this.user
         }
         
         const auth = getAuth()
@@ -255,32 +273,95 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async updateUserSettings(settings: Partial<UserSettings>) {
-      if (!this.user) return
+    /**
+     * Clean an object by removing all undefined values
+     * This is needed because Firestore doesn't accept undefined values
+     */
+    cleanObject(obj: any): any {
+      if (obj === null || obj === undefined) return obj;
       
-      this.loading = true
-      this.error = null
+      if (Array.isArray(obj)) {
+        return obj.map(item => this.cleanObject(item));
+      }
+      
+      if (typeof obj === 'object') {
+        const result: any = {};
+        Object.keys(obj).forEach(key => {
+          const value = this.cleanObject(obj[key]);
+          if (value !== undefined) {
+            result[key] = value;
+          }
+        });
+        return result;
+      }
+      
+      return obj;
+    },
+    
+    async updateUserSettings(settings: Partial<UserSettings>) {
+      if (!this.user) {
+        console.error('Cannot update settings: No user is logged in');
+        return;
+      }
+      
+      this.loading = true;
+      this.error = null;
       
       try {
-        const db = getFirestore()
-        const userRef = doc(db, 'users', this.user.id)
+        const db = getFirestore();
+        const userRef = doc(db, 'users', this.user.id);
         
+        // Deep merge current settings with new settings
         const updatedSettings = {
           ...this.user.settings,
           ...settings
-        }
+        };
         
-        await setDoc(userRef, { settings: updatedSettings }, { merge: true })
+        // Clean the settings object to remove any undefined values
+        // which would cause Firestore to throw an error
+        const cleanSettings = this.cleanObject(updatedSettings);
         
-        this.user = {
-          ...this.user,
-          settings: updatedSettings as UserSettings
+        // Log before saving to help with debugging
+        console.log('Updating user settings with cleaned data:', {
+          userId: this.user.id,
+          hasIntegrationAccounts: Array.isArray(cleanSettings.integrationAccounts),
+          integrationAccountsCount: Array.isArray(cleanSettings.integrationAccounts) 
+            ? cleanSettings.integrationAccounts.length 
+            : 0
+        });
+        
+        try {
+          await setDoc(userRef, { settings: cleanSettings }, { merge: true });
+          
+          // Update local state after successful Firestore update
+          this.user = {
+            ...this.user,
+            settings: cleanSettings as UserSettings
+          };
+          
+          console.log('Settings updated successfully');
+        } catch (firestoreError: any) {
+          // Log detailed error info for Firestore errors
+          console.error('Firestore error details:', {
+            code: firestoreError.code,
+            name: firestoreError.name,
+            message: firestoreError.message,
+            stack: firestoreError.stack,
+            // Log specific information about integration accounts
+            integrationAccounts: Array.isArray(updatedSettings.integrationAccounts) 
+              ? `Array with ${updatedSettings.integrationAccounts.length} items` 
+              : typeof updatedSettings.integrationAccounts
+          });
+          
+          this.error = `Firestore error (${firestoreError.code}): ${firestoreError.message}`;
+          throw firestoreError;
         }
       } catch (error: any) {
-        this.error = error.message || 'Failed to update settings'
-        throw error
+        this.error = error.message || 'Failed to update settings';
+        console.error('Settings update failed:', error);
+        throw error;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
     

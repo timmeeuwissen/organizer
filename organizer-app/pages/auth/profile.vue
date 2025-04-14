@@ -103,37 +103,53 @@ v-container
                 v-for="account in integrationAccounts"
                 :key="account.id"
                 :active="false"
-                @click="expandAccount(account.id)"
               )
                 template(v-slot:prepend)
                   v-avatar(:color="account.color")
                     v-icon(color="white") {{ getAccountIcon(account.type) }}
                 
-                v-list-item-title {{ account.name }}
+                v-list-item-title {{ account.oauthData.name }}
                 
                 v-list-item-subtitle
-                  | {{ getAccountTypeName(account.type) }} | {{ account.email }}
+                  | {{ getAccountTypeName(account.type) }} | {{ account.oauthData.email }}
                   v-chip(
-                    :color="account.connected ? 'success' : 'error'"
+                    :color="account.oauthData.connected ? 'success' : 'error'"
                     size="x-small"
                     class="ml-2"
-                  ) {{ account.connected ? $t('settings.connected') : $t('settings.disconnected') }}
+                  ) {{ account.oauthData.connected ? $t('settings.connected') : $t('settings.disconnected') }}
                 
                 template(v-slot:append)
-                  v-btn(
-                    icon
-                    variant="text"
-                    size="small"
-                    @click.stop="showEditIntegrationDialog(account)"
-                  )
-                    v-icon mdi-pencil
+                  // Color picker
+                  v-menu(location="bottom")
+                    template(v-slot:activator="{ props }")
+                      v-btn(
+                        icon
+                        variant="text"
+                        size="small"
+                        v-bind="props"
+                        :title="$t('settings.changeColor')"
+                      )
+                        v-icon mdi-palette
+                    
+                    v-card(min-width="300" class="pa-3")
+                      v-card-title(class="text-subtitle-1 pb-0") {{ $t('settings.changeColor') }}
+                      v-color-picker(
+                        v-model="account.color"
+                        :swatches="colorSwatches"
+                        show-swatches
+                        hide-inputs
+                        hide-canvas
+                        @update:model-value="updateIntegrationColor(account.id, $event)"
+                      )
                   
+                  // Delete button
                   v-btn(
                     icon
                     variant="text"
                     size="small"
                     color="error"
                     @click.stop="confirmDeleteIntegration(account)"
+                    :title="$t('common.delete')"
                   )
                     v-icon mdi-delete
         
@@ -146,21 +162,22 @@ v-container
             :disabled="!hasProfileChanges || isSaving"
           ) {{ $t('common.save') }}
   
-  // Integration account dialog
+  // Integration account dialog (only for adding new integrations)
   integration-account-dialog(
     v-model="showIntegrationDialog"
     :account="selectedIntegrationAccount"
     @save="saveIntegrationAccount"
     @test="handleIntegrationTest"
+    add-only
   )
   
   // Confirm delete dialog  
   v-dialog(v-model="showDeleteDialog" max-width="500")
     v-card
-      v-card-title {{ $t('common.delete') }} {{ accountToDelete?.name }}?
+      v-card-title {{ $t('common.delete') }} {{ accountToDelete?.oauthData?.name }}?
       v-card-text 
         | {{ $t('common.delete') }} {{ getAccountTypeName(accountToDelete?.type) }} 
-        | {{ $t('settings.integrationAccount') }} {{ accountToDelete?.email }}?
+        | {{ $t('settings.integrationAccount') }} {{ accountToDelete?.oauthData?.email }}?
         | {{ $t('common.delete') }}?
       v-card-actions
         v-spacer
@@ -208,6 +225,13 @@ const integrationSuccessMsg = ref('')
 const showDeleteDialog = ref(false)
 const accountToDelete = ref(null)
 const isDeletingAccount = ref(false)
+
+// Color swatches for accounts
+const colorSwatches = [
+  ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3'],
+  ['#03A9F4', '#00BCD4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39'],
+  ['#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#607D8B']
+]
 
 // Validation rules
 const rules = {
@@ -345,13 +369,11 @@ function getAccountTypeName(type) {
 
 function showAddIntegrationDialog() {
   // Create a new account template with reasonable defaults
+  const now = new Date();
   selectedIntegrationAccount.value = {
     id: uuidv4(), // Generate a unique ID using imported function
-    name: '',
     type: 'google', // Default to Google
-    email: user.value?.email || '',
-    username: user.value?.email || '',
-    connected: false,
+    color: '#2196F3', // Default blue
     syncCalendar: true,
     syncMail: true,
     syncTasks: true,
@@ -360,21 +382,34 @@ function showAddIntegrationDialog() {
     showInMail: true,
     showInTasks: true,
     showInContacts: true,
-    color: '#2196F3', // Default blue
-    createdAt: new Date(),
-    updatedAt: new Date()
+    oauthData: {
+      connected: false,
+      email: user.value?.email || '',
+      name: 'New Integration'
+    },
+    createdAt: now,
+    updatedAt: now
   }
   showIntegrationDialog.value = true
 }
 
-function showEditIntegrationDialog(account) {
-  selectedIntegrationAccount.value = account
-  showIntegrationDialog.value = true
-}
-
-function expandAccount(accountId) {
-  // Expand account details or show details panel
-  console.log('Expand account', accountId)
+// Update integration color
+async function updateIntegrationColor(accountId, newColor) {
+  const index = integrationAccounts.value.findIndex(account => account.id === accountId);
+  if (index >= 0) {
+    // Update the color
+    integrationAccounts.value[index].color = newColor;
+    integrationAccounts.value[index].updatedAt = new Date();
+    
+    // Update settings
+    await updateUserSettings();
+    
+    // Show success message
+    integrationSuccessMsg.value = 'Integration color updated';
+    setTimeout(() => {
+      integrationSuccessMsg.value = '';
+    }, 2000);
+  }
 }
 
 function confirmDeleteIntegration(account) {
@@ -508,6 +543,7 @@ async function updateUserSettings() {
       integrationAccounts: integrationAccounts.value
     }
     
+    // The auth store now handles cleaning undefined values internally
     await authStore.updateUserSettings(settings)
     
     successMsg.value = 'Settings updated successfully'

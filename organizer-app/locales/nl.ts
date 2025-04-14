@@ -91,7 +91,19 @@ export default {
     oauthStep3: 'Autoriseer de toegang tot je account in de browser die wordt geopend',
     oauthStep4: 'Kopieer de client-ID, clientgeheim en vernieuwingstoken uit de uitvoer naar de onderstaande velden',
     enterOAuthCredentials: 'Voer OAuth-referenties in',
-    oauthConfigured: 'OAuth Geconfigureerd'
+    oauthConfigured: 'OAuth Geconfigureerd',
+    googlePopupAuth: 'Gebruik Google Popup-authenticatie',
+    manualOAuth: 'Handmatige OAuth-installatie',
+    authOptions: 'Authenticatieopties',
+    // New integration dialog translations
+    connectIntegration: 'Integratie Verbinden',
+    selectAuthMethod: 'Selecteer Authenticatiemethode',
+    connectGoogle: 'Verbind Google',
+    connectMicrosoft: 'Verbind Microsoft',
+    changeColor: 'Kleur Wijzigen',
+    provider: {
+      info: 'Provider Informatie'
+    }
   },
   behaviors: {
     title: 'Gedragingen',

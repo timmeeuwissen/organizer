@@ -1,12 +1,12 @@
 <template lang="pug">
 v-dialog(
   v-model="dialogVisible"
-  max-width="700px"
+  max-width="500px"
   persistent
 )
   v-card
     v-card-title
-      span {{ dialogTitle }}
+      span {{ $t('settings.connectIntegration') }}
       v-spacer
       v-btn(icon @click="close")
         v-icon mdi-close
@@ -30,32 +30,44 @@ v-dialog(
     ) {{ successMsg }}
     
     v-card-text
-      integration-account-form(
-        ref="accountForm"
-        :account="formDataForDisplay"
-        :isEditMode="isEditMode"
-        @save="handleSave"
-        @test="handleTest"
-        @sync="handleSync"
-        @disconnect="handleDisconnect"
-        @update:account="handleFormUpdate"
-      )
+      v-row(align="center" justify="center")
+        v-col(cols="12" class="text-center")
+          h3.mb-4 {{ $t('settings.selectAuthMethod') }}
+          
+          // Google auth using the GoogleAuthButton component
+          v-col(cols="12" md="6" class="d-flex align-center justify-center my-3")
+            google-auth-button(
+              color="error"
+              :text="$t('settings.connectGoogle')"
+              block
+              @auth-success="handleGoogleAuthSuccess"
+              @auth-error="handleGoogleAuthError"
+              :loading="isGoogleLoading"
+            )
+          
+          // Microsoft auth
+          v-col(cols="12" md="6" class="d-flex align-center justify-center my-3")
+            o-auth-authorize-button(
+              provider="microsoft"
+              color="info"
+              :text="$t('settings.connectMicrosoft')"
+              :icon="'mdi-microsoft'"
+              block
+              @tokens-updated="handleMicrosoftAuthSuccess"
+              :loading="isMicrosoftLoading"
+            )
     
     v-card-actions
       v-spacer
       v-btn(color="error" variant="text" @click="close") {{ $t('common.cancel') }}
-      v-btn(
-        color="primary"
-        @click="connectAndClose"
-        :disabled="!hasChanges || isSaving"
-        :loading="isSaving"
-      ) {{ $t('common.done') }}
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IntegrationAccountForm from './IntegrationAccountForm.vue'
+import GoogleAuthButton from './GoogleAuthButton'
+import OAuthAuthorizeButton from './OAuthAuthorizeButton'
 
 // Props
 const props = defineProps({
@@ -66,6 +78,10 @@ const props = defineProps({
   account: {
     type: Object,
     default: null
+  },
+  addOnly: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -74,7 +90,7 @@ const emit = defineEmits(['update:modelValue', 'save', 'test'])
 
 // State
 const dialogVisible = ref(false)
-const formData = ref(null)          // Form data only (UI-related fields)
+const formData = ref(null)          // Basic account data
 const oauthData = ref(null)         // OAuth-related data (tokens, etc.)
 const originalFormData = ref(null)  // Original form data for comparison
 const accountForm = ref(null)
@@ -85,15 +101,117 @@ const isSaving = ref(false)
 // Composables
 const i18n = useI18n()
 
-// Computed
-const isEditMode = computed(() => !!props.account)
+// State for auth providers
+const isGoogleLoading = ref(false);
+const isMicrosoftLoading = ref(false);
 
-const dialogTitle = computed(() => {
-  if (isEditMode.value) {
-    return i18n.t('settings.editIntegration')
+// Functions for handling auth results from components
+function handleGoogleAuthSuccess(tokens) {
+  console.log('Google auth success:', tokens);
+  errorMsg.value = '';
+  successMsg.value = '';
+  
+  try {
+    // Create account with tokens from Google
+    const now = new Date();
+    const account = {
+      id: uuidv4(),
+      type: 'google',
+      color: '#DB4437', // Google red
+      syncCalendar: true,
+      syncMail: true,
+      syncTasks: true,
+      syncContacts: true,
+      showInCalendar: true,
+      showInMail: true,
+      showInTasks: true,
+      showInContacts: true,
+      createdAt: now,
+      updatedAt: now,
+      oauthData: {
+        name: tokens.displayName || 'Google Account',
+        email: tokens.email || '',
+        connected: true,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        tokenExpiry: tokens.tokenExpiry,
+        clientId: tokens.clientId,
+        lastSync: new Date()
+      }
+    };
+    
+    // Show success and save
+    successMsg.value = i18n.t('settings.connectionSuccessful');
+    emit('save', account);
+    
+    // Close after delay
+    setTimeout(() => {
+      dialogVisible.value = false;
+    }, 1500);
   }
-  return i18n.t('settings.addIntegration')
-})
+  catch (error) {
+    console.error('Error processing Google auth:', error);
+    errorMsg.value = error.message || 'Failed to process Google authentication';
+  }
+}
+
+function handleGoogleAuthError(error) {
+  console.error('Google auth error:', error);
+  errorMsg.value = error.message || 'Failed to connect to Google';
+}
+
+function handleMicrosoftAuthSuccess(tokens) {
+  console.log('Microsoft auth success:', tokens);
+  errorMsg.value = '';
+  successMsg.value = '';
+  
+  try {
+    // Create account with tokens from Microsoft
+    const now = new Date();
+    const account = {
+      id: uuidv4(),
+      type: 'office365',
+      color: '#0078D4', // Microsoft blue
+      syncCalendar: true,
+      syncMail: true,
+      syncTasks: true,
+      syncContacts: true,
+      showInCalendar: true,
+      showInMail: true,
+      showInTasks: true,
+      showInContacts: true,
+      createdAt: now,
+      updatedAt: now,
+      oauthData: {
+        name: 'Microsoft Account',
+        email: tokens.email || 'user@outlook.com',
+        connected: true,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        tokenExpiry: tokens.tokenExpiry,
+        clientId: tokens.clientId,
+        clientSecret: tokens.clientSecret,
+        lastSync: new Date()
+      }
+    };
+    
+    // Show success and save
+    successMsg.value = i18n.t('settings.connectionSuccessful');
+    emit('save', account);
+    
+    // Close after delay
+    setTimeout(() => {
+      dialogVisible.value = false;
+    }, 1500);
+  }
+  catch (error) {
+    console.error('Error processing Microsoft auth:', error);
+    errorMsg.value = error.message || 'Failed to process Microsoft authentication';
+  }
+}
+
+// Computed
+const isEditMode = computed(() => !!props.account && !props.addOnly);
 
 const hasChanges = computed(() => {
   if (!formData.value || !originalFormData.value) return false
@@ -102,27 +220,38 @@ const hasChanges = computed(() => {
   return JSON.stringify(formData.value) !== JSON.stringify(originalFormData.value)
 })
 
-// For display in the form, we need to merge the form data with connected status
-// from OAuth data, so the form knows if the account is connected or not
-const formDataForDisplay = computed(() => {
-  if (!formData.value) return null;
-  
-  // Create a merged display object for the form
-  return {
-    ...formData.value,
-    // Include connected status if available
-    connected: oauthData.value?.connected || false,
-    // Pass lastSync if available for display purposes
-    lastSync: oauthData.value?.lastSync || null
-  }
-})
+import { v4 as uuidv4 } from 'uuid';
 
-// Separate OAuth data from account data
+// Process account data according to new structure
 function separateAccountData(account) {
   if (!account) return { formData: null, oauthData: null };
   
-  // Extract OAuth-specific fields
+  if (account.oauthData) {
+    // Account already has new structure
+    return {
+      formData: {
+        id: account.id,
+        type: account.type,
+        color: account.color,
+        syncCalendar: account.syncCalendar,
+        syncMail: account.syncMail,
+        syncTasks: account.syncTasks,
+        syncContacts: account.syncContacts,
+        showInCalendar: account.showInCalendar,
+        showInMail: account.showInMail,
+        showInTasks: account.showInTasks,
+        showInContacts: account.showInContacts,
+        createdAt: account.createdAt,
+        updatedAt: account.updatedAt
+      },
+      oauthData: account.oauthData
+    };
+  }
+  
+  // For backward compatibility - extract OAuth-specific fields
   const oauth = {
+    name: account.name || '',
+    email: account.email || '',
     refreshToken: account.refreshToken,
     accessToken: account.accessToken,
     tokenExpiry: account.tokenExpiry,
@@ -133,45 +262,56 @@ function separateAccountData(account) {
     lastSync: account.lastSync || null
   };
   
-  // Extract form data (everything else)
-  const form = { ...account };
-  
-  // Remove OAuth fields from form data
-  delete form.refreshToken;
-  delete form.accessToken;
-  delete form.tokenExpiry;
-  delete form.clientId;
-  delete form.clientSecret;
-  delete form.scope;
+  // Create new format formData
+  const form = {
+    id: account.id,
+    type: account.type,
+    color: account.color,
+    syncCalendar: account.syncCalendar,
+    syncMail: account.syncMail,
+    syncTasks: account.syncTasks,
+    syncContacts: account.syncContacts,
+    showInCalendar: account.showInCalendar,
+    showInMail: account.showInMail,
+    showInTasks: account.showInTasks,
+    showInContacts: account.showInContacts,
+    createdAt: account.createdAt,
+    updatedAt: account.updatedAt
+  };
   
   return { formData: form, oauthData: oauth };
 }
 
-// Merge form data with OAuth data for storage/API calls
+// Create account data for storage/API calls
 function mergeAccountData() {
   if (!formData.value) return null;
   
-  // Start with form data
-  const merged = { ...formData.value };
+  // Create new account object with the new structure
+  const account = { 
+    ...formData.value,
+    updatedAt: new Date()
+  };
   
   // Add OAuth data if available
   if (oauthData.value) {
-    // Only add non-null and non-undefined values
+    // Filter any undefined values from oauthData
+    const filteredOAuthData = {};
     Object.entries(oauthData.value).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        merged[key] = value;
+        filteredOAuthData[key] = value;
       }
     });
+    
+    account.oauthData = filteredOAuthData;
+  } else {
+    account.oauthData = {
+      connected: false,
+      email: '',
+      name: ''
+    };
   }
   
-  // Filter out any undefined values that might cause Firestore errors
-  Object.keys(merged).forEach(key => {
-    if (merged[key] === undefined) {
-      delete merged[key];
-    }
-  });
-  
-  return merged;
+  return account;
 }
 
 // Watchers
@@ -217,106 +357,6 @@ function close() {
   successMsg.value = '';
 }
 
-function handleFormUpdate(updatedFormData) {
-  console.info('Form data updated:', updatedFormData);
-  // Update form data only - OAuth data remains unchanged
-  formData.value = updatedFormData;
-}
-
-function handleTest(testAccountData) {
-  errorMsg.value = '';
-  successMsg.value = '';
-  
-  // For testing connectivity, we'll use the form data but keep our OAuth tokens
-  console.log('Testing connection with form data:', testAccountData);
-  
-  // Mock a connection test
-  setTimeout(() => {
-    const success = Math.random() > 0.2; // 80% success rate for testing
-    
-    if (success) {
-      successMsg.value = i18n.t('settings.connectionSuccessful');
-      
-      // When the test succeeds, we might get new tokens back
-      // In a real implementation, we would extract the OAuth data from the test result
-      const testResult = testAccountData; // This would normally come from the API
-      
-      // Extract any new OAuth data from test result
-      const { oauthData: newOAuthData } = separateAccountData(testResult);
-      
-      // Merge with existing OAuth data, keeping existing values if new ones aren't provided
-      if (newOAuthData) {
-        if (!oauthData.value) {
-          oauthData.value = {};
-        }
-        
-        Object.entries(newOAuthData).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            oauthData.value[key] = value;
-          }
-        });
-        
-        // Mark as connected
-        oauthData.value.connected = true;
-      }
-      
-      emit('test', mergeAccountData());
-      
-      setTimeout(() => {
-        successMsg.value = '';
-      }, 3000);
-    } else {
-      errorMsg.value = i18n.t('settings.connectionFailed');
-      setTimeout(() => {
-        errorMsg.value = '';
-      }, 3000);
-    }
-  }, 1000);
-}
-
-function handleSave(updatedFormData) {
-  console.info('Save requested with form data:', updatedFormData);
-  
-  // Update form data
-  formData.value = updatedFormData;
-  
-  saveAccount();
-}
-
-function handleSync(updatedFormData) {
-  console.info('Sync requested with form data:', updatedFormData);
-  
-  // Update form data
-  formData.value = updatedFormData;
-  
-  // Update lastSync in OAuth data
-  if (!oauthData.value) {
-    oauthData.value = {};
-  }
-  oauthData.value.lastSync = new Date();
-  
-  successMsg.value = i18n.t('settings.connectionSuccessful');
-  setTimeout(() => {
-    successMsg.value = '';
-  }, 3000);
-}
-
-function handleDisconnect(updatedFormData) {
-  console.info('Disconnect requested with form data:', updatedFormData);
-  
-  // Update form data
-  formData.value = updatedFormData;
-  
-  // Mark as disconnected in OAuth data, but preserve tokens
-  if (oauthData.value) {
-    oauthData.value.connected = false;
-  }
-  
-  successMsg.value = i18n.t('settings.disconnected');
-  setTimeout(() => {
-    successMsg.value = '';
-  }, 3000);
-}
 
 async function connectAndClose() {
   console.info('Connect and close with form data:', formData.value);
@@ -335,18 +375,15 @@ async function connectAndClose() {
       throw new Error('Account ID is required');
     }
     
-    if (!formData.value.name || !formData.value.email || !formData.value.type) {
+    if (!formData.value.type) {
       console.error('Missing required account fields');
-      throw new Error('Name, email and account type are required');
+      throw new Error('Account type is required');
     }
     
-    // Ensure OAuth data exists
-    if (!oauthData.value) {
-      oauthData.value = {};
+    if (!oauthData.value || !oauthData.value.email) {
+      console.error('Missing OAuth email');
+      throw new Error('OAuth email is required');
     }
-    
-    // Always ensure connected status is set to true when saving
-    oauthData.value.connected = true;
     
     // Set lastSync if it doesn't exist
     if (!oauthData.value.lastSync) {
@@ -369,11 +406,13 @@ async function connectAndClose() {
     // Log what we're saving to Firebase
     console.log('Saving to Firebase:', {
       id: mergedAccount.id,
-      name: mergedAccount.name, 
       type: mergedAccount.type,
-      email: mergedAccount.email,
-      hasRefreshToken: !!mergedAccount.refreshToken,
-      refreshTokenLength: mergedAccount.refreshToken ? mergedAccount.refreshToken.length : 0
+      oauthData: {
+        email: mergedAccount.oauthData.email,
+        name: mergedAccount.oauthData.name,
+        connected: mergedAccount.oauthData.connected,
+        hasRefreshToken: !!mergedAccount.oauthData.refreshToken
+      }
     });
     
     // Send the merged account data to parent component
@@ -410,9 +449,14 @@ async function saveAccount() {
       throw new Error('Account ID is required');
     }
     
-    if (!formData.value.name || !formData.value.email || !formData.value.type) {
+    if (!formData.value.type) {
       console.error('Missing required account fields');
-      throw new Error('Name, email and account type are required');
+      throw new Error('Account type is required');
+    }
+    
+    if (!oauthData.value || !oauthData.value.email) {
+      console.error('Missing OAuth email');
+      throw new Error('OAuth email is required');
     }
     
     // Brief delay to simulate saving
