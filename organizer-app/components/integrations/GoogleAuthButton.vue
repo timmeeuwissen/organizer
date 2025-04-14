@@ -59,6 +59,15 @@ async function handleGoogleAuth() {
     const auth = getAuth()
     const provider = new GoogleAuthProvider()
     
+    // Set client ID if available from environment variables
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    if (clientId) {
+      console.log('Using client ID from environment variables')
+      provider.setCustomParameters({
+        client_id: clientId
+      })
+    }
+    
     // Add scopes for Google services we need access to
     // Gmail scopes - adding multiple scopes to ensure access
     provider.addScope('https://www.googleapis.com/auth/gmail.readonly')
@@ -84,6 +93,7 @@ async function handleGoogleAuth() {
     
     // Extract relevant authentication information
     const credential = GoogleAuthProvider.credentialFromResult(result)
+    console.log('DEBUG TIM', auth, result, credential)
     const user = result.user
     
     // Log auth data to see what we're getting

@@ -138,7 +138,7 @@ v-container(fluid)
                 v-list-subheader {{ formatSelectedDate() }}
                 template(v-if="selectedDateEvents.length === 0")
                   v-list-item
-                    v-list-item-text {{ $t('calendar.noEvents') }}
+                    v-list-item-title {{ $t('calendar.noEvents') }}
                 template(v-else)
                   v-list-item(
                     v-for="event in selectedDateEvents"
@@ -178,13 +178,12 @@ v-container(fluid)
 import { ref, computed, onMounted, watch } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
-// The meetings store would be imported here when implemented
-// import { useMeetingsStore } from '~/stores/meetings'
+import { useCalendarStore } from '~/stores/calendar'
 
 // Stores
 const tasksStore = useTasksStore()
 const authStore = useAuthStore()
-// const meetingsStore = useMeetingsStore()
+const calendarStore = useCalendarStore()
 
 // Check if user has connected calendar integrations
 const hasCalendarIntegrations = computed(() => {
@@ -216,14 +215,33 @@ const calendarViews = [
 // Load data
 onMounted(async () => {
   try {
+    loading.value = true
+    
+    // Fetch tasks
     await tasksStore.fetchTasks()
-    // When meetings store is implemented:
-    // await meetingsStore.fetchMeetings()
     
-    // For now, we'll simulate some meetings
-    simulateMeetings()
+    // Load calendar events from integrations
+    if (hasCalendarIntegrations.value) {
+      // Set date range for calendar query
+      const today = new Date()
+      const startDate = new Date(today)
+      startDate.setDate(1) // First day of current month
+      
+      const endDate = new Date(today)
+      endDate.setMonth(endDate.getMonth() + 1)
+      endDate.setDate(0) // Last day of current month
+      
+      // Fetch events from calendar integrations
+      await calendarStore.fetchEvents({
+        startDate,
+        endDate
+      })
+      
+      // Fetch available calendars
+      await calendarStore.fetchCalendars()
+    }
     
-    // Combine tasks and meetings into events
+    // Combine tasks and events
     updateEvents()
   } catch (error) {
     console.error('Failed to load calendar data:', error)
@@ -232,9 +250,46 @@ onMounted(async () => {
   }
 })
 
-// Watch for filter changes
+// Watch for filter changes and date navigation
 watch([showMeetings, showTasks, showCompletedTasks], () => {
   updateEvents()
+})
+
+// Watch for month/date changes to load new event data
+watch(selectedDate, (newDate) => {
+  if (hasCalendarIntegrations.value) {
+    const date = new Date(newDate)
+    
+    // When changing months, fetch events for the new month
+    if (currentView.value === 'month') {
+      const startDate = new Date(date.getFullYear(), date.getMonth(), 1)
+      const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+      
+      calendarStore.fetchEvents({
+        startDate,
+        endDate
+      }).then(() => {
+        updateEvents()
+      })
+    } 
+    // For week view, fetch events for that week
+    else if (currentView.value === 'week') {
+      const day = date.getDay()
+      const diff = date.getDate() - day
+      const startDate = new Date(date)
+      startDate.setDate(diff)
+      
+      const endDate = new Date(startDate)
+      endDate.setDate(startDate.getDate() + 7)
+      
+      calendarStore.fetchEvents({
+        startDate,
+        endDate
+      }).then(() => {
+        updateEvents()
+      })
+    }
+  }
 })
 
 // Helper to get first day of month
@@ -558,29 +613,23 @@ const updateEvents = () => {
           title: task.title,
           type: 'task',
           date: new Date(task.dueDate),
+          startTime: new Date(task.dueDate),
+          endTime: new Date(task.dueDate),
           allDay: true
         })
       }
     })
   }
   
-  // Add meetings as events
-  if (showMeetings.value) {
-    // When meetings store is implemented, we'll use that
-    // meetingsStore.meetings.forEach(meeting => {
-    //   events.value.push({
-    //     id: meeting.id,
-    //     title: meeting.title,
-    //     type: 'meeting',
-    //     date: new Date(meeting.startTime),
-    //     startTime: new Date(meeting.startTime),
-    //     endTime: new Date(meeting.endTime),
-    //     allDay: false
-    //   })
-    // })
-    
-    // For now, we'll use simulated meetings
-    events.value = [...events.value, ...simulatedMeetings.value]
+  // Add calendar events from integrations
+  if (hasCalendarIntegrations.value && showMeetings.value) {
+    calendarStore.events.forEach(event => {
+      events.value.push({
+        ...event,
+        type: 'meeting',
+        date: new Date(event.startTime)
+      })
+    })
   }
 }
 

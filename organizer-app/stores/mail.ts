@@ -374,6 +374,9 @@ export const useMailStore = defineStore('mail', {
       const connectedAccounts = this.getConnectedAccounts
       if (connectedAccounts.length === 0) {
         console.error('No connected accounts to send email from')
+        // Update error state in the store
+        this.error = 'No connected email accounts available'
+        
         // Still add to sent folder for UI consistency
         const newEmail: Email = {
           ...email,
@@ -398,13 +401,19 @@ export const useMailStore = defineStore('mail', {
         if (!mailProvider.isAuthenticated()) {
           const authenticated = await mailProvider.authenticate()
           if (!authenticated) {
+            this.error = 'Authentication failed. Please reconnect your email account'
             throw new Error('Not authenticated with mail provider')
           }
         }
         
+        // Make sure body is defined and not null
+        const emailBody = email.body || ''
+        console.log('Email body from compose:', emailBody, 'Length:', emailBody.length)
+        
         // Create email object with account info
         const newEmail: Email = {
           ...email,
+          body: emailBody, // Ensure body is not undefined or null
           id: `email-${Date.now()}`,
           folder: 'sent',
           read: true,
@@ -415,18 +424,30 @@ export const useMailStore = defineStore('mail', {
         // Send via provider
         const success = await mailProvider.sendEmail(newEmail)
         if (!success) {
+          this.error = 'Failed to send email. Please try again'
           throw new Error('Failed to send email')
         }
         
+        // Clear any previous errors on success
+        this.error = null
+        
         // Add to local state
         this.emails.unshift(newEmail)
+        
+        // Log success - UI will handle showing notifications
+        console.log('[Mail] Email sent successfully')
+        
         return newEmail
       } catch (error) {
         console.error('Error sending email:', error)
         
+        // Log error message - UI will handle showing error notifications
+        console.error('[Mail] Email sending failed:', this.error || 'Failed to send email. Please check your email settings')
+        
         // Still add to sent folder for UI consistency, but mark as failed
         const newEmail: Email = {
           ...email,
+          body: email.body || '', // Ensure body is not undefined or null
           id: `email-${Date.now()}`,
           folder: 'sent',
           read: true,

@@ -631,6 +631,9 @@ const forwardEmail = () => {
 }
 
 const sendEmail = () => {
+  // Log the body content to help debug
+  console.log('Compose body before sending:', composeData.value.body);
+  
   // Create email from form data
   const newEmail: Email = {
     id: `sent-${Date.now()}`,
@@ -658,7 +661,11 @@ const sendEmail = () => {
     folder: 'sent'
   }
   
+  // Double-check email has body
+  console.log('Email object body before sending:', newEmail.body);
+  
   // Use mail store to send the email
+  console.log('Sending email via mailStore.sendEmail with body:', newEmail.body);
   mailStore.sendEmail(newEmail)
   showComposeDialog.value = false
   

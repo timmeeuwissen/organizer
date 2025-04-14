@@ -167,7 +167,7 @@ export class GmailProvider implements MailProvider {
       hasAccessToken: !!this.account.accessToken,
       tokenExpiry: this.account.tokenExpiry,
       currentTime: new Date(),
-      isTokenExpired: this.account.tokenExpiry && new Date(this.account.tokenExpiry) < new Date(),
+      isTokenExpired: this.account.tokenExpiry ? new Date(this.account.tokenExpiry) < new Date() : 'No expiry set',
       scope: this.account.scope
     });
     
@@ -178,7 +178,14 @@ export class GmailProvider implements MailProvider {
     }
     
     // Check token expiry
-    if (this.account.tokenExpiry && new Date(this.account.tokenExpiry) < new Date()) {
+    // If tokenExpiry is not set, consider the token expired and force a refresh
+    if (!this.account.tokenExpiry) {
+      console.log(`${this.account.email}: No token expiry date set, assuming expired`);
+      return false;
+    }
+    
+    // Check if token is expired
+    if (new Date(this.account.tokenExpiry) < new Date()) {
       console.log(`${this.account.email}: Token expired`);
       return false;
     }
@@ -388,7 +395,7 @@ export class GmailProvider implements MailProvider {
       };
       
       const url = `${endpoint}?${params.toString()}`;
-      console.log(`[Gmail] Fetching emails with query: ${searchQuery}, page: ${page}, pageSize: ${pageSize}`);
+      console.log(`[Gmail] Fetching emails with ${url} query: ${searchQuery}, page: ${page}, pageSize: ${pageSize}`, headers);
       
       // Make the request to get message IDs
       const response = await fetch(url, {
@@ -576,6 +583,8 @@ export class GmailProvider implements MailProvider {
         email.body || ''
       ].filter(Boolean).join('\r\n');
       
+      console.log('Sending email with body:', email.body); // Debug log
+      
       // In browser, we need to use TextEncoder
       const encoder = new TextEncoder();
       const rawData = encoder.encode(rawEmail);
@@ -587,12 +596,19 @@ export class GmailProvider implements MailProvider {
           .join('')
       ).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       
-      // Prepare request with auth
+      // Prepare request with auth - explicitly specifying 'Accept: application/json' to ensure JSON response
       const headers = {
         'Authorization': `Bearer ${this.account.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       };
+      
+      // Debug log for the request we're about to send
+      console.log('[Gmail] Sending email request with payload:', {
+        to: email.to.map(t => t.email).join(', '),
+        subject: email.subject,
+        bodyLength: email.body ? email.body.length : 0
+      });
       
       // Send the request
       const response = await fetch(endpoint, {

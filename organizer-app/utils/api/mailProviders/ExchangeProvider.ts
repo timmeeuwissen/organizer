@@ -14,8 +14,35 @@ export class ExchangeProvider implements MailProvider {
   }
   
   isAuthenticated(): boolean {
-    return !!this.account.accessToken && 
-      (!this.account.tokenExpiry || new Date(this.account.tokenExpiry) > new Date())
+    console.log(`ExchangeProvider.isAuthenticated check for ${this.account.email}:`, {
+      hasAccessToken: !!this.account.accessToken,
+      tokenExpiry: this.account.tokenExpiry,
+      currentTime: new Date(),
+      isTokenExpired: this.account.tokenExpiry ? new Date(this.account.tokenExpiry) < new Date() : 'No expiry set',
+      scope: this.account.scope
+    });
+    
+    // Check access token
+    if (!this.account.accessToken) {
+      console.log(`${this.account.email}: No access token found`);
+      return false;
+    }
+    
+    // Check token expiry
+    // If tokenExpiry is not set, consider the token expired and force a refresh
+    if (!this.account.tokenExpiry) {
+      console.log(`${this.account.email}: No token expiry date set, assuming expired`);
+      return false;
+    }
+    
+    // Check if token is expired
+    if (new Date(this.account.tokenExpiry) < new Date()) {
+      console.log(`${this.account.email}: Token expired`);
+      return false;
+    }
+    
+    console.log(`${this.account.email}: Authentication valid`);
+    return true;
   }
   
   async authenticate(): Promise<boolean> {
@@ -385,6 +412,8 @@ export class ExchangeProvider implements MailProvider {
         },
         saveToSentItems: true
       }
+      
+      console.log('Sending Exchange email with body:', email.body); // Debug log
       
       // Send the request
       const response = await fetch(endpoint, {
