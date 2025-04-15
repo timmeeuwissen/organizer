@@ -38,6 +38,7 @@ export interface UserSettings {
   darkMode: boolean;
   emailNotifications: boolean;
   calendarSync: boolean;
+  weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   integrationAccounts: IntegrationAccount[];
 }
 

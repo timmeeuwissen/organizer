@@ -55,6 +55,7 @@ export const useAuthStore = defineStore('auth', {
           darkMode: false,
           emailNotifications: true,
           calendarSync: false,
+          weekStartsOn: 1, // Default to Monday
           integrationAccounts: []
         }
       };
@@ -140,6 +141,7 @@ export const useAuthStore = defineStore('auth', {
                 darkMode: false,
                 emailNotifications: true,
                 calendarSync: false,
+                weekStartsOn: 1, // Default to Monday
                 integrationAccounts: []
               }
             }
@@ -163,6 +165,7 @@ export const useAuthStore = defineStore('auth', {
                   darkMode: false,
                   emailNotifications: true,
                   calendarSync: false,
+                  weekStartsOn: 1, // Default to Monday
                   integrationAccounts: []
                 }
               }
@@ -194,6 +197,7 @@ export const useAuthStore = defineStore('auth', {
                   darkMode: false,
                   emailNotifications: true,
                   calendarSync: false,
+                  weekStartsOn: 1, // Default to Monday
                   integrationAccounts: []
                 }
             }

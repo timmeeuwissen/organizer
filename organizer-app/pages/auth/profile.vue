@@ -57,6 +57,15 @@ v-container
                 @update:model-value="handleLanguageChange"
               )
               
+              v-select(
+                v-model="weekStartsDayInput"
+                :items="weekDayOptions"
+                :label="$t('settings.weekStartsOn')"
+                item-title="text"
+                item-value="value"
+                @update:model-value="handleSettingsChange"
+              )
+              
               v-switch(
                 v-model="emailNotificationsInput"
                 :label="$t('settings.emailNotifications')"
@@ -211,8 +220,20 @@ const successMsg = ref('')
 const displayNameInput = ref('')
 const darkModeInput = ref(false)
 const languageInput = ref('en')
+const weekStartsDayInput = ref(1) // Default to Monday
 const emailNotificationsInput = ref(true)
 const calendarSyncInput = ref(false)
+
+// Week start day options
+const weekDayOptions = [
+  { text: 'Sunday', value: 0 },
+  { text: 'Monday', value: 1 },
+  { text: 'Tuesday', value: 2 },
+  { text: 'Wednesday', value: 3 },
+  { text: 'Thursday', value: 4 },
+  { text: 'Friday', value: 5 },
+  { text: 'Saturday', value: 6 }
+]
 
 // Integration accounts
 const integrationAccounts = ref([])
@@ -331,6 +352,7 @@ function loadUserData() {
     displayNameInput.value = user.value.displayName || ''
     darkModeInput.value = user.value.settings?.darkMode || false
     languageInput.value = user.value.settings?.defaultLanguage || 'en'
+    weekStartsDayInput.value = user.value.settings?.weekStartsOn ?? 1 // Default to Monday if not set
     emailNotificationsInput.value = user.value.settings?.emailNotifications || true
     calendarSyncInput.value = user.value.settings?.calendarSync || false
     
@@ -538,6 +560,7 @@ async function updateUserSettings() {
     const settings = {
       darkMode: darkModeInput.value,
       defaultLanguage: languageInput.value,
+      weekStartsOn: weekStartsDayInput.value,
       emailNotifications: emailNotificationsInput.value, 
       calendarSync: calendarSyncInput.value,
       integrationAccounts: integrationAccounts.value

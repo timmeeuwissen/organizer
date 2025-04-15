@@ -48,6 +48,7 @@ export default {
     language: 'Language',
     emailNotifications: 'Email Notifications',
     calendarSync: 'Calendar Synchronization',
+    weekStartsOn: 'Week Starts On',
     profile: 'Profile',
     integrations: 'Integrations',
     exchange: 'Microsoft Exchange',

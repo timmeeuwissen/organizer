@@ -53,112 +53,44 @@ v-container(fluid)
     v-col(cols="12" md="9")
       v-card
         v-card-title.d-flex
-          v-btn-group(divided)
-            v-btn(
-              v-for="view in calendarViews"
-              :key="view.value"
-              :color="getViewButtonColor(view.value)"
-              @click="currentView = view.value"
-            ) {{ $t(view.title) }}
-          v-spacer
-          v-btn-group
-            v-btn(icon @click="navigatePrevious")
-              v-icon mdi-chevron-left
-            v-btn(icon @click="navigateToday")
-              v-icon mdi-calendar-today
-            v-btn(icon @click="navigateNext")
-              v-icon mdi-chevron-right
+          CalendarHeader(
+            :current-view="currentView"
+            @update:view="currentView = $event"
+            @navigate="handleNavigation"
+          )
               
         v-card-text
           template(v-if="currentView === 'month'")
-            .calendar-month
-              .calendar-header
-                .calendar-day-header(v-for="day in weekDays") {{ day }}
-              .calendar-body
-                .calendar-week(v-for="week in calendarDays")
-                  .calendar-day(
-                    v-for="day in week"
-                    :class="getDayClasses(day)"
-                    @click="selectDay(day.date)"
-                  )
-                    span.day-number {{ day.dayNumber }}
-                    .calendar-events(v-if="day.events.length")
-                      .calendar-event(
-                        v-for="event in day.events.slice(0, 3)"
-                        :key="event.id"
-                        :class="getEventTypeClass(event)"
-                      )
-                        span {{ event.title }}
-                      .calendar-event-more(v-if="day.events.length > 3")
-                        span +{{ day.events.length - 3 }} more
+            MonthView(
+              :calendar-days="calendarDays"
+              :week-days="weekDays"
+              :calendars="calendarStore.calendars"
+              @day-click="selectDay"
+              @week-click="selectWeek"
+            )
                       
           template(v-else-if="currentView === 'week'")
-            .calendar-week-view
-              .calendar-week-header
-                .calendar-week-time
-                .calendar-week-days
-                  .calendar-week-day(v-for="day in weekViewDays" :class="getWeekDayClasses(day)")
-                    .day-name {{ day.dayName }}
-                    .day-number {{ day.dayNumber }}
-              .calendar-week-body
-                .calendar-week-row(v-for="hour in hours")
-                  .calendar-week-time {{ hour }}:00
-                  .calendar-week-slots
-                    .calendar-week-slot(
-                      v-for="day in weekViewDays"
-                      :class="getWeekDayClasses(day)"
-                    )
-                      .calendar-event(
-                        v-for="event in getEventsForHour(day.date, hour)"
-                        :key="event.id"
-                        :class="getEventTypeClass(event)"
-                        :style="getEventStyle(event)"
-                      )
-                        span {{ event.title }}
+            WeekView(
+              :week-view-days="weekViewDays"
+              :hours="hours"
+              :calendars="calendarStore.calendars"
+              :get-events-for-hour="getEventsForHour"
+              @day-header-click="selectDayFromWeekView"
+            )
                   
           template(v-else-if="currentView === 'day'")
-            .calendar-day-view
-              .calendar-day-header
-                h2 {{ formatSelectedDate() }}
-              .calendar-day-body
-                .calendar-day-row(v-for="hour in hours")
-                  .calendar-day-time {{ hour }}:00
-                  .calendar-day-slot
-                    .calendar-event(
-                      v-for="event in getEventsForHour(selectedDate, hour)"
-                      :key="event.id"
-                      :class="getEventTypeClass(event)"
-                      :style="getEventStyle(event)"
-                    )
-                      span {{ event.title }}
+            DayView(
+              :selected-date="new Date(selectedDate)"
+              :hours="hours"
+              :calendars="calendarStore.calendars"
+              :get-events-for-hour="getEventsForHour"
+            )
                   
           template(v-else)
-            .calendar-schedule
-              v-list
-                v-list-subheader {{ formatSelectedDate() }}
-                template(v-if="selectedDateEvents.length === 0")
-                  v-list-item
-                    v-list-item-title {{ $t('calendar.noEvents') }}
-                template(v-else)
-                  v-list-item(
-                    v-for="event in selectedDateEvents"
-                    :key="event.id"
-                    :class="getEventClass(event)"
-                  )
-                    template(v-slot:prepend)
-                      v-icon(:icon="getEventIcon(event.type)")
-                    v-list-item-title {{ event.title }}
-                    v-list-item-subtitle
-                      template(v-if="event.startTime") {{ formatEventTime(event) }}
-                      template(v-else) {{ $t('calendar.allDay') }}
-                    template(v-slot:append)
-                      v-btn(
-                        icon
-                        variant="text"
-                        :to="getEventLink(event)"
-                        color="primary"
-                      )
-                        v-icon mdi-open-in-new
+            ScheduleView(
+              :selected-date="new Date(selectedDate)"
+              :events="selectedDateEvents"
+            )
         
         v-card-actions
           v-spacer
@@ -179,11 +111,31 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
 import { useCalendarStore } from '~/stores/calendar'
+import { useCalendarHelpers } from '~/composables/useCalendarHelpers'
+
+// Import custom calendar components
+import CalendarHeader from '~/components/calendar/CalendarHeader.vue'
+import MonthView from '~/components/calendar/MonthView.vue'
+import WeekView from '~/components/calendar/WeekView.vue'
+import DayView from '~/components/calendar/DayView.vue'
+import ScheduleView from '~/components/calendar/ScheduleView.vue'
 
 // Stores
 const tasksStore = useTasksStore()
 const authStore = useAuthStore()
 const calendarStore = useCalendarStore()
+
+// Helper composable
+const {
+  isSameDay,
+  isToday,
+  getFirstDayOfMonth,
+  getDaysInMonth,
+  getWeekNumber,
+  getWeekStartDay,
+  getWeekDayNames,
+  getFirstDayOfWeek
+} = useCalendarHelpers()
 
 // Check if user has connected calendar integrations
 const hasCalendarIntegrations = computed(() => {
@@ -199,18 +151,11 @@ const currentView = ref('month')
 const showMeetings = ref(true)
 const showTasks = ref(true)
 const showCompletedTasks = ref(false)
-const events = ref([])
 const loading = ref(true)
 
-// Calendar navigation
-const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+// Calendar navigation using user preferences
+const weekDays = computed(() => getWeekDayNames('short'))
 const hours = Array.from(Array(24).keys())
-const calendarViews = [
-  { title: 'calendar.month', value: 'month' },
-  { title: 'calendar.week', value: 'week' },
-  { title: 'calendar.day', value: 'day' },
-  { title: 'calendar.schedule', value: 'schedule' }
-]
 
 // Load data
 onMounted(async () => {
@@ -241,8 +186,6 @@ onMounted(async () => {
       await calendarStore.fetchCalendars()
     }
     
-    // Combine tasks and events
-    updateEvents()
   } catch (error) {
     console.error('Failed to load calendar data:', error)
   } finally {
@@ -250,9 +193,9 @@ onMounted(async () => {
   }
 })
 
-// Watch for filter changes and date navigation
+// Watch for filter changes
 watch([showMeetings, showTasks, showCompletedTasks], () => {
-  updateEvents()
+  console.log('[Calendar] Filter changed, recalculating events')
 })
 
 // Watch for month/date changes to load new event data
@@ -268,8 +211,6 @@ watch(selectedDate, (newDate) => {
       calendarStore.fetchEvents({
         startDate,
         endDate
-      }).then(() => {
-        updateEvents()
       })
     } 
     // For week view, fetch events for that week
@@ -285,28 +226,10 @@ watch(selectedDate, (newDate) => {
       calendarStore.fetchEvents({
         startDate,
         endDate
-      }).then(() => {
-        updateEvents()
       })
     }
   }
 })
-
-// Helper to get first day of month
-const getFirstDayOfMonth = (date) => {
-  const d = new Date(date)
-  d.setDate(1)
-  return d
-}
-
-// Helper to get days in month
-const getDaysInMonth = (date) => {
-  const d = new Date(date)
-  const month = d.getMonth()
-  d.setMonth(month + 1)
-  d.setDate(0)
-  return d.getDate()
-}
 
 // Generate calendar days for month view
 const calendarDays = computed(() => {
@@ -315,8 +238,12 @@ const calendarDays = computed(() => {
   const daysInMonth = getDaysInMonth(date)
   const weeks = []
   
-  // Get day of week of first day (0 = Sunday, 6 = Saturday)
-  let dayOfWeek = firstDay.getDay()
+  // Get the user's preferred week start day (0 = Sunday, 1 = Monday, etc.)
+  const weekStartDay = getWeekStartDay()
+  
+  // Calculate the day of week relative to the user's preferred start day
+  // e.g., if week starts on Monday (1) and the first day is Wednesday (3), this would be 2
+  let dayOfWeek = (firstDay.getDay() - weekStartDay + 7) % 7
   
   // Create first week with days from previous month if needed
   let week = []
@@ -424,12 +351,11 @@ const calendarDays = computed(() => {
 // Generate days for week view
 const weekViewDays = computed(() => {
   const date = new Date(selectedDate.value)
-  const day = date.getDay()
-  const diff = date.getDate() - day
-  const firstDayOfWeek = new Date(date)
-  firstDayOfWeek.setDate(diff)
+  // Use the helper function to get the first day of the week based on user preference
+  const firstDayOfWeek = getFirstDayOfWeek(date)
   
   const days = []
+  const dayNamesArray = weekDays.value
   
   for (let i = 0; i < 7; i++) {
     const dayDate = new Date(firstDayOfWeek)
@@ -437,7 +363,7 @@ const weekViewDays = computed(() => {
     
     days.push({
       date: dayDate,
-      dayName: weekDays[i],
+      dayName: dayNamesArray[i],
       dayNumber: dayDate.getDate(),
       isToday: isToday(dayDate),
       events: getEventsForDay(dayDate)
@@ -455,146 +381,6 @@ const selectedDateEvents = computed(() => {
     return a.startTime.getTime() - b.startTime.getTime()
   })
 })
-
-// Helper functions
-const isToday = (date) => {
-  const today = new Date()
-  return isSameDay(date, today)
-}
-
-// Style and class calculations
-const getDayClasses = (day) => {
-  if (!day) return {}
-  
-  return {
-    'current-month': day.currentMonth,
-    'today': day.isToday,
-    'selected': day.isSelected,
-    'has-events': day.hasEvents
-  }
-}
-
-const getWeekDayClasses = (day) => {
-  if (!day) return {}
-  
-  return {
-    'today': day.isToday
-  }
-}
-
-const getViewButtonColor = (viewValue) => {
-  return currentView.value === viewValue ? 'primary' : ''
-}
-
-const getEventStyle = (event) => {
-  if (!event || typeof event.durationHours === 'undefined' || typeof event.minutesFromHourStart === 'undefined') {
-    return {
-      height: '0px',
-      top: '0px'
-    }
-  }
-  
-  return {
-    height: `${event.durationHours * 60}px`,
-    top: `${event.minutesFromHourStart}px`
-  }
-}
-
-const isSameDay = (date1, date2) => {
-  return date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-}
-
-const formatSelectedDate = () => {
-  const date = new Date(selectedDate.value)
-  return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-}
-
-const formatEventTime = (event) => {
-  if (!event || !event.startTime) return ''
-  
-  let timeStr = event.startTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-  
-  if (event.endTime) {
-    timeStr += ' - ' + event.endTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-  }
-  
-  return timeStr
-}
-
-const getEventTypeClass = (event) => {
-  if (!event || !event.type) return ''
-  return event.type
-}
-
-const getEventClass = (event) => {
-  if (!event || !event.type) return ''
-  return `event-${event.type}`
-}
-
-const getEventIcon = (type) => {
-  if (!type) return 'mdi-calendar'
-  
-  switch (type) {
-    case 'meeting': return 'mdi-account-group'
-    case 'task': return 'mdi-checkbox-marked-outline'
-    default: return 'mdi-calendar'
-  }
-}
-
-const getEventLink = (event) => {
-  if (!event || !event.type || !event.id) return '#'
-  
-  if (event.type === 'meeting') {
-    return `/meetings/${event.id}`
-  } else if (event.type === 'task') {
-    return `/tasks?id=${event.id}`
-  }
-  
-  return '#'
-}
-
-// Navigation
-const navigatePrevious = () => {
-  const date = new Date(selectedDate.value)
-  
-  if (currentView.value === 'month') {
-    date.setMonth(date.getMonth() - 1)
-  } else if (currentView.value === 'week') {
-    date.setDate(date.getDate() - 7)
-  } else {
-    date.setDate(date.getDate() - 1)
-  }
-  
-  selectedDate.value = date.toISOString().slice(0, 10)
-}
-
-const navigateNext = () => {
-  const date = new Date(selectedDate.value)
-  
-  if (currentView.value === 'month') {
-    date.setMonth(date.getMonth() + 1)
-  } else if (currentView.value === 'week') {
-    date.setDate(date.getDate() + 7)
-  } else {
-    date.setDate(date.getDate() + 1)
-  }
-  
-  selectedDate.value = date.toISOString().slice(0, 10)
-}
-
-const navigateToday = () => {
-  selectedDate.value = new Date().toISOString().slice(0, 10)
-}
-
-const selectDay = (date) => {
-  selectedDate.value = date.toISOString().slice(0, 10)
-  
-  if (currentView.value === 'month') {
-    currentView.value = 'day'
-  }
-}
 
 // Use computed for combined events to make it reactive to store changes
 const combinedEvents = computed(() => {
@@ -627,7 +413,8 @@ const combinedEvents = computed(() => {
       result.push({
         ...event,
         type: 'meeting',
-        date: new Date(event.startTime)
+        date: new Date(event.startTime),
+        calendarId: event.calendarId // Pass through calendar ID for color
       })
     })
   }
@@ -635,15 +422,70 @@ const combinedEvents = computed(() => {
   return result
 })
 
-// Event handling
-const updateEvents = () => {
-  // This function now just triggers reactivity
-  // combinedEvents computed property will automatically update
-  console.log(`[Calendar] Manually triggering event update`)
+// Navigation handlers
+const handleNavigation = (direction) => {
+  if (direction === 'previous') {
+    navigatePrevious()
+  } else if (direction === 'next') {
+    navigateNext()
+  } else if (direction === 'today') {
+    navigateToday()
+  }
 }
 
+const navigatePrevious = () => {
+  const date = new Date(selectedDate.value)
+  
+  if (currentView.value === 'month') {
+    date.setMonth(date.getMonth() - 1)
+  } else if (currentView.value === 'week') {
+    date.setDate(date.getDate() - 7)
+  } else {
+    date.setDate(date.getDate() - 1)
+  }
+  
+  selectedDate.value = date.toISOString().slice(0, 10)
+}
+
+const navigateNext = () => {
+  const date = new Date(selectedDate.value)
+  
+  if (currentView.value === 'month') {
+    date.setMonth(date.getMonth() + 1)
+  } else if (currentView.value === 'week') {
+    date.setDate(date.getDate() + 7)
+  } else {
+    date.setDate(date.getDate() + 1)
+  }
+  
+  selectedDate.value = date.toISOString().slice(0, 10)
+}
+
+const navigateToday = () => {
+  selectedDate.value = new Date().toISOString().slice(0, 10)
+}
+
+// Selection handlers
+const selectDay = (date) => {
+  selectedDate.value = date.toISOString().slice(0, 10)
+  
+  if (currentView.value === 'month') {
+    currentView.value = 'day'
+  }
+}
+
+const selectDayFromWeekView = (date) => {
+  selectedDate.value = date.toISOString().slice(0, 10)
+  currentView.value = 'day'
+}
+
+const selectWeek = (date) => {
+  selectedDate.value = date.toISOString().slice(0, 10)
+  currentView.value = 'week'
+}
+
+// Event helpers
 const getEventsForDay = (date) => {
-  console.log(`[GUI Calendar] Getting events for day ${date}`)
   if (!date) return []
   
   return combinedEvents.value.filter(event => {
@@ -684,295 +526,4 @@ const getEventsForHour = (date, hour) => {
     }
   })
 }
-
-// Simulated meetings for development
-const simulatedMeetings = ref([])
-
-const simulateMeetings = () => {
-  const today = new Date()
-  const tomorrow = new Date(today)
-  tomorrow.setDate(today.getDate() + 1)
-  
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-  
-  // Meeting in the past
-  simulatedMeetings.value.push({
-    id: 'meeting-1',
-    title: 'Team Standup',
-    type: 'meeting',
-    date: yesterday,
-    startTime: new Date(yesterday.setHours(9, 0)),
-    endTime: new Date(yesterday.setHours(9, 30)),
-    allDay: false
-  })
-  
-  // Meeting today
-  simulatedMeetings.value.push({
-    id: 'meeting-2',
-    title: 'Project Planning',
-    type: 'meeting',
-    date: today,
-    startTime: new Date(new Date().setHours(14, 0)),
-    endTime: new Date(new Date().setHours(15, 0)),
-    allDay: false
-  })
-  
-  // Meeting in the future
-  simulatedMeetings.value.push({
-    id: 'meeting-3',
-    title: 'Client Demo',
-    type: 'meeting',
-    date: tomorrow,
-    startTime: new Date(tomorrow.setHours(11, 0)),
-    endTime: new Date(tomorrow.setHours(12, 0)),
-    allDay: false
-  })
-}
 </script>
-
-<style lang="scss" scoped>
-.calendar-month {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  
-  .calendar-header {
-    display: flex;
-    padding: 8px 0;
-    font-weight: bold;
-    
-    .calendar-day-header {
-      flex: 1;
-      text-align: center;
-    }
-  }
-  
-  .calendar-body {
-    display: flex;
-    flex-direction: column;
-    
-    .calendar-week {
-      display: flex;
-      min-height: 120px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .calendar-day {
-        flex: 1;
-        padding: 8px;
-        border-right: 1px solid rgba(0, 0, 0, 0.12);
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-        
-        &:hover {
-          background-color: rgba(0, 0, 0, 0.04);
-        }
-        
-        &:last-child {
-          border-right: none;
-        }
-        
-        &.current-month {
-          background-color: white;
-        }
-        
-        &:not(.current-month) {
-          background-color: rgba(0, 0, 0, 0.04);
-          color: rgba(0, 0, 0, 0.38);
-        }
-        
-        &.today {
-          background-color: rgba(25, 118, 210, 0.05);
-          
-          .day-number {
-            color: white;
-            background-color: var(--v-primary-base);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-          }
-        }
-        
-        &.selected {
-          background-color: rgba(25, 118, 210, 0.1);
-        }
-        
-        &.has-events {
-          .day-number {
-            font-weight: bold;
-          }
-        }
-        
-        .day-number {
-          margin-bottom: 4px;
-        }
-        
-        .calendar-events {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          
-          .calendar-event {
-            padding: 2px 4px;
-            border-radius: 2px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            
-            &.task {
-              background-color: rgba(25, 118, 210, 0.1);
-              color: #1976d2;
-            }
-            
-            &.meeting {
-              background-color: rgba(76, 175, 80, 0.1);
-              color: #4caf50;
-            }
-          }
-          
-          .calendar-event-more {
-            font-size: 0.75rem;
-            color: rgba(0, 0, 0, 0.6);
-            text-align: right;
-          }
-        }
-      }
-    }
-  }
-}
-
-.calendar-week-view, .calendar-day-view {
-  display: flex;
-  flex-direction: column;
-  height: 600px;
-  
-  .calendar-week-header, .calendar-day-header {
-    display: flex;
-    padding: 8px 0;
-    font-weight: bold;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-    
-    .calendar-week-time {
-      width: 60px;
-    }
-    
-    .calendar-week-days {
-      display: flex;
-      flex: 1;
-      
-      .calendar-week-day {
-        flex: 1;
-        text-align: center;
-        padding: 4px;
-        
-        &.today {
-          background-color: rgba(25, 118, 210, 0.05);
-        }
-        
-        .day-name {
-          font-weight: bold;
-        }
-        
-        .day-number {
-          font-size: 1.2rem;
-        }
-      }
-    }
-  }
-  
-  .calendar-week-body, .calendar-day-body {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow-y: auto;
-    
-    .calendar-week-row, .calendar-day-row {
-      display: flex;
-      height: 60px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .calendar-week-time, .calendar-day-time {
-        width: 60px;
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        padding: 4px;
-        color: rgba(0, 0, 0, 0.6);
-        font-size: 0.75rem;
-      }
-      
-      .calendar-week-slots {
-        display: flex;
-        flex: 1;
-        
-        .calendar-week-slot {
-          flex: 1;
-          border-right: 1px solid rgba(0, 0, 0, 0.12);
-          position: relative;
-          
-          &:last-child {
-            border-right: none;
-          }
-          
-          &.today {
-            background-color: rgba(25, 118, 210, 0.05);
-          }
-        }
-      }
-      
-      .calendar-day-slot {
-        flex: 1;
-        position: relative;
-      }
-      
-      .calendar-event {
-        position: absolute;
-        left: 0;
-        right: 0;
-        margin: 1px 2px;
-        padding: 2px 4px;
-        border-radius: 2px;
-        font-size: 0.75rem;
-        overflow: hidden;
-        z-index: 1;
-        
-        &.task {
-          background-color: rgba(25, 118, 210, 0.1);
-          color: #1976d2;
-        }
-        
-        &.meeting {
-          background-color: rgba(76, 175, 80, 0.1);
-          color: #4caf50;
-        }
-      }
-    }
-  }
-}
-
-.calendar-schedule {
-  max-height: 600px;
-  overflow-y: auto;
-  
-  .event-task {
-    background-color: rgba(25, 118, 210, 0.05);
-  }
-  
-  .event-meeting {
-    background-color: rgba(76, 175, 80, 0.05);
-  }
-}
-</style>
