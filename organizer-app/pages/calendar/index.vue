@@ -294,7 +294,7 @@ const calendarDays = computed(() => {
   if (week.length > 0 && week.length < 7) {
     const nextMonth = new Date(date)
     nextMonth.setMonth(nextMonth.getMonth() + 1)
-    console.log('week too short')
+
     for (let i = week.length; i < 7; i++) {
       const nextMonthDay = i - week.length + 1
       const dayDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonthDay)
