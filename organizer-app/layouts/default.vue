@@ -12,7 +12,7 @@ v-app
         :title="$t(item.title)"
       )
         template(v-slot:append v-if="item.addAction")
-          v-btn(icon variant="text" size="small" @click.stop="item.addAction")
+          v-btn(icon variant="text" size="small" @click.stop.prevent="item.addAction")
             v-icon mdi-plus
   
   v-app-bar(app)
@@ -22,13 +22,14 @@ v-app
     template(v-if="isAuthenticated")
       v-menu(location="bottom end" :offset="[0, 5]")
         template(v-slot:activator="{ props }")
-          v-btn(icon v-bind="props")
+          v-btn(icon v-bind="props" @click.stop)
             v-icon mdi-plus
         v-list
           v-list-item(
             v-for="(item, i) in addMenuItems" 
             :key="i" 
-            @click="item.action"
+            @click.stop.prevent="item.action"
+            :to="null"
           )
             template(v-slot:prepend)
               v-icon(:icon="item.icon" :color="item.color")

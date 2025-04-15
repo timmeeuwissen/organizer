@@ -1,14 +1,15 @@
 <template lang="pug">
 v-menu(location="bottom end" :offset="[0, 5]" v-model="menu")
   template(v-slot:activator="{ props }")
-    v-btn(icon v-bind="props")
+    v-btn(icon v-bind="props" @click.stop)
       v-icon mdi-plus
   
   v-list
     v-list-item(
       v-for="(item, i) in items" 
       :key="i" 
-      @click="item.action"
+      @click.stop.prevent="item.action"
+      :to="null"
     )
       template(v-slot:prepend)
         v-icon(:icon="item.icon" :color="item.color")
