@@ -1,5 +1,19 @@
 import { defineStore } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  doc, 
+  getDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc,
+  serverTimestamp,
+  orderBy
+} from 'firebase/firestore'
+import { getFirestore } from 'firebase/firestore'
 import type { IntegrationAccount } from '~/types/models'
 import { hasValidOAuthTokens, refreshOAuthToken } from '~/utils/api/emailUtils'
 import { getCalendarProvider } from '~/utils/api/calendarProviders/index'
@@ -35,7 +49,9 @@ export interface Calendar {
   accountId?: string
 }
 
-export const useCalendarStore = defineStore('calendar', {
+export const useCalendarStore = defineStore({
+  id: 'calendar',
+  
   state: () => ({
     events: [] as CalendarEvent[],
     calendars: [] as Calendar[],
@@ -48,6 +64,8 @@ export const useCalendarStore = defineStore('calendar', {
     // Additional state
     hasMore: false,
     loadingCalendars: false,
+    // Local persistence state
+    syncedEvents: [] as CalendarEvent[], // Events stored in Firestore
   }),
 
   getters: {
@@ -102,6 +120,184 @@ export const useCalendarStore = defineStore('calendar', {
   },
 
   actions: {
+    /**
+     * Fetch local persisted events from Firestore
+     */
+    async fetchPersistedEvents() {
+      const authStore = useAuthStore()
+      if (!authStore.user) return []
+      
+      try {
+        const db = getFirestore()
+        const eventsRef = collection(db, 'calendarEvents')
+        const q = query(
+          eventsRef, 
+          where('userId', '==', authStore.user.id),
+          orderBy('startTime')
+        )
+        const querySnapshot = await getDocs(q)
+        
+        const events = querySnapshot.docs.map(doc => {
+          const data = doc.data()
+          return {
+            ...data,
+            id: doc.id,
+            startTime: data.startTime?.toDate() || new Date(),
+            endTime: data.endTime?.toDate() || new Date(),
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+          } as unknown as CalendarEvent
+        })
+        
+        this.syncedEvents = events
+        console.log(`[Calendar] Loaded ${events.length} persisted events from Firestore`)
+        return events
+      } catch (error: any) {
+        console.error('[Calendar] Error fetching persisted events:', error)
+        return []
+      }
+    },
+    
+    /**
+     * Save an event to Firestore
+     */
+    async persistEvent(event: CalendarEvent) {
+      const authStore = useAuthStore()
+      if (!authStore.user) return null
+      
+      try {
+        const db = getFirestore()
+        const eventsRef = collection(db, 'calendarEvents')
+        
+        const eventData = {
+          ...event,
+          userId: authStore.user.id,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          // Convert Date objects to Firestore timestamps
+          startTime: event.startTime,
+          endTime: event.endTime,
+        }
+        
+        // Create a new object without the id
+        const { id, ...eventDataWithoutId } = eventData
+        
+        const docRef = await addDoc(eventsRef, eventDataWithoutId)
+        console.log(`[Calendar] Event persisted with ID: ${docRef.id}`)
+        
+        // Add this event to our synced events list
+        const newEvent = {
+          ...eventData,
+          id: docRef.id,
+          startTime: new Date(event.startTime),
+          endTime: new Date(event.endTime),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as CalendarEvent
+        
+        this.syncedEvents.push(newEvent)
+        
+        return docRef.id
+      } catch (error: any) {
+        console.error('[Calendar] Error persisting event:', error)
+        return null
+      }
+    },
+    
+    /**
+     * Update a persisted event in Firestore
+     */
+    async updatePersistedEvent(id: string, updates: Partial<CalendarEvent>) {
+      const authStore = useAuthStore()
+      if (!authStore.user) return false
+      
+      try {
+        const db = getFirestore()
+        const eventRef = doc(db, 'calendarEvents', id)
+        
+        // First, verify this event belongs to the current user
+        const eventSnap = await getDoc(eventRef)
+        if (!eventSnap.exists()) {
+          console.error('[Calendar] Event not found for update:', id)
+          return false
+        }
+        
+        const eventData = eventSnap.data()
+        if (eventData.userId !== authStore.user.id) {
+          console.error('[Calendar] Unauthorized access to event:', id)
+          return false
+        }
+        
+        // Prepare update data
+        const updateData = {
+          ...updates,
+          updatedAt: serverTimestamp(),
+        }
+        
+        // Convert Date objects
+        if (updates.startTime) updateData.startTime = updates.startTime
+        if (updates.endTime) updateData.endTime = updates.endTime
+        
+        // Don't update these fields
+        const { id: _, userId, createdAt, ...updateDataWithoutId } = updateData as any
+        
+        await updateDoc(eventRef, updateDataWithoutId)
+        console.log(`[Calendar] Event updated in Firestore: ${id}`)
+        
+        // Update in local state
+        const index = this.syncedEvents.findIndex(e => e.id === id)
+        if (index !== -1) {
+          this.syncedEvents[index] = {
+            ...this.syncedEvents[index],
+            ...updates,
+            updatedAt: new Date(),
+          }
+        }
+        
+        return true
+      } catch (error: any) {
+        console.error('[Calendar] Error updating persisted event:', error)
+        return false
+      }
+    },
+    
+    /**
+     * Delete a persisted event from Firestore
+     */
+    async deletePersistedEvent(id: string) {
+      const authStore = useAuthStore()
+      if (!authStore.user) return false
+      
+      try {
+        const db = getFirestore()
+        const eventRef = doc(db, 'calendarEvents', id)
+        
+        // First, verify this event belongs to the current user
+        const eventSnap = await getDoc(eventRef)
+        if (!eventSnap.exists()) {
+          console.error('[Calendar] Event not found for deletion:', id)
+          return false
+        }
+        
+        const eventData = eventSnap.data()
+        if (eventData.userId !== authStore.user.id) {
+          console.error('[Calendar] Unauthorized access to event for deletion:', id)
+          return false
+        }
+        
+        await deleteDoc(eventRef)
+        console.log(`[Calendar] Event deleted from Firestore: ${id}`)
+        
+        // Remove from local state
+        this.syncedEvents = this.syncedEvents.filter(e => e.id !== id)
+        
+        return true
+      } catch (error: any) {
+        console.error('[Calendar] Error deleting persisted event:', error)
+        return false
+      }
+    },
+    
     /**
      * Fetch calendar events for the specified date range
      */
@@ -287,51 +483,69 @@ export const useCalendarStore = defineStore('calendar', {
      */
     async createEvent(event: CalendarEvent) {
       try {
-        // Get the account to use
-        const connectedAccounts = this.getConnectedAccounts
-        if (connectedAccounts.length === 0) {
-          console.error('[Calendar] No connected accounts to create event in')
-          return { success: false }
-        }
+        let result = { success: false, eventId: null as string | null };
+        const connectedAccounts = this.getConnectedAccounts;
         
-        // If account ID is specified and exists, use that
-        let account
-        if (event.accountId) {
-          account = connectedAccounts.find(a => a.id === event.accountId)
-        }
-        
-        // Otherwise use the first connected account
-        if (!account) {
-          account = connectedAccounts[0]
-        }
-        
-        const calendarProvider = getCalendarProvider(account)
-        
-        // Check if authenticated
-        if (!calendarProvider.isAuthenticated()) {
-          const authenticated = await calendarProvider.authenticate()
-          if (!authenticated) {
-            console.error('[Calendar] Not authenticated with calendar provider')
-            return { success: false }
+        // Try to create the event in the connected account if available
+        if (connectedAccounts.length > 0) {
+          // If account ID is specified and exists, use that
+          let account;
+          if (event.accountId) {
+            account = connectedAccounts.find(a => a.id === event.accountId);
+          }
+          
+          // Otherwise use the first connected account
+          if (!account) {
+            account = connectedAccounts[0];
+          }
+          
+          const calendarProvider = getCalendarProvider(account);
+          
+          // Check if authenticated
+          if (!calendarProvider.isAuthenticated()) {
+            const authenticated = await calendarProvider.authenticate();
+            if (!authenticated) {
+              console.error('[Calendar] Not authenticated with calendar provider');
+            } else {
+              // Create the event in the provider
+              result = await calendarProvider.createEvent(event);
+            }
+          } else {
+            // Create the event in the provider
+            result = await calendarProvider.createEvent(event);
           }
         }
         
-        // Create the event
-        const result = await calendarProvider.createEvent(event)
+        // Regardless of remote success, also persist locally 
+        const persistedId = await this.persistEvent(event);
         
+        // If remote creation succeeded, add to events with the remote ID
         if (result.success && result.eventId) {
-          // Add to local state
+          const account = connectedAccounts.find(a => a.id === event.accountId) || connectedAccounts[0];
           this.events.push({
             ...event,
             id: result.eventId,
             accountId: account.id
-          })
+          });
+        } 
+        // Otherwise if only local persistence succeeded, add with the local ID
+        else if (persistedId) {
+          this.events.push({
+            ...event,
+            id: persistedId
+          });
+          
+          // Update the result to indicate success
+          result = { 
+            success: true, 
+            eventId: persistedId 
+          };
         }
         
-        return result
+        return result;
       } catch (error) {
         console.error('[Calendar] Error creating event:', error)
-        return { success: false }
+        return { success: false, eventId: null }
       }
     },
     
@@ -340,43 +554,51 @@ export const useCalendarStore = defineStore('calendar', {
      */
     async updateEvent(event: CalendarEvent) {
       try {
-        if (!event.accountId) {
-          console.error('[Calendar] No account ID specified for event update')
-          return false
-        }
+        let success = false;
         
-        // Get the account to use
-        const connectedAccounts = this.getConnectedAccounts
-        const account = connectedAccounts.find(a => a.id === event.accountId)
-        
-        if (!account) {
-          console.error(`[Calendar] Account with ID ${event.accountId} not found`)
-          return false
-        }
-        
-        const calendarProvider = getCalendarProvider(account)
-        
-        // Check if authenticated
-        if (!calendarProvider.isAuthenticated()) {
-          const authenticated = await calendarProvider.authenticate()
-          if (!authenticated) {
-            console.error('[Calendar] Not authenticated with calendar provider')
-            return false
+        // If this is a synced event (from a connected account), try to update it there
+        if (event.accountId) {
+          const connectedAccounts = this.getConnectedAccounts;
+          const account = connectedAccounts.find(a => a.id === event.accountId);
+          
+          if (account) {
+            const calendarProvider = getCalendarProvider(account);
+            
+            // Check if authenticated
+            if (!calendarProvider.isAuthenticated()) {
+              const authenticated = await calendarProvider.authenticate();
+              if (authenticated) {
+                // Update the remote event
+                success = await calendarProvider.updateEvent(event);
+              }
+            } else {
+              // Update the remote event
+              success = await calendarProvider.updateEvent(event);
+            }
           }
         }
         
-        // Update the event
-        const success = await calendarProvider.updateEvent(event)
+        // Check if this is an event we have persisted locally
+        const syncedEvent = this.syncedEvents.find(e => e.id === event.id);
         
-        if (success) {
-          // Update local state
-          const index = this.events.findIndex(e => e.id === event.id)
-          if (index !== -1) {
-            this.events[index] = { ...event }
-          }
+        if (syncedEvent) {
+          // Update in Firestore as well
+          const localSuccess = await this.updatePersistedEvent(event.id, event);
+          success = success || localSuccess;
+        } else {
+          // This might be a new event that wasn't persisted yet
+          // Try to persist it now
+          const persistedId = await this.persistEvent(event);
+          success = success || !!persistedId;
         }
         
-        return success
+        // Update local state
+        const index = this.events.findIndex(e => e.id === event.id);
+        if (index !== -1) {
+          this.events[index] = { ...event };
+        }
+        
+        return success;
       } catch (error) {
         console.error('[Calendar] Error updating event:', error)
         return false
@@ -388,47 +610,52 @@ export const useCalendarStore = defineStore('calendar', {
      */
     async deleteEvent(eventId: string) {
       try {
+        let success = false;
+        
         // Find the event in local state
-        const event = this.events.find(e => e.id === eventId)
+        const event = this.events.find(e => e.id === eventId);
         
-        if (!event || !event.accountId) {
-          console.error('[Calendar] Event not found or missing account ID')
-          return false
-        }
-        
-        // Get the account to use
-        const connectedAccounts = this.getConnectedAccounts
-        const account = connectedAccounts.find(a => a.id === event.accountId)
-        
-        if (!account) {
-          console.error(`[Calendar] Account with ID ${event.accountId} not found`)
-          return false
-        }
-        
-        const calendarProvider = getCalendarProvider(account)
-        
-        // Check if authenticated
-        if (!calendarProvider.isAuthenticated()) {
-          const authenticated = await calendarProvider.authenticate()
-          if (!authenticated) {
-            console.error('[Calendar] Not authenticated with calendar provider')
-            return false
+        // If this is an event from a connected account, try to delete it there
+        if (event && event.accountId) {
+          const connectedAccounts = this.getConnectedAccounts;
+          const account = connectedAccounts.find(a => a.id === event.accountId);
+          
+          if (account) {
+            const calendarProvider = getCalendarProvider(account);
+            
+            // Check if authenticated
+            if (!calendarProvider.isAuthenticated()) {
+              const authenticated = await calendarProvider.authenticate();
+              if (authenticated) {
+                // Delete from remote
+                success = await calendarProvider.deleteEvent(eventId);
+              }
+            } else {
+              // Delete from remote
+              success = await calendarProvider.deleteEvent(eventId);
+            }
           }
         }
         
-        // Delete the event
-        const success = await calendarProvider.deleteEvent(eventId)
+        // Check if this is a persisted event
+        const syncedEvent = this.syncedEvents.find(e => e.id === eventId);
         
-        if (success) {
-          // Remove from local state
-          this.events = this.events.filter(e => e.id !== eventId)
+        if (syncedEvent) {
+          // Delete from Firestore as well
+          const localSuccess = await this.deletePersistedEvent(eventId);
+          success = success || localSuccess;
         }
         
-        return success
+        // Always remove from local state, regardless of remote success
+        this.events = this.events.filter(e => e.id !== eventId);
+        
+        return success;
       } catch (error) {
         console.error('[Calendar] Error deleting event:', error)
         return false
       }
     }
-  }
+  },
+  
+  persist: true
 })

@@ -16,7 +16,9 @@ import { getFirestore } from 'firebase/firestore'
 import { useAuthStore } from './auth'
 import type { Person } from '~/types/models'
 
-export const usePeopleStore = defineStore('people', {
+export const usePeopleStore = defineStore({
+  id: 'people',
+  
   state: () => ({
     people: [] as Person[],
     currentPerson: null as Person | null,
@@ -284,5 +286,7 @@ export const usePeopleStore = defineStore('people', {
       
       return this.updatePerson(id, { lastContacted: date })
     }
-  }
+  },
+  
+  persist: true
 })

@@ -38,7 +38,9 @@ export interface MailFolder {
   icon: string
 }
 
-export const useMailStore = defineStore('mail', {
+export const useMailStore = defineStore({
+  id: 'mail',
+  
   state: () => ({
     emails: [] as Email[],
     folders: [
@@ -121,7 +123,7 @@ export const useMailStore = defineStore('mail', {
             if (!mailProvider.isAuthenticated()) {
               const authenticated = await mailProvider.authenticate();
               if (!authenticated) {
-                console.warn(`Authentication failed for account ${account.email}`);
+                console.warn(`Authentication failed for account ${account.oauthData.email}`);
                 return null;
               }
             }
@@ -129,7 +131,7 @@ export const useMailStore = defineStore('mail', {
             // Get folder counts
             return await mailProvider.getFolderCounts();
           } catch (error) {
-            console.error(`Error getting folder counts for ${account.email}:`, error);
+            console.error(`Error getting folder counts for ${account.oauthData.email}:`, error);
             return null;
           }
         });
@@ -178,7 +180,7 @@ export const useMailStore = defineStore('mail', {
               console.log(`[Mail] Folder ${folder} unread count: ${count} (total now: ${unreadCounts[folder]})`);
             }
           } catch (error) {
-            console.error(`Error getting unread counts for ${account.email}:`, error);
+            console.error(`Error getting unread counts for ${account.oauthData.email}:`, error);
           }
         }
         
@@ -494,5 +496,7 @@ export const useMailStore = defineStore('mail', {
       this.emails.unshift(newEmail)
       return newEmail
     }
-  }
+  },
+  
+  persist: true
 })

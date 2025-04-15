@@ -22,6 +22,7 @@
     "firebase-admin": "^11.5.0",
     "html2canvas": "^1.4.1",
     "pinia": "^2.0.0",
+    "pinia-plugin-persistedstate": "^4.2.0",
     "pug": "^3.0.2",
     "pug-plain-loader": "^1.1.0",
     "sass": "^1.59.3",
