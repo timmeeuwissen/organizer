@@ -1,9 +1,11 @@
 import { ref } from 'vue'
 import { useMailStore } from '~/stores/mail'
 import { useCalendarStore } from '~/stores/calendar'
+import { usePeopleStore } from '~/stores/people'
 import { useAuthStore } from '~/stores/auth'
 import { getMailProvider } from '~/utils/api/mailProviders'
 import { getCalendarProvider } from '~/utils/api/calendarProviders'
+import { createContactsProvider } from '~/utils/api/contactProviders'
 
 /**
  * Composable for refreshing data from all connected providers
@@ -16,6 +18,7 @@ export function useDataRefresh() {
   // Get stores
   const mailStore = useMailStore()
   const calendarStore = useCalendarStore()
+  const peopleStore = usePeopleStore()
   const authStore = useAuthStore()
   
   /**
@@ -113,7 +116,30 @@ export function useDataRefresh() {
             }
           }
           
-          // Add other data types (contacts, etc.) here as they are implemented
+          // Refresh contacts data if this account has contacts enabled
+          if (account.syncContacts && account.showInContacts) {
+            try {
+              console.log(`Refreshing contacts data for ${account.oauthData.email}`)
+              const contactsProvider = createContactsProvider(account)
+              
+              // Authenticate if needed
+              if (!contactsProvider.isAuthenticated()) {
+                const authenticated = await contactsProvider.authenticate()
+                if (!authenticated) {
+                  console.warn(`Contacts authentication failed for ${account.oauthData.email}`)
+                  failedCount++
+                  continue
+                }
+              }
+              
+              // Refresh contacts data
+              await peopleStore.fetchContactsFromProvider(account)
+              succeededCount++
+            } catch (error) {
+              console.error(`Error refreshing contacts for ${account.oauthData.email}:`, error)
+              failedCount++
+            }
+          }
           
         } catch (error) {
           console.error(`Error processing account ${account.oauthData.email}:`, error)
