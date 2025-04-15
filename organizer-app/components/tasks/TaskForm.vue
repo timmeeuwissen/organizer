@@ -14,6 +14,17 @@ v-form(
         class="mb-4"
       ) {{ error }}
       
+      v-select(
+        v-model="storageProvider"
+        :items="availableProviders"
+        :label="$t('common.storageLocation')"
+        item-title="name"
+        item-value="id"
+        prepend-icon="mdi-server"
+        :rules="[rules.required]"
+        required
+      )
+      
       v-text-field(
         v-model="title"
         :label="$t('tasks.title')"
@@ -237,6 +248,7 @@ import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useAuthStore } from '~/stores/auth'
+import { useIntegrationProviders } from '~/composables/useIntegrationProviders'
 import type { Task, Comment } from '~/types/models'
 
 const props = defineProps({
@@ -266,6 +278,7 @@ const valid = ref(false)
 const dueDateMenu = ref(false)
 
 // Form fields
+const storageProvider = ref(props.task?.storageProvider || 'organizer') // Default to storing in Organizer
 const title = ref(props.task?.title || '')
 const description = ref(props.task?.description || '')
 const status = ref(props.task?.status || 'todo')
@@ -275,6 +288,10 @@ const dueDate = ref(props.task?.dueDate ? new Date(props.task.dueDate).toISOStri
 const assignedTo = ref(props.task?.assignedTo || '')
 const tags = ref(props.task?.tags || [])
 const relatedProjects = ref(props.task?.relatedProjects || [])
+
+// Get available storage providers
+const { taskProviders } = useIntegrationProviders()
+const availableProviders = computed(() => taskProviders.value)
 
 // Comments section
 const comments = ref(props.task?.comments || [])

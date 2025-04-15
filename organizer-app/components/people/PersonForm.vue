@@ -14,6 +14,17 @@ v-form(
         class="mb-4"
       ) {{ error }}
       
+      v-select(
+        v-model="storageProvider"
+        :items="availableProviders"
+        :label="$t('common.storageLocation')"
+        item-title="name"
+        item-value="id"
+        prepend-icon="mdi-server"
+        :rules="[rules.required]"
+        required
+      )
+      
       v-row
         v-col(cols="12" sm="6")
           v-text-field(
@@ -102,6 +113,7 @@ v-form(
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useIntegrationProviders } from '~/composables/useIntegrationProviders'
 import type { Person } from '~/types/models'
 
 const props = defineProps({
@@ -125,6 +137,7 @@ const form = ref(null)
 const valid = ref(false)
 
 // Form fields
+const storageProvider = ref(props.person?.storageProvider || 'organizer') // Default to storing in Organizer
 const firstName = ref(props.person?.firstName || '')
 const lastName = ref(props.person?.lastName || '')
 const email = ref(props.person?.email || '')
@@ -134,6 +147,10 @@ const role = ref(props.person?.role || '')
 const team = ref(props.person?.team || '')
 const contactFrequency = ref(props.person?.contactFrequency || null)
 const notes = ref(props.person?.notes || '')
+
+// Get available storage providers
+const { contactProviders } = useIntegrationProviders()
+const availableProviders = computed(() => contactProviders.value)
 
 // Validation rules
 const rules = {
@@ -170,6 +187,7 @@ const submit = () => {
   if (!valid.value) return
   
   const personData: Partial<Person> = {
+    storageProvider: storageProvider.value,
     firstName: firstName.value,
     lastName: lastName.value,
     email: email.value || undefined,
