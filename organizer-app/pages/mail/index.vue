@@ -72,8 +72,8 @@ v-container(fluid)
           v-list-item(
             v-for="account in connectedAccounts"
             :key="account.id"
-            :title="account.name"
-            :subtitle="account.email"
+            :title="account.type"
+            :subtitle="account.oauthData.email"
           )
             template(v-slot:prepend)
               v-avatar(size="32" :color="account.color")
@@ -566,6 +566,7 @@ const getContactInitials = (contact: Person) => {
 }
 
 const getInitialsFromString = (name: string) => {
+  if (!name) return ''
   const parts = name.split(' ')
   if (parts.length >= 2) {
     return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`

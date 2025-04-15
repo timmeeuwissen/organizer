@@ -168,8 +168,8 @@ export class GmailProvider implements MailProvider {
       tokenExpiry: this.account.oauthData.tokenExpiry,
       currentTime: new Date(),
       isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
-      scope: this.account.oauthData.scope
-    });
+      scope: this.account.oauthData.scope,
+    }, this.account);
     
     // Check access token
     if (!this.account.oauthData.accessToken) {
@@ -220,7 +220,20 @@ export class GmailProvider implements MailProvider {
     // Standard OAuth refresh flow for any account with a refresh token
     if (this.account.oauthData.refreshToken) {
       try {
-        this.account = await refreshOAuthToken(this.account);
+        // Refresh token and get updated account
+        const updatedAccount = await refreshOAuthToken(this.account);
+        
+        // Update this instance's account reference
+        this.account = updatedAccount;
+        
+        // Update the account in the pinia store so other components can benefit
+        // from the refreshed token without having to refresh again
+        import('~/utils/api/emailUtils').then(module => {
+          module.updateAccountInStore(updatedAccount);
+        }).catch(err => {
+          console.error('Error importing updateAccountInStore:', err);
+        });
+        
         console.log(`Successfully refreshed token for ${this.account.oauthData.email}`);
         return true;
       } catch (error) {

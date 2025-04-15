@@ -1,4 +1,5 @@
 import type { IntegrationAccount } from '~/types/models'
+import { useAuthStore } from '~/stores/auth'
 
 /**
  * Utility functions for email integrations
@@ -209,4 +210,43 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
   }
   
   throw new Error(`Unsupported account type: ${account.type}`)
+}
+
+/**
+ * Updates the account in Pinia store after refreshing token
+ * @param updatedAccount The integration account with refreshed tokens
+ */
+export function updateAccountInStore(updatedAccount: IntegrationAccount): void {
+  // Get the auth store instance
+  const authStore = useAuthStore();
+  
+  if (!authStore.currentUser || !authStore.currentUser.settings) {
+    console.warn('Cannot update account in store: No current user or settings');
+    return;
+  }
+  
+  try {
+    // Find the account in the user's settings
+    const integrationAccounts = authStore.currentUser.settings.integrationAccounts || [];
+    const accountIndex = integrationAccounts.findIndex(acc => acc.id === updatedAccount.id);
+    
+    // If the account exists, update it
+    if (accountIndex >= 0) {
+      // Create new settings object with updated integration account
+      const updatedIntegrationAccounts = [...integrationAccounts];
+      updatedIntegrationAccounts[accountIndex] = updatedAccount;
+      
+      // Update the settings in the store
+      authStore.updateUserSettings({
+        ...authStore.currentUser.settings,
+        integrationAccounts: updatedIntegrationAccounts
+      });
+      
+      console.log(`Updated account ${updatedAccount.oauthData.email} in auth store with refreshed token`);
+    } else {
+      console.warn(`Could not find account ${updatedAccount.oauthData.email} in auth store`);
+    }
+  } catch (error) {
+    console.error('Error updating account in store:', error);
+  }
 }

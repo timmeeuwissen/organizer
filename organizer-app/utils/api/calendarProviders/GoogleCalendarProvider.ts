@@ -14,73 +14,86 @@ export class GoogleCalendarProvider implements CalendarProvider {
   }
   
   isAuthenticated(): boolean {
-    console.log(`GoogleCalendarProvider.isAuthenticated check for ${this.account.email}:`, {
-      hasAccessToken: !!this.account.accessToken,
-      tokenExpiry: this.account.tokenExpiry,
+    console.log(`GoogleCalendarProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
+      hasAccessToken: !!this.account.oauthData.accessToken,
+      tokenExpiry: this.account.oauthData.tokenExpiry,
       currentTime: new Date(),
-      isTokenExpired: this.account.tokenExpiry ? new Date(this.account.tokenExpiry) < new Date() : 'No expiry set',
-      scope: this.account.scope
+      isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
+      scope: this.account.oauthData.scope
     })
     
     // Check access token
-    if (!this.account.accessToken) {
-      console.log(`${this.account.email}: No access token found`)
+    if (!this.account.oauthData.accessToken) {
+      console.log(`${this.account.oauthData.email}: No access token found`)
       return false
     }
     
     // Check token expiry
     // If tokenExpiry is not set, consider the token expired and force a refresh
-    if (!this.account.tokenExpiry) {
-      console.log(`${this.account.email}: No token expiry date set, assuming expired`)
+    if (!this.account.oauthData.tokenExpiry) {
+      console.log(`${this.account.oauthData.email}: No token expiry date set, assuming expired`)
       return false
     }
     
     // Check if token is expired
-    if (new Date(this.account.tokenExpiry) < new Date()) {
-      console.log(`${this.account.email}: Token expired`)
+    if (new Date(this.account.oauthData.tokenExpiry) < new Date()) {
+      console.log(`${this.account.oauthData.email}: Token expired`)
       return false
     }
     
     // Verify proper Calendar scopes if scope is specified
-    if (this.account.scope) {
+    if (this.account.oauthData.scope) {
       const hasCalendarScope = 
-        this.account.scope.includes('calendar') || 
-        this.account.scope.includes('calendar.readonly') || 
-        this.account.scope.includes('calendar.events') || 
-        this.account.scope.includes('calendar.events.readonly') ||
-        this.account.scope.includes('https://www.googleapis.com/auth/calendar');
+        this.account.oauthData.scope.includes('calendar') || 
+        this.account.oauthData.scope.includes('calendar.readonly') || 
+        this.account.oauthData.scope.includes('calendar.events') || 
+        this.account.oauthData.scope.includes('calendar.events.readonly') ||
+        this.account.oauthData.scope.includes('https://www.googleapis.com/auth/calendar');
         
       if (!hasCalendarScope) {
-        console.warn(`${this.account.email}: Google account missing required calendar scopes:`, this.account.scope)
+        console.warn(`${this.account.oauthData.email}: Google account missing required calendar scopes:`, this.account.oauthData.scope)
         return false
       }
     }
     
-    console.log(`${this.account.email}: Authentication valid`)
+    console.log(`${this.account.oauthData.email}: Authentication valid`)
     return true
   }
   
   async authenticate(): Promise<boolean> {
-    console.log(`GoogleCalendarProvider.authenticate for ${this.account.email}`)
+    console.log(`GoogleCalendarProvider.authenticate for ${this.account.oauthData.email}`)
     
     if (this.isAuthenticated()) {
-      console.log(`${this.account.email} is already authenticated`)
+      console.log(`${this.account.oauthData.email} is already authenticated`)
       return true
     }
     
     // Standard OAuth refresh flow for any account with a refresh token
-    if (this.account.refreshToken) {
+    if (this.account.oauthData.refreshToken) {
       try {
-        this.account = await refreshOAuthToken(this.account)
-        console.log(`Successfully refreshed token for ${this.account.email}`)
+        // Refresh token and get updated account
+        const updatedAccount = await refreshOAuthToken(this.account);
+        
+        // Update this instance's account reference
+        this.account = updatedAccount;
+        
+        // Update the account in the pinia store so other components can benefit
+        // from the refreshed token without having to refresh again
+        import('~/utils/api/emailUtils').then(module => {
+          module.updateAccountInStore(updatedAccount);
+        }).catch(err => {
+          console.error('Error importing updateAccountInStore:', err);
+        });
+        
+        console.log(`Successfully refreshed token for ${this.account.oauthData.email}`)
         return true
       } catch (error) {
-        console.error(`Failed to refresh token for ${this.account.email}:`, error)
+        console.error(`Failed to refresh token for ${this.account.oauthData.email}:`, error)
         return false
       }
     }
     
-    console.warn(`${this.account.email} has no refresh token, would need to redirect to OAuth flow`)
+    console.warn(`${this.account.oauthData.email} has no refresh token, would need to redirect to OAuth flow`)
     return false
   }
   
@@ -138,7 +151,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
@@ -265,7 +278,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
@@ -361,7 +374,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
@@ -451,7 +464,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Accept': 'application/json'
       }
       
@@ -496,7 +509,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Accept': 'application/json'
       }
       
