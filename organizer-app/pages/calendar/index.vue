@@ -596,9 +596,9 @@ const selectDay = (date) => {
   }
 }
 
-// Event handling
-const updateEvents = () => {
-  events.value = []
+// Use computed for combined events to make it reactive to store changes
+const combinedEvents = computed(() => {
+  const result = []
   
   // Add tasks as events
   if (showTasks.value) {
@@ -608,7 +608,7 @@ const updateEvents = () => {
       }
       
       if (task.dueDate) {
-        events.value.push({
+        result.push({
           id: task.id,
           title: task.title,
           type: 'task',
@@ -624,20 +624,29 @@ const updateEvents = () => {
   // Add calendar events from integrations
   if (hasCalendarIntegrations.value && showMeetings.value) {
     calendarStore.events.forEach(event => {
-      events.value.push({
+      result.push({
         ...event,
         type: 'meeting',
         date: new Date(event.startTime)
       })
     })
   }
+  
+  return result
+})
+
+// Event handling
+const updateEvents = () => {
+  // This function now just triggers reactivity
+  // combinedEvents computed property will automatically update
+  console.log(`[Calendar] Manually triggering event update`)
 }
 
 const getEventsForDay = (date) => {
-  console.log(`[GUI Calendar] Getting events for day ${date}`, events.value)
-  if (!date || !events.value) return []
+  console.log(`[GUI Calendar] Getting events for day ${date}`)
+  if (!date) return []
   
-  return events.value.filter(event => {
+  return combinedEvents.value.filter(event => {
     if (!event || !event.date) return false
     try {
       const eventDate = new Date(event.date)
@@ -649,9 +658,9 @@ const getEventsForDay = (date) => {
 }
 
 const getEventsForHour = (date, hour) => {
-  if (!date || hour === undefined || !events.value) return []
+  if (!date || hour === undefined) return []
   
-  return events.value.filter(event => {
+  return combinedEvents.value.filter(event => {
     if (!event || !event.date || !event.startTime) return false
     
     try {
