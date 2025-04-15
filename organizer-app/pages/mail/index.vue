@@ -437,9 +437,7 @@ onMounted(async () => {
   await mailStore.fetchEmails({ folder: selectedFolder.value });
   
   // Display integrated accounts info if available
-  if (connectedAccounts.value.length > 0) {
-    console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`);
-  }
+  console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`);
 });
 
 // Refresh unread counts periodically but less frequently

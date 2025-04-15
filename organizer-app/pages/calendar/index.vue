@@ -189,7 +189,7 @@ const calendarStore = useCalendarStore()
 const hasCalendarIntegrations = computed(() => {
   const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
   return integrationAccounts.some(account => 
-    account.connected && account.syncCalendar && account.showInCalendar
+    account.oauthData.connected && account.syncCalendar && account.showInCalendar
   )
 })
 

@@ -80,10 +80,10 @@ export const useMailStore = defineStore('mail', {
     getConnectedAccounts: () => {
       const authStore = useAuthStore()
       const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
-      
+
       // Only return accounts that are connected and have syncMail and showInMail set to true
       return integrationAccounts.filter(account => 
-        account.connected && account.syncMail && account.showInMail
+        account.oauthData.connected && account.syncMail && account.showInMail
       )
     },
 
@@ -287,25 +287,25 @@ export const useMailStore = defineStore('mail', {
       pagination?: EmailPagination
     ): Promise<EmailFetchResult> {
       try {
-        console.log(`Connecting to ${account.type} email API for account: ${account.email}`)
+        console.log(`Connecting to ${account.type} email API for account: ${account.oauthData.email}`)
         
         // Create a copy of the account object to avoid modifying the original
         let workingAccount = { ...account };
         
         // No special account handling - use actual credentials from the account
-        console.log(`Using real integration for ${account.email}`);
+        console.log(`Using real integration for ${account.oauthData.email}`);
         
         // Get the appropriate mail provider with possibly modified account
         const mailProvider = getMailProvider(workingAccount)
         
         // Check if authenticated
         if (!mailProvider.isAuthenticated()) {
-          console.log(`Account ${account.email} requires authentication`)
+          console.log(`Account ${account.oauthData.email} requires authentication`)
           
           // Try to authenticate
           const authenticated = await mailProvider.authenticate()
           if (!authenticated) {
-            console.warn(`Authentication failed for account ${account.email}`)
+            console.warn(`Authentication failed for account ${account.oauthData.email}`)
             return {
               emails: [],
               totalCount: 0,
@@ -314,7 +314,7 @@ export const useMailStore = defineStore('mail', {
               hasMore: false
             }; // Can't fetch emails without authentication
           }
-          else console.info(`Authentication succeeded for account ${account.email}`)
+          else console.info(`Authentication succeeded for account ${account.oauthData.email}`)
         }
         
         // Use the query if provided, otherwise default to inbox
@@ -322,11 +322,11 @@ export const useMailStore = defineStore('mail', {
         
         // Fetch emails with pagination
         try {
-          console.log(`Fetching emails for ${account.email} with query:`, emailQuery);
+          console.log(`Fetching emails for ${account.oauthData.email} with query:`, emailQuery);
           const result = await mailProvider.fetchEmails(emailQuery, pagination);
           return result;
         } catch (error: any) {
-          console.error(`Error fetching emails for ${account.email}:`, error);
+          console.error(`Error fetching emails for ${account.oauthData.email}:`, error);
           // Return empty result when there's an error
           return {
             emails: [],
@@ -337,7 +337,7 @@ export const useMailStore = defineStore('mail', {
           };
         }
       } catch (error) {
-        console.error(`Error fetching emails for account ${account.email}:`, error)
+        console.error(`Error fetching emails for account ${account.oauthData.email}:`, error)
         throw error
       }
     },

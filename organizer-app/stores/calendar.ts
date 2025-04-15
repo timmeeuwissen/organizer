@@ -96,7 +96,7 @@ export const useCalendarStore = defineStore('calendar', {
       
       // Only return accounts that are connected and have syncCalendar and showInCalendar set to true
       return integrationAccounts.filter(account => 
-        account.connected && account.syncCalendar && account.showInCalendar
+        account.oauthData.connected && account.syncCalendar && account.showInCalendar
       )
     }
   },

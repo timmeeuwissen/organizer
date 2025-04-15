@@ -163,73 +163,73 @@ export class GmailProvider implements MailProvider {
   }
   
   isAuthenticated(): boolean {
-    console.log(`GmailProvider.isAuthenticated check for ${this.account.email}:`, {
-      hasAccessToken: !!this.account.accessToken,
-      tokenExpiry: this.account.tokenExpiry,
+    console.log(`GmailProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
+      hasAccessToken: !!this.account.oauthData.accessToken,
+      tokenExpiry: this.account.oauthData.tokenExpiry,
       currentTime: new Date(),
-      isTokenExpired: this.account.tokenExpiry ? new Date(this.account.tokenExpiry) < new Date() : 'No expiry set',
-      scope: this.account.scope
+      isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
+      scope: this.account.oauthData.scope
     });
     
     // Check access token
-    if (!this.account.accessToken) {
-      console.log(`${this.account.email}: No access token found`);
+    if (!this.account.oauthData.accessToken) {
+      console.log(`${this.account.oauthData.email}: No access token found`);
       return false;
     }
     
     // Check token expiry
     // If tokenExpiry is not set, consider the token expired and force a refresh
-    if (!this.account.tokenExpiry) {
-      console.log(`${this.account.email}: No token expiry date set, assuming expired`);
+    if (!this.account.oauthData.tokenExpiry) {
+      console.log(`${this.account.oauthData.email}: No token expiry date set, assuming expired`);
       return false;
     }
     
     // Check if token is expired
-    if (new Date(this.account.tokenExpiry) < new Date()) {
-      console.log(`${this.account.email}: Token expired`);
+    if (new Date(this.account.oauthData.tokenExpiry) < new Date()) {
+      console.log(`${this.account.oauthData.email}: Token expired`);
       return false;
     }
     
     // Verify proper Gmail scopes if scope is specified
-    if (this.account.scope) {
+    if (this.account.oauthData.scope) {
       const hasGmailScope = 
-        this.account.scope.includes('gmail.readonly') || 
-        this.account.scope.includes('gmail.send') || 
-        this.account.scope.includes('gmail.modify') || 
-        this.account.scope.includes('gmail.labels') ||
-        this.account.scope.includes('https://www.googleapis.com/auth/gmail.readonly');
+        this.account.oauthData.scope.includes('gmail.readonly') || 
+        this.account.oauthData.scope.includes('gmail.send') || 
+        this.account.oauthData.scope.includes('gmail.modify') || 
+        this.account.oauthData.scope.includes('gmail.labels') ||
+        this.account.oauthData.scope.includes('https://www.googleapis.com/auth/gmail.readonly');
         
       if (!hasGmailScope) {
-        console.warn(`${this.account.email}: Gmail account missing required scopes:`, this.account.scope);
+        console.warn(`${this.account.oauthData.email}: Gmail account missing required scopes:`, this.account.oauthData.scope);
         return false;
       }
     }
     
-    console.log(`${this.account.email}: Authentication valid`);
+    console.log(`${this.account.oauthData.email}: Authentication valid`);
     return true;
   }
   
   async authenticate(): Promise<boolean> {
-    console.log(`GmailProvider.authenticate for ${this.account.email}`);
+    console.log(`GmailProvider.authenticate for ${this.account.oauthData.email}`);
     
     if (this.isAuthenticated()) {
-      console.log(`${this.account.email} is already authenticated`);
+      console.log(`${this.account.oauthData.email} is already authenticated`);
       return true;
     }
     
     // Standard OAuth refresh flow for any account with a refresh token
-    if (this.account.refreshToken) {
+    if (this.account.oauthData.refreshToken) {
       try {
         this.account = await refreshOAuthToken(this.account);
-        console.log(`Successfully refreshed token for ${this.account.email}`);
+        console.log(`Successfully refreshed token for ${this.account.oauthData.email}`);
         return true;
       } catch (error) {
-        console.error(`Failed to refresh token for ${this.account.email}:`, error);
+        console.error(`Failed to refresh token for ${this.account.oauthData.email}:`, error);
         return false;
       }
     }
     
-    console.warn(`${this.account.email} has no refresh token, would need to redirect to OAuth flow`);
+    console.warn(`${this.account.oauthData.email} has no refresh token, would need to redirect to OAuth flow`);
     // Would need to redirect user to OAuth flow
     return false;
   }
@@ -265,13 +265,13 @@ export class GmailProvider implements MailProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       };
       
       const url = `${endpoint}?${params.toString()}`;
-      console.log(`[Gmail] Counting emails with query: ${searchQuery}`);
+      console.log(`[Gmail] Counting emails with query: ${searchQuery}`, headers);
       
       // Make the request
       const response = await fetch(url, {
@@ -389,7 +389,7 @@ export class GmailProvider implements MailProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       };
@@ -598,7 +598,7 @@ export class GmailProvider implements MailProvider {
       
       // Prepare request with auth - explicitly specifying 'Accept: application/json' to ensure JSON response
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       };

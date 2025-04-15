@@ -11,18 +11,18 @@ import type { IntegrationAccount } from '~/types/models'
  */
 export function hasValidOAuthTokens(account: IntegrationAccount): boolean {
   // Must have access token
-  if (!account.accessToken) {
+  if (!account.oauthData.accessToken) {
     return false
   }
   
   // Check if token is expired
-  if (account.tokenExpiry) {
+  if (account.oauthData.tokenExpiry) {
     const now = new Date()
-    const expiryDate = new Date(account.tokenExpiry)
+    const expiryDate = new Date(account.oauthData.tokenExpiry)
     
     if (now > expiryDate) {
       // Token is expired, check for refresh token
-      return !!account.refreshToken
+      return !!account.oauthData.refreshToken
     }
   }
   
@@ -35,7 +35,7 @@ export function hasValidOAuthTokens(account: IntegrationAccount): boolean {
  * @returns Status message for the account
  */
 export function getAccountStatusMessage(account: IntegrationAccount): string {
-  if (!account.connected) {
+  if (!account.oauthData.connected) {
     return 'Not connected'
   }
   
@@ -44,16 +44,16 @@ export function getAccountStatusMessage(account: IntegrationAccount): string {
   }
   
   // Check that proper scopes are granted for mail access
-  if (account.type === 'google' && account.scope) {
-    if (!account.scope.includes('gmail.readonly') && 
-        !account.scope.includes('gmail.send') && 
-        !account.scope.includes('gmail.modify') && 
-        !account.scope.includes('gmail.labels') &&
-        !account.scope.includes('https://www.googleapis.com/auth/gmail.readonly')) {
+  if (account.type === 'google' && account.oauthData.scope) {
+    if (!account.oauthData.scope.includes('gmail.readonly') && 
+        !account.oauthData.scope.includes('gmail.send') && 
+        !account.oauthData.scope.includes('gmail.modify') && 
+        !account.oauthData.scope.includes('gmail.labels') &&
+        !account.oauthData.scope.includes('https://www.googleapis.com/auth/gmail.readonly')) {
       return 'Gmail permissions required'
     }
-  } else if ((account.type === 'office365' || account.type === 'exchange') && account.scope) {
-    if (!account.scope.includes('Mail.Read')) {
+  } else if ((account.type === 'office365' || account.type === 'exchange') && account.oauthData.scope) {
+    if (!account.oauthData.scope.includes('Mail.Read')) {
       return 'Mail access permissions required'
     }
   }
@@ -67,7 +67,7 @@ export function getAccountStatusMessage(account: IntegrationAccount): string {
  * @returns Color name for the status
  */
 export function getAccountStatusColor(account: IntegrationAccount): string {
-  if (!account.connected) {
+  if (!account.oauthData.connected) {
     return 'error'
   }
   
@@ -76,16 +76,16 @@ export function getAccountStatusColor(account: IntegrationAccount): string {
   }
   
   // Check scopes
-  if (account.type === 'google' && account.scope) {
-    if (!account.scope.includes('gmail.readonly') && 
-        !account.scope.includes('gmail.send') && 
-        !account.scope.includes('gmail.modify') && 
-        !account.scope.includes('gmail.labels') && 
-        !account.scope.includes('https://www.googleapis.com/auth/gmail.readonly')) {
+  if (account.type === 'google' && account.oauthData.scope) {
+    if (!account.oauthData.scope.includes('gmail.readonly') && 
+        !account.oauthData.scope.includes('gmail.send') && 
+        !account.oauthData.scope.includes('gmail.modify') && 
+        !account.oauthData.scope.includes('gmail.labels') && 
+        !account.oauthData.scope.includes('https://www.googleapis.com/auth/gmail.readonly')) {
       return 'warning'
     }
-  } else if ((account.type === 'office365' || account.type === 'exchange') && account.scope) {
-    if (!account.scope.includes('Mail.Read')) {
+  } else if ((account.type === 'office365' || account.type === 'exchange') && account.oauthData.scope) {
+    if (!account.oauthData.scope.includes('Mail.Read')) {
       return 'warning'
     }
   }
@@ -99,18 +99,18 @@ export function getAccountStatusColor(account: IntegrationAccount): string {
  * @returns Updated account with new access token
  */
 export async function refreshOAuthToken(account: IntegrationAccount): Promise<IntegrationAccount> {
-  if (!account.refreshToken) {
+  if (!account.oauthData.refreshToken) {
     throw new Error('No refresh token available')
   }
   
   console.log(`Refreshing oAuth token for account: ${account.type}`)
   
   if (account.type === 'google') {
-    console.log(`Refreshing Google OAuth token for ${account.email} using refresh token`);
+    console.log(`Refreshing Google OAuth token for ${account.oauthData.email} using refresh token`);
     
     try {
       // Try server-side token refresh first
-      console.log(`Attempting to refresh Google token using server-side endpoint for ${account.email}`);
+      console.log(`Attempting to refresh Google token using server-side endpoint for ${account.oauthData.email}`);
       
       const response = await fetch('/api/auth/refresh', {
         method: 'POST',
@@ -119,9 +119,9 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          refreshToken: account.refreshToken,
+          refreshToken: account.oauthData.refreshToken,
           provider: 'google',
-          email: account.email
+          email: account.oauthData.email
         }),
       });
       
@@ -138,10 +138,12 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
         
         return {
           ...account,
-          accessToken: tokens.access_token,
-          tokenExpiry: new Date(Date.now() + (tokens.expires_in * 1000)),
-          scope: tokens.scope || account.scope,
-          updatedAt: new Date()
+          oauthData: {
+            ...account.oauthData, 
+            tokenExpiry: new Date(Date.now() + (tokens.expires_in * 1000)),
+            ...tokens, 
+            updatedAt: new Date(),
+          }
         };
       } else {
         // If server-side refresh fails with a JSON error, log it
@@ -151,29 +153,14 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
       
       // Fallback token when oauth refresh fails
       console.warn('All OAuth refresh methods failed, using temporary token for debug and testing');
-      
-      // Generate temporary token that will last a short time (1 hour)
-      // This is just for development/testing - in production this would redirect to OAuth flow
-      return {
-        ...account,
-        accessToken: `temporary-token-${Date.now()}`,
-        tokenExpiry: new Date(Date.now() + (3600 * 1000)), // 1 hour
-        updatedAt: new Date()
-      };
+
     } catch (error: any) {
       console.error('OAuth refresh failed:', error);
       
-      // Even if refresh fails, return a temporary token for development/testing
-      return {
-        ...account,
-        accessToken: `emergency-token-${Date.now()}`,
-        tokenExpiry: new Date(Date.now() + (1800 * 1000)), // 30 minutes 
-        updatedAt: new Date()
-      };
     }
   } else if (account.type === 'office365' || 
-            (account.type === 'exchange' && account.server?.includes('office365'))) {
-    console.log(`Refreshing Microsoft OAuth token for ${account.email} using refresh token`);
+            (account.type === 'exchange')) {
+    console.log(`Refreshing Microsoft OAuth token for ${account.oauthData.email} using refresh token`);
     
     try {
       // Try server-side token refresh
@@ -184,9 +171,9 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          refreshToken: account.refreshToken,
+          refreshToken: account.oauthData.refreshToken,
           provider: 'microsoft',
-          email: account.email
+          email: account.oauthData.email
         }),
       });
       
@@ -204,34 +191,20 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
         // Update the account with new token
         return {
           ...account,
-          accessToken: tokens.access_token,
-          tokenExpiry: new Date(Date.now() + (tokens.expires_in * 1000)),
-          scope: tokens.scope || account.scope,
-          updatedAt: new Date()
+          oauthData: {
+            ...account.oauthData, 
+            ...tokens, 
+            updatedAt: new Date(),
+            tokenExpiry: new Date(Date.now() + (tokens.expires_in * 1000)),
+          }
         };
       }
       
       // Fallback token when oauth refresh fails
       console.warn('All Microsoft OAuth refresh methods failed, using temporary token for debug and testing');
-      
-      // Generate temporary token that will last a short time (1 hour)
-      // This is just for development/testing - in production this would redirect to OAuth flow
-      return {
-        ...account,
-        accessToken: `temporary-office365-token-${Date.now()}`,
-        tokenExpiry: new Date(Date.now() + (3600 * 1000)), // 1 hour
-        updatedAt: new Date()
-      };
     } catch (error: any) {
       console.error('Microsoft OAuth refresh failed:', error);
-      
-      // Even if refresh fails, return a temporary token for development/testing
-      return {
-        ...account,
-        accessToken: `emergency-office365-token-${Date.now()}`,
-        tokenExpiry: new Date(Date.now() + (1800 * 1000)), // 30 minutes
-        updatedAt: new Date()
-      };
+
     }
   }
   
