@@ -158,15 +158,18 @@ const participants = ref(props.meeting?.participants || [])
 const notes = ref(props.meeting?.notes || '')
 const actionItems = ref(props.meeting?.actionItems || '')
 
-// Meeting categories
+// Meeting categories - hardcoded to match the data structure in meetingCategories.yaml
 const meetingCategories = [
-  { id: 'team', name: 'Team Meeting' },
-  { id: 'client', name: 'Client Meeting' },
+  { id: 'standup', name: 'Standup' },
+  { id: 'planning', name: 'Planning' },
+  { id: 'review', name: 'Review' },
+  { id: 'retrospective', name: 'Retrospective' }, 
   { id: 'one_on_one', name: 'One-on-One' },
-  { id: 'project', name: 'Project Meeting' },
-  { id: 'stand_up', name: 'Stand-up' },
+  { id: 'client_meeting', name: 'Client Meeting' },
+  { id: 'workshop', name: 'Workshop' },
   { id: 'interview', name: 'Interview' },
-  { id: 'other', name: 'Other' }
+  { id: 'demo', name: 'Demo' },
+  { id: 'brainstorming', name: 'Brainstorming' }
 ]
 
 // Validation rules
