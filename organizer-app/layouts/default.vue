@@ -109,6 +109,27 @@ v-app
       @submit="onMailSubmit"
       @close="mailDialog = false"
     )
+    
+  dialog-form(v-model="behaviorDialog" max-width="700px")
+    behavior-form(
+      v-if="behaviorDialog"
+      :loading="false" 
+      @submit="onBehaviorSubmit"
+    )
+    
+  dialog-form(v-model="projectDialog" max-width="800px")
+    project-form(
+      v-if="projectDialog"
+      :loading="false" 
+      @submit="onProjectSubmit"
+    )
+    
+  dialog-form(v-model="meetingDialog" max-width="800px")
+    meeting-form(
+      v-if="meetingDialog"
+      :loading="false" 
+      @submit="onMeetingSubmit"
+    )
 </template>
 
 <script setup lang="ts">
@@ -125,8 +146,13 @@ import TaskForm from '~/components/tasks/TaskForm.vue'
 import PersonForm from '~/components/people/PersonForm.vue'
 import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
+import { useBehaviorsStore } from '~/stores/behaviors'
+import { useProjectsStore } from '~/stores/projects'
 import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
 import MailComposeForm from '~/components/mail/MailComposeForm.vue'
+import BehaviorForm from '~/components/behaviors/BehaviorForm.vue'
+import ProjectForm from '~/components/projects/ProjectForm.vue'
+import MeetingForm from '~/components/meetings/MeetingForm.vue'
 
 const i18n = useI18n()
 const theme = useTheme()
@@ -146,9 +172,24 @@ const taskDialog = ref(false)
 const personDialog = ref(false)
 const calendarDialog = ref(false)
 const mailDialog = ref(false)
+const behaviorDialog = ref(false)
+const projectDialog = ref(false)
+const meetingDialog = ref(false)
 
 // Add Button Menu Items
 const addMenuItems = [
+  { 
+    title: i18n.t('behaviors.add'), 
+    icon: 'mdi-account-cog-outline', 
+    color: 'indigo',
+    action: () => behaviorDialog.value = true
+  },
+  { 
+    title: i18n.t('projects.createProject'), 
+    icon: 'mdi-folder-plus', 
+    color: 'teal',
+    action: () => projectDialog.value = true
+  },
   { 
     title: i18n.t('tasks.addTask'), 
     icon: 'mdi-checkbox-marked-outline', 
@@ -168,6 +209,12 @@ const addMenuItems = [
     action: () => calendarDialog.value = true
   },
   { 
+    title: i18n.t('meetings.title'), 
+    icon: 'mdi-account-group-outline', 
+    color: 'deep-purple',
+    action: () => meetingDialog.value = true
+  },
+  { 
     title: i18n.t('mail.compose'), 
     icon: 'mdi-email-plus', 
     color: 'warning',
@@ -179,14 +226,24 @@ const addMenuItems = [
 const navItems = [
   // Dashboard is already linked at the top of the nav drawer, so this avoids the duplicate ID error
   // { title: 'dashboard.title', icon: 'mdi-view-dashboard', to: '/dashboard' },
-  { title: 'behaviors.title', icon: 'mdi-account-cog', to: '/behaviors' },
+  { 
+    title: 'behaviors.title', 
+    icon: 'mdi-account-cog', 
+    to: '/behaviors',
+    addAction: () => behaviorDialog.value = true
+  },
   { 
     title: 'people.title', 
     icon: 'mdi-account-group', 
     to: '/people',
     addAction: () => personDialog.value = true
   },
-  { title: 'projects.title', icon: 'mdi-folder-multiple', to: '/projects' },
+  { 
+    title: 'projects.title', 
+    icon: 'mdi-folder-multiple', 
+    to: '/projects',
+    addAction: () => projectDialog.value = true
+  },
   { 
     title: 'tasks.title', 
     icon: 'mdi-checkbox-marked-outline', 
@@ -199,7 +256,12 @@ const navItems = [
     to: '/calendar',
     addAction: () => calendarDialog.value = true
   },
-  { title: 'meetings.title', icon: 'mdi-account-group-outline', to: '/meetings' },
+  { 
+    title: 'meetings.title', 
+    icon: 'mdi-account-group-outline', 
+    to: '/meetings',
+    addAction: () => meetingDialog.value = true
+  },
   { 
     title: 'mail.title', 
     icon: 'mdi-email', 
@@ -231,6 +293,8 @@ const logout = async () => {
 // Store instances for form handling
 const tasksStore = useTasksStore()
 const peopleStore = usePeopleStore()
+const behaviorsStore = useBehaviorsStore()
+const projectsStore = useProjectsStore()
 
 // Form submission handlers
 const onTaskSubmit = async (taskData) => {
@@ -332,6 +396,41 @@ const onMailSubmit = async (mailData) => {
     mailDialog.value = false
   } catch (error) {
     console.error('Failed to send mail:', error)
+  }
+}
+
+// Behavior handler
+const onBehaviorSubmit = async (behaviorData) => {
+  try {
+    // Store in organizer (Firestore)
+    await behaviorsStore.createBehavior(behaviorData)
+    behaviorDialog.value = false
+  } catch (error) {
+    console.error('Failed to create behavior:', error)
+  }
+}
+
+// Project handler
+const onProjectSubmit = async (projectData) => {
+  try {
+    // Store in organizer (Firestore)
+    await projectsStore.createProject(projectData)
+    projectDialog.value = false
+  } catch (error) {
+    console.error('Failed to create project:', error)
+  }
+}
+
+// Meeting handler
+const onMeetingSubmit = async (meetingData) => {
+  try {
+    // Store in organizer (Firestore)
+    console.log('Meeting created in Organizer:', meetingData)
+    // In a real implementation, this would call a meetings store method
+    // e.g., meetingsStore.createMeeting(meetingData)
+    meetingDialog.value = false
+  } catch (error) {
+    console.error('Failed to create meeting:', error)
   }
 }
 
