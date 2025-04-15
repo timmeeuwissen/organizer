@@ -19,6 +19,7 @@ export default {
     apply: 'Apply',
     close: 'Close',
     done: 'Done',
+    refreshData: 'Refresh Data',
     offlineWarning: 'You are currently offline. Some features may not be available.',
     onlineNotification: 'You are back online. All features are now available.',
     or: 'or',

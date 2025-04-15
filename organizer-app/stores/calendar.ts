@@ -145,7 +145,7 @@ export const useCalendarStore = defineStore('calendar', {
               anyHasMore = true
             }
           } catch (error) {
-            console.error(`Error fetching events for account ${account.email}:`, error)
+            console.error(`[Calendar] Error fetching events for account ${account.oauthData.email}:`, error)
           }
         }
         
@@ -158,8 +158,8 @@ export const useCalendarStore = defineStore('calendar', {
         // Update pagination state
         this.hasMore = anyHasMore
       } catch (error: any) {
-        console.error('Error fetching calendar events:', error)
-        this.error = error.message || 'Failed to fetch calendar events'
+        console.error('[Calendar] Error fetching calendar events:', error)
+        this.error = error.message || '[Calendar] Failed to fetch calendar events'
       } finally {
         this.loading = false
       }
@@ -173,7 +173,7 @@ export const useCalendarStore = defineStore('calendar', {
       query?: CalendarEventQuery
     ) {
       try {
-        console.log(`Connecting to ${account.type} calendar API for account: ${account.email}`)
+        console.log(`[Calendar] Connecting to ${account.type} calendar API for account: ${account.oauthData.email}`)
         
         // Create a copy of the account object to avoid modifying the original
         let workingAccount = { ...account }
@@ -183,18 +183,18 @@ export const useCalendarStore = defineStore('calendar', {
         
         // Check if authenticated
         if (!calendarProvider.isAuthenticated()) {
-          console.log(`Account ${account.email} requires authentication`)
+          console.log(`[Calendar] Account ${account.oauthData.email} requires authentication`)
           
           // Try to authenticate
           const authenticated = await calendarProvider.authenticate()
           if (!authenticated) {
-            console.warn(`Authentication failed for account ${account.email}`)
+            console.warn(`[Calendar] Authentication failed for account ${account.oauthData.email}`)
             
             // Log failure for the UI to handle
-            this.error = `Authentication failed for ${account.email}. Check token permissions or try reconnecting the account.`
+            this.error = `[Calendar] Authentication failed for ${account.oauthData.email}. Check token permissions or try reconnecting the account.`
             return { events: [], hasMore: false }
           }
-          else console.info(`Authentication succeeded for account ${account.email}`)
+          else console.info(`[Calendar] Authentication succeeded for account ${account.oauthData.email}`)
         }
         
         // Use the query if provided, otherwise default to current date range
@@ -205,7 +205,7 @@ export const useCalendarStore = defineStore('calendar', {
         
         // Fetch events
         try {
-          console.log(`Fetching events for ${account.email} with query:`, eventQuery)
+          console.log(`[Calendar] Fetching events for ${account.oauthData.email} with query:`, eventQuery)
           const result = await calendarProvider.fetchEvents(eventQuery)
           
           // Add account ID to each event
@@ -216,11 +216,11 @@ export const useCalendarStore = defineStore('calendar', {
           
           return { events: eventsWithAccount, hasMore: result.hasMore }
         } catch (error: any) {
-          console.error(`Error fetching events for ${account.email}:`, error)
+          console.error(`[Calendar] Error fetching events for ${account.oauthData.email}:`, error)
           return { events: [], hasMore: false }
         }
       } catch (error) {
-        console.error(`Error fetching events for account ${account.email}:`, error)
+        console.error(`[Calendar] Error fetching events for account ${account.oauthData.email}:`, error)
         throw error
       }
     },
@@ -268,11 +268,11 @@ export const useCalendarStore = defineStore('calendar', {
             // Add to store
             this.calendars = [...this.calendars, ...calendarsWithAccount]
           } catch (error) {
-            console.error(`Error fetching calendars for ${account.email}:`, error)
+            console.error(`[Calendar] Error fetching calendars for ${account.oauthData.email}:`, error)
           }
         }
       } catch (error: any) {
-        console.error('Error fetching calendars:', error)
+        console.error('[Calendar] Error fetching calendars:', error)
       } finally {
         this.loadingCalendars = false
       }
@@ -286,7 +286,7 @@ export const useCalendarStore = defineStore('calendar', {
         // Get the account to use
         const connectedAccounts = this.getConnectedAccounts
         if (connectedAccounts.length === 0) {
-          console.error('No connected accounts to create event in')
+          console.error('[Calendar] No connected accounts to create event in')
           return { success: false }
         }
         
@@ -307,7 +307,7 @@ export const useCalendarStore = defineStore('calendar', {
         if (!calendarProvider.isAuthenticated()) {
           const authenticated = await calendarProvider.authenticate()
           if (!authenticated) {
-            console.error('Not authenticated with calendar provider')
+            console.error('[Calendar] Not authenticated with calendar provider')
             return { success: false }
           }
         }
@@ -326,7 +326,7 @@ export const useCalendarStore = defineStore('calendar', {
         
         return result
       } catch (error) {
-        console.error('Error creating event:', error)
+        console.error('[Calendar] Error creating event:', error)
         return { success: false }
       }
     },
@@ -337,7 +337,7 @@ export const useCalendarStore = defineStore('calendar', {
     async updateEvent(event: CalendarEvent) {
       try {
         if (!event.accountId) {
-          console.error('No account ID specified for event update')
+          console.error('[Calendar] No account ID specified for event update')
           return false
         }
         
@@ -346,7 +346,7 @@ export const useCalendarStore = defineStore('calendar', {
         const account = connectedAccounts.find(a => a.id === event.accountId)
         
         if (!account) {
-          console.error(`Account with ID ${event.accountId} not found`)
+          console.error(`[Calendar] Account with ID ${event.accountId} not found`)
           return false
         }
         
@@ -356,7 +356,7 @@ export const useCalendarStore = defineStore('calendar', {
         if (!calendarProvider.isAuthenticated()) {
           const authenticated = await calendarProvider.authenticate()
           if (!authenticated) {
-            console.error('Not authenticated with calendar provider')
+            console.error('[Calendar] Not authenticated with calendar provider')
             return false
           }
         }
@@ -374,7 +374,7 @@ export const useCalendarStore = defineStore('calendar', {
         
         return success
       } catch (error) {
-        console.error('Error updating event:', error)
+        console.error('[Calendar] Error updating event:', error)
         return false
       }
     },
@@ -388,7 +388,7 @@ export const useCalendarStore = defineStore('calendar', {
         const event = this.events.find(e => e.id === eventId)
         
         if (!event || !event.accountId) {
-          console.error('Event not found or missing account ID')
+          console.error('[Calendar] Event not found or missing account ID')
           return false
         }
         
@@ -397,7 +397,7 @@ export const useCalendarStore = defineStore('calendar', {
         const account = connectedAccounts.find(a => a.id === event.accountId)
         
         if (!account) {
-          console.error(`Account with ID ${event.accountId} not found`)
+          console.error(`[Calendar] Account with ID ${event.accountId} not found`)
           return false
         }
         
@@ -407,7 +407,7 @@ export const useCalendarStore = defineStore('calendar', {
         if (!calendarProvider.isAuthenticated()) {
           const authenticated = await calendarProvider.authenticate()
           if (!authenticated) {
-            console.error('Not authenticated with calendar provider')
+            console.error('[Calendar] Not authenticated with calendar provider')
             return false
           }
         }
@@ -422,7 +422,7 @@ export const useCalendarStore = defineStore('calendar', {
         
         return success
       } catch (error) {
-        console.error('Error deleting event:', error)
+        console.error('[Calendar] Error deleting event:', error)
         return false
       }
     }

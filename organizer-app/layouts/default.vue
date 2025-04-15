@@ -22,6 +22,20 @@ v-app
         v-list-item(@click="changeLocale('nl')")
           v-list-item-title Nederlands
     template(v-if="isAuthenticated")
+      // Data refresh button
+      v-tooltip(location="bottom")
+        template(v-slot:activator="{ props }")
+          v-btn(
+            icon
+            v-bind="props"
+            @click="refreshAllData"
+            :loading="isRefreshing"
+            :disabled="isRefreshing"
+            :color="refreshError ? 'error' : 'default'"
+            :title="$t('common.refreshData')"
+          )
+            v-icon mdi-refresh
+        span {{ $t('common.refreshData') }}
       v-btn(icon to="/auth/profile")
         v-icon mdi-account-circle
       v-btn(icon @click="logout" title="Logout")
@@ -48,6 +62,7 @@ import { useI18n } from 'vue-i18n'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+import { useDataRefresh } from '~/composables/useDataRefresh'
 import DemoModeToggle from '~/components/auth/DemoModeToggle.vue'
 import FeedbackButton from '~/components/feedback/FeedbackButton.vue'
 
@@ -55,6 +70,9 @@ const i18n = useI18n()
 const theme = useTheme()
 const authStore = useAuthStore()
 const router = useRouter()
+
+// Data refresh
+const { isRefreshing, lastRefreshed, refreshError, refreshAllData } = useDataRefresh()
 
 const drawer = ref(false)
 const isDarkTheme = computed(() => theme.global.current.value.dark)

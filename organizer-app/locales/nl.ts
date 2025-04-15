@@ -18,6 +18,8 @@ export default {
     clear: 'Wissen',
     apply: 'Toepassen',
     close: 'Sluiten',
+    done: 'Voltooid',
+    refreshData: 'Gegevens Vernieuwen',
     offlineWarning: 'Je bent momenteel offline. Sommige functies zijn mogelijk niet beschikbaar.',
     onlineNotification: 'Je bent weer online. Alle functies zijn nu beschikbaar.',
   },

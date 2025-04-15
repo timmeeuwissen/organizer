@@ -163,13 +163,13 @@ export class GmailProvider implements MailProvider {
   }
   
   isAuthenticated(): boolean {
-    console.log(`GmailProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
-      hasAccessToken: !!this.account.oauthData.accessToken,
-      tokenExpiry: this.account.oauthData.tokenExpiry,
-      currentTime: new Date(),
-      isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
-      scope: this.account.oauthData.scope,
-    }, this.account);
+    // console.log(`GmailProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
+    //   hasAccessToken: !!this.account.oauthData.accessToken,
+    //   tokenExpiry: this.account.oauthData.tokenExpiry,
+    //   currentTime: new Date(),
+    //   isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
+    //   scope: this.account.oauthData.scope,
+    // }, this.account);
     
     // Check access token
     if (!this.account.oauthData.accessToken) {

@@ -14,30 +14,30 @@ export class GoogleCalendarProvider implements CalendarProvider {
   }
   
   isAuthenticated(): boolean {
-    console.log(`GoogleCalendarProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
-      hasAccessToken: !!this.account.oauthData.accessToken,
-      tokenExpiry: this.account.oauthData.tokenExpiry,
-      currentTime: new Date(),
-      isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
-      scope: this.account.oauthData.scope
-    })
+    // console.log(`GoogleCalendarProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
+    //   hasAccessToken: !!this.account.oauthData.accessToken,
+    //   tokenExpiry: this.account.oauthData.tokenExpiry,
+    //   currentTime: new Date(),
+    //   isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
+    //   scope: this.account.oauthData.scope
+    // })
     
     // Check access token
     if (!this.account.oauthData.accessToken) {
-      console.log(`${this.account.oauthData.email}: No access token found`)
+      console.log(`[GCal] ${this.account.oauthData.email}: No access token found`)
       return false
     }
     
     // Check token expiry
     // If tokenExpiry is not set, consider the token expired and force a refresh
     if (!this.account.oauthData.tokenExpiry) {
-      console.log(`${this.account.oauthData.email}: No token expiry date set, assuming expired`)
+      console.log(`[GCal] ${this.account.oauthData.email}: No token expiry date set, assuming expired`)
       return false
     }
     
     // Check if token is expired
     if (new Date(this.account.oauthData.tokenExpiry) < new Date()) {
-      console.log(`${this.account.oauthData.email}: Token expired`)
+      console.log(`[GCal] ${this.account.oauthData.email}: Token expired`)
       return false
     }
     
@@ -51,20 +51,20 @@ export class GoogleCalendarProvider implements CalendarProvider {
         this.account.oauthData.scope.includes('https://www.googleapis.com/auth/calendar');
         
       if (!hasCalendarScope) {
-        console.warn(`${this.account.oauthData.email}: Google account missing required calendar scopes:`, this.account.oauthData.scope)
+        console.warn(`[GCal] ${this.account.oauthData.email}: Google account missing required calendar scopes:`, this.account.oauthData.scope)
         return false
       }
     }
     
-    console.log(`${this.account.oauthData.email}: Authentication valid`)
+    console.log(`[GCal] ${this.account.oauthData.email}: Authentication valid`)
     return true
   }
   
   async authenticate(): Promise<boolean> {
-    console.log(`GoogleCalendarProvider.authenticate for ${this.account.oauthData.email}`)
+    console.log(`[GCal] GoogleCalendarProvider.authenticate for ${this.account.oauthData.email}`)
     
     if (this.isAuthenticated()) {
-      console.log(`${this.account.oauthData.email} is already authenticated`)
+      console.log(`[GCal] ${this.account.oauthData.email} is already authenticated`)
       return true
     }
     
@@ -82,18 +82,18 @@ export class GoogleCalendarProvider implements CalendarProvider {
         import('~/utils/api/emailUtils').then(module => {
           module.updateAccountInStore(updatedAccount);
         }).catch(err => {
-          console.error('Error importing updateAccountInStore:', err);
+          console.error('[GCal] Error importing updateAccountInStore:', err);
         });
         
-        console.log(`Successfully refreshed token for ${this.account.oauthData.email}`)
+        console.log(`[GCal] Successfully refreshed token for ${this.account.oauthData.email}`)
         return true
       } catch (error) {
-        console.error(`Failed to refresh token for ${this.account.oauthData.email}:`, error)
+        console.error(`[GCal] Failed to refresh token for ${this.account.oauthData.email}:`, error)
         return false
       }
     }
     
-    console.warn(`${this.account.oauthData.email} has no refresh token, would need to redirect to OAuth flow`)
+    console.warn(`[GCal] ${this.account.oauthData.email} has no refresh token, would need to redirect to OAuth flow`)
     return false
   }
   
@@ -104,7 +104,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
-        console.error('Not authenticated with Google Calendar')
+        console.error('[GCal] Not authenticated with Google Calendar')
         return {
           events: [],
           hasMore: false
@@ -113,6 +113,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
     }
     
     try {
+      console.log('[GCal] requestiong to fetch from API with Query: ', query)
       // API endpoint for Google Calendar
       const endpoint = 'https://www.googleapis.com/calendar/v3/calendars'
       
@@ -158,18 +159,20 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Make the request to get events
       const url = `${endpoint}/${calendarId}/events?${params.toString()}`
-      console.log(`[Google Calendar] Fetching events from: ${url}`)
+      console.log(`[GCal] Fetching events from: ${url}`)
       
       const response = await fetch(url, {
         method: 'GET',
         headers: headers
       })
       
+      console.log('[GCal] Response object: ', response)
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('[Google Calendar] Fetch error:', errorText)
-        throw new Error(`Google Calendar API error: ${response.status} ${response.statusText}`)
+        console.error('[GCal] Fetch error:', errorText)
+        throw new Error(`[GCal] API error: ${response.status} ${response.statusText}`)
       }
       
       // Parse the response
@@ -178,6 +181,8 @@ export class GoogleCalendarProvider implements CalendarProvider {
       // Process events
       const events: CalendarEvent[] = []
       
+      console.log('[GCal] Got API response:', data)
+
       if (data.items && Array.isArray(data.items)) {
         for (const item of data.items) {
           try {
@@ -236,7 +241,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
             
             events.push(event)
           } catch (err) {
-            console.error('[Google Calendar] Error processing event:', err, item)
+            console.error('[GCal] Error processing event:', err, item)
           }
         }
       }
@@ -244,12 +249,14 @@ export class GoogleCalendarProvider implements CalendarProvider {
       // Check if there are more events (pagination)
       const hasMore = !!data.nextPageToken
       
+      console.log('[GCal] Returning with events:', events, hasMore)
+
       return {
         events,
         hasMore
       }
     } catch (error) {
-      console.error('[Google Calendar] Error fetching events:', error)
+      console.error('[GCal] Error fetching events:', error)
       return {
         events: [],
         hasMore: false
@@ -264,7 +271,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
-        console.error('Not authenticated with Google Calendar')
+        console.error('[GCal] Not authenticated with Google Calendar')
         return { success: false }
       }
     }
@@ -324,7 +331,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Make the request to create the event
       const url = `${endpoint}/${calendarId}/events`
-      console.log(`[Google Calendar] Creating event at: ${url}`)
+      console.log(`[GCal] Creating event at: ${url}`)
       
       const response = await fetch(url, {
         method: 'POST',
@@ -335,8 +342,8 @@ export class GoogleCalendarProvider implements CalendarProvider {
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('[Google Calendar] Create error:', errorText)
-        throw new Error(`Google Calendar API error: ${response.status} ${response.statusText}`)
+        console.error('[GCal] Create error:', errorText)
+        throw new Error(`[GCal] API error: ${response.status} ${response.statusText}`)
       }
       
       // Parse the response
@@ -348,7 +355,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
         eventId: data.id
       }
     } catch (error) {
-      console.error('[Google Calendar] Error creating event:', error)
+      console.error('[GCal] Error creating event:', error)
       return { success: false }
     }
   }
@@ -360,7 +367,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
-        console.error('Not authenticated with Google Calendar')
+        console.error('[GCal] Not authenticated with Google Calendar')
         return false
       }
     }
@@ -420,7 +427,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Make the request to update the event
       const url = `${endpoint}/${calendarId}/events/${event.id}`
-      console.log(`[Google Calendar] Updating event at: ${url}`)
+      console.log(`[GCal] Updating event at: ${url}`)
       
       const response = await fetch(url, {
         method: 'PUT',
@@ -431,13 +438,13 @@ export class GoogleCalendarProvider implements CalendarProvider {
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('[Google Calendar] Update error:', errorText)
-        throw new Error(`Google Calendar API error: ${response.status} ${response.statusText}`)
+        console.error('[GCal] Update error:', errorText)
+        throw new Error(`[GCal] API error: ${response.status} ${response.statusText}`)
       }
       
       return true
     } catch (error) {
-      console.error('[Google Calendar] Error updating event:', error)
+      console.error('[GCal] Error updating event:', error)
       return false
     }
   }
@@ -449,7 +456,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
-        console.error('Not authenticated with Google Calendar')
+        console.error('[GCal] Not authenticated with Google Calendar')
         return false
       }
     }
@@ -470,7 +477,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       // Make the request to delete the event
       const url = `${endpoint}/${calendarId}/events/${eventId}`
-      console.log(`[Google Calendar] Deleting event at: ${url}`)
+      console.log(`[GCal] Deleting event at: ${url}`)
       
       const response = await fetch(url, {
         method: 'DELETE',
@@ -480,13 +487,13 @@ export class GoogleCalendarProvider implements CalendarProvider {
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('[Google Calendar] Delete error:', errorText)
-        throw new Error(`Google Calendar API error: ${response.status} ${response.statusText}`)
+        console.error('[GCal] Delete error:', errorText)
+        throw new Error(`[GCal] API error: ${response.status} ${response.statusText}`)
       }
       
       return true
     } catch (error) {
-      console.error('[Google Calendar] Error deleting event:', error)
+      console.error('[GCal] Error deleting event:', error)
       return false
     }
   }
@@ -498,7 +505,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
-        console.error('Not authenticated with Google Calendar')
+        console.error('[GCal] Not authenticated with Google Calendar')
         return []
       }
     }
@@ -514,7 +521,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       }
       
       // Make the request to get the calendar list
-      console.log(`[Google Calendar] Fetching calendar list`)
+      console.log(`[GCal] Fetching calendar list`)
       
       const response = await fetch(endpoint, {
         method: 'GET',
@@ -524,8 +531,8 @@ export class GoogleCalendarProvider implements CalendarProvider {
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('[Google Calendar] Calendar list error:', errorText)
-        throw new Error(`Google Calendar API error: ${response.status} ${response.statusText}`)
+        console.error('[GCal] Calendar list error:', errorText)
+        throw new Error(`[GCal] API error: ${response.status} ${response.statusText}`)
       }
       
       // Parse the response
@@ -548,7 +555,7 @@ export class GoogleCalendarProvider implements CalendarProvider {
       
       return calendars
     } catch (error) {
-      console.error('[Google Calendar] Error fetching calendars:', error)
+      console.error('[GCal] Error fetching calendars:', error)
       return []
     }
   }
