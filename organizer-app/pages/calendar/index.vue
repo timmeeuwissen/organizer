@@ -162,14 +162,14 @@ v-container(fluid)
         
         v-card-actions
           v-spacer
+          //- todo: new meetings should be made in a popup
           v-btn(
             color="primary"
-            :to="'/meetings/new'"
             v-if="showMeetings"
           ) {{ $t('meetings.title') }} +
+          //- todo: new tasks should be made in a popup
           v-btn(
             color="info"
-            :to="'/tasks/new'"
             v-if="showTasks"
           ) {{ $t('tasks.title') }} +
 </template>
@@ -634,6 +634,7 @@ const updateEvents = () => {
 }
 
 const getEventsForDay = (date) => {
+  console.log(`[GUI Calendar] Getting events for day ${date}`, events.value)
   if (!date || !events.value) return []
   
   return events.value.filter(event => {

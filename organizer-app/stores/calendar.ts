@@ -139,7 +139,9 @@ export const useCalendarStore = defineStore('calendar', {
         
         for (const account of connectedAccounts) {
           try {
+            console.log(`[Calendar] Fetching events for account ${account.oauthData.email}`)
             const result = await this.fetchEventsFromAccount(account, query)
+            console.log(`[Calendar] Received ${result.events.length} events for account ${account.oauthData.email}`)
             allEvents.push(...result.events)
             if (result.hasMore) {
               anyHasMore = true
@@ -151,7 +153,9 @@ export const useCalendarStore = defineStore('calendar', {
         
         // Replace the events array with the new results
         this.events = allEvents
-        
+        console.log(`[Calendar] Total events in state after fetching: ${this.events.length}`)
+        console.log('[Calendar] Internal state is ', this.events)
+
         // Sort events by start time
         this.events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
         
