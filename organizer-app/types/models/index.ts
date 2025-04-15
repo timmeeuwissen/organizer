@@ -82,7 +82,13 @@ export interface Person {
   notes?: string;
   tags?: string[];
   relatedProjects?: string[]; // Project IDs
+  relatedMeetings?: string[]; // Meeting IDs
+  relatedTasks?: string[]; // Task IDs
   lastContacted?: Date;
+  // Provider information for integration with external contact systems
+  providerId?: string; // ID of this contact in the external provider
+  providerAccountId?: string; // ID of the integration account this contact belongs to
+  providerUpdatedAt?: Date; // When this contact was last updated from the provider
   createdAt: Date;
   updatedAt: Date;
 }

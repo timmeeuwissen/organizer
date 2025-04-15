@@ -10,7 +10,8 @@ import {
   updateDoc, 
   deleteDoc,
   serverTimestamp,
-  orderBy
+  orderBy,
+  setDoc
 } from 'firebase/firestore'
 import { getFirestore } from 'firebase/firestore'
 import { useAuthStore } from './auth'
@@ -290,15 +291,17 @@ export const usePeopleStore = defineStore({
     },
 
     /**
-     * Fetch contacts from the specified integration account
+     * Fetch contacts from the specified integration account and update the store
      * @param account The integration account to fetch contacts from
      * @param query Optional query parameters
      * @param pagination Optional pagination parameters
+     * @param updateStore Whether to update the store with the fetched contacts (default: true)
      */
     async fetchContactsFromProvider(
       account: IntegrationAccount, 
       query?: any, 
-      pagination?: { page: number, pageSize: number }
+      pagination?: { page: number, pageSize: number },
+      updateStore: boolean = true
     ) {
       this.loading = true
       this.error = null
@@ -316,6 +319,20 @@ export const usePeopleStore = defineStore({
         // Fetch contacts
         const result = await provider.fetchContacts(query, pagination)
         
+        console.log(`[People] Fetched ${result.contacts.length} contacts from ${account.type} provider (${account.oauthData.email})`)
+        
+        // Optionally update the store directly with the fetched contacts
+        if (updateStore && result.contacts.length > 0) {
+          // Mark these as provider contacts by setting the provider account ID
+          const providerContacts = result.contacts.map(contact => ({
+            ...contact,
+            providerAccountId: account.id
+          }))
+          
+          // Merge into store and database
+          await this.mergeProviderContacts(providerContacts, account.id)
+        }
+        
         // Return contacts from this provider
         return result
       } catch (error: any) {
@@ -328,28 +345,175 @@ export const usePeopleStore = defineStore({
     },
     
     /**
-     * Synchronize contacts from all enabled integration accounts
-     */
-    /**
      * Merge contacts from provider into the local store
      * @param providerContacts Contacts from the provider
      * @param accountId The account ID these contacts came from
      */
-    mergeProviderContacts(providerContacts: Person[], accountId: string) {
-      // For now, just log the contact count - in a real implementation, we would:
-      // 1. Match contacts with existing contacts by email or other identifiers
-      // 2. Update existing contacts with new information from provider
-      // 3. Add new contacts with provenance information
-      // 4. Potentially handle deletion of contacts that no longer exist in the provider
-      console.log(`Would merge ${providerContacts.length} contacts from account ${accountId}`)
+    /**
+     * Merge contacts from provider into the local store and database
+     * @param providerContacts Contacts from the provider
+     * @param accountId The account ID these contacts came from
+     */
+    async mergeProviderContacts(providerContacts: Person[], accountId: string) {
+      const authStore = useAuthStore()
+      if (!authStore.user) return
       
-      // Simulated implementation (comments only)
-      // - Contacts from providers could be stored with a "providerId" field
-      // - Matching could be done on email address
-      // - We could store the original provider ID to allow updates/deletes
-      // - Sync conflicts could be resolved based on update timestamps
+      const userId = authStore.user.id
+      
+      // Get Firestore DB reference
+      const db = getFirestore()
+      
+      // Store for tracking which contacts were processed
+      const processedProviderIds = new Set<string>()
+      const updatedContacts: Person[] = []
+      const newContacts: Person[] = []
+      
+      for (const providerContact of providerContacts) {
+        // Keep track of which contacts we've processed
+        if (providerContact.id) {
+          processedProviderIds.add(providerContact.id)
+        }
+        
+        // Skip contacts without required fields
+        if (!providerContact.firstName && !providerContact.lastName && !providerContact.email) {
+          console.log('Skipping contact with insufficient information')
+          continue
+        }
+        
+        // Try to find an existing contact with the same email or same provider ID
+        let existingContact = null
+        
+        if (providerContact.email) {
+          // Look for a match by email
+          existingContact = this.people.find(p => 
+            p.email === providerContact.email &&
+            // Optionally check for providerId if it exists
+            (!p.providerId || p.providerId === providerContact.id)
+          )
+        }
+        
+        if (!existingContact && providerContact.id) {
+          // Look for a match by provider ID
+          existingContact = this.people.find(p => 
+            p.providerId === providerContact.id && 
+            p.providerAccountId === accountId
+          )
+        }
+        
+        if (existingContact) {
+          // Update existing contact with new provider data
+          // Note: We're using a simple "provider data wins" strategy here
+          // A real implementation might have more sophisticated conflict resolution
+          
+          const updates: Partial<Person> = {
+            // Only update provider-specific fields if this is the same provider
+            // Otherwise keep existing data
+            firstName: providerContact.firstName || existingContact.firstName,
+            lastName: providerContact.lastName || existingContact.lastName,
+            email: providerContact.email || existingContact.email,
+            phone: providerContact.phone || existingContact.phone,
+            organization: providerContact.organization || existingContact.organization,
+            role: providerContact.role || existingContact.role,
+            tags: [...new Set([...(existingContact.tags || []), ...(providerContact.tags || [])])],
+            providerId: providerContact.id,
+            providerAccountId: accountId,
+            providerUpdatedAt: new Date(),
+            updatedAt: new Date()
+          }
+          
+          // Update the contact in the local store
+          const index = this.people.findIndex(p => p.id === existingContact.id)
+          if (index !== -1) {
+            this.people[index] = {
+              ...this.people[index],
+              ...updates
+            }
+            
+            updatedContacts.push(this.people[index])
+            console.log(`Updated existing contact: ${existingContact.firstName} ${existingContact.lastName}`)
+          }
+        } else {
+          // Create a new contact with provider data
+          const newContact: Person = {
+            id: providerContact.id || `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            userId: userId,
+            firstName: providerContact.firstName || '',
+            lastName: providerContact.lastName || '',
+            email: providerContact.email,
+            phone: providerContact.phone,
+            organization: providerContact.organization,
+            role: providerContact.role,
+            tags: providerContact.tags || [],
+            providerId: providerContact.id,
+            providerAccountId: accountId,
+            providerUpdatedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            relatedMeetings: [],
+            relatedProjects: [],
+            relatedTasks: []
+          }
+          
+          // Add to local state and mark for database insertion
+          this.people.push(newContact)
+          newContacts.push(newContact)
+          console.log(`Added new contact from provider: ${newContact.firstName} ${newContact.lastName}`)
+        }
+      }
+      
+      // Save changes to the database
+      try {
+        // Update existing contacts in Firestore
+        const updatePromises = updatedContacts.map(async (contact) => {
+          const contactRef = doc(db, 'people', contact.id)
+          
+          // Prepare update data - convert to a plain object
+          const { id, ...updateData } = contact
+          
+          // Handle timestamps
+          const firestoreData = {
+            ...updateData,
+            updatedAt: serverTimestamp()
+          }
+          
+          return updateDoc(contactRef, firestoreData)
+        })
+        
+        // Add new contacts to Firestore
+        const addPromises = newContacts.map(async (contact) => {
+          // Extract ID and prepare data
+          const { id, ...contactData } = contact
+          
+          // Convert dates to Firestore timestamps
+          const firestoreData = {
+            ...contactData,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          }
+          
+          // Create with specific ID
+          const contactRef = doc(db, 'people', id)
+          return setDoc(contactRef, firestoreData)
+        })
+        
+        // Wait for all database operations to complete
+        await Promise.all([...updatePromises, ...addPromises])
+        
+        console.log(`Saved ${updatedContacts.length} updated and ${newContacts.length} new contacts to database`)
+      } catch (error) {
+        console.error('Error saving contacts to database:', error)
+      }
+      
+      console.log(`Merged ${processedProviderIds.size} contacts from account ${accountId}`)
+      
+      // In a real implementation, we might also handle deletions:
+      // - Find contacts with providerAccountId = accountId but not in processedProviderIds
+      // - Either delete them or mark them as deleted
     },
 
+    /**
+     * Synchronize contacts from all enabled integration accounts
+     */
     async syncContactsFromAllProviders() {
       const authStore = useAuthStore()
       if (!authStore.user || !authStore.user.settings) return
@@ -364,10 +528,9 @@ export const usePeopleStore = defineStore({
         
         for (const account of enabledAccounts) {
           try {
-            const result = await this.fetchContactsFromProvider(account)
-            
-            // Process and merge the contacts
-            this.mergeProviderContacts(result.contacts, account.id)
+            // The fetchContactsFromProvider method now handles storing contacts in the Pinia store
+            // No need to call mergeProviderContacts separately
+            const result = await this.fetchContactsFromProvider(account, undefined, undefined, true)
             console.log(`Synced ${result.contacts.length} contacts from ${account.type} account (${account.oauthData.email})`)
           } catch (error) {
             console.error(`Error syncing contacts from ${account.type} account:`, error)

@@ -148,7 +148,7 @@ export class GoogleContactsProvider implements ContactProvider {
         method: 'GET',
         headers: headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
@@ -158,7 +158,7 @@ export class GoogleContactsProvider implements ContactProvider {
       
       // Parse the response
       const data = await response.json()
-      
+
       // Extract connections
       const connections = data.connections || []
       
