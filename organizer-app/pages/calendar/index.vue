@@ -283,7 +283,7 @@ const calendarDays = computed(() => {
     dayOfWeek++
     
     // Start a new week
-    if (dayOfWeek === 7 || day === daysInMonth) {
+    if (dayOfWeek === 7) {
       weeks.push(week)
       week = []
       dayOfWeek = 0
@@ -294,7 +294,7 @@ const calendarDays = computed(() => {
   if (week.length > 0 && week.length < 7) {
     const nextMonth = new Date(date)
     nextMonth.setMonth(nextMonth.getMonth() + 1)
-    
+    console.log('week too short')
     for (let i = week.length; i < 7; i++) {
       const nextMonthDay = i - week.length + 1
       const dayDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonthDay)
@@ -313,37 +313,37 @@ const calendarDays = computed(() => {
     weeks.push(week)
   }
   
-  // If we have less than 6 weeks, add another week
-  if (weeks.length < 6) {
-    const nextMonth = new Date(date)
-    nextMonth.setMonth(nextMonth.getMonth() + 1)
-    week = []
+  // // If we have less than 6 weeks, add another week
+  // if (weeks.length < 6) {
+  //   const nextMonth = new Date(date)
+  //   nextMonth.setMonth(nextMonth.getMonth() + 1)
+  //   week = []
     
-    // Check if the last week and its last day exist and have a dayNumber
-    const lastWeek = weeks[weeks.length - 1];
-    const lastDayOfLastWeek = lastWeek && lastWeek[6];
-    const lastDayNumber = lastDayOfLastWeek && lastDayOfLastWeek.dayNumber;
+  //   // Check if the last week and its last day exist and have a dayNumber
+  //   const lastWeek = weeks[weeks.length - 1];
+  //   const lastDayOfLastWeek = lastWeek && lastWeek[6];
+  //   const lastDayNumber = lastDayOfLastWeek && lastDayOfLastWeek.dayNumber;
     
-    // If we can't get the last day's number, use the first day of next month as fallback
-    const startDayNumber = lastDayNumber !== undefined ? lastDayNumber + 1 : 1;
+  //   // If we can't get the last day's number, use the first day of next month as fallback
+  //   const startDayNumber = lastDayNumber !== undefined ? lastDayNumber + 1 : 1;
     
-    for (let i = 0; i < 7; i++) {
-      const nextMonthDay = startDayNumber + i;
-      const dayDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonthDay)
+  //   for (let i = 0; i < 7; i++) {
+  //     const nextMonthDay = startDayNumber + i;
+  //     const dayDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonthDay)
       
-      week.push({
-        date: dayDate,
-        dayNumber: nextMonthDay,
-        currentMonth: false,
-        isToday: isToday(dayDate),
-        isSelected: isSameDay(dayDate, new Date(selectedDate.value)),
-        events: getEventsForDay(dayDate),
-        hasEvents: getEventsForDay(dayDate).length > 0
-      })
-    }
+  //     week.push({
+  //       date: dayDate,
+  //       dayNumber: nextMonthDay,
+  //       currentMonth: false,
+  //       isToday: isToday(dayDate),
+  //       isSelected: isSameDay(dayDate, new Date(selectedDate.value)),
+  //       events: getEventsForDay(dayDate),
+  //       hasEvents: getEventsForDay(dayDate).length > 0
+  //     })
+  //   }
     
-    weeks.push(week)
-  }
+  //   weeks.push(week)
+  // }
   
   return weeks
 })
