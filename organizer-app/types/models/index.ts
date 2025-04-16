@@ -191,6 +191,17 @@ export interface Comment {
   updatedAt: Date;
 }
 
+export interface MeetingCategory {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  icon: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Statistics {
   id: string;
   userId: string;

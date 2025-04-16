@@ -50,50 +50,51 @@ v-container(fluid)
   
   // Category form dialog
   dialog-form(v-model="categoryDialog" :title="isEditing ? $t('meetings.editCategory') : $t('meetings.createCategory')")
-    v-card-text
-      v-form(ref="form" @submit.prevent="submitCategory")
-        v-text-field(
-          v-model="editedCategory.name"
-          :label="$t('meetings.categoryName')"
-          required
-          outlined
-          :rules="[v => !!v || $t('validation.required')]"
-        )
+    v-card
+      v-card-text
+        v-form(ref="form" @submit.prevent="submitCategory")
+          v-text-field(
+            v-model="editedCategory.name"
+            :label="$t('meetings.categoryName')"
+            required
+            outlined
+            :rules="[v => !!v || $t('validation.required')]"
+          )
+          
+          v-textarea(
+            v-model="editedCategory.description"
+            :label="$t('meetings.categoryDescription')"
+            outlined
+            rows="3"
+          )
+          
+          v-color-picker(
+            v-model="editedCategory.color"
+            mode="hex"
+            swatches-max-height="200"
+            show-swatches
+          )
+          
+          v-text-field(
+            v-model="editedCategory.icon"
+            :label="$t('meetings.categoryIcon')"
+            outlined
+            :hint="'Example: mdi-calendar'"
+            persistent-hint
+          )
         
-        v-textarea(
-          v-model="editedCategory.description"
-          :label="$t('meetings.categoryDescription')"
-          outlined
-          rows="3"
-        )
-        
-        v-color-picker(
-          v-model="editedCategory.color"
-          mode="hex"
-          swatches-max-height="200"
-          show-swatches
-        )
-        
-        v-text-field(
-          v-model="editedCategory.icon"
-          :label="$t('meetings.categoryIcon')"
-          outlined
-          :hint="'Example: mdi-calendar'"
-          persistent-hint
-        )
-      
-    v-card-actions
-      v-spacer
-      v-btn(
-        color="primary"
-        @click="submitCategory"
-        :loading="saving"
-      ) {{ $t('common.save') }}
-      v-btn(
-        color="grey"
-        @click="categoryDialog = false"
-        :disabled="saving"
-      ) {{ $t('common.cancel') }}
+      v-card-actions
+        v-spacer
+        v-btn(
+          color="primary"
+          @click="submitCategory"
+          :loading="saving"
+        ) {{ $t('common.save') }}
+        v-btn(
+          color="grey"
+          @click="categoryDialog = false"
+          :disabled="saving"
+        ) {{ $t('common.cancel') }}
   
   // Delete confirmation dialog
   v-dialog(v-model="deleteDialog" max-width="500px")
@@ -128,31 +129,18 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useMeetingsStore } from '~/stores/meetings'
+import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import DialogForm from '~/components/common/DialogForm.vue'
-import { 
-  collection, 
-  query, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  where,
-  getFirestore,
-  serverTimestamp,
-  Timestamp
-} from 'firebase/firestore'
 import { useAuthStore } from '~/stores/auth'
 
 // Store access
 const meetingsStore = useMeetingsStore()
+const categoriesStore = useMeetingCategoriesStore()
 const authStore = useAuthStore()
-const db = getFirestore()
 
 // State
-const categories = ref([])
-const categoriesLoading = ref(true)
+const categories = computed(() => categoriesStore.categories)
+const categoriesLoading = computed(() => categoriesStore.loading)
 const categoryDialog = ref(false)
 const isEditing = ref(false)
 const editedCategory = ref({
@@ -177,26 +165,6 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false, align: 'end', width: '120px' },
 ]
 
-// Load categories
-const fetchCategories = async () => {
-  if (!authStore.user) return
-  
-  categoriesLoading.value = true
-  try {
-    const categoriesRef = collection(db, 'meetingCategories')
-    const q = query(categoriesRef, where('userId', '==', authStore.user.id))
-    const querySnapshot = await getDocs(q)
-    
-    categories.value = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }))
-  } catch (error) {
-    console.error('Error fetching categories:', error)
-  } finally {
-    categoriesLoading.value = false
-  }
-}
 
 // Get count of meetings for a specific category
 const getMeetingsCountForCategory = (categoryId) => {
@@ -230,38 +198,15 @@ const submitCategory = async () => {
       name: editedCategory.value.name,
       description: editedCategory.value.description || '',
       color: editedCategory.value.color,
-      icon: editedCategory.value.icon || 'mdi-calendar',
-      userId: authStore.user.id,
-      updatedAt: serverTimestamp()
+      icon: editedCategory.value.icon || 'mdi-calendar'
     }
     
     if (isEditing.value) {
       // Update existing category
-      const categoryRef = doc(db, 'meetingCategories', editedCategory.value.id)
-      await updateDoc(categoryRef, categoryData)
-      
-      // Update the local array
-      const index = categories.value.findIndex(c => c.id === editedCategory.value.id)
-      if (index !== -1) {
-        categories.value[index] = {
-          ...categoryData,
-          id: editedCategory.value.id,
-          updatedAt: new Date() // For local display, serverTimestamp() is not a real Date
-        }
-      }
+      await categoriesStore.updateCategory(editedCategory.value.id, categoryData)
     } else {
       // Create new category
-      categoryData.createdAt = serverTimestamp()
-      const categoriesRef = collection(db, 'meetingCategories')
-      const docRef = await addDoc(categoriesRef, categoryData)
-      
-      // Add to the local array
-      categories.value.push({
-        ...categoryData,
-        id: docRef.id,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
+      await categoriesStore.createCategory(categoryData)
     }
     
     categoryDialog.value = false
@@ -291,8 +236,7 @@ const deleteCategory = async () => {
   deleting.value = true
   try {
     // Delete the category
-    const categoryRef = doc(db, 'meetingCategories', selectedCategoryId.value)
-    await deleteDoc(categoryRef)
+    await categoriesStore.deleteCategory(selectedCategoryId.value)
     
     // Update meetings that were using this category
     const affectedMeetings = meetingsStore.meetings.filter(
@@ -302,9 +246,6 @@ const deleteCategory = async () => {
     for (const meeting of affectedMeetings) {
       await meetingsStore.updateMeeting(meeting.id, { category: null })
     }
-    
-    // Update the local array
-    categories.value = categories.value.filter(c => c.id !== selectedCategoryId.value)
     
     deleteDialog.value = false
   } catch (error) {
@@ -317,9 +258,14 @@ const deleteCategory = async () => {
 // Load data on mount
 onMounted(async () => {
   await Promise.all([
-    fetchCategories(),
+    categoriesStore.fetchCategories(),
     meetingsStore.fetchMeetings()
   ])
+  
+  // If no categories exist, seed from the YAML file
+  if (categories.value.length === 0) {
+    await categoriesStore.seedDefaultCategories()
+  }
 })
 </script>
 

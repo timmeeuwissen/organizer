@@ -13,6 +13,7 @@ import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'
 import type { User, UserSettings } from '~/types/models'
 
 export const useAuthStore = defineStore('auth', {
+  persist: true,
   state: () => ({
     user: null as User | null,
     loading: true,
