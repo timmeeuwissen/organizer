@@ -30,6 +30,9 @@ export default {
     offlineWarning: 'You are currently offline. Some features may not be available.',
     onlineNotification: 'You are back online. All features are now available.',
     or: 'or',
+    period: 'Time Period',
+    listView: 'List View',
+    cardView: 'Card View',
   },
   auth: {
     login: 'Login',
