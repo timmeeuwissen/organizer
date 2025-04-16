@@ -354,10 +354,57 @@ const filteredMeetings = computed(() => {
 
 // Upcoming and past meetings
 const upcomingMeetings = computed(() => {
-  const now = new Date()
-  return filteredMeetings.value
-    .filter(meeting => new Date(meeting.startTime) > now)
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+  // Use the store's upcomingMeetings getter for meetings that need to be planned
+  const storeMeetings = meetingsStore.upcomingMeetings
+  
+  // Apply additional filters based on user's selections
+  let result = storeMeetings
+  
+  // Apply category filter
+  if (categoryFilter.value) {
+    result = result.filter(m => m.category === categoryFilter.value)
+  }
+
+  // Apply project filter
+  if (projectFilter.value) {
+    result = result.filter(m => 
+      m.relatedProjects && m.relatedProjects.includes(projectFilter.value)
+    )
+  }
+
+  // Apply person filter
+  if (personFilter.value) {
+    result = result.filter(m => 
+      m.participants && m.participants.includes(personFilter.value)
+    )
+  }
+
+  // Apply period filter
+  if (periodFilter.value !== 'all') {
+    const now = new Date()
+    let cutoffDate: Date
+
+    switch (periodFilter.value) {
+      case 'week':
+        cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case 'month':
+        cutoffDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+        break
+      case 'quarter':
+        cutoffDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate())
+        break
+      case 'year':
+        cutoffDate = new Date(now.getFullYear(), 0, 1)
+        break
+      default:
+        cutoffDate = new Date(0) // beginning of time
+    }
+
+    result = result.filter(m => new Date(m.startTime) >= cutoffDate)
+  }
+
+  return result
 })
 
 const pastMeetings = computed(() => {
