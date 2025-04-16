@@ -26,19 +26,22 @@ export interface CalendarPerson {
 }
 
 export interface CalendarEvent {
-  id: string
-  title: string
-  description?: string
-  location?: string
-  startTime: Date
-  endTime: Date
-  allDay: boolean
-  organizer?: CalendarPerson
-  attendees?: CalendarPerson[]
-  calendarId?: string
-  accountId?: string
-  recurrence?: string
-  type?: string // 'meeting', 'task', etc.
+  id: string;
+  title: string;
+  description?: string;
+  location?: string;
+  startTime: Date;
+  endTime: Date;
+  allDay: boolean;
+  organizer?: CalendarPerson;
+  attendees?: CalendarPerson[];
+  calendarId?: string;
+  accountId?: string;
+  recurrence?: string;
+  type?: string; // 'meeting', 'task', etc.
+  meetingId?: string; // Reference to a meeting
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Calendar {
@@ -508,11 +511,19 @@ export const useCalendarStore = defineStore({
               console.error('[Calendar] Not authenticated with calendar provider');
             } else {
               // Create the event in the provider
-              result = await calendarProvider.createEvent(event);
+              const providerResult = await calendarProvider.createEvent(event);
+              result = { 
+                success: providerResult.success, 
+                eventId: providerResult.eventId || null 
+              };
             }
           } else {
             // Create the event in the provider
-            result = await calendarProvider.createEvent(event);
+            const providerResult = await calendarProvider.createEvent(event);
+            result = { 
+              success: providerResult.success, 
+              eventId: providerResult.eventId || null 
+            };
           }
         }
         

@@ -161,15 +161,10 @@ export const useMeetingsStore = defineStore('meetings', {
         const db = getFirestore()
         const meetingsRef = collection(db, 'meetings')
         
-        // Ensure startTime and endTime are Date objects
-        let startTime = newMeeting.startTime || new Date()
-        let endTime = newMeeting.endTime || new Date(startTime.getTime() + 60 * 60 * 1000) // Default to 1 hour
-
-        const meetingData = {
+        // Prepare base meeting data
+        const meetingData: any = {
           ...newMeeting,
           userId: authStore.user.id,
-          startTime: Timestamp.fromDate(startTime),
-          endTime: Timestamp.fromDate(endTime),
           participants: newMeeting.participants || [],
           tasks: newMeeting.tasks || [],
           relatedProjects: newMeeting.relatedProjects || [],
@@ -177,17 +172,32 @@ export const useMeetingsStore = defineStore('meetings', {
           updatedAt: serverTimestamp(),
         }
         
+        // Only set startTime and endTime if this is not a "to be planned" meeting
+        // or if explicit startTime/endTime are provided
+        if (newMeeting.plannedStatus !== 'to_be_planned' || newMeeting.startTime) {
+          // Ensure startTime and endTime are Date objects
+          let startTime = newMeeting.startTime || new Date()
+          let endTime = newMeeting.endTime || new Date(startTime.getTime() + 60 * 60 * 1000) // Default to 1 hour
+          
+          meetingData.startTime = Timestamp.fromDate(startTime)
+          meetingData.endTime = Timestamp.fromDate(endTime)
+        }
+        
         const docRef = await addDoc(meetingsRef, meetingData)
         
         // Add the new meeting to the local state
-        const addedMeeting = {
+        const addedMeeting: any = {
           ...meetingData,
           id: docRef.id,
-          startTime,
-          endTime,
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as Meeting
+        }
+        
+        // Set the startTime and endTime in the local state if they exist in meetingData
+        if (meetingData.startTime) {
+          addedMeeting.startTime = newMeeting.startTime || new Date()
+          addedMeeting.endTime = newMeeting.endTime || new Date(addedMeeting.startTime.getTime() + 60 * 60 * 1000)
+        }
         
         this.meetings.push(addedMeeting)
         this.currentMeeting = addedMeeting
@@ -233,13 +243,22 @@ export const useMeetingsStore = defineStore('meetings', {
           updatedAt: serverTimestamp(),
         }
         
-        // Convert Date objects to Timestamps
+        // Convert Date objects to Timestamps if present
         if (updates.startTime) {
           updateData.startTime = Timestamp.fromDate(updates.startTime)
         }
         
         if (updates.endTime) {
           updateData.endTime = Timestamp.fromDate(updates.endTime)
+        }
+        
+        // Handle removing dates for meetings being changed to "to be planned"
+        if (updates.plannedStatus === 'to_be_planned' && !updates.startTime) {
+          // If we're changing to "to be planned" and no new dates provided, 
+          // use deleteField() to remove these fields from Firestore
+          const { deleteField } = require('firebase/firestore')
+          updateData.startTime = deleteField()
+          updateData.endTime = deleteField()
         }
         
         // Remove fields that shouldn't be directly updated

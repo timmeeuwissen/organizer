@@ -212,16 +212,27 @@ v-container(fluid)
           :loading="formLoading"
           :error="formError"
           @submit="handleMeetingSubmit"
+          @plan="handleMeetingPlan"
+        )
+      
+      // Calendar Event Dialog (shown after planning a meeting)
+      v-dialog(v-model="showCalendarDialog" max-width="800px")
+        CalendarEventForm(
+          :loading="calendarFormLoading"
+          :error="calendarFormError"
+          @submit="handleCalendarEventSubmit"
         )
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
+import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
+import { useCalendarStore } from '~/stores/calendar'
 import type { Meeting } from '~/types/models'
 
 // Define stores
@@ -229,6 +240,7 @@ const meetingsStore = useMeetingsStore()
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const categoriesStore = useMeetingCategoriesStore()
+const calendarStore = useCalendarStore()
 
 // UI state
 const loading = ref(true)
@@ -238,10 +250,14 @@ const projectFilter = ref(null)
 const personFilter = ref(null)
 const periodFilter = ref('all')
 
-// New meeting dialog state
+// Dialog states
 const showNewMeetingDialog = ref(false)
+const showCalendarDialog = ref(false)
 const formLoading = ref(false)
 const formError = ref('')
+const calendarFormLoading = ref(false)
+const calendarFormError = ref('')
+const pendingMeetingId = ref<string | null>(null)
 
 // Meeting categories from store
 const meetingCategories = computed(() => categoriesStore.categories)
@@ -366,13 +382,20 @@ const handleMeetingSubmit = async (meetingData: any) => {
   formError.value = ''
   
   try {
-    await meetingsStore.createMeeting({
+    // Prepare meeting data
+    const createData: any = { 
       ...meetingData,
-      // Convert date and time to startTime
-      startTime: new Date(`${meetingData.date}T${meetingData.time}`),
-      // Map subject to title field
-      title: meetingData.subject
-    })
+      title: meetingData.subject // Map subject to title field
+    }
+    
+    // Set startTime and endTime if this is not a "to be planned" meeting
+    if (meetingData.date && meetingData.time && meetingData.plannedStatus !== 'to_be_planned') {
+      createData.startTime = new Date(`${meetingData.date}T${meetingData.time}`)
+      // Default meeting duration is 1 hour
+      createData.endTime = new Date(createData.startTime.getTime() + 60 * 60 * 1000)
+    }
+    
+    await meetingsStore.createMeeting(createData)
     
     // Close dialog on success
     showNewMeetingDialog.value = false
@@ -380,6 +403,70 @@ const handleMeetingSubmit = async (meetingData: any) => {
     formError.value = error.message || 'Error creating meeting'
   } finally {
     formLoading.value = false
+  }
+}
+
+// Handle planning a meeting (create meeting and then open calendar dialog)
+const handleMeetingPlan = async (meetingData: any) => {
+  formLoading.value = true
+  formError.value = ''
+  
+  try {
+    // First create the meeting
+    const createData = {
+      ...meetingData,
+      title: meetingData.subject, // Map subject to title field
+      plannedStatus: 'to_be_planned', // Ensure planned status is set
+    }
+    
+    const meetingId = await meetingsStore.createMeeting(createData)
+    
+    pendingMeetingId.value = meetingId
+    
+    // Close meeting dialog and open calendar dialog
+    showNewMeetingDialog.value = false
+    showCalendarDialog.value = true
+  } catch (error) {
+    formError.value = error.message || 'Error creating meeting'
+  } finally {
+    formLoading.value = false
+  }
+}
+
+// Handle calendar event submission
+const handleCalendarEventSubmit = async (eventData: any) => {
+  if (!pendingMeetingId.value) return
+  
+  calendarFormLoading.value = true
+  calendarFormError.value = ''
+  
+  try {
+    // Create calendar event
+    const result = await calendarStore.createEvent({
+      ...eventData,
+      title: eventData.title,
+      description: eventData.description || '',
+      location: eventData.location || '',
+      startTime: eventData.start,
+      endTime: eventData.end,
+      // Link to meeting
+      meetingId: pendingMeetingId.value
+    })
+    
+    if (result.success && result.eventId) {
+      // Update the meeting with the calendar event ID
+      await meetingsStore.updateMeeting(pendingMeetingId.value, {
+        calendarEventId: result.eventId
+      })
+    }
+    
+    // Reset and close dialog
+    pendingMeetingId.value = null
+    showCalendarDialog.value = false
+  } catch (error) {
+    calendarFormError.value = error.message || 'Error creating calendar event'
+  } finally {
+    calendarFormLoading.value = false
   }
 }
 

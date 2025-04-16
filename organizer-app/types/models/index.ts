@@ -179,6 +179,8 @@ export interface Meeting {
   category?: string;
   notes?: string;
   tags?: string[];
+  plannedStatus?: 'held' | 'to_be_planned'; // Whether the meeting has been held or is to be planned
+  calendarEventId?: string; // ID of the linked calendar event
   createdAt: Date;
   updatedAt: Date;
 }

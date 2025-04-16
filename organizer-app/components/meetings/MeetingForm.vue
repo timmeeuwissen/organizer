@@ -40,6 +40,20 @@ v-form(
         required
       )
       
+      v-radio-group(
+        v-model="plannedStatus"
+        row
+        @change="handlePlannedStatusChange"
+      )
+        v-radio(
+          :label="'Already held'"
+          value="held"
+        )
+        v-radio(
+          :label="'To be planned'"
+          value="to_be_planned"
+        )
+      
       v-row
         v-col(cols="12" md="6")
           v-menu(
@@ -53,8 +67,7 @@ v-form(
                 prepend-icon="mdi-calendar"
                 readonly
                 v-bind="props"
-                :rules="[rules.required]"
-                required
+                :required="plannedStatus !== 'to_be_planned'"
               )
             v-date-picker(
               v-model="date"
@@ -67,8 +80,7 @@ v-form(
             :label="$t('meetings.time')"
             type="time"
             prepend-icon="mdi-clock"
-            :rules="[rules.required]"
-            required
+            :required="plannedStatus !== 'to_be_planned'"
           )
       
       v-text-field(
@@ -112,6 +124,15 @@ v-form(
         @click="$emit('delete')"
       ) {{ $t('common.delete') }}
       v-btn(
+        v-if="plannedStatus === 'to_be_planned' && valid && !isEdit"
+        color="secondary"
+        :loading="loading"
+        :disabled="!valid || loading"
+        @click="planMeeting"
+      ) 
+        v-icon(start) mdi-calendar-plus
+        span Plan this meeting
+      v-btn(
         color="primary"
         :loading="loading"
         :disabled="!valid || loading"
@@ -123,6 +144,7 @@ v-form(
 import { ref, computed, onMounted } from 'vue'
 import { usePeopleStore } from '~/stores/people'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
+import { useCalendarStore } from '~/stores/calendar'
 import type { Meeting } from '~/types/models'
 
 const props = defineProps({
@@ -140,10 +162,11 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['submit', 'delete'])
+const emit = defineEmits(['submit', 'delete', 'plan'])
 
 const peopleStore = usePeopleStore()
 const categoriesStore = useMeetingCategoriesStore()
+const calendarStore = useCalendarStore()
 
 const form = ref(null)
 const valid = ref(false)
@@ -153,12 +176,14 @@ const dateMenu = ref(false)
 const subject = ref(props.meeting?.subject || '')
 const summary = ref(props.meeting?.summary || '')
 const category = ref(props.meeting?.category || '')
+const plannedStatus = ref(props.meeting?.plannedStatus || 'held')
 const date = ref(props.meeting?.date ? new Date(props.meeting.date).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10))
 const time = ref(props.meeting?.time || '09:00')
 const location = ref(props.meeting?.location || '')
 const participants = ref(props.meeting?.participants || [])
 const notes = ref(props.meeting?.notes || '')
 const actionItems = ref(props.meeting?.actionItems || '')
+const calendarEventId = ref(props.meeting?.calendarEventId || null)
 
 // Meeting categories from store
 const meetingCategories = computed(() => categoriesStore.categories)
@@ -166,6 +191,16 @@ const meetingCategories = computed(() => categoriesStore.categories)
 // Validation rules
 const rules = {
   required: (v: string) => !!v || 'This field is required'
+}
+
+// Handle planned status change
+const handlePlannedStatusChange = () => {
+  if (plannedStatus.value === 'to_be_planned') {
+    // Reset validation errors if any
+    if (form.value) {
+      form.value.validate()
+    }
+  }
 }
 
 // Computed values
@@ -191,6 +226,28 @@ const submit = () => {
     subject: subject.value,
     summary: summary.value,
     category: category.value,
+    plannedStatus: plannedStatus.value,
+    date: date.value ? new Date(date.value) : undefined,
+    time: time.value,
+    location: location.value,
+    participants: participants.value,
+    notes: notes.value,
+    actionItems: actionItems.value,
+    calendarEventId: calendarEventId.value
+  }
+  
+  emit('submit', meetingData)
+}
+
+// Plan meeting - create meeting and open calendar event dialog
+const planMeeting = () => {
+  if (!valid.value) return
+  
+  const meetingData = {
+    subject: subject.value,
+    summary: summary.value,
+    category: category.value,
+    plannedStatus: plannedStatus.value,
     date: date.value ? new Date(date.value) : undefined,
     time: time.value,
     location: location.value,
@@ -199,7 +256,7 @@ const submit = () => {
     actionItems: actionItems.value
   }
   
-  emit('submit', meetingData)
+  emit('plan', meetingData)
 }
 
 // When meeting changes, update form values
@@ -228,6 +285,7 @@ onMounted(async () => {
     subject.value = props.meeting.subject
     summary.value = props.meeting.summary || ''
     category.value = props.meeting.category
+    plannedStatus.value = props.meeting.plannedStatus || 'held'
     date.value = props.meeting.date 
       ? new Date(props.meeting.date).toISOString().substr(0, 10) 
       : new Date().toISOString().substr(0, 10)
@@ -236,6 +294,7 @@ onMounted(async () => {
     participants.value = [...props.meeting.participants]
     notes.value = props.meeting.notes || ''
     actionItems.value = props.meeting.actionItems || ''
+    calendarEventId.value = props.meeting.calendarEventId || null
   }
 })
 </script>
