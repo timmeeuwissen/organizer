@@ -32,8 +32,21 @@ export const useMeetingsStore = defineStore('meetings', {
     upcomingMeetings: (state) => {
       const now = new Date()
       return state.meetings
-        .filter(meeting => meeting.startTime > now)
-        .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+        .filter(meeting => 
+          // Include meetings that are in the future OR specifically marked as "to be planned"
+          (meeting.startTime > now) || (meeting.plannedStatus === 'to_be_planned')
+        )
+        .sort((a, b) => {
+          // If both meetings have startTime, sort chronologically
+          if (a.startTime && b.startTime) {
+            return a.startTime.getTime() - b.startTime.getTime()
+          }
+          // If only one has a startTime, prioritize meetings with dates
+          if (a.startTime && !b.startTime) return -1
+          if (!a.startTime && b.startTime) return 1
+          // If neither has a startTime, sort by creation date
+          return a.createdAt.getTime() - b.createdAt.getTime()
+        })
     },
     pastMeetings: (state) => {
       const now = new Date()
@@ -76,6 +89,7 @@ export const useMeetingsStore = defineStore('meetings', {
 
   actions: {
     async fetchMeetings() {
+      console.log('[Store Meetings] Fetching meetings')
       const authStore = useAuthStore()
       if (!authStore.user) return
 
@@ -83,15 +97,18 @@ export const useMeetingsStore = defineStore('meetings', {
       this.error = null
       
       try {
+        console.log('[Store Meetings] Fetching from Firestore')
+        
         const db = getFirestore()
         const meetingsRef = collection(db, 'meetings')
         const q = query(
           meetingsRef, 
           where('userId', '==', authStore.user.id),
-          orderBy('startTime', 'desc')
+          orderBy('updatedAt', 'desc')
         )
         const querySnapshot = await getDocs(q)
         
+        console.log('[Store Meetings] Fetch yielded', querySnapshot.docs)
         this.meetings = querySnapshot.docs.map(doc => {
           const data = doc.data()
           return {
@@ -103,6 +120,7 @@ export const useMeetingsStore = defineStore('meetings', {
             updatedAt: data.updatedAt?.toDate() || new Date(),
           } as Meeting
         })
+        console.log('[Store Meetings] state is: ', this.meetings)
       } catch (error: any) {
         this.error = error.message || 'Failed to fetch meetings'
         console.error('Error fetching meetings:', error)
@@ -238,7 +256,7 @@ export const useMeetingsStore = defineStore('meetings', {
         }
         
         // Prepare update data
-        const updateData = {
+        const updateData: any = {
           ...updates,
           updatedAt: serverTimestamp(),
         }

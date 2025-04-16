@@ -95,6 +95,8 @@ tmp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+temp/
+tmp/
 
 # Secrets
 .google-oauth-tokens.json
