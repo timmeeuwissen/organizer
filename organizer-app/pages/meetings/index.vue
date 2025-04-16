@@ -45,23 +45,11 @@ v-container(fluid)
           )
       
       v-card
-        v-card-title {{ $t('common.statistics') }}
+        v-card-title {{ $t('meetings.categories') }}
         v-card-text
-          p {{ $t('meetings.totalCount') }}: {{ filteredMeetings.length }}
-          
-          template(v-if="meetingCategories.length > 0")
-            h3.text-subtitle-1.mt-4 {{ $t('meetings.byCategory') }}
-            v-progress-linear(
-              v-for="category in meetingCategories"
-              :key="category.id"
-              :model-value="getCategoryPercentage(category.id)"
-              :color="category.color"
-              height="20"
-              rounded
-              class="mb-2"
-            )
-              template(v-slot:default="{ value }")
-                span.white--text {{ category.name }}: {{ value.toFixed(0) }}%
+          v-btn(color="primary" :to="`/meetings/categories`" block)
+            v-icon(start) mdi-tag-multiple
+            span {{ $t('meetings.categoriesManage') }}
     
     v-col(cols="12" md="9")
       v-row
@@ -70,7 +58,7 @@ v-container(fluid)
             v-card-title.d-flex
               span {{ $t('meetings.upcomingMeetings') }}
               v-spacer
-              v-btn(color="primary" :to="`/meetings/new`")
+              v-btn(color="primary" @click="showNewMeetingDialog = true")
                 v-icon(start) mdi-plus
                 span {{ $t('meetings.newMeeting') }}
             
@@ -217,10 +205,20 @@ v-container(fluid)
                         template(v-if="meeting.summary")
                           p.text-caption.mt-2 {{ $t('meetings.summary') }}:
                           p.text-body-2.meeting-summary {{ meeting.summary }}
+      
+      // New Meeting Dialog
+      DialogForm(v-model="showNewMeetingDialog" max-width="800px")
+        MeetingForm(
+          :loading="formLoading"
+          :error="formError"
+          @submit="handleMeetingSubmit"
+        )
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import DialogForm from '~/components/common/DialogForm.vue'
+import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
@@ -238,6 +236,11 @@ const categoryFilter = ref(null)
 const projectFilter = ref(null)
 const personFilter = ref(null)
 const periodFilter = ref('all')
+
+// New meeting dialog state
+const showNewMeetingDialog = ref(false)
+const formLoading = ref(false)
+const formError = ref('')
 
 // Meeting categories
 const meetingCategories = ref([
@@ -365,6 +368,29 @@ const getCategoryPercentage = (categoryId: string) => {
   
   const categoryMeetings = filteredMeetings.value.filter(m => m.category === categoryId).length
   return (categoryMeetings / totalMeetings) * 100
+}
+
+// Form handlers
+const handleMeetingSubmit = async (meetingData: any) => {
+  formLoading.value = true
+  formError.value = ''
+  
+  try {
+    await meetingsStore.createMeeting({
+      ...meetingData,
+      // Convert date and time to startTime
+      startTime: new Date(`${meetingData.date}T${meetingData.time}`),
+      // Map subject to title field
+      title: meetingData.subject
+    })
+    
+    // Close dialog on success
+    showNewMeetingDialog.value = false
+  } catch (error) {
+    formError.value = error.message || 'Error creating meeting'
+  } finally {
+    formLoading.value = false
+  }
 }
 
 // Utility functions

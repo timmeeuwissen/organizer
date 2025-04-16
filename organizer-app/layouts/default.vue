@@ -4,16 +4,27 @@ v-app
     v-list
       v-list-item(prepend-avatar="/favicon.ico" :title="$t('common.appName')" to="/dashboard")
       v-divider
-      v-list-item(
-        v-for="(item, i) in navItems" 
-        :key="i" 
-        :to="item.to" 
-        :prepend-icon="item.icon" 
-        :title="$t(item.title)"
-      )
-        template(v-slot:append v-if="item.addAction")
-          v-btn(icon variant="text" size="small" @click.stop.prevent="item.addAction")
-            v-icon mdi-plus
+      template(v-for="(item, i) in navItems" :key="i")
+        v-list-item(
+          :to="item.to" 
+          :prepend-icon="item.icon" 
+          :title="$t(item.title)"
+          :class="{ 'parent-active': isParentActive(item) }"
+        )
+          template(v-slot:append v-if="item.addAction")
+            v-btn(icon variant="text" size="small" @click.stop.prevent="item.addAction")
+              v-icon mdi-plus
+        
+        // Nested menu items
+        template(v-if="item.children && isParentActive(item)")
+          v-list-item(
+            v-for="(child, j) in item.children"
+            :key="`${i}-${j}`"
+            :to="child.to"
+            :prepend-icon="child.icon"
+            :title="$t(child.title)"
+            class="nested-item"
+          )
   
   v-app-bar(app)
     v-app-bar-nav-icon(v-if="isAuthenticated" @click.stop="drawer = !drawer")
@@ -223,6 +234,16 @@ const addMenuItems = [
 ]
 
 // Navigation Items with Add Actions
+// Helper function to determine if a parent route is active
+const isParentActive = (item) => {
+  if (!item.to) return false
+  
+  // Check if current route starts with the parent route path
+  const currentPath = window.location.pathname
+  
+  return currentPath.startsWith(item.to) 
+}
+
 const navItems = [
   // Dashboard is already linked at the top of the nav drawer, so this avoids the duplicate ID error
   // { title: 'dashboard.title', icon: 'mdi-view-dashboard', to: '/dashboard' },
@@ -260,7 +281,14 @@ const navItems = [
     title: 'meetings.title', 
     icon: 'mdi-account-group-outline', 
     to: '/meetings',
-    addAction: () => meetingDialog.value = true
+    addAction: () => meetingDialog.value = true,
+    children: [
+      { 
+        title: 'meetings.categoriesTitle',
+        icon: 'mdi-tag-multiple-outline',
+        to: '/meetings/categories'
+      }
+    ]
   },
   { 
     title: 'mail.title', 
@@ -471,3 +499,13 @@ const getIntegrationById = (id) => {
   return mockIntegrations.find(integration => integration.id === id)
 }
 </script>
+
+<style>
+.nested-item {
+  padding-left: 56px !important;
+}
+
+.parent-active {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+</style>
