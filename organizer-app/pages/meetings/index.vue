@@ -207,7 +207,7 @@ v-container(fluid)
                           p.text-body-2.meeting-summary {{ meeting.summary }}
       
       // New Meeting Dialog
-      DialogForm(v-model="showNewMeetingDialog" max-width="800px")
+      v-dialog(v-model="showNewMeetingDialog" max-width="800px")
         MeetingForm(
           :loading="formLoading"
           :error="formError"
@@ -217,7 +217,6 @@ v-container(fluid)
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import DialogForm from '~/components/common/DialogForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { usePeopleStore } from '~/stores/people'

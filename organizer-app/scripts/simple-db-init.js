@@ -111,9 +111,111 @@ function createSampleData() {
     [integrationUserId]: integratedUser
   };
 
+  // Create sample meeting categories
+  const meetingCategoriesCollection = {};
+  
+  // Create categories for basic user
+  const basicUserCategories = [
+    {
+      id: generateId(),
+      userId: basicUserId,
+      name: 'Standup',
+      description: 'Daily team standup meetings',
+      color: '#4CAF50',
+      icon: 'mdi-account-group',
+      createdAt: createTimestamp(),
+      updatedAt: createTimestamp()
+    },
+    {
+      id: generateId(),
+      userId: basicUserId,
+      name: 'Client Meeting',
+      description: 'Meetings with external clients',
+      color: '#F44336',
+      icon: 'mdi-account-tie',
+      createdAt: createTimestamp(),
+      updatedAt: createTimestamp()
+    },
+    {
+      id: generateId(),
+      userId: basicUserId,
+      name: 'Planning',
+      description: 'Sprint planning meetings',
+      color: '#2196F3',
+      icon: 'mdi-chart-timeline',
+      createdAt: createTimestamp(),
+      updatedAt: createTimestamp()
+    }
+  ];
+  
+  // Add categories to the collection
+  basicUserCategories.forEach(category => {
+    meetingCategoriesCollection[category.id] = category;
+  });
+  
+  // Create sample meetings
+  const meetingsCollection = {};
+  
+  // Create meetings for basic user
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const basicUserMeetings = [
+    {
+      id: generateId(),
+      userId: basicUserId,
+      title: 'Daily Standup',
+      description: 'Team daily standup meeting',
+      startTime: {
+        _seconds: Math.floor(tomorrow.setHours(10, 0, 0) / 1000),
+        _nanoseconds: 0
+      },
+      endTime: {
+        _seconds: Math.floor(tomorrow.setHours(10, 30, 0) / 1000),
+        _nanoseconds: 0
+      },
+      location: 'Conference Room A',
+      participants: [],
+      category: basicUserCategories[0].id, // Standup category
+      notes: 'Discuss progress on current sprint',
+      createdAt: createTimestamp(),
+      updatedAt: createTimestamp()
+    },
+    {
+      id: generateId(),
+      userId: basicUserId,
+      title: 'Client Presentation',
+      description: 'Quarterly update with client',
+      startTime: {
+        _seconds: Math.floor(yesterday.setHours(14, 0, 0) / 1000),
+        _nanoseconds: 0
+      },
+      endTime: {
+        _seconds: Math.floor(yesterday.setHours(15, 30, 0) / 1000),
+        _nanoseconds: 0
+      },
+      location: 'Main Meeting Room',
+      participants: [],
+      category: basicUserCategories[1].id, // Client Meeting category
+      notes: 'Prepare slides for Q3 results',
+      createdAt: createTimestamp(),
+      updatedAt: createTimestamp()
+    }
+  ];
+  
+  // Add meetings to the collection
+  basicUserMeetings.forEach(meeting => {
+    meetingsCollection[meeting.id] = meeting;
+  });
+
   // Create the database structure
   const database = {
-    users: usersCollection
+    users: usersCollection,
+    meetingCategories: meetingCategoriesCollection,
+    meetings: meetingsCollection
   };
 
   return database;

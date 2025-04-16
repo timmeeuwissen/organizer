@@ -51,6 +51,13 @@ service cloud.firestore {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
+    // Meeting categories collection rules
+    match /meetingCategories/{categoryId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
     // Behaviors collection rules
     match /behaviors/{behaviorId} {
       allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
