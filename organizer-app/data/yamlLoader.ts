@@ -33,12 +33,34 @@ export function loadMeetingCategories() {
 }
 
 /**
- * Interface for icon data with translations
+ * Interface for translations (used by both categories and icons)
+ */
+export interface Translations {
+  [key: string]: string
+}
+
+/**
+ * Interface for individual icon data
  */
 export interface IconData {
   icon: string
-  translations: {
-    [key: string]: string
+  translations: Translations
+}
+
+/**
+ * Interface for category
+ */
+export interface CategoryData {
+  translations: Translations
+  icons: IconData[]
+}
+
+/**
+ * Interface for the full icons data structure
+ */
+export interface IconsYamlData {
+  categories: {
+    [key: string]: CategoryData
   }
 }
 
@@ -47,7 +69,5 @@ export interface IconData {
  * @returns Icons data with translations
  */
 export function loadIcons() {
-  return loadYamlFile<{
-    icons: IconData[]
-  }>('data/icons.yaml')
+  return loadYamlFile<IconsYamlData>('data/icons.yaml')
 }

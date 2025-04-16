@@ -1,644 +1,698 @@
-icons:
-  # Calendar icons
-  - icon: mdi-calendar
+categories:
+  calendar:
     translations:
       en: Calendar
       nl: Kalender
-  - icon: mdi-calendar-check
-    translations:
-      en: Calendar Check
-      nl: Kalender Afvinken
-  - icon: mdi-calendar-month
-    translations:
-      en: Calendar Month
-      nl: Kalender Maand
-  - icon: mdi-calendar-week
-    translations:
-      en: Calendar Week
-      nl: Kalender Week
-  - icon: mdi-calendar-today
-    translations:
-      en: Calendar Today
-      nl: Kalender Vandaag
-  - icon: mdi-calendar-range
-    translations:
-      en: Calendar Range
-      nl: Kalender Bereik
+    icons:
+      - icon: mdi-calendar
+        translations:
+          en: Calendar
+          nl: Kalender
+      - icon: mdi-calendar-check
+        translations:
+          en: Calendar Check
+          nl: Kalender Afvinken
+      - icon: mdi-calendar-month
+        translations:
+          en: Calendar Month
+          nl: Kalender Maand
+      - icon: mdi-calendar-week
+        translations:
+          en: Calendar Week
+          nl: Kalender Week
+      - icon: mdi-calendar-today
+        translations:
+          en: Calendar Today
+          nl: Kalender Vandaag
+      - icon: mdi-calendar-range
+        translations:
+          en: Calendar Range
+          nl: Kalender Bereik
+      - icon: mdi-calendar-remove
+        translations:
+          en: Calendar Remove
+          nl: Kalender Verwijderen
+      - icon: mdi-calendar-plus
+        translations:
+          en: Calendar Add
+          nl: Kalender Toevoegen
+      - icon: mdi-calendar-edit
+        translations:
+          en: Calendar Edit
+          nl: Kalender Bewerken
+      - icon: mdi-calendar-sync
+        translations:
+          en: Calendar Sync
+          nl: Kalender Synchroniseren
+      - icon: mdi-calendar-search
+        translations:
+          en: Calendar Search
+          nl: Kalender Zoeken
+      - icon: mdi-calendar-star
+        translations:
+          en: Calendar Star
+          nl: Kalender Ster
+      - icon: mdi-calendar-clock
+        translations:
+          en: Calendar Clock
+          nl: Kalender Klok
 
-  # Account/People icons
-  - icon: mdi-account
+  people:
     translations:
-      en: Account
-      nl: Account
-  - icon: mdi-account-group
-    translations:
-      en: Group
-      nl: Groep
-  - icon: mdi-account-multiple
-    translations:
-      en: Multiple Accounts
-      nl: Meerdere Accounts
-  - icon: mdi-human
-    translations:
-      en: Human
-      nl: Mens
-  - icon: mdi-head
-    translations:
-      en: Head
-      nl: Hoofd
+      en: People
+      nl: Mensen
+    icons:
+      - icon: mdi-account
+        translations:
+          en: Account
+          nl: Account
+      - icon: mdi-account-group
+        translations:
+          en: Group
+          nl: Groep
+      - icon: mdi-account-multiple
+        translations:
+          en: Multiple Accounts
+          nl: Meerdere Accounts
+      - icon: mdi-human
+        translations:
+          en: Human
+          nl: Mens
+      - icon: mdi-head
+        translations:
+          en: Head
+          nl: Hoofd
+      - icon: mdi-account-circle
+        translations:
+          en: Account Circle
+          nl: Account Cirkel
+      - icon: mdi-account-supervisor
+        translations:
+          en: Supervisor
+          nl: Supervisor
+      - icon: mdi-account-settings
+        translations:
+          en: Account Settings
+          nl: Account Instellingen
+      - icon: mdi-account-star
+        translations:
+          en: Account Star
+          nl: Account Ster
+      - icon: mdi-account-check
+        translations:
+          en: Account Check
+          nl: Account Controleren
+      - icon: mdi-account-search
+        translations:
+          en: Account Search
+          nl: Account Zoeken
+      - icon: mdi-account-network
+        translations:
+          en: Account Network
+          nl: Account Netwerk
+      - icon: mdi-account-details
+        translations:
+          en: Account Details
+          nl: Account Details
 
-  # Notification icons
-  - icon: mdi-bell
+  notifications:
     translations:
-      en: Bell
-      nl: Bel
-  - icon: mdi-alert
-    translations:
-      en: Alert
-      nl: Waarschuwing
-  - icon: mdi-alert-circle
-    translations:
-      en: Alert Circle
-      nl: Waarschuwingscirkel
-  - icon: mdi-alert-circle-outline
-    translations:
-      en: Alert Circle Outline
-      nl: Waarschuwingscirkel Omtrek
-  - icon: mdi-alert-octagon
-    translations:
-      en: Alert Octagon
-      nl: Waarschuwingsachthoek
+      en: Notifications
+      nl: Meldingen
+    icons:
+      - icon: mdi-bell
+        translations:
+          en: Bell
+          nl: Bel
+      - icon: mdi-alert
+        translations:
+          en: Alert
+          nl: Waarschuwing
+      - icon: mdi-alert-circle
+        translations:
+          en: Alert Circle
+          nl: Waarschuwingscirkel
+      - icon: mdi-alert-circle-outline
+        translations:
+          en: Alert Circle Outline
+          nl: Waarschuwingscirkel Omtrek
+      - icon: mdi-alert-octagon
+        translations:
+          en: Alert Octagon
+          nl: Waarschuwingsachthoek
+      - icon: mdi-bell-ring
+        translations:
+          en: Bell Ring
+          nl: Bel Rinkelen
+      - icon: mdi-bell-off
+        translations:
+          en: Bell Off
+          nl: Bel Uit
+      - icon: mdi-bell-outline
+        translations:
+          en: Bell Outline
+          nl: Bel Omtrek
+      - icon: mdi-bell-plus
+        translations:
+          en: Bell Add
+          nl: Bel Toevoegen
+      - icon: mdi-alarm
+        translations:
+          en: Alarm
+          nl: Alarm
+      - icon: mdi-alert-box
+        translations:
+          en: Alert Box
+          nl: Waarschuwingsvak
+      - icon: mdi-alert-rhombus
+        translations:
+          en: Alert Rhombus
+          nl: Waarschuwingsruit
 
-  # Document icons
-  - icon: mdi-file
+  documents:
     translations:
-      en: File
-      nl: Bestand
-  - icon: mdi-folder
-    translations:
-      en: Folder
-      nl: Map
-  - icon: mdi-note
-    translations:
-      en: Note
-      nl: Notitie
-  - icon: mdi-note-text
-    translations:
-      en: Text Note
-      nl: Tekst Notitie
-  - icon: mdi-clipboard
-    translations:
-      en: Clipboard
-      nl: Klembord
-  - icon: mdi-clipboard-text
-    translations:
-      en: Clipboard Text
-      nl: Klembord Tekst
+      en: Documents
+      nl: Documenten
+    icons:
+      - icon: mdi-file
+        translations:
+          en: File
+          nl: Bestand
+      - icon: mdi-folder
+        translations:
+          en: Folder
+          nl: Map
+      - icon: mdi-note
+        translations:
+          en: Note
+          nl: Notitie
+      - icon: mdi-note-text
+        translations:
+          en: Text Note
+          nl: Tekst Notitie
+      - icon: mdi-clipboard
+        translations:
+          en: Clipboard
+          nl: Klembord
+      - icon: mdi-clipboard-text
+        translations:
+          en: Clipboard Text
+          nl: Klembord Tekst
+      - icon: mdi-file-document
+        translations:
+          en: Document
+          nl: Document
+      - icon: mdi-file-pdf
+        translations:
+          en: PDF
+          nl: PDF
+      - icon: mdi-file-excel
+        translations:
+          en: Excel
+          nl: Excel
+      - icon: mdi-file-word
+        translations:
+          en: Word
+          nl: Word
+      - icon: mdi-file-powerpoint
+        translations:
+          en: PowerPoint
+          nl: PowerPoint
+      - icon: mdi-file-image
+        translations:
+          en: Image File
+          nl: Afbeeldingsbestand
+      - icon: mdi-file-video
+        translations:
+          en: Video File
+          nl: Videobestand
+      - icon: mdi-file-music
+        translations:
+          en: Music File
+          nl: Muziekbestand
+      - icon: mdi-file-search
+        translations:
+          en: Search File
+          nl: Bestand Zoeken
+      - icon: mdi-folder-open
+        translations:
+          en: Folder Open
+          nl: Map Open
+      - icon: mdi-folder-plus
+        translations:
+          en: Folder Add
+          nl: Map Toevoegen
+      - icon: mdi-folder-search
+        translations:
+          en: Folder Search
+          nl: Map Zoeken
 
-  # Communication icons
-  - icon: mdi-email
+  communication:
     translations:
-      en: Email
-      nl: E-mail
-  - icon: mdi-phone
-    translations:
-      en: Phone
-      nl: Telefoon
-  - icon: mdi-message
-    translations:
-      en: Message
-      nl: Bericht
-  - icon: mdi-chat
-    translations:
-      en: Chat
-      nl: Chat
-  - icon: mdi-comment
-    translations:
-      en: Comment
-      nl: Opmerking
-  - icon: mdi-comment-text
-    translations:
-      en: Comment Text
-      nl: Opmerking Tekst
-  - icon: mdi-comment-outline
-    translations:
-      en: Comment Outline
-      nl: Opmerking Omtrek
-  - icon: mdi-send
-    translations:
-      en: Send
-      nl: Verzenden
+      en: Communication
+      nl: Communicatie
+    icons:
+      - icon: mdi-email
+        translations:
+          en: Email
+          nl: E-mail
+      - icon: mdi-phone
+        translations:
+          en: Phone
+          nl: Telefoon
+      - icon: mdi-message
+        translations:
+          en: Message
+          nl: Bericht
+      - icon: mdi-chat
+        translations:
+          en: Chat
+          nl: Chat
+      - icon: mdi-comment
+        translations:
+          en: Comment
+          nl: Opmerking
+      - icon: mdi-comment-text
+        translations:
+          en: Comment Text
+          nl: Opmerking Tekst
+      - icon: mdi-comment-outline
+        translations:
+          en: Comment Outline
+          nl: Opmerking Omtrek
+      - icon: mdi-send
+        translations:
+          en: Send
+          nl: Verzenden
+      - icon: mdi-email-open
+        translations:
+          en: Email Open
+          nl: E-mail Geopend
+      - icon: mdi-email-outline
+        translations:
+          en: Email Outline
+          nl: E-mail Omtrek
+      - icon: mdi-phone-incoming
+        translations:
+          en: Incoming Call
+          nl: Inkomende Oproep
+      - icon: mdi-phone-outgoing
+        translations:
+          en: Outgoing Call
+          nl: Uitgaande Oproep
+      - icon: mdi-phone-missed
+        translations:
+          en: Missed Call
+          nl: Gemiste Oproep
+      - icon: mdi-message-reply
+        translations:
+          en: Reply
+          nl: Beantwoorden
+      - icon: mdi-message-processing
+        translations:
+          en: Processing Message
+          nl: Bericht Verwerken
+      - icon: mdi-forum
+        translations:
+          en: Forum
+          nl: Forum
+      - icon: mdi-chat-processing
+        translations:
+          en: Chat Processing
+          nl: Chat Verwerken
 
-  # Status/Action icons
-  - icon: mdi-heart
+  status:
     translations:
-      en: Heart
-      nl: Hart
-  - icon: mdi-star
-    translations:
-      en: Star
-      nl: Ster
-  - icon: mdi-check
-    translations:
-      en: Check
-      nl: Vinkje
-  - icon: mdi-check-circle
-    translations:
-      en: Check Circle
-      nl: Vinkje Cirkel
-  - icon: mdi-check-circle-outline
-    translations:
-      en: Check Circle Outline
-      nl: Vinkje Cirkel Omtrek
-  - icon: mdi-close
-    translations:
-      en: Close
-      nl: Sluiten
-  - icon: mdi-close-circle
-    translations:
-      en: Close Circle
-      nl: Sluit Cirkel
-  - icon: mdi-close-circle-outline
-    translations:
-      en: Close Circle Outline
-      nl: Sluit Cirkel Omtrek
+      en: Status
+      nl: Status
+    icons:
+      - icon: mdi-heart
+        translations:
+          en: Heart
+          nl: Hart
+      - icon: mdi-star
+        translations:
+          en: Star
+          nl: Ster
+      - icon: mdi-check
+        translations:
+          en: Check
+          nl: Vinkje
+      - icon: mdi-check-circle
+        translations:
+          en: Check Circle
+          nl: Vinkje Cirkel
+      - icon: mdi-check-circle-outline
+        translations:
+          en: Check Circle Outline
+          nl: Vinkje Cirkel Omtrek
+      - icon: mdi-close
+        translations:
+          en: Close
+          nl: Sluiten
+      - icon: mdi-close-circle
+        translations:
+          en: Close Circle
+          nl: Sluit Cirkel
+      - icon: mdi-close-circle-outline
+        translations:
+          en: Close Circle Outline
+          nl: Sluit Cirkel Omtrek
+      - icon: mdi-progress-check
+        translations:
+          en: Progress Check
+          nl: Voortgang Controle
+      - icon: mdi-progress-alert
+        translations:
+          en: Progress Alert
+          nl: Voortgang Waarschuwing
+      - icon: mdi-toggle-switch
+        translations:
+          en: Toggle Switch
+          nl: Schakelaar
+      - icon: mdi-toggle-switch-off
+        translations:
+          en: Toggle Switch Off
+          nl: Schakelaar Uit
+      - icon: mdi-check-bold
+        translations:
+          en: Bold Check
+          nl: Vet Vinkje
+      - icon: mdi-checkbox-marked
+        translations:
+          en: Checkbox Marked
+          nl: Selectievakje Aangevinkt
+      - icon: mdi-checkbox-blank
+        translations:
+          en: Checkbox Blank
+          nl: Selectievakje Leeg
+      - icon: mdi-radiobox-marked
+        translations:
+          en: Radio Button Selected
+          nl: Radioknop Geselecteerd
+      - icon: mdi-radiobox-blank
+        translations:
+          en: Radio Button Blank
+          nl: Radioknop Leeg
+      - icon: mdi-adjust
+        translations:
+          en: Adjust
+          nl: Aanpassen
 
-  # Navigation icons
-  - icon: mdi-home
+  navigation:
     translations:
-      en: Home
-      nl: Thuis
-  - icon: mdi-briefcase
-    translations:
-      en: Briefcase
-      nl: Aktetas
-  - icon: mdi-arrow-left
-    translations:
-      en: Arrow Left
-      nl: Pijl Links
-  - icon: mdi-arrow-right
-    translations:
-      en: Arrow Right
-      nl: Pijl Rechts
-  - icon: mdi-arrow-up
-    translations:
-      en: Arrow Up
-      nl: Pijl Omhoog
-  - icon: mdi-arrow-down
-    translations:
-      en: Arrow Down
-      nl: Pijl Omlaag
-  - icon: mdi-chevron-left
-    translations:
-      en: Chevron Left
-      nl: Chevron Links
-  - icon: mdi-chevron-right
-    translations:
-      en: Chevron Right
-      nl: Chevron Rechts
-  - icon: mdi-chevron-up
-    translations:
-      en: Chevron Up
-      nl: Chevron Omhoog
-  - icon: mdi-chevron-down
-    translations:
-      en: Chevron Down
-      nl: Chevron Omlaag
+      en: Navigation
+      nl: Navigatie
+    icons:
+      - icon: mdi-home
+        translations:
+          en: Home
+          nl: Thuis
+      - icon: mdi-briefcase
+        translations:
+          en: Briefcase
+          nl: Aktetas
+      - icon: mdi-arrow-left
+        translations:
+          en: Arrow Left
+          nl: Pijl Links
+      - icon: mdi-arrow-right
+        translations:
+          en: Arrow Right
+          nl: Pijl Rechts
+      - icon: mdi-arrow-up
+        translations:
+          en: Arrow Up
+          nl: Pijl Omhoog
+      - icon: mdi-arrow-down
+        translations:
+          en: Arrow Down
+          nl: Pijl Omlaag
+      - icon: mdi-chevron-left
+        translations:
+          en: Chevron Left
+          nl: Chevron Links
+      - icon: mdi-chevron-right
+        translations:
+          en: Chevron Right
+          nl: Chevron Rechts
+      - icon: mdi-chevron-up
+        translations:
+          en: Chevron Up
+          nl: Chevron Omhoog
+      - icon: mdi-chevron-down
+        translations:
+          en: Chevron Down
+          nl: Chevron Omlaag
+      - icon: mdi-arrow-expand
+        translations:
+          en: Expand
+          nl: Uitvouwen
+      - icon: mdi-arrow-collapse
+        translations:
+          en: Collapse
+          nl: Invouwen
 
-  # Time icons
-  - icon: mdi-clock
+  time:
     translations:
-      en: Clock
-      nl: Klok
-  - icon: mdi-refresh
-    translations:
-      en: Refresh
-      nl: Vernieuwen
+      en: Time
+      nl: Tijd
+    icons:
+      - icon: mdi-clock
+        translations:
+          en: Clock
+          nl: Klok
+      - icon: mdi-refresh
+        translations:
+          en: Refresh
+          nl: Vernieuwen
+      - icon: mdi-update
+        translations:
+          en: Update
+          nl: Bijwerken
+      - icon: mdi-timelapse
+        translations:
+          en: Timelapse
+          nl: Tijdsverloop
+      - icon: mdi-timer
+        translations:
+          en: Timer
+          nl: Timer
+      - icon: mdi-timer-sand
+        translations:
+          en: Hourglass
+          nl: Zandloper
+      - icon: mdi-history
+        translations:
+          en: History
+          nl: Geschiedenis
 
-  # UI elements
-  - icon: mdi-menu
+  ui:
     translations:
-      en: Menu
-      nl: Menu
-  - icon: mdi-dots-vertical
-    translations:
-      en: More Options
-      nl: Meer Opties
-  - icon: mdi-dots-horizontal
-    translations:
-      en: More Options Horizontal
-      nl: Meer Opties Horizontaal
-  - icon: mdi-magnify
-    translations:
-      en: Search
-      nl: Zoeken
-  - icon: mdi-filter
-    translations:
-      en: Filter
-      nl: Filter
-  - icon: mdi-sort
-    translations:
-      en: Sort
-      nl: Sorteren
+      en: UI Elements
+      nl: UI-elementen
+    icons:
+      - icon: mdi-menu
+        translations:
+          en: Menu
+          nl: Menu
+      - icon: mdi-dots-vertical
+        translations:
+          en: More Options
+          nl: Meer Opties
+      - icon: mdi-dots-horizontal
+        translations:
+          en: More Options Horizontal
+          nl: Meer Opties Horizontaal
+      - icon: mdi-magnify
+        translations:
+          en: Search
+          nl: Zoeken
+      - icon: mdi-filter
+        translations:
+          en: Filter
+          nl: Filter
+      - icon: mdi-sort
+        translations:
+          en: Sort
+          nl: Sorteren
+      - icon: mdi-table
+        translations:
+          en: Table
+          nl: Tabel
+      - icon: mdi-tab
+        translations:
+          en: Tab
+          nl: Tab
+      - icon: mdi-window-maximize
+        translations:
+          en: Maximize
+          nl: Maximaliseren
+      - icon: mdi-palette
+        translations:
+          en: Palette
+          nl: Palet
 
-  # Settings
-  - icon: mdi-cog
+  actions:
     translations:
-      en: Cog
-      nl: Tandwiel
-  - icon: mdi-settings
-    translations:
-      en: Settings
-      nl: Instellingen
+      en: Actions
+      nl: Acties
+    icons:
+      - icon: mdi-pencil
+        translations:
+          en: Edit
+          nl: Bewerken
+      - icon: mdi-delete
+        translations:
+          en: Delete
+          nl: Verwijderen
+      - icon: mdi-content-save
+        translations:
+          en: Save
+          nl: Opslaan
+      - icon: mdi-plus
+        translations:
+          en: Add
+          nl: Toevoegen
+      - icon: mdi-minus
+        translations:
+          en: Remove
+          nl: Verwijderen
+      - icon: mdi-share
+        translations:
+          en: Share
+          nl: Delen
+      - icon: mdi-undo
+        translations:
+          en: Undo
+          nl: Ongedaan maken
+      - icon: mdi-redo
+        translations:
+          en: Redo
+          nl: Opnieuw
+      - icon: mdi-download
+        translations:
+          en: Download
+          nl: Downloaden
+      - icon: mdi-upload
+        translations:
+          en: Upload
+          nl: Uploaden
 
-  # Formatting
-  - icon: mdi-format-list-bulleted
+  media:
     translations:
-      en: Bulleted List
-      nl: Lijst met Opsommingstekens
-  - icon: mdi-format-list-checks
-    translations:
-      en: Check List
-      nl: Checklist
-  - icon: mdi-format-list-numbered
-    translations:
-      en: Numbered List
-      nl: Genummerde Lijst
+      en: Media
+      nl: Media
+    icons:
+      - icon: mdi-printer
+        translations:
+          en: Printer
+          nl: Printer
+      - icon: mdi-camera
+        translations:
+          en: Camera
+          nl: Camera
+      - icon: mdi-image
+        translations:
+          en: Image
+          nl: Afbeelding
+      - icon: mdi-video
+        translations:
+          en: Video
+          nl: Video
+      - icon: mdi-music
+        translations:
+          en: Music
+          nl: Muziek
+      - icon: mdi-play
+        translations:
+          en: Play
+          nl: Afspelen
+      - icon: mdi-pause
+        translations:
+          en: Pause
+          nl: Pauzeren
+      - icon: mdi-stop
+        translations:
+          en: Stop
+          nl: Stoppen
 
-  # Information
-  - icon: mdi-information
+  nature:
     translations:
-      en: Information
-      nl: Informatie
-  - icon: mdi-information-outline
-    translations:
-      en: Information Outline
-      nl: Informatie Omtrek
-  - icon: mdi-help-circle
-    translations:
-      en: Help
-      nl: Help
-  - icon: mdi-help-circle-outline
-    translations:
-      en: Help Outline
-      nl: Help Omtrek
+      en: Nature
+      nl: Natuur
+    icons:
+      - icon: mdi-earth
+        translations:
+          en: Earth
+          nl: Aarde
+      - icon: mdi-moon-waning-crescent
+        translations:
+          en: Moon
+          nl: Maan
+      - icon: mdi-weather-sunny
+        translations:
+          en: Sunny
+          nl: Zonnig
+      - icon: mdi-weather-cloudy
+        translations:
+          en: Cloudy
+          nl: Bewolkt
+      - icon: mdi-weather-rainy
+        translations:
+          en: Rainy
+          nl: Regenachtig
+      - icon: mdi-weather-snowy
+        translations:
+          en: Snowy
+          nl: Sneeuwachtig
+      - icon: mdi-weather-lightning
+        translations:
+          en: Lightning
+          nl: Bliksem
+      - icon: mdi-weather-windy
+        translations:
+          en: Windy
+          nl: Winderig
+      - icon: mdi-umbrella
+        translations:
+          en: Umbrella
+          nl: Paraplu
+      - icon: mdi-flower
+        translations:
+          en: Flower
+          nl: Bloem
+      - icon: mdi-tree
+        translations:
+          en: Tree
+          nl: Boom
 
-  # Security
-  - icon: mdi-shield
-    translations:
-      en: Shield
-      nl: Schild
-  - icon: mdi-shield-outline
-    translations:
-      en: Shield Outline
-      nl: Schild Omtrek
-  - icon: mdi-lock
-    translations:
-      en: Lock
-      nl: Slot
-  - icon: mdi-lock-open
-    translations:
-      en: Unlock
-      nl: Ontgrendelen
-  - icon: mdi-eye
-    translations:
-      en: View
-      nl: Bekijken
-  - icon: mdi-eye-off
-    translations:
-      en: Hide
-      nl: Verbergen
-
-  # Links
-  - icon: mdi-link
-    translations:
-      en: Link
-      nl: Link
-  - icon: mdi-link-variant
-    translations:
-      en: Link Variant
-      nl: Link Variant
-  - icon: mdi-attachment
-    translations:
-      en: Attachment
-      nl: Bijlage
-
-  # Markers
-  - icon: mdi-flag
-    translations:
-      en: Flag
-      nl: Vlag
-  - icon: mdi-bookmark
-    translations:
-      en: Bookmark
-      nl: Bladwijzer
-  - icon: mdi-tag
-    translations:
-      en: Tag
-      nl: Label
-  - icon: mdi-label
-    translations:
-      en: Label
-      nl: Etiket
-  - icon: mdi-map-marker
-    translations:
-      en: Location
-      nl: Locatie
-
-  # Ratings
-  - icon: mdi-thumb-up
-    translations:
-      en: Thumbs Up
-      nl: Duim Omhoog
-  - icon: mdi-thumb-down
-    translations:
-      en: Thumbs Down
-      nl: Duim Omlaag
-
-  # Charts
-  - icon: mdi-chart-bar
-    translations:
-      en: Bar Chart
-      nl: Staafdiagram
-  - icon: mdi-chart-line
-    translations:
-      en: Line Chart
-      nl: Lijndiagram
-  - icon: mdi-chart-pie
-    translations:
-      en: Pie Chart
-      nl: Taartdiagram
-  - icon: mdi-graph
-    translations:
-      en: Graph
-      nl: Grafiek
-
-  # Views
-  - icon: mdi-view-dashboard
-    translations:
-      en: Dashboard
-      nl: Dashboard
-  - icon: mdi-view-grid
-    translations:
-      en: Grid View
-      nl: Rasterweergave
-  - icon: mdi-web
-    translations:
-      en: Web
-      nl: Web
-
-  # Basic actions
-  - icon: mdi-pencil
-    translations:
-      en: Edit
-      nl: Bewerken
-  - icon: mdi-delete
-    translations:
-      en: Delete
-      nl: Verwijderen
-  - icon: mdi-content-save
-    translations:
-      en: Save
-      nl: Opslaan
-  - icon: mdi-plus
-    translations:
-      en: Add
-      nl: Toevoegen
-  - icon: mdi-minus
-    translations:
-      en: Remove
-      nl: Verwijderen
-
-  # Media
-  - icon: mdi-printer
-    translations:
-      en: Printer
-      nl: Printer
-  - icon: mdi-camera
-    translations:
-      en: Camera
-      nl: Camera
-  - icon: mdi-image
-    translations:
-      en: Image
-      nl: Afbeelding
-  - icon: mdi-video
-    translations:
-      en: Video
-      nl: Video
-  - icon: mdi-music
-    translations:
-      en: Music
-      nl: Muziek
-  - icon: mdi-play
-    translations:
-      en: Play
-      nl: Afspelen
-  - icon: mdi-pause
-    translations:
-      en: Pause
-      nl: Pauzeren
-  - icon: mdi-stop
-    translations:
-      en: Stop
-      nl: Stoppen
-  - icon: mdi-fast-forward
-    translations:
-      en: Fast Forward
-      nl: Vooruitspoelen
-  - icon: mdi-rewind
-    translations:
-      en: Rewind
-      nl: Terugspoelen
-  - icon: mdi-skip-next
-    translations:
-      en: Skip Next
-      nl: Volgende Overslaan
-  - icon: mdi-skip-previous
-    translations:
-      en: Skip Previous
-      nl: Vorige Overslaan
-
-  # Cloud
-  - icon: mdi-cloud
-    translations:
-      en: Cloud
-      nl: Wolk
-  - icon: mdi-cloud-upload
-    translations:
-      en: Cloud Upload
-      nl: Cloud Upload
-  - icon: mdi-cloud-download
-    translations:
-      en: Cloud Download
-      nl: Cloud Download
-
-  # Achievement
-  - icon: mdi-trophy
-    translations:
-      en: Trophy
-      nl: Trofee
-  - icon: mdi-medal
-    translations:
-      en: Medal
-      nl: Medaille
-
-  # Ideas
-  - icon: mdi-lightbulb
-    translations:
-      en: Idea
-      nl: Idee
-  - icon: mdi-lightbulb-outline
-    translations:
-      en: Idea Outline
-      nl: Idee Omtrek
-  - icon: mdi-fire
-    translations:
-      en: Fire
-      nl: Vuur
-  - icon: mdi-flash
-    translations:
-      en: Flash
-      nl: Flits
-
-  # Everyday objects
-  - icon: mdi-food
-    translations:
-      en: Food
-      nl: Voedsel
-  - icon: mdi-coffee
-    translations:
-      en: Coffee
-      nl: Koffie
-  - icon: mdi-cake
-    translations:
-      en: Cake
-      nl: Taart
-  - icon: mdi-gift
-    translations:
-      en: Gift
-      nl: Cadeau
-
-  # Transportation
-  - icon: mdi-car
-    translations:
-      en: Car
-      nl: Auto
-  - icon: mdi-airplane
-    translations:
-      en: Airplane
-      nl: Vliegtuig
-  - icon: mdi-train
-    translations:
-      en: Train
-      nl: Trein
-  - icon: mdi-bike
-    translations:
-      en: Bike
-      nl: Fiets
-  - icon: mdi-walk
-    translations:
-      en: Walk
-      nl: Lopen
-  - icon: mdi-run
-    translations:
-      en: Run
-      nl: Rennen
-
-  # Finance
-  - icon: mdi-bank
-    translations:
-      en: Bank
-      nl: Bank
-  - icon: mdi-cash
-    translations:
-      en: Cash
-      nl: Contant
-  - icon: mdi-credit-card
-    translations:
-      en: Credit Card
-      nl: Creditcard
-  - icon: mdi-currency-usd
-    translations:
-      en: Currency
-      nl: Valuta
-  - icon: mdi-cart
-    translations:
-      en: Shopping Cart
-      nl: Winkelwagen
-  - icon: mdi-store
-    translations:
-      en: Store
-      nl: Winkel
-
-  # Nature
-  - icon: mdi-earth
-    translations:
-      en: Earth
-      nl: Aarde
-  - icon: mdi-moon-waning-crescent
-    translations:
-      en: Moon
-      nl: Maan
-  - icon: mdi-weather-sunny
-    translations:
-      en: Sunny
-      nl: Zonnig
-  - icon: mdi-weather-cloudy
-    translations:
-      en: Cloudy
-      nl: Bewolkt
-  - icon: mdi-weather-rainy
-    translations:
-      en: Rainy
-      nl: Regenachtig
-  - icon: mdi-weather-snowy
-    translations:
-      en: Snowy
-      nl: Sneeuwachtig
-  - icon: mdi-weather-lightning
-    translations:
-      en: Lightning
-      nl: Bliksem
-  - icon: mdi-weather-windy
-    translations:
-      en: Windy
-      nl: Winderig
-  - icon: mdi-umbrella
-    translations:
-      en: Umbrella
-      nl: Paraplu
-  - icon: mdi-flower
-    translations:
-      en: Flower
-      nl: Bloem
-  - icon: mdi-tree
-    translations:
-      en: Tree
-      nl: Boom
-
-  # Emotions
-  - icon: mdi-emoticon
-    translations:
-      en: Emoticon
-      nl: Emoticon
-  - icon: mdi-emoticon-happy
-    translations:
-      en: Happy
-      nl: Blij
-  - icon: mdi-emoticon-sad
-    translations:
-      en: Sad
-      nl: Verdrietig
-  - icon: mdi-emoticon-cool
-    translations:
-      en: Cool
-      nl: Cool
-  - icon: mdi-emoticon-neutral
-    translations:
-      en: Neutral
-      nl: Neutraal
-  - icon: mdi-emoticon-excited
-    translations:
-      en: Excited
-      nl: Opgewonden
+  emotions:
+    translations:
+      en: Emotions
+      nl: Emoties
+    icons:
+      - icon: mdi-emoticon
+        translations:
+          en: Emoticon
+          nl: Emoticon
+      - icon: mdi-emoticon-happy
+        translations:
+          en: Happy
+          nl: Blij
+      - icon: mdi-emoticon-sad
+        translations:
+          en: Sad
+          nl: Verdrietig
+      - icon: mdi-emoticon-cool
+        translations:
+          en: Cool
+          nl: Cool
+      - icon: mdi-emoticon-neutral
+        translations:
+          en: Neutral
+          nl: Neutraal
+      - icon: mdi-emoticon-excited
+        translations:
+          en: Excited
+          nl: Opgewonden
