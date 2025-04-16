@@ -221,12 +221,14 @@ import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
+import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import type { Meeting } from '~/types/models'
 
 // Define stores
 const meetingsStore = useMeetingsStore()
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
+const categoriesStore = useMeetingCategoriesStore()
 
 // UI state
 const loading = ref(true)
@@ -241,19 +243,8 @@ const showNewMeetingDialog = ref(false)
 const formLoading = ref(false)
 const formError = ref('')
 
-// Meeting categories
-const meetingCategories = ref([
-  { id: 'standup', name: 'Standup', color: '#4CAF50', icon: 'mdi-account-group' },
-  { id: 'planning', name: 'Planning', color: '#2196F3', icon: 'mdi-chart-timeline' },
-  { id: 'review', name: 'Review', color: '#FF9800', icon: 'mdi-eye-check' },
-  { id: 'retrospective', name: 'Retrospective', color: '#9C27B0', icon: 'mdi-reflection' },
-  { id: 'one_on_one', name: 'One-on-One', color: '#607D8B', icon: 'mdi-account-voice' },
-  { id: 'client_meeting', name: 'Client Meeting', color: '#F44336', icon: 'mdi-account-tie' },
-  { id: 'workshop', name: 'Workshop', color: '#009688', icon: 'mdi-school' },
-  { id: 'interview', name: 'Interview', color: '#795548', icon: 'mdi-account-question' },
-  { id: 'demo', name: 'Demo', color: '#3F51B5', icon: 'mdi-presentation' },
-  { id: 'brainstorming', name: 'Brainstorming', color: '#FF5722', icon: 'mdi-lightbulb-group' },
-])
+// Meeting categories from store
+const meetingCategories = computed(() => categoriesStore.categories)
 
 // Table headers
 const headers = [
@@ -435,18 +426,12 @@ onMounted(async () => {
       meetingsStore.fetchMeetings(),
       peopleStore.fetchPeople(),
       projectsStore.fetchProjects(),
+      categoriesStore.fetchCategories(),
     ])
     
-    // Try to load categories from YAML (if available)
-    try {
-      const { loadMeetingCategories } = await import('~/data/yamlLoader')
-      const categoriesData = loadMeetingCategories()
-      if (categoriesData && categoriesData.categories) {
-        meetingCategories.value = categoriesData.categories
-      }
-    } catch (error) {
-      console.warn('Unable to load meeting categories from YAML:', error)
-      // Keep using the default categories defined above
+    // Seed default categories if none exist
+    if (categoriesStore.categories.length === 0) {
+      await categoriesStore.seedDefaultCategories()
     }
   } catch (error) {
     console.error('Error loading meetings data:', error)

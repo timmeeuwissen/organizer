@@ -122,6 +122,7 @@ v-form(
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { usePeopleStore } from '~/stores/people'
+import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import type { Meeting } from '~/types/models'
 
 const props = defineProps({
@@ -142,6 +143,7 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'delete'])
 
 const peopleStore = usePeopleStore()
+const categoriesStore = useMeetingCategoriesStore()
 
 const form = ref(null)
 const valid = ref(false)
@@ -158,19 +160,8 @@ const participants = ref(props.meeting?.participants || [])
 const notes = ref(props.meeting?.notes || '')
 const actionItems = ref(props.meeting?.actionItems || '')
 
-// Meeting categories - hardcoded to match the data structure in meetingCategories.yaml
-const meetingCategories = [
-  { id: 'standup', name: 'Standup' },
-  { id: 'planning', name: 'Planning' },
-  { id: 'review', name: 'Review' },
-  { id: 'retrospective', name: 'Retrospective' }, 
-  { id: 'one_on_one', name: 'One-on-One' },
-  { id: 'client_meeting', name: 'Client Meeting' },
-  { id: 'workshop', name: 'Workshop' },
-  { id: 'interview', name: 'Interview' },
-  { id: 'demo', name: 'Demo' },
-  { id: 'brainstorming', name: 'Brainstorming' }
-]
+// Meeting categories from store
+const meetingCategories = computed(() => categoriesStore.categories)
 
 // Validation rules
 const rules = {
@@ -213,9 +204,24 @@ const submit = () => {
 
 // When meeting changes, update form values
 onMounted(async () => {
-  // Load people for selects
+  // Load people and categories for selects
+  const loadPromises = []
+  
   if (peopleStore.people.length === 0) {
-    await peopleStore.fetchPeople()
+    loadPromises.push(peopleStore.fetchPeople())
+  }
+  
+  if (categoriesStore.categories.length === 0) {
+    loadPromises.push(categoriesStore.fetchCategories())
+    
+    // Seed default categories if none exist after fetching
+    if (categoriesStore.categories.length === 0) {
+      loadPromises.push(categoriesStore.seedDefaultCategories())
+    }
+  }
+  
+  if (loadPromises.length > 0) {
+    await Promise.all(loadPromises)
   }
   
   if (props.meeting) {
