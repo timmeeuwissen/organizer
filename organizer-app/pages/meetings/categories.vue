@@ -75,13 +75,15 @@ v-container(fluid)
             show-swatches
           )
           
-          v-text-field(
-            v-model="editedCategory.icon"
-            :label="$t('meetings.categoryIcon')"
-            outlined
-            :hint="'Example: mdi-calendar'"
-            persistent-hint
-          )
+          // Icon selector
+          .mb-4
+            label.text-subtitle-2.mb-2 {{ $t('meetings.categoryIcon') }}
+            icon-selector(
+              v-model="editedCategory.icon"
+              :color="editedCategory.color"
+              :label="$t('meetings.categoryIcon')"
+              placeholder="mdi-calendar"
+            )
         
       v-card-actions
         v-spacer
@@ -131,6 +133,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import DialogForm from '~/components/common/DialogForm.vue'
+import IconSelector from '~/components/common/IconSelector.vue'
 import { useAuthStore } from '~/stores/auth'
 
 // Store access
