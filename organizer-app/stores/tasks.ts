@@ -591,26 +591,26 @@ export const useTasksStore = defineStore('tasks', {
             const result = await provider.fetchTasks()
             
             // Add userId to each task and store in syncedTasks
-              // Ensure all required Task fields are present
-              const tasks = result.tasks.map((task: Partial<Task>) => ({
-                ...task,
-                userId: authStore.user!.id,
-                id: task.id || crypto.randomUUID(), // Ensure ID is present
-                providerId: task.id, // Store the provider's task ID
-                providerAccountId: account.id, // Store the account ID
-                providerUpdatedAt: new Date(),
-                status: task.status || 'todo',
-                title: task.title || 'Untitled Task',
-                priority: task.priority || 3,
-                type: task.type || 'task',
-                tags: task.tags || [],
-                subtasks: task.subtasks || [],
-                dueDate: task.dueDate || null,
-                completedAt: task.completedAt || null,
-                createdAt: task.createdAt || new Date(),
-                updatedAt: task.updatedAt || new Date(),
-                comments: task.comments || []
-              })) as Task[]
+            // Ensure all required Task fields are present
+            const tasks = result.tasks.map((task: Partial<Task>) => ({
+              ...task,
+              userId: authStore.user!.id,
+              id: task.id || crypto.randomUUID(), // Ensure ID is present
+              providerId: task.id, // Store the provider's task ID
+              providerAccountId: account.id, // Store the account ID
+              providerUpdatedAt: new Date(),
+              status: task.status || 'todo',
+              title: task.title || 'Untitled Task',
+              priority: task.priority || 3,
+              type: task.type || 'task',
+              tags: task.tags || [],
+              subtasks: task.subtasks || [],
+              dueDate: task.dueDate || null,
+              completedAt: task.completedAt || null,
+              createdAt: task.createdAt || new Date(),
+              updatedAt: task.updatedAt || new Date(),
+              comments: task.comments || []
+            })) as Task[]
 
             syncedTasks[account.id] = tasks
             console.log(`Fetched ${tasks.length} tasks from ${account.type} (${account.oauthData.email})`)
@@ -661,23 +661,42 @@ export const useTasksStore = defineStore('tasks', {
           if (existingTaskIndex === -1) {
             // Task doesn't exist locally, add it to Firestore
             // Clean up any undefined fields that might cause Firestore errors
-            const taskData = {
-              ...task,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-              // Handle completedDate/completedAt - ensure it's either a valid Timestamp or null (not undefined)
-              completedAt: task.completedAt ? Timestamp.fromDate(task.completedAt) : null,
-              completedDate: null // Explicitly set completedDate to null to avoid the undefined error
-            }
+            // Create a clean object with no undefined values
+            const taskData: Record<string, any> = {}
             
-            // Remove any undefined fields to prevent Firestore errors
-            // Use type assertion to handle dynamic properties
-            Object.keys(taskData).forEach(key => {
-              const typedTaskData = taskData as any;
-              if (typedTaskData[key] === undefined) {
-                typedTaskData[key] = null;
-              }
-            });
+            // Start with required fields that must be present
+            taskData.userId = task.userId || authStore.user!.id
+            taskData.title = task.title || 'Untitled Task'
+            taskData.status = task.status || 'todo'
+            taskData.priority = task.priority || 'medium'
+            taskData.type = task.type || 'task'
+            taskData.createdAt = serverTimestamp()
+            taskData.updatedAt = serverTimestamp()
+            
+            // Handle array fields
+            taskData.tags = task.tags || []
+            taskData.subtasks = task.subtasks || []
+            taskData.comments = task.comments || []
+            taskData.relatedProjects = task.relatedProjects || []
+            taskData.relatedMeetings = task.relatedMeetings || []
+            taskData.relatedBehaviors = task.relatedBehaviors || []
+            
+            // Handle date fields
+            taskData.completedAt = task.completedAt ? Timestamp.fromDate(task.completedAt) : null
+            taskData.completedDate = null // Explicitly set to null 
+            taskData.dueDate = task.dueDate ? Timestamp.fromDate(task.dueDate) : null
+            
+            // Provider fields
+            taskData.providerId = task.providerId || null
+            taskData.providerAccountId = task.providerAccountId || null
+            taskData.providerUpdatedAt = task.providerUpdatedAt 
+              ? Timestamp.fromDate(task.providerUpdatedAt) 
+              : Timestamp.fromDate(new Date())
+            
+            // Optional string fields
+            taskData.description = task.description || ''
+            taskData.assignedTo = task.assignedTo || null
+            taskData.parentTask = task.parentTask || null
             
             // Add to Firestore
             await addDoc(tasksRef, taskData)
