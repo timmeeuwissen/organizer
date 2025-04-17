@@ -539,7 +539,9 @@ const submit = () => {
     dueDate: dueDate.value ? new Date(dueDate.value) : undefined,
     assignedTo: assignedTo.value || undefined,
     tags: tags.value,
-    relatedProjects: relatedProjects.value
+    relatedProjects: relatedProjects.value,
+    // Add provider information for non-organizer storage
+    storageProvider: storageProvider.value
   }
   
   emit('submit', taskData)

@@ -160,6 +160,10 @@ export interface Task {
   };
   notes?: string;
   tags: string[];
+  // Provider integration fields
+  providerId?: string; // ID of this task in the external provider
+  providerAccountId?: string; // ID of the integration account this task belongs to
+  providerUpdatedAt?: Date; // When this task was last updated from the provider
   createdAt: Date;
   updatedAt: Date;
 }

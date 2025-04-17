@@ -181,56 +181,81 @@ v-container(fluid)
                 th(style="width: 120px") {{ $t('tasks.type') }}
                 th
             tbody
-              tr(
-                v-for="task in filteredTasks" 
-                :key="task.id"
-                :class="{ 'text-decoration-line-through': task.status === 'completed' }"
-                style="cursor: pointer"
-                @click="openTask(task)"
-              )
-                td(style="width: 50px")
-                  v-checkbox(
-                    v-model="task.completed"
-                    :value="task.status === 'completed'"
-                    color="success"
-                    @click.stop="toggleTaskStatus(task)"
-                    :disabled="task.status === 'completed'"
-                  )
-                td {{ task.title }}
-                td 
-                  v-chip(
-                    v-if="task.dueDate"
-                    size="small"
-                    :color="getDueDateColor(task.dueDate)"
-                  ) {{ formatDate(task.dueDate) }}
-                td
-                  v-chip(
-                    size="small"
-                    :color="getPriorityColor(task.priority)"
-                  ) {{ getPriorityText(task.priority) }}
-                td
-                  v-chip(
-                    size="small"
-                    :color="getStatusColor(task.status)"
-                  ) 
-                    v-icon(size="x-small" start) {{ getStatusIcon(task.status) }}
-                    | {{ getStatusText(task.status) }}
-                td
-                  v-chip(
-                    size="small"
-                    :color="getTypeColor(task.type)"
-                  ) {{ getTypeText(task.type) }}
-                td(style="width: 100px")
-                  v-btn(icon size="small" @click.stop="openTask(task)" color="primary")
-                    v-icon mdi-pencil
-                  v-btn(
-                    v-if="task.status !== 'completed'"
-                    icon
-                    size="small"
-                    @click.stop="toggleTaskStatus(task)"
-                    color="success"
-                  )
-                    v-icon mdi-check
+              template(v-for="(task, index) in processedTasks" :key="task.id")
+                tr(
+                  :class="getTaskRowClasses(task)"
+                  :style="getTaskRowStyle(task)" 
+                  @click="openTask(task)"
+                )
+                  td(style="width: 50px")
+                    v-checkbox(
+                      v-model="task.completed"
+                      :value="task.status === 'completed'"
+                      color="success"
+                      @click.stop="toggleTaskStatus(task)"
+                      :disabled="task.status === 'completed'"
+                    )
+                  td(class="d-flex align-center")
+                    div(
+                      v-if="task.level > 0"
+                      :style="{ width: `${task.level * 20}px` }"
+                    )
+                    v-btn(
+                      v-if="task.hasSubtasks"
+                      icon="mdi-chevron-down"
+                      size="x-small"
+                      variant="text"
+                      :class="{ 'rotate-icon': !isExpanded(task.id) }"
+                      @click.stop="toggleExpand(task.id)"
+                    )
+                    v-icon(
+                      v-else-if="task.level > 0"
+                      size="x-small"
+                      class="ms-6"
+                    ) mdi-subdirectory-arrow-right
+                    span {{ task.title }}
+                  td 
+                    v-chip(
+                      v-if="task.dueDate"
+                      size="small"
+                      :color="getDueDateColor(task.dueDate)"
+                    ) {{ formatDate(task.dueDate) }}
+                  td
+                    v-chip(
+                      size="small"
+                      :color="getPriorityColor(task.priority)"
+                    ) {{ getPriorityText(task.priority) }}
+                  td
+                    v-chip(
+                      size="small"
+                      :color="getStatusColor(task.status)"
+                    ) 
+                      v-icon(size="x-small" start) {{ getStatusIcon(task.status) }}
+                      | {{ getStatusText(task.status) }}
+                  td
+                    v-chip(
+                      size="small"
+                      :color="getTypeColor(task.type)"
+                    ) {{ getTypeText(task.type) }}
+                  td(style="width: 100px")
+                    v-btn(icon size="small" @click.stop="openTask(task)" color="primary")
+                      v-icon mdi-pencil
+                    v-btn(
+                      v-if="task.status !== 'completed'"
+                      icon
+                      size="small"
+                      @click.stop="toggleTaskStatus(task)"
+                      color="success"
+                    )
+                      v-icon mdi-check
+                    v-btn(
+                      v-if="!task.hasSubtasks"
+                      icon
+                      size="small"
+                      @click.stop="addSubtask(task)"
+                      color="info"
+                    )
+                      v-icon mdi-plus-circle-outline
           
           template(v-else-if="loading")
             v-skeleton-loader(type="table")
@@ -260,10 +285,12 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
+import { useAuthStore } from '~/stores/auth'
+import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import type { Task } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 
@@ -305,18 +332,71 @@ const typeOptions = [
   { title: 'Follow-up', value: 'followUp' }
 ]
 
+// Connected accounts
+const integrationAccounts = ref([])
+const providerSyncEnabled = ref(false)
+const syncLoading = ref(false)
+const syncError = ref('')
+
 // Initialize data
 onMounted(async () => {
+  loading.value = true
+
   try {
-    await tasksStore.fetchTasks()
-    await peopleStore.fetchPeople()
-    await projectsStore.fetchProjects()
+    // Get integration accounts
+    const { $firebase } = useNuxtApp()
+    const auth = useAuthStore()
+    
+    if (auth.user) {
+      // Get user settings to find connected accounts with task sync enabled
+      const db = getFirestore($firebase)
+      const userRef = doc(db, 'users', auth.user.id)
+      const userSnap = await getDoc(userRef)
+      
+      if (userSnap.exists() && userSnap.data().settings?.integrationAccounts) {
+        const accounts = userSnap.data().settings.integrationAccounts
+        integrationAccounts.value = accounts.filter(a => a.syncTasks && a.oauthData.connected)
+        providerSyncEnabled.value = integrationAccounts.value.length > 0
+        
+        // Set the accounts in the tasks store
+        tasksStore.setIntegrationAccounts(integrationAccounts.value)
+      }
+    }
+    
+    // Fetch data
+    await Promise.all([
+      tasksStore.fetchTasks(),
+      peopleStore.fetchPeople(),
+      projectsStore.fetchProjects()
+    ])
+    
+    // If providers are connected, sync tasks from them
+    if (providerSyncEnabled.value) {
+      await syncTasksFromProviders()
+    }
   } catch (error: any) {
     formError.value = error.message || 'Failed to load tasks'
   } finally {
     loading.value = false
   }
 })
+
+// Sync tasks from providers
+const syncTasksFromProviders = async () => {
+  if (!providerSyncEnabled.value) return
+  
+  syncLoading.value = true
+  syncError.value = ''
+  
+  try {
+    await tasksStore.fetchTasksFromProviders()
+  } catch (error: any) {
+    syncError.value = error.message || 'Failed to sync tasks from providers'
+    console.error('Error syncing tasks:', error)
+  } finally {
+    syncLoading.value = false
+  }
+}
 
 // Computed properties
 const tags = computed(() => {
@@ -558,7 +638,23 @@ const createTask = async (taskData: Partial<Task>) => {
   formError.value = ''
   
   try {
-    await tasksStore.createTask(taskData)
+    // Check if the task should be created with a provider
+    if (taskData.storageProvider && taskData.storageProvider !== 'organizer') {
+      // Find the provider account
+      const account = integrationAccounts.value.find(a => a.id === taskData.storageProvider)
+      
+      if (account) {
+        // Create in provider
+        await tasksStore.createTaskWithProvider(taskData, account.id)
+      } else {
+        // Fallback to regular creation if the account isn't found
+        await tasksStore.createTask(taskData)
+      }
+    } else {
+      // Regular creation in Firestore
+      await tasksStore.createTask(taskData)
+    }
+    
     addDialog.value = false
   } catch (error: any) {
     formError.value = error.message || 'Failed to create task'
@@ -574,7 +670,15 @@ const updateTask = async (taskData: Partial<Task>) => {
   formError.value = ''
   
   try {
-    await tasksStore.updateTask(selectedTask.value.id, taskData)
+    // Check if this is a provider-synced task
+    if (selectedTask.value.providerId && selectedTask.value.providerAccountId) {
+      // Update with provider
+      await tasksStore.updateTaskWithProvider(selectedTask.value.id, taskData)
+    } else {
+      // Regular update
+      await tasksStore.updateTask(selectedTask.value.id, taskData)
+    }
+    
     taskDialog.value = false
   } catch (error: any) {
     formError.value = error.message || 'Failed to update task'
@@ -590,7 +694,15 @@ const deleteTask = async () => {
   formError.value = ''
   
   try {
-    await tasksStore.deleteTask(selectedTask.value.id)
+    // Check if this is a provider-synced task
+    if (selectedTask.value.providerId && selectedTask.value.providerAccountId) {
+      // Delete with provider
+      await tasksStore.deleteTaskWithProvider(selectedTask.value.id)
+    } else {
+      // Regular delete
+      await tasksStore.deleteTask(selectedTask.value.id)
+    }
+    
     taskDialog.value = false
     selectedTask.value = null
   } catch (error: any) {
@@ -607,7 +719,15 @@ const completeTask = async () => {
   formError.value = ''
   
   try {
-    await tasksStore.markComplete(selectedTask.value.id)
+    // Check if this is a provider-synced task
+    if (selectedTask.value.providerId && selectedTask.value.providerAccountId) {
+      // Complete with provider
+      await tasksStore.completeTaskWithProvider(selectedTask.value.id)
+    } else {
+      // Regular complete
+      await tasksStore.markComplete(selectedTask.value.id)
+    }
+    
     taskDialog.value = false
   } catch (error: any) {
     formError.value = error.message || 'Failed to complete task'
@@ -616,11 +736,203 @@ const completeTask = async () => {
   }
 }
 
-const toggleTaskStatus = async (task: Task) => {
-  if (task.status === 'completed') {
-    await tasksStore.markInProgress(task.id)
+// Subtask and hierarchy management
+const expandedTasks = reactive(new Set<string>())
+
+// Check if a task is expanded
+const isExpanded = (taskId: string): boolean => {
+  return expandedTasks.has(taskId)
+}
+
+// Toggle task expansion
+const toggleExpand = (taskId: string) => {
+  if (expandedTasks.has(taskId)) {
+    expandedTasks.delete(taskId)
   } else {
-    await tasksStore.markComplete(task.id)
+    expandedTasks.add(taskId)
+  }
+}
+
+// Add a subtask to a parent task
+const addSubtask = async (parentTask: Task) => {
+  // Open a dialog that pre-fills the parent task
+  selectedTask.value = null // Clear selected task to avoid confusion
+  
+  // Create a placeholder for the new subtask and set the parent
+  const newSubtaskData: Partial<Task> = {
+    title: '',
+    status: 'todo',
+    priority: parentTask.priority || 3,
+    type: parentTask.type || 'task',
+    parentTask: parentTask.id,
+    tags: [...(parentTask.tags || [])],
+    relatedProjects: [...(parentTask.relatedProjects || [])]
+  }
+  
+  // Open the add dialog with the subtask data
+  tasksStore.setSubtaskParent(parentTask)
+  addDialog.value = true
+}
+
+// Initialize with parent tasks expanded by default
+onMounted(() => {
+  // Get parent tasks
+  const parentTasks = tasksStore.tasks.filter(task => task.subtasks?.length > 0);
+  parentTasks.forEach(task => {
+    expandedTasks.add(task.id);
+  });
+});
+
+// Process tasks into a hierarchical structure
+const processedTasks = computed(() => {
+  // Use filteredTasks as the source
+  const tasks = filteredTasks.value
+  
+  // Create a map of parent IDs to child tasks
+  const taskMap = new Map<string, Task[]>()
+  
+  // First, group all tasks by their parent ID
+  tasks.forEach(task => {
+    if (task.parentTask) {
+      if (!taskMap.has(task.parentTask)) {
+        taskMap.set(task.parentTask, [])
+      }
+      taskMap.get(task.parentTask)!.push(task)
+    }
+  })
+  
+  // Also index tasks by their ID for subtask lookup
+  const taskById = new Map<string, Task>()
+  tasks.forEach(task => {
+    taskById.set(task.id, task)
+  })
+  
+  // Function to check if a task has subtasks based on the subtasks array
+  const hasSubtasks = (taskId: string): boolean => {
+    const task = taskById.get(taskId)
+    if (!task) return false
+    
+    // Check if this task has any subtasks defined
+    return (task.subtasks && task.subtasks.length > 0) || 
+      // Or if any task references this as parent
+      (taskMap.has(taskId) && taskMap.get(taskId)!.length > 0)
+  }
+  
+  // Function to recursively process tasks with their levels
+  function processTasksRecursively(
+    parentId: string | null, 
+    level: number, 
+    result: Array<Task & { level: number, hasSubtasks: boolean }>
+  ) {
+    // Get tasks for this level
+    const levelTasks = parentId === null 
+      ? tasks.filter(t => !t.parentTask) // Top-level tasks
+      : taskMap.get(parentId) || [] // Child tasks
+    
+    // Process each task at this level
+    levelTasks.forEach(task => {
+      // Add the task with its level info
+      const processedTask = {
+        ...task,
+        level,
+        hasSubtasks: hasSubtasks(task.id)
+      }
+      
+      result.push(processedTask)
+      
+      // If this task has children and is expanded, recursively process them
+      if (hasSubtasks(task.id) && isExpanded(task.id)) {
+        // Look for tasks that reference this as parent
+        if (taskMap.has(task.id)) {
+          processTasksRecursively(task.id, level + 1, result)
+        }
+        
+        // Also look for tasks in the subtasks array that are in our index
+        if (task.subtasks) {
+          task.subtasks.forEach(subtaskId => {
+            const subtask = taskById.get(subtaskId)
+            if (subtask && !subtask.parentTask) {
+              // Add this subtask
+              const processedSubtask = {
+                ...subtask,
+                level: level + 1,
+                parentTask: task.id, // Ensure parent is set
+                hasSubtasks: hasSubtasks(subtask.id)
+              }
+              result.push(processedSubtask)
+              
+              // Process this subtask's children if expanded
+              if (hasSubtasks(subtask.id) && isExpanded(subtask.id)) {
+                processTasksRecursively(subtask.id, level + 2, result)
+              }
+            }
+          })
+        }
+      }
+    })
+  }
+  
+  // Start with an empty result and process from top level (null parent, level 0)
+  const result: Array<Task & { level: number, hasSubtasks: boolean }> = []
+  processTasksRecursively(null, 0, result)
+  
+  return result
+})
+
+// Helper functions for task row display
+const getTaskRowClasses = (task: Task & { level: number, hasSubtasks: boolean }) => {
+  return { 
+    'text-decoration-line-through': task.status === 'completed',
+    'task-parent': task.hasSubtasks,
+    'task-child': task.level > 0
+  }
+}
+
+const getTaskRowStyle = (task: Task & { level: number, hasSubtasks: boolean }) => {
+  return { 
+    cursor: 'pointer',
+    backgroundColor: task.level > 0 ? `rgba(0, 0, 0, ${0.03 * task.level})` : ''
+  }
+}
+
+const toggleTaskStatus = async (task: Task) => {
+  try {
+    if (task.status === 'completed') {
+      // Check if this is a provider-synced task
+      if (task.providerId && task.providerAccountId) {
+        // Update with provider
+        await tasksStore.updateTaskWithProvider(task.id, { status: 'inProgress' })
+      } else {
+        // Regular update
+        await tasksStore.markInProgress(task.id)
+      }
+    } else {
+      // Check if this is a provider-synced task
+      if (task.providerId && task.providerAccountId) {
+        // Complete with provider
+        await tasksStore.completeTaskWithProvider(task.id)
+      } else {
+        // Regular complete
+        await tasksStore.markComplete(task.id)
+      }
+    }
+  } catch (error: any) {
+    console.error('Error toggling task status:', error)
   }
 }
 </script>
+
+<style scoped>
+.rotate-icon {
+  transform: rotate(-90deg);
+  transition: transform 0.3s ease;
+}
+
+.task-parent {
+  font-weight: 500;
+}
+
+.task-child {
+  border-left: 2px solid rgba(0, 0, 0, 0.1);
+}
+</style>

@@ -1,134 +1,118 @@
-import { computed, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref, computed, onMounted } from 'vue'
+import type { Ref } from 'vue'
+import { useAuthStore } from '~/stores/auth'
+import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import type { FirebaseApp } from 'firebase/app'
+import type { IntegrationAccount } from '~/types/models'
 
-export type IntegrationType = 'tasks' | 'calendar' | 'contacts' | 'mail'
-
-interface Integration {
-  id: string;
-  provider: string;
-  name?: string;
-  email: string;
-  syncTasks: boolean;
-  syncCalendar: boolean;
-  syncContacts: boolean;
-  syncMail: boolean;
+interface ProviderOption {
+  id: string
+  name: string
+  account?: IntegrationAccount
 }
 
-interface Provider {
-  id: string;
-  name: string;
-}
-
-export function useIntegrationProviders() {
-  const i18n = useI18n()
+export const useIntegrationProviders = () => {
+  const authStore = useAuthStore()
   
-  // Mock data for integrations - in a real app, this would be fetched from user profile
-  // or from a dedicated integration store
-  const mockIntegrations = ref<Integration[]>([
-    {
-      id: 'google-1',
-      provider: 'Google',
-      email: 'user@gmail.com',
-      syncTasks: true,
-      syncCalendar: true,
-      syncContacts: true,
-      syncMail: true
-    },
-    {
-      id: 'microsoft-1',
-      provider: 'Microsoft',
-      email: 'user@outlook.com',
-      syncTasks: true,
-      syncCalendar: true,
-      syncContacts: true,
-      syncMail: true
-    },
-    {
-      id: 'exchange-1',
-      provider: 'Exchange',
-      email: 'user@company.com',
-      syncTasks: false,
-      syncCalendar: true,
-      syncContacts: true,
-      syncMail: true
-    }
-  ])
-
-  // Function to get available providers based on integration type
-  const getProvidersForType = (type: IntegrationType): Provider[] => {
-    // Default provider is always available
-    const providers: Provider[] = [
-      {
-        id: 'organizer',
-        name: i18n.t('common.organizerApplication')
-      }
+  // Integration accounts from user settings
+  const integrationAccounts: Ref<IntegrationAccount[]> = ref([])
+  
+  // Provider options for selection menus
+  const mailProviders = computed<ProviderOption[]>(() => {
+    const providers: ProviderOption[] = [
+      { id: 'organizer', name: 'Organizer' }
     ]
-
-    // In a real application, this would filter the user's integrations based on
-    // their capabilities and return only those that support the requested type
     
-    if (type === 'tasks') {
-      // Filter integrations that support tasks
-      const taskProviders = mockIntegrations.value
-        .filter((integration: Integration) => integration.syncTasks)
-        .map((integration: Integration) => ({
-          id: integration.id,
-          name: integration.name || `${integration.provider} (${integration.email})`
-        }))
-      
-      return [...providers, ...taskProviders]
-    }
+    // Add connected mail providers
+    const mailAccounts = integrationAccounts.value.filter(a => a.syncMail && a.oauthData.connected)
     
-    if (type === 'calendar') {
-      // Filter integrations that support calendar
-      const calendarProviders = mockIntegrations.value
-        .filter((integration: Integration) => integration.syncCalendar)
-        .map((integration: Integration) => ({
-          id: integration.id,
-          name: integration.name || `${integration.provider} (${integration.email})`
-        }))
-      
-      return [...providers, ...calendarProviders]
-    }
-    
-    if (type === 'contacts') {
-      // Filter integrations that support contacts
-      const contactProviders = mockIntegrations.value
-        .filter((integration: Integration) => integration.syncContacts)
-        .map((integration: Integration) => ({
-          id: integration.id,
-          name: integration.name || `${integration.provider} (${integration.email})`
-        }))
-      
-      return [...providers, ...contactProviders]
-    }
-    
-    if (type === 'mail') {
-      // Filter integrations that support mail
-      const mailProviders = mockIntegrations.value
-        .filter((integration: Integration) => integration.syncMail)
-        .map((integration: Integration) => ({
-          id: integration.id,
-          name: integration.name || `${integration.provider} (${integration.email})`
-        }))
-      
-      return [...providers, ...mailProviders]
-    }
+    mailAccounts.forEach(account => {
+      providers.push({
+        id: account.id,
+        name: `${account.type === 'google' ? 'Gmail' : account.type === 'office365' ? 'Outlook' : 'Exchange'} (${account.oauthData.email})`,
+        account
+      })
+    })
     
     return providers
-  }
-
-  // Computed functions for each type
-  const taskProviders = computed(() => getProvidersForType('tasks'))
-  const calendarProviders = computed(() => getProvidersForType('calendar'))
-  const contactProviders = computed(() => getProvidersForType('contacts'))
-  const mailProviders = computed(() => getProvidersForType('mail'))
-
+  })
+  
+  const calendarProviders = computed<ProviderOption[]>(() => {
+    const providers: ProviderOption[] = [
+      { id: 'organizer', name: 'Organizer' }
+    ]
+    
+    // Add connected calendar providers
+    const calendarAccounts = integrationAccounts.value.filter(a => a.syncCalendar && a.oauthData.connected)
+    
+    calendarAccounts.forEach(account => {
+      providers.push({
+        id: account.id,
+        name: `${account.type === 'google' ? 'Google Calendar' : account.type === 'office365' ? 'Outlook Calendar' : 'Exchange Calendar'} (${account.oauthData.email})`,
+        account
+      })
+    })
+    
+    return providers
+  })
+  
+  const contactProviders = computed<ProviderOption[]>(() => {
+    const providers: ProviderOption[] = [
+      { id: 'organizer', name: 'Organizer' }
+    ]
+    
+    // Add connected contact providers
+    const contactAccounts = integrationAccounts.value.filter(a => a.syncContacts && a.oauthData.connected)
+    
+    contactAccounts.forEach(account => {
+      providers.push({
+        id: account.id,
+        name: `${account.type === 'google' ? 'Google Contacts' : account.type === 'office365' ? 'Outlook Contacts' : 'Exchange Contacts'} (${account.oauthData.email})`,
+        account
+      })
+    })
+    
+    return providers
+  })
+  
+  const taskProviders = computed<ProviderOption[]>(() => {
+    const providers: ProviderOption[] = [
+      { id: 'organizer', name: 'Organizer' }
+    ]
+    
+    // Add connected task providers
+    const taskAccounts = integrationAccounts.value.filter(a => a.syncTasks && a.oauthData.connected)
+    
+    taskAccounts.forEach(account => {
+      providers.push({
+        id: account.id,
+        name: `${account.type === 'google' ? 'Google Tasks' : account.type === 'office365' ? 'Microsoft To Do' : 'Exchange Tasks'} (${account.oauthData.email})`,
+        account
+      })
+    })
+    
+    return providers
+  })
+  
+  // Initialize data
+  onMounted(async () => {
+    if (authStore.user) {
+      const { $firebase } = useNuxtApp()
+      const db = getFirestore($firebase as FirebaseApp)
+      const userRef = doc(db, 'users', authStore.user.id)
+      const userSnap = await getDoc(userRef)
+      
+      if (userSnap.exists() && userSnap.data().settings?.integrationAccounts) {
+        integrationAccounts.value = userSnap.data().settings.integrationAccounts
+      }
+    }
+  })
+  
   return {
-    getProvidersForType,
-    taskProviders,
+    integrationAccounts,
+    mailProviders,
     calendarProviders,
     contactProviders,
-    mailProviders
+    taskProviders
   }
 }
