@@ -1,19 +1,16 @@
 /**
- * Task providers module
- * @module utils/api/taskProviders
+ * This file is kept for backward compatibility.
+ * Please use the modular imports from './taskProviders/' directory instead.
  */
 
 import type { IntegrationAccount } from '~/types/models'
-import { GoogleTasksProvider } from './GoogleTasksProvider'
-import { Office365TasksProvider } from './Office365TasksProvider'
-import { ExchangeTasksProvider } from './ExchangeTasksProvider'
-import type { TaskProvider } from './TaskProvider'
+import type { TaskProvider } from './taskProviders/TaskProvider'
+import { GoogleTasksProvider } from './taskProviders/GoogleTasksProvider'
+import { Office365TasksProvider } from './taskProviders/Office365TasksProvider'
+import { ExchangeTasksProvider } from './taskProviders/ExchangeTasksProvider'
 
-export * from './TaskProvider'
-export * from './BaseTaskProvider'
-export * from './GoogleTasksProvider'
-export * from './Office365TasksProvider'
-export * from './ExchangeTasksProvider'
+// Important: We're not using export * to avoid circular dependency issues
+// Instead, we're explicitly exporting functions needed by the application
 
 /**
  * Factory function to get the appropriate task provider implementation
@@ -27,7 +24,6 @@ export function getTaskProvider(account: IntegrationAccount): TaskProvider {
     case 'office365':
       return new Office365TasksProvider(account)
     case 'exchange':
-      // Exchange provider delegates to Office365TasksProvider internally
       return new ExchangeTasksProvider(account)
     default:
       throw new Error(`Unsupported account type: ${account.type}`)
@@ -41,3 +37,7 @@ export function getTaskProvider(account: IntegrationAccount): TaskProvider {
 export function createTasksProvider(account: IntegrationAccount): TaskProvider {
   return getTaskProvider(account)
 }
+
+// Re-export the types and classes that might be needed
+export type { TaskProvider }
+export { GoogleTasksProvider, Office365TasksProvider, ExchangeTasksProvider }

@@ -1,11 +1,11 @@
 import type { Task, IntegrationAccount } from '~/types/models'
 import type { 
-  TaskProvider, 
   TaskQuery,
   FetchTasksResponse,
   CreateTaskResponse
 } from './TaskProvider'
-import { useNuxtApp } from '#app'
+import { BaseTaskProvider } from './BaseTaskProvider'
+import { BaseProvider } from '../core/BaseProvider'
 
 // Google Tasks API base URL
 const API_BASE_URL = 'https://tasks.googleapis.com/tasks/v1'
@@ -125,124 +125,11 @@ function mapTaskToGoogleTask(task: Partial<GoogleTask>): any {
 /**
  * Google Tasks provider implementation
  */
-export class GoogleTasksProvider implements TaskProvider {
-  // Store the account for reference
-  account: IntegrationAccount
+export class GoogleTasksProvider extends BaseTaskProvider {
   // Store the default task list ID
   private defaultTaskListId: string = ''
   // Store the task lists
   private taskLists: any[] = []
-  
-  constructor(account: IntegrationAccount) {
-    this.account = account
-  }
-
-  /**
-   * Get the account information for this provider
-   */
-  getAccount() {
-    return this.account
-  }
-  
-  /**
-   * Check if the provider is authenticated
-   */
-  isAuthenticated() {
-    return !!(
-      this.account?.oauthData?.accessToken && 
-      this.account?.oauthData?.connected
-    )
-  }
-  
-  /**
-   * Authenticate with Google Tasks API
-   * This method refreshes the token if necessary
-   */
-  async authenticate(): Promise<boolean> {
-    if (!this.account?.oauthData?.refreshToken) {
-      console.error('No refresh token available for Google Tasks account')
-      return false
-    }
-    
-    // If access token is still valid, return true
-    if (this.isAuthenticated()) {
-      const tokenExpiry = new Date(this.account.oauthData.tokenExpiry || 0)
-      // Check if token is still valid for at least 5 more minutes
-      if (tokenExpiry.getTime() > Date.now() + 5 * 60 * 1000) {
-        return true
-      }
-    }
-    
-    try {
-      // Use nuxt's $fetch to refresh the token
-      const nuxtApp = useNuxtApp()
-      const fetchFunc = nuxtApp.$fetch as any
-      
-      // Request new token using the refresh token
-      const response = await fetchFunc('/api/auth/refresh', {
-        method: 'POST',
-        body: {
-          refreshToken: this.account.oauthData.refreshToken,
-          provider: 'google'
-        }
-      })
-      
-      if (response.accessToken) {
-        // Update the account with the new token
-        this.account.oauthData.accessToken = response.accessToken
-        this.account.oauthData.tokenExpiry = new Date(Date.now() + response.expiresIn * 1000)
-        return true
-      }
-      
-      return false
-    } catch (error) {
-      console.error('Error refreshing Google Tasks token:', error)
-      return false
-    }
-  }
-  
-  /**
-   * Make an authenticated request to the Google Tasks API
-   */
-  private async makeRequest(
-    endpoint: string, 
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
-    body?: any
-  ): Promise<any> {
-    // Ensure we're authenticated
-    if (!this.isAuthenticated()) {
-      const authenticated = await this.authenticate()
-      if (!authenticated) {
-        throw new Error('Not authenticated with Google Tasks')
-      }
-    }
-    
-    // Use global fetch directly with proxy through our API
-    // This will use a server-side proxy to avoid CORS issues
-    const url = `/api/proxy?url=${encodeURIComponent(`${API_BASE_URL}${endpoint}`)}`
-    
-    try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: body ? JSON.stringify(body) : undefined
-      })
-      
-      return response
-    } catch (error: any) {
-      if (error.status === 401) {
-        // Token expired, refresh and try again
-        const authenticated = await this.authenticate()
-        if (authenticated) {
-          return this.makeRequest(endpoint, method, body)
-        }
-      }
-      throw error
-    }
-  }
   
   /**
    * Get all task lists from Google Tasks API
@@ -252,9 +139,14 @@ export class GoogleTasksProvider implements TaskProvider {
       return this.taskLists
     }
     
-    const response = await this.makeRequest('/users/@me/lists')
-    this.taskLists = response.items || []
-    return this.taskLists
+    try {
+      const data = await this.makeApiRequest<any>('/users/@me/lists')
+      this.taskLists = data.items || []
+      return this.taskLists
+    } catch (error) {
+      console.error('[GoogleTasks] Error fetching task lists:', error)
+      return []
+    }
   }
   
   /**
@@ -274,13 +166,39 @@ export class GoogleTasksProvider implements TaskProvider {
     }
     
     // If no task list exists, create a new one
-    const newList = await this.makeRequest('/users/@me/lists', 'POST', {
-      title: 'Organizer Tasks'
-    })
+    const newList = await this.makeApiRequest<any>(
+      '/users/@me/lists', 
+      { 
+        method: 'POST',
+        body: { title: 'Organizer Tasks' }
+      }
+    )
     
     this.defaultTaskListId = newList.id
     this.taskLists.push(newList)
     return this.defaultTaskListId
+  }
+  
+  /**
+   * Make a request to the Google Tasks API
+   */
+  private async makeApiRequest<T>(
+    endpoint: string, 
+    options: {
+      method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', 
+      params?: Record<string, string>,
+      body?: any
+    } = {}
+  ): Promise<T> {
+    // Build URL with query parameters if provided
+    let url = `${API_BASE_URL}${endpoint}`
+    
+    // Use the makeRequest helper from BaseProvider through the proxy
+    return await super.makeRequest<T>(`/api/proxy?url=${encodeURIComponent(url)}`, {
+      method: options.method || 'GET',
+      params: options.params,
+      body: options.body
+    });
   }
   
   /**
@@ -289,25 +207,24 @@ export class GoogleTasksProvider implements TaskProvider {
   async fetchTasks(query?: TaskQuery): Promise<FetchTasksResponse> {
     try {
       const taskListId = await this.getDefaultTaskList()
-      const params = new URLSearchParams()
+      const params: Record<string, string> = {}
       
       // Handle pagination
       if (query?.limit) {
-        params.append('maxResults', query.limit.toString())
+        params.maxResults = query.limit.toString()
       }
       
       // Add showCompleted flag based on query
-      if (query?.completed === false) {
-        params.append('showCompleted', 'false')
-      } else {
-        params.append('showCompleted', 'true')
-      }
+      params.showCompleted = query?.completed === false ? 'false' : 'true'
       
       // Add showHidden to include hidden tasks
-      params.append('showHidden', 'true')
+      params.showHidden = 'true'
       
       // Make the request to Google Tasks API
-      const response = await this.makeRequest(`/lists/${taskListId}/tasks?${params.toString()}`)
+      const response = await this.makeApiRequest<any>(`/lists/${taskListId}/tasks`, {
+        method: 'GET',
+        params
+      })
       
       // Convert Google Tasks to our app's Task format
       const tasks = (response.items || []).map((item: any) => 
@@ -325,7 +242,7 @@ export class GoogleTasksProvider implements TaskProvider {
         }
       }
     } catch (error: any) {
-      console.error('Error fetching tasks from Google Tasks:', error)
+      console.error('[GoogleTasks] Error fetching tasks:', error)
       return {
         success: false,
         tasks: [],
@@ -343,10 +260,12 @@ export class GoogleTasksProvider implements TaskProvider {
       const googleTask = mapTaskToGoogleTask(task as Partial<GoogleTask>)
       
       // Create the task in Google Tasks
-      const response = await this.makeRequest(
+      const response = await this.makeApiRequest<any>(
         `/lists/${taskListId}/tasks`, 
-        'POST', 
-        googleTask
+        {
+          method: 'POST',
+          body: googleTask
+        }
       )
       
       return {
@@ -354,7 +273,7 @@ export class GoogleTasksProvider implements TaskProvider {
         taskId: response.id
       }
     } catch (error: any) {
-      console.error('Error creating task in Google Tasks:', error)
+      console.error('[GoogleTasks] Error creating task:', error)
       return {
         success: false,
         error: error.message || 'Failed to create task in Google Tasks'
@@ -374,7 +293,9 @@ export class GoogleTasksProvider implements TaskProvider {
       const taskListId = googleUpdates.providerListId || await this.getDefaultTaskList()
       
       // First, get the current task to preserve fields not included in updates
-      const currentTask = await this.makeRequest(`/lists/${taskListId}/tasks/${taskId}`)
+      const currentTask = await this.makeApiRequest<any>(
+        `/lists/${taskListId}/tasks/${taskId}`
+      )
       
       // Merge with updates
       const googleTask = mapTaskToGoogleTask({
@@ -383,15 +304,17 @@ export class GoogleTasksProvider implements TaskProvider {
       })
       
       // Update the task in Google Tasks
-      await this.makeRequest(
+      await this.makeApiRequest<any>(
         `/lists/${taskListId}/tasks/${taskId}`, 
-        'PUT', 
-        googleTask
+        {
+          method: 'PUT',
+          body: googleTask
+        }
       )
       
       return true
     } catch (error) {
-      console.error('Error updating task in Google Tasks:', error)
+      console.error('[GoogleTasks] Error updating task:', error)
       return false
     }
   }
@@ -407,7 +330,10 @@ export class GoogleTasksProvider implements TaskProvider {
       
       for (const list of taskLists) {
         try {
-          await this.makeRequest(`/lists/${list.id}/tasks/${taskId}`, 'DELETE')
+          await this.makeApiRequest<void>(
+            `/lists/${list.id}/tasks/${taskId}`, 
+            { method: 'DELETE' }
+          )
           return true
         } catch (error: any) {
           // If task not found in this list, try next list
@@ -420,7 +346,7 @@ export class GoogleTasksProvider implements TaskProvider {
       // If we get here, the task was not found in any list
       return false
     } catch (error) {
-      console.error('Error deleting task from Google Tasks:', error)
+      console.error('[GoogleTasks] Error deleting task:', error)
       return false
     }
   }
@@ -435,16 +361,18 @@ export class GoogleTasksProvider implements TaskProvider {
       
       for (const list of taskLists) {
         try {
-          const task = await this.makeRequest(`/lists/${list.id}/tasks/${taskId}`)
+          const task = await this.makeApiRequest<any>(`/lists/${list.id}/tasks/${taskId}`)
           
           // Update the task status to completed
           task.status = 'completed'
           task.completed = new Date().toISOString()
           
-          await this.makeRequest(
+          await this.makeApiRequest<any>(
             `/lists/${list.id}/tasks/${taskId}`, 
-            'PUT',
-            task
+            {
+              method: 'PUT',
+              body: task
+            }
           )
           
           return true
@@ -459,7 +387,7 @@ export class GoogleTasksProvider implements TaskProvider {
       // If we get here, the task was not found in any list
       return false
     } catch (error) {
-      console.error('Error completing task in Google Tasks:', error)
+      console.error('[GoogleTasks] Error completing task:', error)
       return false
     }
   }

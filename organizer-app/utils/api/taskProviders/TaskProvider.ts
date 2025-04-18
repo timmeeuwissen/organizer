@@ -64,11 +64,6 @@ export interface CreateTaskResponse {
  */
 export interface TaskProvider {
   /**
-   * The account information for this provider
-   */
-  account: IntegrationAccount;
-
-  /**
    * Get the account information for this provider
    */
   getAccount(): IntegrationAccount

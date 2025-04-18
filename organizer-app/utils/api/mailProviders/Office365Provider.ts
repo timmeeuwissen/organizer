@@ -1,69 +1,11 @@
-import type { IntegrationAccount } from '~/types/models'
-import type { Email, EmailPerson } from '~/stores/mail'
-import { refreshOAuthToken } from '~/utils/api/emailUtils'
-import type { MailProvider, EmailQuery, EmailPagination, EmailFetchResult } from './MailProvider'
+import type { Email } from '~/stores/mail'
+import { BaseMailProvider } from './BaseMailProvider'
+import type { EmailQuery, EmailPagination, EmailFetchResult } from './MailProvider'
 
 /**
  * Microsoft Office 365 provider implementation using direct fetch API
  */
-export class Office365Provider implements MailProvider {
-  private account: IntegrationAccount
-  
-  constructor(account: IntegrationAccount) {
-    this.account = account
-  }
-  
-  isAuthenticated(): boolean {
-    console.log(`Office365Provider.isAuthenticated check for ${this.account.email}:`, {
-      hasAccessToken: !!this.account.accessToken,
-      tokenExpiry: this.account.tokenExpiry,
-      currentTime: new Date(),
-      isTokenExpired: this.account.tokenExpiry ? new Date(this.account.tokenExpiry) < new Date() : 'No expiry set',
-      scope: this.account.scope
-    });
-    
-    // Check access token
-    if (!this.account.accessToken) {
-      console.log(`${this.account.email}: No access token found`);
-      return false;
-    }
-    
-    // Check token expiry
-    // If tokenExpiry is not set, consider the token expired and force a refresh
-    if (!this.account.tokenExpiry) {
-      console.log(`${this.account.email}: No token expiry date set, assuming expired`);
-      return false;
-    }
-    
-    // Check if token is expired
-    if (new Date(this.account.tokenExpiry) < new Date()) {
-      console.log(`${this.account.email}: Token expired`);
-      return false;
-    }
-    
-    console.log(`${this.account.email}: Authentication valid`);
-    return true;
-  }
-  
-  async authenticate(): Promise<boolean> {
-    if (this.isAuthenticated()) {
-      return true
-    }
-    
-    if (this.account.refreshToken) {
-      try {
-        this.account = await refreshOAuthToken(this.account)
-        return true
-      } catch (error) {
-        console.error('Failed to refresh Office 365 token:', error)
-        return false
-      }
-    }
-    
-    // Would need to redirect user to OAuth flow
-    return false
-  }
-  
+export class Office365Provider extends BaseMailProvider {
   // Map our folder names to Microsoft Graph API folder names
   private mapFolderToOffice365Folder(folder: string): string {
     switch (folder) {
@@ -101,7 +43,7 @@ export class Office365Provider implements MailProvider {
       const page = pagination?.page || 0;
       
       // Using Microsoft Graph API directly with fetch
-      console.log(`[Office 365] Fetching emails from ${folder} folder (page ${page}, pageSize ${pageSize}) for ${this.account.email}`)
+      console.log(`[Office 365] Fetching emails from ${folder} folder (page ${page}, pageSize ${pageSize}) for ${this.account.oauthData.email}`)
       
       // Map our folder names to Microsoft Graph folder names
       const graphFolder = this.mapFolderToOffice365Folder(folder)
@@ -137,14 +79,14 @@ export class Office365Provider implements MailProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
       
       // Log authentication info
-      const tokenPreview = this.account.accessToken 
-        ? `Bearer ${this.account.accessToken.substring(0, 10)}...` 
+      const tokenPreview = this.account.oauthData.accessToken 
+        ? `Bearer ${this.account.oauthData.accessToken.substring(0, 10)}...` 
         : 'Missing access token';
       console.log(`[Office 365] Using auth token: ${tokenPreview}`);
       
@@ -251,7 +193,7 @@ export class Office365Provider implements MailProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Accept': 'application/json',
         'ConsistencyLevel': 'eventual' // Required for $count
       };
@@ -312,7 +254,7 @@ export class Office365Provider implements MailProvider {
         }
         
         const headers = {
-          'Authorization': `Bearer ${this.account.accessToken}`,
+          'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
           'Accept': 'application/json'
         };
         
@@ -371,7 +313,7 @@ export class Office365Provider implements MailProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Accept': 'application/json'
       };
       
@@ -431,7 +373,7 @@ export class Office365Provider implements MailProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }

@@ -1,18 +1,14 @@
 import type { IntegrationAccount } from '~/types/models'
 import type { Email, EmailPerson } from '~/stores/mail'
-import { refreshOAuthToken } from '~/utils/api/emailUtils'
-import type { MailProvider, EmailQuery, EmailPagination, EmailFetchResult } from './MailProvider'
+import { BaseMailProvider } from './BaseMailProvider'
+import type { EmailQuery, EmailPagination, EmailFetchResult } from './MailProvider'
+import { parseEmailAddress, decodeBase64UrlContent } from '~/utils/api/core/emailUtils'
 
 /**
  * Gmail provider implementation
  */
-export class GmailProvider implements MailProvider {
-  private account: IntegrationAccount
+export class GmailProvider extends BaseMailProvider {
   private pageTokens: Record<number, string> = {}
-  
-  constructor(account: IntegrationAccount) {
-    this.account = account
-  }
   
   // Utility methods for handling Gmail API responses
   private extractHeader(payload: any, name: string): string | null {
@@ -22,34 +18,13 @@ export class GmailProvider implements MailProvider {
     return header ? header.value : null;
   }
   
-  private parseEmailAddress(addressString: string): EmailPerson {
-    if (!addressString) {
-      return { name: 'Unknown', email: 'unknown@example.com' };
-    }
-    
-    // Try to match "Name <email@example.com>" format
-    const match = addressString.match(/^([^<]+)<([^>]+)>$/);
-    if (match) {
-      return {
-        name: match[1].trim(),
-        email: match[2].trim()
-      };
-    }
-    
-    // If no match, just use the whole string as both name and email
-    return {
-      name: addressString,
-      email: addressString
-    };
-  }
-  
   private extractBody(payload: any): string {
     if (!payload) return '';
     
     // Check if the message has a body
     if (payload.body && payload.body.data) {
       // Decode base64 content
-      return this.decodeBase64UrlContent(payload.body.data);
+      return decodeBase64UrlContent(payload.body.data);
     }
     
     // Check for multipart message
@@ -60,7 +35,7 @@ export class GmailProvider implements MailProvider {
       );
       
       if (htmlPart) {
-        return this.decodeBase64UrlContent(htmlPart.body.data);
+        return decodeBase64UrlContent(htmlPart.body.data);
       }
       
       // Try to find plain text part
@@ -69,7 +44,7 @@ export class GmailProvider implements MailProvider {
       );
       
       if (textPart) {
-        const plainText = this.decodeBase64UrlContent(textPart.body.data);
+        const plainText = decodeBase64UrlContent(textPart.body.data);
         // Convert plain text to simple HTML with line breaks
         return plainText.replace(/\n/g, '<br>');
       }
@@ -84,28 +59,6 @@ export class GmailProvider implements MailProvider {
     }
     
     return '';
-  }
-  
-  private decodeBase64UrlContent(encoded: string): string {
-    try {
-      // Convert base64url to base64
-      const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-      
-      // Add padding if needed
-      const paddingLength = (4 - (base64.length % 4)) % 4;
-      const paddedBase64 = base64 + '='.repeat(paddingLength);
-      
-      // Decode and convert to UTF-8 string
-      const rawData = atob(paddedBase64);
-      return decodeURIComponent(
-        Array.from(rawData)
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-    } catch (e) {
-      console.error('Error decoding base64 content:', e);
-      return '[Content could not be decoded]';
-    }
   }
   
   // Map our folder names to Gmail API label IDs
@@ -162,7 +115,7 @@ export class GmailProvider implements MailProvider {
     return parts.join(' ');
   }
   
-  isAuthenticated(): boolean {
+  override isAuthenticated(): boolean {
     // console.log(`GmailProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
     //   hasAccessToken: !!this.account.oauthData.accessToken,
     //   tokenExpiry: this.account.oauthData.tokenExpiry,
@@ -171,23 +124,9 @@ export class GmailProvider implements MailProvider {
     //   scope: this.account.oauthData.scope,
     // }, this.account);
     
-    // Check access token
-    if (!this.account.oauthData.accessToken) {
-      console.log(`${this.account.oauthData.email}: No access token found`);
-      return false;
-    }
-    
-    // Check token expiry
-    // If tokenExpiry is not set, consider the token expired and force a refresh
-    if (!this.account.oauthData.tokenExpiry) {
-      console.log(`${this.account.oauthData.email}: No token expiry date set, assuming expired`);
-      return false;
-    }
-    
-    // Check if token is expired
-    if (new Date(this.account.oauthData.tokenExpiry) < new Date()) {
-      console.log(`${this.account.oauthData.email}: Token expired`);
-      return false;
+    // First check basic authentication with parent method
+    if (!super.isAuthenticated()) {
+      return false
     }
     
     // Verify proper Gmail scopes if scope is specified
@@ -209,56 +148,10 @@ export class GmailProvider implements MailProvider {
     return true;
   }
   
-  async authenticate(): Promise<boolean> {
-    console.log(`GmailProvider.authenticate for ${this.account.oauthData.email}`);
-    
-    if (this.isAuthenticated()) {
-      console.log(`${this.account.oauthData.email} is already authenticated`);
-      return true;
-    }
-    
-    // Standard OAuth refresh flow for any account with a refresh token
-    if (this.account.oauthData.refreshToken) {
-      try {
-        // Refresh token and get updated account
-        const updatedAccount = await refreshOAuthToken(this.account);
-        
-        // Update this instance's account reference
-        this.account = updatedAccount;
-        
-        // Update the account in the pinia store so other components can benefit
-        // from the refreshed token without having to refresh again
-        import('~/utils/api/emailUtils').then(module => {
-          module.updateAccountInStore(updatedAccount);
-        }).catch(err => {
-          console.error('Error importing updateAccountInStore:', err);
-        });
-        
-        console.log(`Successfully refreshed token for ${this.account.oauthData.email}`);
-        return true;
-      } catch (error) {
-        console.error(`Failed to refresh token for ${this.account.oauthData.email}:`, error);
-        return false;
-      }
-    }
-    
-    console.warn(`${this.account.oauthData.email} has no refresh token, would need to redirect to OAuth flow`);
-    // Would need to redirect user to OAuth flow
-    return false;
-  }
-  
   /**
    * Count emails in a folder or matching a query
    */
   async countEmails(query?: EmailQuery): Promise<number> {
-    if (!this.isAuthenticated()) {
-      const authenticated = await this.authenticate();
-      if (!authenticated) {
-        console.error('Not authenticated with Gmail');
-        return 0;
-      }
-    }
-    
     try {
       // Use folder if provided, otherwise default to inbox
       const folder = query?.folder || 'inbox';
@@ -270,37 +163,20 @@ export class GmailProvider implements MailProvider {
       const endpoint = `https://gmail.googleapis.com/gmail/v1/users/me/messages`;
       
       // Prepare query parameters - we only need the count, not the actual messages
-      const params = new URLSearchParams({
+      const params = {
         q: searchQuery,
         // Just get message IDs, not content
         fields: 'resultSizeEstimate'
-      });
-      
-      // Prepare headers with authentication
-      const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
       };
       
-      const url = `${endpoint}?${params.toString()}`;
-      console.log(`[Gmail] Counting emails with query: ${searchQuery}`, headers);
+      console.log(`[Gmail] Counting emails with query: ${searchQuery}`);
       
-      // Make the request
-      const response = await fetch(url, {
+      // Use the makeRequest helper from BaseProvider that handles auth and retries
+      const data = await this.makeRequest<any>(endpoint, {
         method: 'GET',
-        headers: headers
+        params
       });
       
-      // Check for HTTP errors
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Gmail] Count error:', errorText);
-        throw new Error(`Gmail API error: ${response.status} ${response.statusText}`);
-      }
-      
-      // Parse the response
-      const data = await response.json();
       const count = data.resultSizeEstimate || 0;
       
       console.log(`[Gmail] Found ${count} emails matching query`);
@@ -315,20 +191,13 @@ export class GmailProvider implements MailProvider {
    * Get counts for all folders without fetching email content
    */
   async getFolderCounts(): Promise<Record<string, number>> {
-    if (!this.isAuthenticated()) {
-      const authenticated = await this.authenticate();
-      if (!authenticated) {
-        console.error('Not authenticated with Gmail');
-        return {};
-      }
-    }
-    
     try {
       // Standard folders to get counts for
       const standardFolders = ['inbox', 'sent', 'drafts', 'trash', 'spam'];
       const result: Record<string, number> = {};
       
       // Get counts for each folder in parallel
+      // Our countEmails method already uses makeRequest, which handles authentication
       const countPromises = standardFolders.map(async (folder) => {
         const count = await this.countEmails({ folder });
         return { folder, count };
@@ -354,20 +223,6 @@ export class GmailProvider implements MailProvider {
    * Gmail API's pagination uses page tokens rather than page numbers
    */
   async fetchEmails(query?: EmailQuery, pagination?: EmailPagination): Promise<EmailFetchResult> {
-    if (!this.isAuthenticated()) {
-      const authenticated = await this.authenticate();
-      if (!authenticated) {
-        console.error('Not authenticated with Gmail');
-        return {
-          emails: [],
-          totalCount: 0,
-          page: 0,
-          pageSize: 20,
-          hasMore: false
-        };
-      }
-    }
-    
     try {
       // Default values
       const folder = query?.folder || 'inbox';
@@ -384,15 +239,15 @@ export class GmailProvider implements MailProvider {
       const endpoint = `https://gmail.googleapis.com/gmail/v1/users/me/messages`;
       
       // Prepare query parameters
-      const params = new URLSearchParams({
+      const paramsObj: Record<string, string> = {
         q: searchQuery,
         maxResults: pageSize.toString()
-      });
+      };
       
       // For Gmail, we need to handle pagination differently since it uses page tokens
       // We'll manage page tokens in store state
       if (page > 0 && this.pageTokens && this.pageTokens[page - 1]) {
-        params.append('pageToken', this.pageTokens[page - 1]);
+        paramsObj.pageToken = this.pageTokens[page - 1];
       } else if (page > 0) {
         // If we don't have a token for the requested page but page > 0,
         // we need to start from page 0 and work our way up
@@ -400,31 +255,14 @@ export class GmailProvider implements MailProvider {
         return this.fetchEmailsFromStart(query, pagination);
       }
       
-      // Prepare headers with authentication
-      const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
+      console.log(`[Gmail] Fetching emails with query: ${searchQuery}, page: ${page}, pageSize: ${pageSize}`);
       
-      const url = `${endpoint}?${params.toString()}`;
-      console.log(`[Gmail] Fetching emails with ${url} query: ${searchQuery}, page: ${page}, pageSize: ${pageSize}`, headers);
-      
-      // Make the request to get message IDs
-      const response = await fetch(url, {
+      // Use the makeRequest helper from BaseProvider that handles auth and retries
+      const data = await this.makeRequest<any>(endpoint, {
         method: 'GET',
-        headers: headers
+        params: paramsObj
       });
       
-      // Check for HTTP errors
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Gmail] Fetch error:', errorText);
-        throw new Error(`Gmail API error: ${response.status} ${response.statusText}`);
-      }
-      
-      // Parse the response
-      const data = await response.json();
       const messageIds: string[] = data.messages?.map((msg: any) => msg.id) || [];
       const nextPageToken = data.nextPageToken;
       
@@ -449,7 +287,7 @@ export class GmailProvider implements MailProvider {
       
       // Now fetch each message's details (in parallel for better performance)
       const emails: Email[] = [];
-      const fetchPromises = messageIds.map(messageId => this.fetchSingleEmail(messageId, folder, headers));
+      const fetchPromises = messageIds.map(messageId => this.fetchSingleEmail(messageId, folder));
       const emailResults = await Promise.all(fetchPromises);
       
       // Filter out failed fetches and add successful ones to the result
@@ -484,29 +322,24 @@ export class GmailProvider implements MailProvider {
   /**
    * Helper to fetch a single email by ID
    */
-  private async fetchSingleEmail(messageId: string, folder: string, headers: Record<string, string>): Promise<Email | null> {
-    const endpoint = `https://gmail.googleapis.com/gmail/v1/users/me/messages`;
-    
+  private async fetchSingleEmail(messageId: string, folder: string): Promise<Email | null> {
     try {
-      const messageResponse = await fetch(`${endpoint}/${messageId}?format=full`, {
+      const endpoint = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}`;
+      
+      // Use the makeRequest helper from BaseProvider that handles auth and retries
+      const msgData = await this.makeRequest<any>(endpoint, {
         method: 'GET',
-        headers: headers
+        params: {
+          format: 'full'
+        }
       });
-      
-      if (!messageResponse.ok) {
-        console.error(`[Gmail] Failed to fetch message ${messageId}:`, 
-          messageResponse.status, messageResponse.statusText);
-        return null;
-      }
-      
-      const msgData = await messageResponse.json();
       
       // Convert Gmail message to Email object
       return {
         id: msgData.id || `gmail-${Date.now()}`,
         subject: this.extractHeader(msgData.payload, 'Subject') || '(No subject)',
-        from: this.parseEmailAddress(this.extractHeader(msgData.payload, 'From') || ''),
-        to: [this.parseEmailAddress(this.extractHeader(msgData.payload, 'To') || '')],
+        from: parseEmailAddress(this.extractHeader(msgData.payload, 'From') || ''),
+        to: [parseEmailAddress(this.extractHeader(msgData.payload, 'To') || '')],
         body: this.extractBody(msgData.payload) || '',
         date: new Date(parseInt(msgData.internalDate || Date.now().toString())),
         read: !msgData.labelIds?.includes('UNREAD'),
@@ -561,14 +394,6 @@ export class GmailProvider implements MailProvider {
   }
   
   async sendEmail(email: Email): Promise<boolean> {
-    if (!this.isAuthenticated()) {
-      const authenticated = await this.authenticate()
-      if (!authenticated) {
-        console.error('Not authenticated with Gmail')
-        return false
-      }
-    }
-    
     try {
       console.log(`[Gmail] Sending email "${email.subject}" to ${email.to.map(t => t.email).join(', ')}`);
       
@@ -596,8 +421,6 @@ export class GmailProvider implements MailProvider {
         email.body || ''
       ].filter(Boolean).join('\r\n');
       
-      console.log('Sending email with body:', email.body); // Debug log
-      
       // In browser, we need to use TextEncoder
       const encoder = new TextEncoder();
       const rawData = encoder.encode(rawEmail);
@@ -609,35 +432,20 @@ export class GmailProvider implements MailProvider {
           .join('')
       ).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       
-      // Prepare request with auth - explicitly specifying 'Accept: application/json' to ensure JSON response
-      const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
-      
       // Debug log for the request we're about to send
-      console.log('[Gmail] Sending email request with payload:', {
+      console.log('[Gmail] Sending email request', {
         to: email.to.map(t => t.email).join(', '),
         subject: email.subject,
         bodyLength: email.body ? email.body.length : 0
       });
       
-      // Send the request
-      const response = await fetch(endpoint, {
+      // Use the makeRequest helper from BaseProvider that handles auth and retries
+      await this.makeRequest(endpoint, {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
+        body: {
           raw: base64url
-        })
+        }
       });
-      
-      // Check for HTTP errors
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Gmail] Send mail error:', errorText);
-        throw new Error(`Gmail API error: ${response.status} ${response.statusText}`);
-      }
       
       console.log('[Gmail] Email sent successfully');
       return true;

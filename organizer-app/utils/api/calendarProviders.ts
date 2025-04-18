@@ -1,19 +1,16 @@
 /**
- * Calendar providers module
- * @module utils/api/calendarProviders
+ * This file is kept for backward compatibility.
+ * Please use the modular imports from './calendarProviders/' directory instead.
  */
 
 import type { IntegrationAccount } from '~/types/models'
-import { GoogleCalendarProvider } from './GoogleCalendarProvider'
-import { Office365CalendarProvider } from './Office365CalendarProvider'
-import { ExchangeCalendarProvider } from './ExchangeCalendarProvider'
-import type { CalendarProvider } from './CalendarProvider'
+import type { CalendarProvider } from './calendarProviders/CalendarProvider'
+import { GoogleCalendarProvider } from './calendarProviders/GoogleCalendarProvider'
+import { Office365CalendarProvider } from './calendarProviders/Office365CalendarProvider'
+import { ExchangeCalendarProvider } from './calendarProviders/ExchangeCalendarProvider'
 
-export * from './CalendarProvider'
-export * from './BaseCalendarProvider'
-export * from './GoogleCalendarProvider'
-export * from './Office365CalendarProvider'
-export * from './ExchangeCalendarProvider'
+// Important: We're not using export * to avoid circular dependency issues
+// Instead, we're explicitly exporting functions needed by the application
 
 /**
  * Factory function to get the appropriate calendar provider implementation
@@ -27,7 +24,6 @@ export function getCalendarProvider(account: IntegrationAccount): CalendarProvid
     case 'office365':
       return new Office365CalendarProvider(account)
     case 'exchange':
-      // Exchange provider delegates to Office365CalendarProvider internally
       return new ExchangeCalendarProvider(account)
     default:
       throw new Error(`Unsupported account type: ${account.type}`)
@@ -41,3 +37,7 @@ export function getCalendarProvider(account: IntegrationAccount): CalendarProvid
 export function createCalendarProvider(account: IntegrationAccount): CalendarProvider {
   return getCalendarProvider(account)
 }
+
+// Re-export the types and classes that might be needed
+export type { CalendarProvider }
+export { GoogleCalendarProvider, Office365CalendarProvider, ExchangeCalendarProvider }

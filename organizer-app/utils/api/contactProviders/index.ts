@@ -1,38 +1,43 @@
+/**
+ * Contact providers module
+ * @module utils/api/contactProviders
+ */
+
+import type { IntegrationAccount } from '~/types/models'
 import { GoogleContactsProvider } from './GoogleContactsProvider'
 import { Office365ContactsProvider } from './Office365ContactsProvider'
 import { ExchangeContactsProvider } from './ExchangeContactsProvider'
 import type { ContactProvider } from './ContactProvider'
-import type { IntegrationAccount } from '~/types/models'
+
+export * from './ContactProvider'
+export * from './BaseContactProvider'
+export * from './GoogleContactsProvider'
+export * from './Office365ContactsProvider'
+export * from './ExchangeContactsProvider'
 
 /**
- * Create the appropriate contacts provider based on account type
+ * Factory function to get the appropriate contact provider implementation
  * @param account The integration account
- * @returns A contacts provider instance
+ * @returns Provider implementation for the account type
  */
-export function createContactsProvider(account: IntegrationAccount): ContactProvider {
+export function getContactProvider(account: IntegrationAccount): ContactProvider {
   switch (account.type) {
     case 'google':
       return new GoogleContactsProvider(account)
     case 'office365':
       return new Office365ContactsProvider(account)
     case 'exchange':
+      // Exchange provider delegates to Office365ContactsProvider internally
       return new ExchangeContactsProvider(account)
     default:
-      throw new Error(`Unsupported provider type: ${account.type}`)
+      throw new Error(`Unsupported account type: ${account.type}`)
   }
 }
 
-// Export provider classes
-export { 
-  GoogleContactsProvider,
-  Office365ContactsProvider,
-  ExchangeContactsProvider
+/**
+ * Alias for getContactProvider for backward compatibility
+ * @deprecated Use getContactProvider instead
+ */
+export function createContactsProvider(account: IntegrationAccount): ContactProvider {
+  return getContactProvider(account)
 }
-
-// Export provider types
-export type { 
-  ContactProvider,
-  ContactQuery,
-  ContactPagination,
-  ContactFetchResult
-} from './ContactProvider'

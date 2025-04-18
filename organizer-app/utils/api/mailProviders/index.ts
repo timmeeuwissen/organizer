@@ -1,8 +1,19 @@
+/**
+ * Mail providers module
+ * @module utils/api/mailProviders
+ */
+
 import type { IntegrationAccount } from '~/types/models'
-import type { MailProvider } from './MailProvider'
 import { GmailProvider } from './GmailProvider'
 import { Office365Provider } from './Office365Provider'
 import { ExchangeProvider } from './ExchangeProvider'
+import type { MailProvider } from './MailProvider'
+
+export * from './MailProvider'
+export * from './BaseMailProvider'
+export * from './GmailProvider'
+export * from './Office365Provider'
+export * from './ExchangeProvider'
 
 /**
  * Factory function to get the appropriate mail provider implementation
@@ -16,17 +27,17 @@ export function getMailProvider(account: IntegrationAccount): MailProvider {
     case 'office365':
       return new Office365Provider(account)
     case 'exchange':
-      if (account.server?.includes('office365')) {
-        return new Office365Provider(account)
-      }
+      // Exchange provider delegates to Office365Provider internally
       return new ExchangeProvider(account)
     default:
       throw new Error(`Unsupported account type: ${account.type}`)
   }
 }
 
-// Export types and provider implementations
-export { type MailProvider } from './MailProvider'
-export { GmailProvider } from './GmailProvider'
-export { Office365Provider } from './Office365Provider'
-export { ExchangeProvider } from './ExchangeProvider'
+/**
+ * Alias for getMailProvider for backward compatibility
+ * @deprecated Use getMailProvider instead
+ */
+export function createMailProvider(account: IntegrationAccount): MailProvider {
+  return getMailProvider(account)
+}
