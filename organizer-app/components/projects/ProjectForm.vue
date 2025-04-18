@@ -164,6 +164,17 @@ v-form(
         multiple
         chips
       )
+      
+      v-select(
+        v-model="stakeholders"
+        :items="availablePeople"
+        :label="$t('projects.stakeholders')"
+        item-title="name"
+        item-value="id"
+        prepend-icon="mdi-account-star"
+        multiple
+        chips
+      )
     
     v-card-actions
       v-spacer
@@ -225,6 +236,7 @@ const icon = ref(props.project?.icon || 'mdi-folder-outline')
 const color = ref(props.project?.color || 'primary')
 const tags = ref(props.project?.tags || [])
 const members = ref(props.project?.members || [])
+const stakeholders = ref(props.project?.stakeholders || [])
 
 // Status, priority and color options
 const statusOptions = [
@@ -352,7 +364,8 @@ const submit = () => {
     icon: icon.value,
     color: color.value,
     tags: tags.value,
-    members: members.value
+    members: members.value,
+    stakeholders: stakeholders.value
   }
   
   emit('submit', projectData)
@@ -380,6 +393,7 @@ watch(() => props.project, (newProject) => {
     color.value = newProject.color || 'primary'
     tags.value = [...newProject.tags]
     members.value = [...newProject.members]
+    stakeholders.value = [...(newProject.stakeholders || [])]
   }
 }, { immediate: true })
 </script>

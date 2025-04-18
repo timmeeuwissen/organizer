@@ -105,6 +105,7 @@ export interface Project {
   completedDate?: Date;
   teamMembers?: string[]; // Person IDs
   members: string[]; // Alias for teamMembers (for backward compatibility)
+  stakeholders?: string[]; // Person IDs
   tasks: string[]; // Task IDs
   meetings?: string[]; // Meeting IDs
   pages: string[]; // Page IDs (references to ProjectPage)

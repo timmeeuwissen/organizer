@@ -69,6 +69,15 @@ v-container
                     span {{ getPersonName(memberId) }}
               
               v-card(elevation="1" class="mb-4")
+                v-card-title {{ $t('projects.stakeholders') }}
+                v-card-text
+                  div(v-if="!project.stakeholders || project.stakeholders.length === 0") {{ $t('projects.noStakeholders') }}
+                  
+                  div.d-flex.flex-wrap.align-center(v-for="stakeholderId in project.stakeholders || []" :key="stakeholderId" class="mb-2")
+                    v-avatar(:color="getAvatarColor(stakeholderId)" size="32" class="mr-2") {{ getPersonInitials(stakeholderId) }}
+                    span {{ getPersonName(stakeholderId) }}
+              
+              v-card(elevation="1" class="mb-4")
                 v-card-title {{ $t('projects.tags') }}
                 v-card-text
                   div(v-if="project.tags.length === 0") {{ $t('projects.noTags') }}
