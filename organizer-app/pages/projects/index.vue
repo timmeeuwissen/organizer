@@ -96,104 +96,29 @@ v-container(fluid)
           v-alert(v-else-if="filteredProjects.length === 0" type="info" variant="tonal") 
             | {{ $t('projects.noProjects') }}
           
-          template(v-else)
-            v-col(
+          div.project-grid(v-else)
+            project-card.project-card-item(
               v-for="project in filteredProjects" 
               :key="project.id"
-              cols="12"
-              sm="6"
-              md="4"
+              :project="project" 
+              @navigate="navigateToProject"
+              @edit="openEditDialog"
             )
-              v-card(
-                :color="getStatusColor(project.status)"
-                class="mb-4 project-card"
-                @click="openProject(project)"
-              )
-                v-card-item
-                  v-card-title {{ project.title }}
-                  v-card-subtitle
-                    template(v-if="project.dueDate")
-                      v-icon(size="small" class="mr-1") mdi-calendar
-                      | {{ formatDate(project.dueDate) }}
-                v-card-text
-                  div.mb-2(v-if="project.description" class="text-truncate") {{ project.description }}
-                  
-                  v-progress-linear(
-                    :model-value="project.progress" 
-                    height="8" 
-                    color="white"
-                    bg-color="rgba(255, 255, 255, 0.3)"
-                    rounded
-                  )
-                  div.text-right.text-caption.mt-1 {{ project.progress }}%
-                  
-                  div.d-flex.mt-3(v-if="project.tags.length > 0")
-                    v-chip(
-                      v-for="tag in project.tags.slice(0, 3)" 
-                      :key="tag"
-                      size="x-small"
-                      color="white"
-                      text-color="black"
-                      class="mr-1"
-                    ) {{ tag }}
-                    v-chip(
-                      v-if="project.tags.length > 3"
-                      size="x-small"
-                      color="white"
-                      text-color="black"
-                    ) +{{ project.tags.length - 3 }}
-                
-                v-card-actions
-                  v-avatar.ml-2(
-                    v-for="(memberId, index) in project.members.slice(0, 3)" 
-                    :key="memberId"
-                    :color="getAvatarColor(index)"
-                    size="30"
-                  ) {{ getPersonInitials(memberId) }}
-                  v-avatar(
-                    v-if="project.members.length > 3"
-                    color="grey"
-                    size="30"
-                  ) +{{ project.members.length - 3 }}
-                  v-spacer
-                  v-chip(
-                    :color="getStatusColorLight(project.status)"
-                    size="small"
-                  ) 
-                    v-icon(size="small" start) {{ getStatusIcon(project.status) }}
-                    | {{ getStatusText(project.status) }}
 
-  // View/Edit Dialog
-  v-dialog(v-model="projectDialog" max-width="800px")
-    v-card(v-if="projectDialog && selectedProject")
-      v-tabs(v-model="activeTab")
-        v-tab(value="details") {{ $t('projects.title') }}
-        v-tab(value="pages") {{ $t('projects.pages') }}
-        v-tab(value="tasks") {{ $t('projects.tasks') }}
+  // Edit Dialog
+  v-dialog(v-model="editDialog" max-width="800px")
+    v-card(v-if="editDialog && selectedProject")
+      v-card-title.d-flex.align-center
+        v-icon(:color="selectedProject.color || getStatusColor(selectedProject.status)" class="mr-2") {{ selectedProject.icon || 'mdi-folder-outline' }}
+        span {{ $t('projects.edit') }}: {{ selectedProject.title }}
       
-      v-window(v-model="activeTab")
-        v-window-item(value="details")
-          project-form(
-            :project="selectedProject"
-            :loading="formLoading"
-            :error="formError"
-            @submit="updateProject"
-            @delete="deleteProject"
-          )
-        
-        v-window-item(value="pages")
-          // Project pages would go here
-          v-card-text
-            v-alert(type="info") 
-              | {{ $t('projects.viewPages') }}
-              | {{ $t('common.loading') }}...
-        
-        v-window-item(value="tasks")
-          // Project tasks would go here
-          v-card-text
-            v-alert(type="info") 
-              | {{ $t('projects.tasks') }}
-              | {{ $t('common.loading') }}...
+      project-form(
+        :project="selectedProject"
+        :loading="formLoading"
+        :error="formError"
+        @submit="updateProject"
+        @delete="deleteProject"
+      )
   
   // Add Dialog
   v-dialog(v-model="addDialog" max-width="800px")
@@ -211,6 +136,7 @@ import { useProjectsStore } from '~/stores/projects'
 import { usePeopleStore } from '~/stores/people'
 import type { Project } from '~/types/models'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
+import ProjectCard from '~/components/projects/ProjectCard.vue'
 
 const projectsStore = useProjectsStore()
 const peopleStore = usePeopleStore()
@@ -219,13 +145,12 @@ const peopleStore = usePeopleStore()
 const loading = ref(true)
 const formLoading = ref(false)
 const formError = ref('')
-const projectDialog = ref(false)
+const editDialog = ref(false)
 const addDialog = ref(false)
 const selectedProject = ref<Project | null>(null)
 const search = ref('')
 const selectedStatus = ref('all')
 const selectedTags = ref<string[]>([])
-const activeTab = ref('details')
 
 // Initialize data
 onMounted(async () => {
@@ -302,6 +227,25 @@ const getStatusColor = (status: string) => {
   }
 }
 
+// Helper to determine if a color is light (for text contrast)
+const isLightColor = (colorValue: string) => {
+  if (!colorValue) return false;
+  
+  // These colors are known to be light
+  const lightColors = [
+    'light-blue', 
+    'light-green', 
+    'amber', 
+    'yellow', 
+    'lime', 
+    'grey-lighten-3', 
+    'grey-lighten-4',
+    'grey-lighten-5'
+  ];
+  
+  return lightColors.some(c => colorValue.includes(c));
+}
+
 const getStatusColorLight = (status: string) => {
   switch (status) {
     case 'planning': return 'info-lighten-3'
@@ -356,11 +300,21 @@ const toggleTag = (tag: string) => {
   }
 }
 
-// Dialog functions
-const openProject = (project: Project) => {
+// Import router
+import { useRouter } from 'vue-router'
+
+// Setup router
+const router = useRouter()
+
+// Dialog and navigation functions
+const navigateToProject = (project: Project) => {
+  // Navigate to the project detail page
+  router.push(`/projects/${project.id}`)
+}
+
+const openEditDialog = (project: Project) => {
   selectedProject.value = project
-  projectDialog.value = true
-  activeTab.value = 'details'
+  editDialog.value = true
 }
 
 // CRUD operations
@@ -386,7 +340,7 @@ const updateProject = async (projectData: Partial<Project>) => {
   
   try {
     await projectsStore.updateProject(selectedProject.value.id, projectData)
-    projectDialog.value = false
+    editDialog.value = false
   } catch (error: any) {
     formError.value = error.message || 'Failed to update project'
   } finally {
@@ -402,7 +356,7 @@ const deleteProject = async () => {
   
   try {
     await projectsStore.deleteProject(selectedProject.value.id)
-    projectDialog.value = false
+    editDialog.value = false
     selectedProject.value = null
   } catch (error: any) {
     formError.value = error.message || 'Failed to delete project'
@@ -413,13 +367,13 @@ const deleteProject = async () => {
 </script>
 
 <style scoped>
-.project-card {
-  transition: all 0.2s;
-  cursor: pointer;
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
-.project-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.project-card-item {
+  margin-bottom: 0;
 }
 </style>

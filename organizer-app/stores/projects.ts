@@ -51,7 +51,18 @@ export const useProjectsStore = defineStore('projects', {
       return state.projects.filter(project => project.members.includes(memberId))
     },
     getSortedByPriority: (state) => {
-      return [...state.projects].sort((a, b) => a.priority - b.priority)
+      // Convert string priorities to numeric values for sorting
+      const priorityValue = (p: 'low' | 'medium' | 'high' | 'urgent' | number): number => {
+        if (typeof p === 'number') return p;
+        switch(p) {
+          case 'low': return 1;
+          case 'medium': return 2;
+          case 'high': return 3;
+          case 'urgent': return 4;
+          default: return 0;
+        }
+      };
+      return [...state.projects].sort((a, b) => priorityValue(a.priority) - priorityValue(b.priority));
     },
     getTags: (state) => {
       const tags = new Set<string>()
@@ -147,8 +158,11 @@ export const useProjectsStore = defineStore('projects', {
         const db = getFirestore()
         const projectsRef = collection(db, 'projects')
         
+        // Create a clean object without undefined values, as Firebase doesn't accept undefined
         const projectData = {
-          ...newProject,
+          ...Object.fromEntries(
+            Object.entries(newProject).filter(([_, v]) => v !== undefined)
+          ),
           userId: authStore.user.id,
           members: newProject.members || [],
           tags: newProject.tags || [],
@@ -208,16 +222,33 @@ export const useProjectsStore = defineStore('projects', {
           throw new Error('Unauthorized access to project')
         }
         
-        // Prepare update data
+        // Filter out undefined values from the updates object
+        const filteredUpdates: Partial<Project> = {};
+        
+        // Copy only defined values
+        Object.entries(updates).forEach(([key, value]) => {
+          if (value !== undefined) {
+            // Using type assertion to bypass TypeScript's index signature restriction
+            (filteredUpdates as any)[key] = value;
+          }
+        });
+        
+        // Add server timestamp
         const updateData = {
-          ...updates,
+          ...filteredUpdates,
           updatedAt: serverTimestamp(),
-        }
+        };
         
         // Remove fields that shouldn't be directly updated
-        delete updateData.id
-        delete updateData.userId
-        delete updateData.createdAt
+        delete updateData.id;
+        delete updateData.userId;
+        delete updateData.createdAt;
+        
+        // Handle dueDate - convert undefined to undefined (so it's not included in the update)
+        // Let Firebase handle the case where dueDate is explicitly set to null
+        if (updates.dueDate === undefined) {
+          delete updateData.dueDate;
+        }
         
         await updateDoc(projectRef, updateData)
         
@@ -299,8 +330,26 @@ export const useProjectsStore = defineStore('projects', {
       
       return this.updateProject(id, { progress })
     },
+    
+    // Helper to ensure type safety when converting stored priority values
+    getPriorityValue(priority: any): 'low' | 'medium' | 'high' | 'urgent' {
+      if (typeof priority === 'string' && ['low', 'medium', 'high', 'urgent'].includes(priority)) {
+        return priority as 'low' | 'medium' | 'high' | 'urgent';
+      }
+      
+      // Legacy numeric priority conversion
+      if (typeof priority === 'number') {
+        if (priority <= 3) return 'low';
+        if (priority <= 6) return 'medium';
+        if (priority <= 8) return 'high';
+        return 'urgent';
+      }
+      
+      // Default
+      return 'medium';
+    },
 
-    async updatePriority(id: string, priority: number) {
+    async updatePriority(id: string, priority: 'low' | 'medium' | 'high' | 'urgent') {
       return this.updateProject(id, { priority })
     },
 

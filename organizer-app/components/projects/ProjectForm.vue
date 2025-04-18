@@ -14,13 +14,52 @@ v-form(
         class="mb-4"
       ) {{ error }}
       
+      // Project title field
       v-text-field(
         v-model="title"
         :label="$t('projects.title')"
         :rules="[rules.required]"
         required
-        prepend-icon="mdi-folder"
+        :prepend-icon="icon"
+        class="mb-4"
       )
+      
+      // Preview card (wrapped in a div to avoid recursive updates)
+      div.preview-wrapper.mb-4
+        v-card(:color="color" class="pa-2")
+          v-card-title.d-flex.align-center
+            v-icon(:color="shouldUseWhiteText ? 'white' : 'black'" size="large" class="mr-2") {{ icon }}
+            span(:class="shouldUseWhiteText ? 'text-white' : 'text-black'") {{ previewTitle }}
+      
+      v-row
+        v-col(cols="12" md="6")
+          v-select(
+            v-model="color"
+            :items="colorOptions"
+            :label="$t('common.color')"
+            item-title="text"
+            item-value="value"
+            prepend-icon="mdi-palette"
+          )
+            template(v-slot:selection="{ item }")
+              div
+                v-avatar(:color="item.value" size="24" class="mr-2")
+                span {{ item.text }}
+            
+            template(v-slot:item="{ item, props }")
+              v-list-item(
+                v-bind="props"
+                :prepend-avatar="undefined"
+              )
+                template(v-slot:prepend)
+                  v-avatar(:color="item.raw.value" size="24")
+        
+        v-col(cols="12" md="6")
+          icon-selector(
+            v-model="icon"
+            :color="color"
+            :label="$t('common.icon')"
+          )
       
       v-textarea(
         v-model="description"
@@ -44,16 +83,20 @@ v-form(
             v-icon(start size="small") {{ getStatusIcon(item.value) }}
             span {{ item.text }}
       
-      v-slider(
+      v-select(
         v-model="priority"
         :label="$t('projects.priority')"
-        :hint="$t('projects.relativePriority')"
-        persistent-hint
-        min="1"
-        max="10"
-        thumb-label
+        :items="priorityOptions"
+        item-title="text"
+        item-value="value"
         prepend-icon="mdi-arrow-up-down"
+        :rules="[rules.required]"
+        required
       )
+        template(v-slot:selection="{ item }")
+          v-chip(:color="getPriorityColor(item.value)" size="small")
+            v-icon(start size="small") mdi-flag
+            span {{ item.text }}
       
       v-row
         v-col(cols="12" md="6")
@@ -76,15 +119,30 @@ v-form(
               @update:model-value="dueDateMenu = false"
             )
         
-        v-col(cols="12" md="6")
-          v-slider(
-            v-model="progress"
-            :label="$t('projects.progress')"
-            min="0"
-            max="100"
-            thumb-label
-            prepend-icon="mdi-percent"
-          )
+        v-col(cols="12")
+          v-card(class="pa-3" elevation="1")
+            v-card-title.px-0.d-flex.align-center
+              v-icon(class="mr-2") mdi-chart-line
+              span {{ $t('projects.progress') }}
+            v-slider(
+              v-model="progress"
+              min="0"
+              max="100"
+              thumb-label
+              prepend-icon="mdi-percent"
+              color="primary"
+              track-color="grey-lighten-3"
+            )
+            v-progress-linear(
+              :model-value="progress" 
+              height="22" 
+              :color="color || 'primary'"
+              bg-color="grey-lighten-4"
+              rounded
+              class="mt-2"
+            )
+              template(v-slot:default="{ value }")
+                strong {{ Math.round(value) }}%
       
       v-combobox(
         v-model="tags"
@@ -125,9 +183,10 @@ v-form(
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
+import IconSelector from '~/components/common/IconSelector.vue'
 import type { Project } from '~/types/models'
 
 const props = defineProps({
@@ -158,19 +217,48 @@ const dueDateMenu = ref(false)
 const title = ref(props.project?.title || '')
 const description = ref(props.project?.description || '')
 const status = ref(props.project?.status || 'planning')
-const priority = ref(props.project?.priority || 5)
+// Handle priority - default to 'medium' if not defined
+const priority = ref(props.project?.priority || 'medium')
 const dueDate = ref(props.project?.dueDate ? new Date(props.project.dueDate).toISOString().substr(0, 10) : null)
 const progress = ref(props.project?.progress || 0)
+const icon = ref(props.project?.icon || 'mdi-folder-outline')
+const color = ref(props.project?.color || 'primary')
 const tags = ref(props.project?.tags || [])
 const members = ref(props.project?.members || [])
 
-// Status options
+// Status, priority and color options
 const statusOptions = [
   { text: 'Planning', value: 'planning' },
   { text: 'Active', value: 'active' },
   { text: 'On Hold', value: 'onHold' },
   { text: 'Completed', value: 'completed' },
   { text: 'Cancelled', value: 'cancelled' }
+]
+
+const priorityOptions = [
+  { text: 'Low', value: 'low' },
+  { text: 'Medium', value: 'medium' },
+  { text: 'High', value: 'high' },
+  { text: 'Urgent', value: 'urgent' }
+]
+
+const colorOptions = [
+  { text: 'Primary', value: 'primary' },
+  { text: 'Secondary', value: 'secondary' },
+  { text: 'Success', value: 'success' },
+  { text: 'Info', value: 'info' },
+  { text: 'Warning', value: 'warning' },
+  { text: 'Error', value: 'error' },
+  { text: 'Purple', value: 'purple' },
+  { text: 'Indigo', value: 'indigo' },
+  { text: 'Teal', value: 'teal' },
+  { text: 'Orange', value: 'orange' },
+  { text: 'Pink', value: 'pink' },
+  { text: 'Deep Purple', value: 'deep-purple' },
+  { text: 'Light Blue', value: 'light-blue' },
+  { text: 'Green', value: 'green' },
+  { text: 'Amber', value: 'amber' },
+  { text: 'Deep Orange', value: 'deep-orange' },
 ]
 
 // Validation rules
@@ -209,6 +297,16 @@ const getStatusColor = (statusValue: string) => {
   }
 }
 
+const getPriorityColor = (priorityValue: string) => {
+  switch (priorityValue) {
+    case 'low': return 'success'
+    case 'medium': return 'info'
+    case 'high': return 'warning'
+    case 'urgent': return 'error'
+    default: return 'grey'
+  }
+}
+
 const getStatusIcon = (statusValue: string) => {
   switch (statusValue) {
     case 'planning': return 'mdi-pencil'
@@ -220,17 +318,39 @@ const getStatusIcon = (statusValue: string) => {
   }
 }
 
+// Computed values to prevent recursive updates
+const previewTitle = computed(() => title.value || 'New Project')
+
+const shouldUseWhiteText = computed(() => {
+  // These colors are known to be light
+  const lightColors = [
+    'light-blue', 
+    'light-green', 
+    'amber', 
+    'yellow', 
+    'lime', 
+    'grey-lighten-3', 
+    'grey-lighten-4',
+    'grey-lighten-5'
+  ];
+  
+  return !lightColors.some(c => color.value.includes(c));
+})
+
 // Submit function
 const submit = () => {
   if (!valid.value) return
   
+  // Create project data with null instead of undefined for dueDate
   const projectData: Partial<Project> = {
     title: title.value,
     description: description.value,
     status: status.value as 'planning' | 'active' | 'onHold' | 'completed' | 'cancelled',
-    priority: priority.value,
-    dueDate: dueDate.value ? new Date(dueDate.value) : undefined,
+    priority: priority.value as 'low' | 'medium' | 'high' | 'urgent',
+    dueDate: dueDate.value ? new Date(dueDate.value) : null,
     progress: progress.value,
+    icon: icon.value,
+    color: color.value,
     tags: tags.value,
     members: members.value
   }
@@ -238,24 +358,28 @@ const submit = () => {
   emit('submit', projectData)
 }
 
-// When project changes, update form values
+// Load people and tags for selects
 onMounted(async () => {
-  // Load people and tags for selects
   if (peopleStore.people.length === 0) {
     await peopleStore.fetchPeople()
   }
-  
-  if (props.project) {
-    title.value = props.project.title
-    description.value = props.project.description || ''
-    status.value = props.project.status
-    priority.value = props.project.priority
-    dueDate.value = props.project.dueDate 
-      ? new Date(props.project.dueDate).toISOString().substr(0, 10) 
-      : null
-    progress.value = props.project.progress
-    tags.value = [...props.project.tags]
-    members.value = [...props.project.members]
-  }
 })
+
+// Watch for project changes to update form values
+watch(() => props.project, (newProject) => {
+  if (newProject) {
+    title.value = newProject.title
+    description.value = newProject.description || ''
+    status.value = newProject.status
+    priority.value = newProject.priority
+    dueDate.value = newProject.dueDate 
+      ? new Date(newProject.dueDate).toISOString().substr(0, 10) 
+      : null
+    progress.value = newProject.progress
+    icon.value = newProject.icon || 'mdi-folder-outline'
+    color.value = newProject.color || 'primary'
+    tags.value = [...newProject.tags]
+    members.value = [...newProject.members]
+  }
+}, { immediate: true })
 </script>

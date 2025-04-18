@@ -111,6 +111,8 @@ export interface Project {
   progress: number; // 0-100
   notes?: string;
   tags: string[];
+  icon?: string; // MDI icon name (e.g., 'mdi-folder')
+  color?: string; // Color name for project (e.g., 'primary', 'green', etc.)
   createdAt: Date;
   updatedAt: Date;
 }
