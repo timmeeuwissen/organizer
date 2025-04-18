@@ -3,8 +3,45 @@ import type { Person } from '~/types/models'
 import type { IntegrationAccount } from '~/types/models'
 import { refreshOAuthToken } from '~/utils/api/emailUtils'
 
+// Type definitions for Google People API
+interface GooglePersonName {
+  givenName?: string;
+  familyName?: string;
+}
+
+interface GoogleEmailAddress {
+  value: string;
+}
+
+interface GooglePhoneNumber {
+  value: string;
+}
+
+interface GoogleOrganization {
+  name?: string;
+  title?: string;
+}
+
+interface GoogleBiography {
+  value: string;
+}
+
+interface GoogleContactData {
+  names: GooglePersonName[];
+  emailAddresses?: GoogleEmailAddress[];
+  phoneNumbers?: GooglePhoneNumber[];
+  organizations?: GoogleOrganization[];
+  biographies?: GoogleBiography[];
+}
+
 /**
  * Google Contacts provider implementation using People API
+ * 
+ * Documentation: https://developers.google.com/people/api/rest
+ * 
+ * This provider uses the Google People API to fetch, create, update, and delete contacts.
+ * The People API provides a more comprehensive set of fields and capabilities compared
+ * to the older Contacts API.
  */
 export class GoogleContactsProvider implements ContactProvider {
   private account: IntegrationAccount
@@ -170,7 +207,7 @@ export class GoogleContactsProvider implements ContactProvider {
       }
       
       // Convert Google contacts to app Person format
-      let contacts = connections.map((connection: any) => this.googleContactToPerson(connection))
+      let contacts = connections.map((connection: Record<string, any>) => this.googleContactToPerson(connection))
       
       // Apply additional filters that can't be applied in the API request
       if (query?.organization) {
@@ -243,7 +280,7 @@ export class GoogleContactsProvider implements ContactProvider {
     return this.fetchContacts(query, pagination)
   }
 
-  async createContact(contact: Partial<Person>): Promise<{ success: boolean, contactId?: string }> {
+  async createContact(contact: Partial<Person>): Promise<{ success: boolean; contactId?: string }> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -257,18 +294,27 @@ export class GoogleContactsProvider implements ContactProvider {
       const endpoint = 'https://people.googleapis.com/v1/people:createContact'
       
       // Prepare the contact data in Google People API format
-      const googleContact = {
+      // Create contact data in Google People API format
+      const firstName = contact.firstName as string | undefined;
+      const lastName = contact.lastName as string | undefined;
+      const email = contact.email as string | undefined;
+      const phone = contact.phone as string | undefined;
+      const organization = contact.organization as string | undefined;
+      const role = contact.role as string | undefined;
+      const notes = contact.notes as string | undefined;
+      
+      const googleContact: GoogleContactData = {
         names: [{
-          givenName: contact.firstName,
-          familyName: contact.lastName
+          givenName: firstName,
+          familyName: lastName
         }],
-        emailAddresses: contact.email ? [{ value: contact.email }] : [],
-        phoneNumbers: contact.phone ? [{ value: contact.phone }] : [],
-        organizations: contact.organization ? [{ 
-          name: contact.organization, 
-          title: contact.role 
+        emailAddresses: email ? [{ value: email }] : [],
+        phoneNumbers: phone ? [{ value: phone }] : [],
+        organizations: organization ? [{ 
+          name: organization, 
+          title: role
         }] : [],
-        biographies: contact.notes ? [{ value: contact.notes }] : []
+        biographies: notes ? [{ value: notes }] : []
       }
       
       // Prepare headers with authentication
@@ -278,7 +324,7 @@ export class GoogleContactsProvider implements ContactProvider {
         'Accept': 'application/json'
       }
       
-      console.log('[GContacts] Creating contact:', googleContact)
+      console.log('[GContacts] Creating contact:', JSON.stringify(googleContact))
       
       // Make the request
       const response = await fetch(endpoint, {
@@ -312,6 +358,14 @@ export class GoogleContactsProvider implements ContactProvider {
   }
 
   async updateContact(contactId: string, updates: Partial<Person>): Promise<boolean> {
+    // Type safety for Person properties
+    const firstName = updates.firstName as string | undefined;
+    const lastName = updates.lastName as string | undefined;
+    const email = updates.email as string | undefined;
+    const phone = updates.phone as string | undefined;
+    const organization = updates.organization as string | undefined;
+    const role = updates.role as string | undefined;
+    const notes = updates.notes as string | undefined;
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -357,43 +411,52 @@ export class GoogleContactsProvider implements ContactProvider {
       // API endpoint for update
       const updateEndpoint = `https://people.googleapis.com/v1/${resourceName}:updateContact`;
       
+      // Build Google People API update payload
+      type GoogleUpdatePayload = {
+        names?: GooglePersonName[];
+        emailAddresses?: GoogleEmailAddress[];
+        phoneNumbers?: GooglePhoneNumber[];
+        organizations?: GoogleOrganization[];
+        biographies?: GoogleBiography[];
+      };
+      
       // Build update fields and updatePersonFields parameter
-      const updateContact: any = {};
+      const updateContact: GoogleUpdatePayload = {};
       const updatePersonFields: string[] = [];
       
       // Names
-      if (updates.firstName !== undefined || updates.lastName !== undefined) {
+      if (firstName !== undefined || lastName !== undefined) {
         updateContact.names = [{
-          givenName: updates.firstName || existingContact.names?.[0]?.givenName,
-          familyName: updates.lastName || existingContact.names?.[0]?.familyName
+          givenName: firstName || existingContact.names?.[0]?.givenName,
+          familyName: lastName || existingContact.names?.[0]?.familyName
         }];
         updatePersonFields.push('names');
       }
       
       // Email
-      if (updates.email !== undefined) {
-        updateContact.emailAddresses = updates.email ? [{ value: updates.email }] : [];
+      if (email !== undefined) {
+        updateContact.emailAddresses = email ? [{ value: email }] : [];
         updatePersonFields.push('emailAddresses');
       }
       
       // Phone
-      if (updates.phone !== undefined) {
-        updateContact.phoneNumbers = updates.phone ? [{ value: updates.phone }] : [];
+      if (phone !== undefined) {
+        updateContact.phoneNumbers = phone ? [{ value: phone }] : [];
         updatePersonFields.push('phoneNumbers');
       }
       
       // Organization/Role
-      if (updates.organization !== undefined || updates.role !== undefined) {
+      if (organization !== undefined || role !== undefined) {
         updateContact.organizations = [{
-          name: updates.organization || existingContact.organizations?.[0]?.name,
-          title: updates.role || existingContact.organizations?.[0]?.title
+          name: organization || existingContact.organizations?.[0]?.name,
+          title: role || existingContact.organizations?.[0]?.title
         }];
         updatePersonFields.push('organizations');
       }
       
       // Notes
-      if (updates.notes !== undefined) {
-        updateContact.biographies = [{ value: updates.notes }];
+      if (notes !== undefined) {
+        updateContact.biographies = [{ value: notes }];
         updatePersonFields.push('biographies');
       }
       
@@ -514,7 +577,7 @@ export class GoogleContactsProvider implements ContactProvider {
       
       // Extract contact groups
       const groups = data.contactGroups || []
-      return groups.map((group: any) => ({
+      return groups.map((group: Record<string, any>) => ({
         id: group.resourceName?.split('/').pop() || '',
         name: group.name || 'Unnamed Group'
       }))
@@ -524,8 +587,12 @@ export class GoogleContactsProvider implements ContactProvider {
     }
   }
 
-  // Helper method to convert Google contact format to our app's Person format
-  private googleContactToPerson(googleContact: any): Person {
+  /**
+   * Helper method to convert Google People API contact format to our app's Person format
+   * @param googleContact A contact from the Google People API
+   * @returns Converted Person object
+   */
+  private googleContactToPerson(googleContact: Record<string, any>): Person {
     const resourceName = googleContact.resourceName || ''
     const id = resourceName.split('/').pop() || ''
     const firstName = googleContact.names?.[0]?.givenName || ''
@@ -537,7 +604,7 @@ export class GoogleContactsProvider implements ContactProvider {
     const notes = googleContact.biographies?.[0]?.value
     
     // Extract any tags/labels from Google's contact
-    const tags = googleContact.memberships?.map((membership: any) => 
+    const tags = googleContact.memberships?.map((membership: Record<string, any>) => 
       membership.contactGroupMembership?.contactGroupId || ''
     ).filter(Boolean) || []
 
