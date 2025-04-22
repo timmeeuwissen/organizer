@@ -6,16 +6,17 @@ export default defineNuxtPlugin((nuxtApp) => {
   // In production, this would be replaced with an actual XAI API client
   const xaiClient = {
     // Generate summary from text
-    async generateSummary(text: string): Promise<string> {
-      console.log('XAI: Generating summary for text:', text.substring(0, 100) + '...')
-      // In a real implementation, this would call the XAI API
+    async generateSummary(text: string, apiKey?: string): Promise<string> {
+      console.log('XAI: Generating summary for text:', text.substring(0, 100) + '...', 
+        apiKey ? 'With API key' : 'Without API key')
+      // In a real implementation, this would call the XAI API with the apiKey
       // For demo purposes, we'll return a mocked summary
       await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API delay
       return `Summary: ${text.substring(0, 150)}...`
     },
 
     // Suggest connections between entities
-    async suggestConnections(entityType: string, entityId: string): Promise<Array<{
+    async suggestConnections(entityType: string, entityId: string, apiKey?: string): Promise<Array<{
       type: string,
       id: string,
       confidence: number,
@@ -53,7 +54,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
 
     // Analyze meeting transcripts to identify behaviors
-    async analyzeBehaviors(text: string): Promise<Array<{
+    async analyzeBehaviors(text: string, apiKey?: string): Promise<Array<{
       behaviorId: string,
       confidence: number,
       evidence: string
@@ -78,7 +79,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
 
     // Suggest task priorities based on context
-    async suggestTaskPriorities(tasks: Array<{id: string, title: string, description: string}>): Promise<Array<{
+    async suggestTaskPriorities(tasks: Array<{id: string, title: string, description: string}>, apiKey?: string): Promise<Array<{
       id: string,
       suggestedPriority: 'low' | 'medium' | 'high' | 'urgent',
       confidence: number,

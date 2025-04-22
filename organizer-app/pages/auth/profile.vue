@@ -80,6 +80,15 @@ v-container
                 @change="handleSettingsChange"
               )
       
+      // AI integrations
+      v-card(class="mt-4")
+        v-card-text
+          AIIntegrationForm(
+            v-model="aiIntegrationsInput" 
+            @update:modelValue="handleAIIntegrationsChange"
+          )
+      
+      // External service integrations
       v-card(class="mt-4")
         v-card-title 
           | {{ $t('settings.integrations') }}
@@ -207,6 +216,7 @@ import { useNetworkStatus } from '~/composables/useNetworkStatus'
 import { getAuth, updateProfile } from 'firebase/auth'
 import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import IntegrationAccountDialog from '~/components/integrations/IntegrationAccountDialog.vue'
+import AIIntegrationForm from '~/components/integrations/AIIntegrationForm.vue'
 import { v4 as uuidv4 } from 'uuid'
 
 // Component state
@@ -223,6 +233,7 @@ const languageInput = ref('en')
 const weekStartsDayInput = ref(1) // Default to Monday
 const emailNotificationsInput = ref(true)
 const calendarSyncInput = ref(false)
+const aiIntegrationsInput = ref([])
 
 // Week start day options
 const weekDayOptions = [
@@ -298,8 +309,13 @@ const hasProfileChanges = computed(() => {
   const userIntegrations = user.value.settings?.integrationAccounts || []
   const integrationsChanged = integrationAccounts.value.length !== userIntegrations.length ||
     JSON.stringify(integrationAccounts.value) !== JSON.stringify(userIntegrations)
+    
+  // Check for AI integration changes
+  const userAIIntegrations = user.value.settings?.aiIntegrations || []
+  const aiIntegrationsChanged = aiIntegrationsInput.value.length !== userAIIntegrations.length ||
+    JSON.stringify(aiIntegrationsInput.value) !== JSON.stringify(userAIIntegrations)
   
-  return basicSettingsChanged || integrationsChanged
+  return basicSettingsChanged || integrationsChanged || aiIntegrationsChanged
 })
 
 // Available languages
@@ -359,6 +375,12 @@ function loadUserData() {
     // Integration accounts
     integrationAccounts.value = Array.isArray(user.value.settings?.integrationAccounts) 
       ? JSON.parse(JSON.stringify(user.value.settings.integrationAccounts))
+      : []
+      
+    // AI integrations
+    console.log('Loading AI integrations from user settings:', user.value.settings?.aiIntegrations)
+    aiIntegrationsInput.value = Array.isArray(user.value.settings?.aiIntegrations)
+      ? JSON.parse(JSON.stringify(user.value.settings.aiIntegrations))
       : []
   }
 }
@@ -547,6 +569,14 @@ function handleSettingsChange() {
     return
   }
   
+  console.log('Handling settings change, will update user settings')
+  updateUserSettings()
+}
+
+// Specific handler for AI integrations changes
+function handleAIIntegrationsChange(integrations) {
+  console.log('AI integrations changed, will update in Firestore:', integrations)
+  // Update immediately in Firestore when AI integrations change
   updateUserSettings()
 }
 
@@ -563,7 +593,8 @@ async function updateUserSettings() {
       weekStartsOn: weekStartsDayInput.value,
       emailNotifications: emailNotificationsInput.value, 
       calendarSync: calendarSyncInput.value,
-      integrationAccounts: integrationAccounts.value
+      integrationAccounts: integrationAccounts.value,
+      aiIntegrations: aiIntegrationsInput.value
     }
     
     // The auth store now handles cleaning undefined values internally

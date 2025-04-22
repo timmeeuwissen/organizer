@@ -46,6 +46,11 @@ v-app
               v-icon(:icon="item.icon" :color="item.color")
             v-list-item-title {{ item.title }}
     
+    // AI button - only shown if AI integrations are enabled
+    template(v-if="hasEnabledAiIntegrations")
+      v-btn(icon @click="showAiDialog = true" :title="$t('ai.analyze')")
+        v-icon mdi-brain
+    
     v-btn(icon @click="toggleTheme")
       v-icon {{ isDarkTheme ? 'mdi-weather-sunny' : 'mdi-weather-night' }}
     v-menu(location="bottom end" :offset="[0, 5]")
@@ -141,6 +146,9 @@ v-app
       :loading="false" 
       @submit="onMeetingSubmit"
     )
+    
+  // AI Analysis Dialog
+  AIAnalysisDialog(v-model="showAiDialog")
 </template>
 
 <script setup lang="ts">
@@ -164,6 +172,7 @@ import MailComposeForm from '~/components/mail/MailComposeForm.vue'
 import BehaviorForm from '~/components/behaviors/BehaviorForm.vue'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
+import AIAnalysisDialog from '~/components/ai/AIAnalysisDialog.vue'
 
 const i18n = useI18n()
 const theme = useTheme()
@@ -178,6 +187,12 @@ const isDarkTheme = computed(() => theme.global.current.value.dark)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const authBypassEnabled = computed(() => import.meta.env.VITE_AUTH_BYPASS === 'true')
 
+// Check if user has any enabled AI integrations
+const hasEnabledAiIntegrations = computed(() => {
+  if (!authStore.currentUser?.settings?.aiIntegrations) return false
+  return authStore.currentUser.settings.aiIntegrations.some(ai => ai.enabled)
+})
+
 // Add dialog states for each type
 const taskDialog = ref(false)
 const personDialog = ref(false)
@@ -186,6 +201,7 @@ const mailDialog = ref(false)
 const behaviorDialog = ref(false)
 const projectDialog = ref(false)
 const meetingDialog = ref(false)
+const showAiDialog = ref(false)
 
 // Add Button Menu Items
 const addMenuItems = [

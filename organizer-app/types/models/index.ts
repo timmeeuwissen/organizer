@@ -33,6 +33,8 @@ export interface IntegrationAccount {
   updatedAt: Date;
 }
 
+import type { AIIntegrationData } from './aiIntegration';
+
 export interface UserSettings {
   defaultLanguage: string;
   darkMode: boolean;
@@ -40,6 +42,7 @@ export interface UserSettings {
   calendarSync: boolean;
   weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   integrationAccounts: IntegrationAccount[];
+  aiIntegrations?: AIIntegrationData[]; // AI integrations like XAI, OpenAI, Gemini
 }
 
 export interface User {

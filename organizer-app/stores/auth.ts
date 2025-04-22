@@ -332,7 +332,12 @@ export const useAuthStore = defineStore('auth', {
           hasIntegrationAccounts: Array.isArray(cleanSettings.integrationAccounts),
           integrationAccountsCount: Array.isArray(cleanSettings.integrationAccounts) 
             ? cleanSettings.integrationAccounts.length 
-            : 0
+            : 0,
+          hasAiIntegrations: Array.isArray(cleanSettings.aiIntegrations),
+          aiIntegrationsCount: Array.isArray(cleanSettings.aiIntegrations) 
+            ? cleanSettings.aiIntegrations.length 
+            : 0,
+          aiIntegrations: cleanSettings.aiIntegrations
         });
         
         try {

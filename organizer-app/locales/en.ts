@@ -453,5 +453,47 @@ export default {
     history: 'Feedback History',
     processedByClaude: 'Processed by Claude',
     processedAt: 'Processed at'
+  },
+  ai: {
+    analyze: 'Analyze with AI',
+    analyzeText: 'Analyze Text with AI',
+    textToAnalyze: 'Text to Analyze',
+    textToAnalyzePlaceholder: 'Paste text, email, or notes to analyze...',
+    textToAnalyzeHint: 'Enter text to extract people, projects, tasks, behaviors, and meetings',
+    selectProvider: 'Select AI Provider',
+    analyzing: 'Analyzing...',
+    analyzingDescription: 'AI is analyzing and extracting information from your text',
+    summary: 'Summary',
+    confidence: 'Confidence',
+    createNew: 'Create New',
+    relateExisting: 'Relate to Existing',
+    ignore: 'Ignore',
+    selectExisting: 'Select Existing',
+    newAnalysis: 'Start New Analysis',
+    // No entities found messages
+    noPeopleFound: 'No people were identified in the text',
+    noProjectsFound: 'No projects were identified in the text',
+    noTasksFound: 'No tasks were identified in the text',
+    noBehaviorsFound: 'No behaviors were identified in the text',
+    noMeetingsFound: 'No meetings were identified in the text',
+    // AI Integration settings
+    aiIntegrations: 'AI Integrations',
+    addAIIntegration: 'Add AI Integration',
+    editAIIntegration: 'Edit AI Integration',
+    aiProvider: 'AI Provider',
+    apiKey: 'API Key', 
+    integrationName: 'Integration Name',
+    enabled: 'Enabled',
+    aiIntegration: 'AI Integration',
+    noAIIntegrations: 'No AI integrations configured yet',
+    addYourFirstAIIntegration: 'Add Your First AI Integration',
+    providerAlreadyExists: 'This AI provider is already configured',
+    aiIntegrationAdded: 'AI integration added successfully',
+    aiIntegrationUpdated: 'AI integration updated successfully',
+    aiIntegrationDeleted: 'AI integration deleted successfully',
+    // Provider hints
+    xaiHint: 'Built-in AI analysis for emails and text in the Organizer app',
+    openaiHint: 'Connect to OpenAI API (requires API key from openai.com)',
+    geminiHint: 'Connect to Google Gemini API (requires API key from Google AI Studio)'
   }
 };

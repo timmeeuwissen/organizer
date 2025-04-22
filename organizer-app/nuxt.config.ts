@@ -20,7 +20,8 @@ export default defineNuxtConfig({
     '~/plugins/vuetify', 
     '~/plugins/firebase',
     '~/plugins/theme',
-    '~/plugins/pinia-persistence'
+    '~/plugins/pinia-persistence',
+    '~/plugins/ai'
   ],
 
   runtimeConfig: {
@@ -33,8 +34,7 @@ export default defineNuxtConfig({
         messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
         appId: process.env.FIREBASE_APP_ID || '',
         measurementId: process.env.FIREBASE_MEASUREMENT_ID || '',
-      },
-      xaiApiKey: process.env.XAI_API_KEY || '',
+      }
     }
   },
 
