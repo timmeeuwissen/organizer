@@ -1,11 +1,34 @@
-import type { AIAnalysisResult, AIIntegrationData } from '~/types/models/aiIntegration'
+import type { AIAnalysisResult, AIIntegrationData, AIAnalysisEntity } from '~/types/models/aiIntegration'
 import type { AIProvider } from './AIProvider'
 import { useAuthStore } from '~/stores/auth'
 
+// XAI API endpoints
+const XAI_API_BASE_URL = 'https://api.xai-service.com/v1'
+const XAI_API_TEST_ENDPOINT = '/auth/test'
+const XAI_API_ANALYZE_ENDPOINT = '/analyze'
+
+// Type definitions for XAI API responses
+interface XAIEntity {
+  entity_type: string;
+  name: string;
+  confidence_score: number;
+  properties: Record<string, any>;
+}
+
+interface XAIAnalysisResponse {
+  request_id: string;
+  status: 'success' | 'error';
+  entities: XAIEntity[];
+  summary: string;
+  processing_time: number;
+}
+
 /**
- * Implementation of the XAI provider
+ * Implementation of the XAI provider API
  */
 export class XAIProvider implements AIProvider {
+  private apiKey: string;
+  
   /**
    * Constructor
    * @param integration The integration data
@@ -14,140 +37,167 @@ export class XAIProvider implements AIProvider {
     if (integration.provider !== 'xai') {
       throw new Error('Invalid provider type for XAIProvider')
     }
+    
+    this.apiKey = integration.apiKey || '';
+    if (!this.apiKey) {
+      console.warn('XAI initialized without an API key');
+    }
   }
   
   /**
-   * Test if the connection to XAI is working
+   * Test if the connection to XAI is working by validating the API key
    */
   async testConnection(): Promise<boolean> {
     try {
-      console.log(`Testing XAI connection with API key: ${this.integration.apiKey?.substring(0, 3)}...`)
+      if (!this.apiKey) {
+        console.error('Cannot test XAI connection: No API key provided');
+        return false;
+      }
       
-      // This is a placeholder for actual API testing
-      // In a real implementation, this would call the XAI API with the apiKey
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API delay
+      const response = await fetch(`${XAI_API_BASE_URL}${XAI_API_TEST_ENDPOINT}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ timestamp: new Date().toISOString() })
+      });
       
-      // For demo purposes, we'll simulate a successful connection 70% of the time
-      const success = Math.random() > 0.3
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('XAI connection test failed with status:', response.status, errorData);
+        return false;
+      }
       
-      return success
+      const data = await response.json();
+      return data.authenticated === true;
     } catch (error) {
-      console.error('XAI connection test failed:', error)
-      return false
+      console.error('XAI connection test failed:', error);
+      return false;
     }
   }
   
   /**
-   * Analyze text using XAI
+   * Analyze text using XAI API
+   * @param text The text to analyze
    */
   async analyzeText(text: string): Promise<AIAnalysisResult> {
     try {
-      console.log(`Analyzing text with XAI: ${text.substring(0, 50)}...`)
-      
-      // In a real implementation, this would call the XAI API
-      // For demo purposes, we'll return a mocked analysis result
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API delay
-      
-      // Generate a mock analysis result
-      return {
-        people: [
-          {
-            type: 'person',
-            name: 'John Smith',
-            confidence: 0.92,
-            details: {
-              firstName: 'John',
-              lastName: 'Smith',
-              email: 'john.smith@example.com',
-              organization: 'Acme Corp',
-              notes: 'Mentioned as the project leader'
-            }
-          },
-          {
-            type: 'person',
-            name: 'Sarah Johnson',
-            confidence: 0.85,
-            details: {
-              firstName: 'Sarah',
-              lastName: 'Johnson',
-              email: 'sarah.j@example.com',
-              organization: 'Client Company',
-              notes: 'Client representative'
-            }
-          }
-        ],
-        projects: [
-          {
-            type: 'project',
-            name: 'Website Redesign',
-            confidence: 0.88,
-            details: {
-              title: 'Website Redesign',
-              description: 'Complete overhaul of company website',
-              status: 'inProgress',
-              priority: 'high'
-            }
-          }
-        ],
-        tasks: [
-          {
-            type: 'task',
-            name: 'Update homepage mockups',
-            confidence: 0.78,
-            details: {
-              title: 'Update homepage mockups',
-              description: 'Incorporate feedback from last meeting',
-              status: 'todo',
-              priority: 'high',
-              dueDate: new Date(Date.now() + 86400000) // tomorrow
-            }
-          },
-          {
-            type: 'task',
-            name: 'Review content strategy',
-            confidence: 0.65,
-            details: {
-              title: 'Review content strategy',
-              description: 'Ensure alignment with brand guidelines',
-              status: 'todo',
-              priority: 'medium'
-            }
-          }
-        ],
-        behaviors: [
-          {
-            type: 'behavior',
-            name: 'Active listening',
-            confidence: 0.72,
-            details: {
-              title: 'Active listening',
-              description: 'Practice active listening in client meetings',
-              type: 'wantToDoBetter'
-            }
-          }
-        ],
-        meetings: [
-          {
-            type: 'meeting',
-            name: 'Design review',
-            confidence: 0.91,
-            details: {
-              title: 'Design review',
-              description: 'Review latest design mockups with team',
-              location: 'Conference Room A',
-              startTime: new Date(Date.now() + 172800000) // day after tomorrow
-            }
-          }
-        ],
-        summary: 'This appears to be an email about the website redesign project. John Smith is leading the effort with Sarah Johnson as the client representative. Key tasks include updating homepage mockups and reviewing content strategy. A design review meeting is scheduled soon.'
+      if (!this.apiKey) {
+        throw new Error('No API key provided for XAI analysis');
       }
+      
+      if (!text || text.trim().length === 0) {
+        throw new Error('No text provided for analysis');
+      }
+      
+      // Send request to XAI API
+      const response = await fetch(`${XAI_API_BASE_URL}${XAI_API_ANALYZE_ENDPOINT}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: text,
+          options: {
+            entities: true,
+            summary: true,
+            extract_people: true,
+            extract_projects: true,
+            extract_tasks: true,
+            extract_behaviors: true,
+            extract_meetings: true
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('XAI analysis failed with status:', response.status, errorData);
+        throw new Error(errorData.message || `XAI API error: ${response.statusText}`);
+      }
+      
+      // Parse the XAI API response
+      const data: XAIAnalysisResponse = await response.json();
+      
+      // Convert XAI API response format to our internal format
+      return this.convertXAIResponseToAnalysisResult(data);
     } catch (error) {
-      console.error('XAI analysis failed:', error)
-      throw error
+      console.error('XAI analysis failed:', error);
+      throw error;
     } finally {
       // Update the last used timestamp
-      await this.updateLastUsed()
+      await this.updateLastUsed();
     }
+  }
+  
+  /**
+   * Convert the XAI API response to our internal AIAnalysisResult format
+   */
+  private convertXAIResponseToAnalysisResult(response: XAIAnalysisResponse): AIAnalysisResult {
+    const result: AIAnalysisResult = {
+      people: [],
+      projects: [],
+      tasks: [],
+      behaviors: [],
+      meetings: [],
+      summary: response.summary || 'No summary available'
+    };
+    
+    // Process each entity from the API response
+    response.entities.forEach(entity => {
+      const baseEntity: AIAnalysisEntity = {
+        type: this.mapEntityType(entity.entity_type),
+        name: entity.name,
+        confidence: entity.confidence_score,
+        details: { ...entity.properties }
+      };
+      
+      // Add entity to appropriate category
+      switch (baseEntity.type) {
+        case 'person':
+          result.people.push(baseEntity);
+          break;
+        case 'project':
+          result.projects.push(baseEntity);
+          break;
+        case 'task':
+          result.tasks.push(baseEntity);
+          break;
+        case 'behavior':
+          result.behaviors.push(baseEntity);
+          break;
+        case 'meeting':
+          // Convert date strings to Date objects
+          if (baseEntity.details.startTime && typeof baseEntity.details.startTime === 'string') {
+            baseEntity.details.startTime = new Date(baseEntity.details.startTime);
+          }
+          if (baseEntity.details.endTime && typeof baseEntity.details.endTime === 'string') {
+            baseEntity.details.endTime = new Date(baseEntity.details.endTime);
+          }
+          result.meetings.push(baseEntity);
+          break;
+      }
+    });
+    
+    return result;
+  }
+  
+  /**
+   * Map XAI entity types to our internal types
+   */
+  private mapEntityType(xaiType: string): 'person' | 'project' | 'task' | 'behavior' | 'meeting' {
+    const typeMap: Record<string, 'person' | 'project' | 'task' | 'behavior' | 'meeting'> = {
+      'PERSON': 'person',
+      'PROJECT': 'project',
+      'TASK': 'task',
+      'BEHAVIOR': 'behavior',
+      'MEETING': 'meeting',
+      'EVENT': 'meeting' // Map EVENT to meeting
+    };
+    
+    return typeMap[xaiType.toUpperCase()] || 'task'; // Default to task if unknown
   }
   
   /**
