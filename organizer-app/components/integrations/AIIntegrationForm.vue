@@ -215,6 +215,7 @@ div.ai-integration-form
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { getProvider } from '~/utils/api/aiProviders'
 
 // Props and emits
 const props = defineProps({
@@ -415,25 +416,28 @@ async function testConnection() {
   try {
     console.log(`Testing connection for ${editedIntegration.provider} with API key ${editedIntegration.apiKey.substring(0, 3)}...`)
     
-    // This is a placeholder for actual API testing
-    // In a real implementation, we would make an API call to test the connection
-    await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate network delay
+    // Create a temporary integration object for testing
+    const tempIntegration = {
+      provider: editedIntegration.provider,
+      name: 'Test Connection',
+      apiKey: editedIntegration.apiKey,
+      enabled: true,
+      connected: false
+    }
     
-    // Simulate random success/failure (70% success rate)
-    const success = Math.random() > 0.3
+    // Get provider implementation and test connection
+    const aiProvider = getProvider(tempIntegration)
+    const success = await aiProvider.testConnection()
+    
+    // Update the connection status based on the result
+    editedIntegration.connected = success
     
     if (success) {
-      // Update the connection status in the edited integration
-      editedIntegration.connected = true
-      
       connectionStatus.value = {
         success: true,
         message: i18n.t('settings.connectionSuccessful')
       }
     } else {
-      // Update the connection status in the edited integration
-      editedIntegration.connected = false
-      
       throw new Error('Invalid API key or service unavailable')
     }
   } catch (error) {

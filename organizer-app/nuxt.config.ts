@@ -20,8 +20,7 @@ export default defineNuxtConfig({
     '~/plugins/vuetify', 
     '~/plugins/firebase',
     '~/plugins/theme',
-    '~/plugins/pinia-persistence',
-    '~/plugins/ai'
+    '~/plugins/pinia-persistence'
   ],
 
   runtimeConfig: {
