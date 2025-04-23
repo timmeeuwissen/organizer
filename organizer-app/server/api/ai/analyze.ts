@@ -34,7 +34,38 @@ export default defineEventHandler(async (event) => {
       const provider = getProvider(integration)
       
       // Call the analyzeText method on the provider
-      const result = await provider.analyzeText(body.text)
+      // But catch any updateLastUsed errors that occur due to missing Pinia store on server
+      // We'll just skip the lastUsed update since it's not critical for the analysis
+      let result;
+      try {
+        result = await provider.analyzeText(body.text)
+      } catch (analysisError: any) {
+        // Check if the error is related to Pinia/store access
+        if (analysisError.message && 
+            (analysisError.message.includes('no active Pinia') || 
+             analysisError.message.includes('getActivePinia()'))) {
+          
+          console.warn('Pinia store not available in server context, skipping lastUsed update')
+          
+          // Instead of extending, let's create a modified copy of the provider
+          // that doesn't rely on the Pinia store
+          const providerCopy = { ...provider };
+          
+          // Override just the updateLastUsed method to be a no-op
+          providerCopy.updateLastUsed = async () => {
+            return Promise.resolve();
+          };
+          
+          // Use the modified provider
+          const serverProvider = providerCopy;
+          
+          // Try again with the modified provider
+          result = await serverProvider.analyzeText(body.text)
+        } else {
+          // If it's not a Pinia error, rethrow
+          throw analysisError
+        }
+      }
       
       return {
         success: true,

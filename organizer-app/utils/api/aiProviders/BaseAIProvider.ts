@@ -165,11 +165,27 @@ export abstract class BaseAIProvider implements AIProvider {
   
   /**
    * Update the last used timestamp for this integration
+   * Safely handles both client and server contexts
    */
   async updateLastUsed(): Promise<void> {
-    const authStore = useAuthStore();
-    
     try {
+      // First check if we can access Pinia - if not, we might be in a server context
+      // This is a safety measure to prevent errors in SSR or API routes
+      let isClientContext = false;
+      try {
+        // This will throw if we're not in a client context with Pinia available
+        const { getActivePinia } = await import('pinia');
+        isClientContext = !!getActivePinia();
+      } catch (error) {
+        console.warn('Pinia not available, skipping lastUsed update (probably server context)');
+        return; // Exit early if we're in a server context
+      }
+      
+      if (!isClientContext) return;
+      
+      // We're in a client context, proceed with store operations
+      const authStore = useAuthStore();
+      
       if (!authStore.currentUser?.settings?.aiIntegrations) return;
 
       // Find the integration and update its lastUsed timestamp
@@ -189,6 +205,7 @@ export abstract class BaseAIProvider implements AIProvider {
       }
     } catch (error) {
       console.error('Error updating lastUsed timestamp:', error);
+      // Non-critical error, we can continue without updating the timestamp
     }
   }
   
