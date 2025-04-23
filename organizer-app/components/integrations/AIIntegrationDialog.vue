@@ -35,10 +35,11 @@ v-dialog(
               v-model="integration.name"
               :label="$t('ai.integrationName')"
               :rules="[rules.required]"
+              :placeholder="$t('ai.newIntegration')"
               variant="outlined"
               dense
             )
-          v-col(cols="12" md="6")
+          v-col(cols="12" md="6" class="d-flex align-center")
             v-select(
               v-model="integration.provider"
               :items="availableProviders"
@@ -46,7 +47,30 @@ v-dialog(
               :rules="[rules.required]"
               variant="outlined"
               dense
+              class="flex-grow-1 mr-2"
             )
+            v-btn(
+              icon
+              variant="text"
+              color="primary"
+              @click="toggleHelp"
+              title="Get help with API keys"
+            )
+              v-icon mdi-help-circle
+
+          v-col(cols="12" v-if="showHelp")
+            v-card(flat class="pa-3 mb-3 bg-grey-lighten-4")
+              v-card-title {{ $t('ai.helpTitle') }}
+              v-card-text
+                div(class="mb-3" style="white-space: pre-line") {{ getProviderInstructions(integration.provider) }}
+                v-btn(
+                  color="primary"
+                  variant="outlined"
+                  prepend-icon="mdi-open-in-new"
+                  @click="openProviderSite"
+                )
+                  | {{ $t('ai.visitProviderSite') }}
+          
           v-col(cols="12")
             v-text-field(
               v-model="integration.apiKey"
@@ -118,6 +142,7 @@ const success = ref('')
 const saving = ref(false)
 const testing = ref(false)
 const showPassword = ref(false)
+const showHelp = ref(false)
 const i18n = useI18n()
 
 // Available provider types
@@ -160,7 +185,7 @@ watch(() => props.modelValue, (newVal) => {
       // Create new integration with defaults
       Object.assign(integration, {
         provider: 'openai',
-        name: i18n.t('ai.newIntegration'),
+        name: '',
         apiKey: '',
         enabled: true,
         connected: false,
@@ -275,5 +300,47 @@ function close() {
   
   // Close dialog
   dialogVisible.value = false
+}
+
+// Toggle help section visibility
+function toggleHelp() {
+  showHelp.value = !showHelp.value
+}
+
+// Get provider-specific instructions
+function getProviderInstructions(provider) {
+  switch (provider) {
+    case 'openai':
+      return i18n.t('ai.openaiInstructions')
+    case 'gemini':
+      return i18n.t('ai.geminiInstructions')
+    case 'xai':
+      return i18n.t('ai.xaiInstructions')
+    default:
+      return ''
+  }
+}
+
+// Open provider site in a new window
+function openProviderSite() {
+  let url = ''
+  
+  switch (integration.provider) {
+    case 'openai':
+      url = i18n.t('ai.openaiUrl')
+      break
+    case 'gemini':
+      url = i18n.t('ai.geminiUrl')
+      break
+    case 'xai':
+      url = i18n.t('ai.xaiUrl')
+      break
+    default:
+      return
+  }
+  
+  if (url) {
+    window.open(url, '_blank')
+  }
 }
 </script>

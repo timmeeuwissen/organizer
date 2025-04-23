@@ -525,6 +525,17 @@ export default {
     selectIntegrationType: 'Select Integration Type',
     integrationDetails: 'Integration Details',
     cancelAddIntegration: 'Cancel',
-    saveIntegration: 'Save Integration'
+    saveIntegration: 'Save Integration',
+    // Help text and instructions
+    helpTitle: 'How to get an API key',
+    visitProviderSite: 'Visit Provider Website',
+    // Provider-specific setup instructions
+    openaiInstructions: '1. Sign up or sign in at OpenAI.com\n2. Navigate to API keys section in your account\n3. Create a new API key\n4. Copy and paste the API key here',
+    geminiInstructions: '1. Sign up or sign in to Google AI Studio\n2. Go to API keys section\n3. Create a new API key\n4. Copy and paste the API key here',
+    xaiInstructions: '1. Sign up or sign in at x.ai\n2. Navigate to your profile settings\n3. Go to API section and generate a new key\n4. Copy and paste the API key here',
+    // Provider URLs
+    openaiUrl: 'https://platform.openai.com/account/api-keys',
+    geminiUrl: 'https://aistudio.google.com/app/apikey',
+    xaiUrl: 'https://x.ai'
   }
 };
