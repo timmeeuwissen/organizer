@@ -470,9 +470,16 @@ export const usePeopleStore = defineStore({
           // Prepare update data - convert to a plain object
           const { id, ...updateData } = contact
           
-          // Handle timestamps
+          // Handle timestamps and convert any undefined values to null
           const firestoreData = {
             ...updateData,
+            // Convert undefined values to null for Firestore
+            phone: updateData.phone ?? null,
+            email: updateData.email ?? null,
+            organization: updateData.organization ?? null,
+            role: updateData.role ?? null,
+            team: updateData.team ?? null,
+            notes: updateData.notes ?? null,
             updatedAt: serverTimestamp()
           }
           
@@ -484,9 +491,16 @@ export const usePeopleStore = defineStore({
           // Extract ID and prepare data
           const { id, ...contactData } = contact
           
-          // Convert dates to Firestore timestamps
+          // Convert dates to Firestore timestamps and undefined values to null
           const firestoreData = {
             ...contactData,
+            // Convert undefined values to null for Firestore
+            phone: contactData.phone ?? null,
+            email: contactData.email ?? null,
+            organization: contactData.organization ?? null,
+            role: contactData.role ?? null,
+            team: contactData.team ?? null,
+            notes: contactData.notes ?? null,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           }

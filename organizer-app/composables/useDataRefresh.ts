@@ -133,8 +133,14 @@ export function useDataRefresh() {
               }
               
               // Refresh contacts data
-              await peopleStore.fetchContactsFromProvider(account)
-              succeededCount++
+              try {
+                await peopleStore.fetchContactsFromProvider(account)
+                succeededCount++
+              } catch (contactError) {
+                console.error(`Error in contact provider for ${account.oauthData.email}:`, contactError)
+                // Continue with other operations even if contact sync fails
+                failedCount++
+              }
             } catch (error) {
               console.error(`Error refreshing contacts for ${account.oauthData.email}:`, error)
               failedCount++

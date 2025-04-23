@@ -211,13 +211,13 @@ export class GoogleContactsProvider implements ContactProvider {
       
       // Apply additional filters that can't be applied in the API request
       if (query?.organization) {
-        contacts = contacts.filter(contact => 
+        contacts = contacts.filter((contact: Person) => 
           contact.organization?.toLowerCase().includes(query.organization!.toLowerCase())
         )
       }
 
       if (query?.tags && query.tags.length > 0) {
-        contacts = contacts.filter(contact => {
+        contacts = contacts.filter((contact: Person) => {
           if (!contact.tags) return false
           return query.tags?.some(tag => contact.tags?.includes(tag))
         })
@@ -294,7 +294,6 @@ export class GoogleContactsProvider implements ContactProvider {
       const endpoint = 'https://people.googleapis.com/v1/people:createContact'
       
       // Prepare the contact data in Google People API format
-      // Create contact data in Google People API format
       const firstName = contact.firstName as string | undefined;
       const lastName = contact.lastName as string | undefined;
       const email = contact.email as string | undefined;
@@ -597,11 +596,11 @@ export class GoogleContactsProvider implements ContactProvider {
     const id = resourceName.split('/').pop() || ''
     const firstName = googleContact.names?.[0]?.givenName || ''
     const lastName = googleContact.names?.[0]?.familyName || ''
-    const email = googleContact.emailAddresses?.[0]?.value
-    const phone = googleContact.phoneNumbers?.[0]?.value
-    const organization = googleContact.organizations?.[0]?.name
-    const role = googleContact.organizations?.[0]?.title
-    const notes = googleContact.biographies?.[0]?.value
+    const email = googleContact.emailAddresses?.[0]?.value || null
+    const phone = googleContact.phoneNumbers?.[0]?.value || null
+    const organization = googleContact.organizations?.[0]?.name || null
+    const role = googleContact.organizations?.[0]?.title || null
+    const notes = googleContact.biographies?.[0]?.value || null
     
     // Extract any tags/labels from Google's contact
     const tags = googleContact.memberships?.map((membership: Record<string, any>) => 
