@@ -3,17 +3,12 @@ import { BaseAIProvider } from './BaseAIProvider'
 
 // OpenAI API endpoints
 // Use the server proxy for external APIs to avoid CORS issues
-const USE_PROXY = true
 const OPENAI_API_BASE_URL = 'https://api.openai.com/v1'
 const OPENAI_MODELS_ENDPOINT = '/models'
 const OPENAI_CHAT_ENDPOINT = '/chat/completions'
 
 // Helper to get the API URL, either direct or through proxy
 function getApiUrl(endpoint: string): string {
-  if (USE_PROXY) {
-    // Use the server's proxy endpoint
-    return `/api/proxy?url=${encodeURIComponent(`${OPENAI_API_BASE_URL}${endpoint}`)}`
-  }
   return `${OPENAI_API_BASE_URL}${endpoint}`
 }
 

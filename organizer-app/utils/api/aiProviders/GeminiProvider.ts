@@ -3,17 +3,12 @@ import { BaseAIProvider } from './BaseAIProvider'
 
 // Gemini API endpoints
 // Use the server proxy for external APIs to avoid CORS issues
-const USE_PROXY = true
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta'
 const GEMINI_MODEL = 'models/gemini-pro' // Using Gemini Pro model
 const GEMINI_GENERATE_CONTENT = `/${GEMINI_MODEL}:generateContent`
 
 // Helper to get the API URL, either direct or through proxy
 function getApiUrl(endpoint: string): string {
-  if (USE_PROXY) {
-    // Use the server's proxy endpoint
-    return `/api/proxy?url=${encodeURIComponent(`${GEMINI_API_BASE_URL}${endpoint}`)}`
-  }
   return `${GEMINI_API_BASE_URL}${endpoint}`
 }
 

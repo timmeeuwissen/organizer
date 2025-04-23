@@ -3,17 +3,12 @@ import { BaseAIProvider } from './BaseAIProvider'
 
 // Grok API endpoints from xAI
 // Use the server proxy for external APIs to avoid CORS issues
-const USE_PROXY = true
 const GROK_API_BASE_URL = 'https://api.x.ai/v1'
-const GROK_API_AUTH_ENDPOINT = '/auth/validate'
+const GROK_API_AUTH_ENDPOINT = '/models'
 const GROK_API_COMPLETION_ENDPOINT = '/chat/completions'
 
 // Helper to get the API URL, either direct or through proxy
 function getApiUrl(endpoint: string): string {
-  if (USE_PROXY) {
-    // Use the server's proxy endpoint
-    return `/api/proxy?url=${encodeURIComponent(`${GROK_API_BASE_URL}${endpoint}`)}`
-  }
   return `${GROK_API_BASE_URL}${endpoint}`
 }
 
@@ -71,12 +66,11 @@ export class XAIProvider extends BaseAIProvider {
       }
       
       const response = await fetch(getApiUrl(GROK_API_AUTH_ENDPOINT), {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ timestamp: new Date().toISOString() })
+        }
       });
       
       if (!response.ok) {
