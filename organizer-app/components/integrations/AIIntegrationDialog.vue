@@ -274,6 +274,14 @@ async function save() {
     }
   }
   
+  if (!integration.connected) {
+    await testIntegration()
+    if (!integration.connected) {
+      console.error('no valid connection established, cannot save')
+      return
+    }
+  }
+
   if (!integration.name) {
     error.value = i18n.t('ai.missingName')
     console.error('missing integration name')

@@ -8,6 +8,30 @@ v-dialog(
     v-card-title
       | {{ $t('ai.analyzeText') }}
       v-spacer
+      
+      // Display selected AI provider in top-right
+      template(v-if="availableIntegrations.length > 0")
+        v-select(
+          v-if="availableIntegrations.length > 1"
+          v-model="selectedIntegration"
+          :items="availableIntegrations"
+          item-title="name"
+          item-value="id"
+          return-object
+          density="compact"
+          variant="plain"
+          hide-details
+          class="max-width-200 mr-2"
+        )
+        v-chip(
+          v-else
+          color="primary"
+          size="small"
+          class="mr-2"
+        ) 
+          v-icon(start) {{ getProviderIcon(availableIntegrations[0].provider) }}
+          | {{ availableIntegrations[0].name }}
+      
       v-btn(icon @click="close")
         v-icon mdi-close
     
@@ -547,18 +571,24 @@ const i18n = useI18n()
 // Computed
 const user = computed(() => authStore.currentUser)
 
-const availableProviders = computed(() => {
+// Get all available AI integrations (enabled ones only)
+const availableIntegrations = computed(() => {
   if (!user.value?.settings?.aiIntegrations) return []
   
   return user.value.settings.aiIntegrations
-    .filter(integration => integration.enabled)
-    .map(integration => ({
-      text: integration.name,
-      value: integration.provider
-    }))
+    .filter(integration => integration.enabled && integration.apiKey)
 })
 
-const selectedProvider = ref('')
+// For backward compatibility with existing code
+const availableProviders = computed(() => {
+  return availableIntegrations.value.map(integration => ({
+    text: integration.name,
+    value: integration.provider
+  }))
+})
+
+// Selected integration ref (the whole integration object)
+const selectedIntegration = ref(null)
 
 // Status and type options for entities
 const projectStatusOptions = [
@@ -592,13 +622,27 @@ const behaviorTypeOptions = [
   'needToImprove'
 ]
 
+// Helper function to get provider icon
+function getProviderIcon(provider) {
+  switch (provider) {
+    case 'openai':
+      return 'mdi-brain'
+    case 'gemini':
+      return 'mdi-google'
+    case 'xai':
+      return 'mdi-robot'
+    default:
+      return 'mdi-api'
+  }
+}
+
 // Watch for dialog visibility change
 watch(() => props.modelValue, (newVal) => {
   dialogVisible.value = newVal
   
-  // Set default provider when dialog opens
-  if (newVal && availableProviders.value.length > 0) {
-    selectedProvider.value = availableProviders.value[0].value
+  // Initialize the selected integration when dialog opens
+  if (newVal && availableIntegrations.value.length > 0) {
+    selectedIntegration.value = availableIntegrations.value[0]
   }
 })
 
@@ -607,36 +651,53 @@ watch(() => dialogVisible.value, (newVal) => {
 })
 
 // Methods
+// Add CSS for max-width to style scope
+const style = document.createElement('style')
+style.textContent = `
+.max-width-200 {
+  max-width: 200px;
+}
+`
+document.head.appendChild(style)
+
 async function analyzeText() {
-  if (!textToAnalyze.value) return
+  console.log('user asks to analyze the text')
+  if (!textToAnalyze.value) {
+    console.error('nothing to analyze')
+    return
+  }
   
   isAnalyzing.value = true
   error.value = ''
   
   try {
-    // Get the selected provider ID
-    const providerId = selectedProvider.value
+    // Get the selected integration
+    const integration = selectedIntegration.value
     
-    if (!providerId) {
-      throw new Error('No AI provider selected')
+    if (!integration) {
+      throw new Error('No AI integration selected')
     }
     
     // Use the API directly from the server rather than going through client-side providers
     try {
+      console.log('requesting server to analyze')
+      console.log('Selected integration:', integration.name)
+
       // Call the server-side API endpoint to analyze the text
-      const { result } = await $fetch('/api/ai/analyze', {
+      const response = await $fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authStore.token}`
         },
         body: {
-          providerId,
+          integration: integration, // Send the full integration object
           text: textToAnalyze.value
         }
       })
       
       // Update the analysis result
-      analysisResult.value = result
+      analysisResult.value = response.result
+      console.log('the server responded with the following message:' , response)
     } catch (fetchErr) {
       console.error('AI analysis fetch error:', fetchErr)
       throw new Error(fetchErr.message || 'Failed to analyze text')

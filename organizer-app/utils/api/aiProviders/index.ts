@@ -33,6 +33,7 @@ export function getProvider(integration: AIIntegrationData): AIProvider {
  * @returns True if the integration is valid and can be used
  */
 export function isValidAIIntegration(integration: AIIntegrationData): boolean {
+  console.log(integration)
   return (
     integration &&
     integration.enabled &&
