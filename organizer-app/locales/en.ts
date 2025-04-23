@@ -128,7 +128,9 @@ export default {
     changeColor: 'Change Color',
     provider: {
       info: 'Provider Information'
-    }
+    },
+    enabled: 'Enabled',
+    disabled: 'Disabled'
   },
   integrations: {
     reauthorizeNeeded: 'Reauthorization Required',

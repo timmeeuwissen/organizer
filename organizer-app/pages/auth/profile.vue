@@ -710,7 +710,7 @@ function removeAIIntegration(index) {
 }
 
 // Save AI Integration from dialog
-function saveAIIntegration(integration) {
+async function saveAIIntegration(integration) {
   console.log('Saving AI integration:', integration)
   
   // Check if this is an update or new integration
@@ -724,6 +724,29 @@ function saveAIIntegration(integration) {
   } else {
     // Add new integration
     aiIntegrationsInput.value.push(integration)
+  }
+  
+  // Save changes to database immediately
+  isSaving.value = true
+  errorMsg.value = ''
+  successMsg.value = ''
+  
+  try {
+    // Update settings in Firestore
+    await updateUserSettings()
+    
+    successMsg.value = existingIndex >= 0
+      ? i18n.t('ai.aiIntegrationUpdated')
+      : i18n.t('ai.aiIntegrationAdded')
+    
+    setTimeout(() => {
+      successMsg.value = ''
+    }, 3000)
+  } catch (err) {
+    errorMsg.value = err.message || i18n.t('ai.saveError')
+    console.error('AI integration save error:', err)
+  } finally {
+    isSaving.value = false
   }
 }
 

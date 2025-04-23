@@ -229,22 +229,28 @@ async function testIntegration() {
   success.value = ''
   
   try {
-    // Create a properly typed integration object
-    const typedIntegration = {
-      ...integration,
+    // Create a payload with the integration details
+    const payload = {
       provider: integration.provider,
-      connected: true
+      apiKey: integration.apiKey
     }
     
-    // Get the provider implementation and test the connection
-    const provider = getProvider(typedIntegration)
-    const result = await provider.testConnection()
+    // Call the application's API endpoint to test the token
+    const response = await fetch('/api/ai/test-integration', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
     
-    if (result) {
+    const result = await response.json()
+    
+    if (response.ok && result.success) {
       success.value = i18n.t('ai.connectionSuccessful')
       integration.connected = true
     } else {
-      error.value = i18n.t('ai.connectionFailed')
+      error.value = result.error || i18n.t('ai.connectionFailed')
       integration.connected = false
     }
   } catch (err) {
@@ -257,29 +263,39 @@ async function testIntegration() {
 }
 
 // Save the integration
-function save() {
+async function save() {
+  console.log('User asks for save')
   // Validate form
-  if (form.value && !form.value.validate().valid) {
-    return
+  if (form.value) {
+    const validation = await form.value.validate()
+    if (!validation.valid) {
+      console.error('Form not valid', validation)
+      return
+    }
   }
   
   if (!integration.name) {
     error.value = i18n.t('ai.missingName')
+    console.error('missing integration name')
     return
   }
   
   if (integration.enabled && !integration.apiKey) {
     error.value = i18n.t('ai.missingApiKeyEnabled')
+    console.error('Missing API-key')
     return
   }
   
   saving.value = true
   
   try {
+    console.log('attempting to save')
+
     // Update the integration's updatedAt timestamp
     integration.updatedAt = new Date()
     
     // Emit save event with deep copy of integration
+    console.log('emitting save state')
     emit('save', JSON.parse(JSON.stringify(integration)))
     
     // Close dialog after successful save
