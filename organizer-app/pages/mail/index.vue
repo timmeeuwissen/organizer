@@ -1,5 +1,7 @@
 <template lang="pug">
 v-container(fluid)
+  // Google reauthorization manager
+  GoogleReauthManager
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('mail.title') }}
@@ -305,6 +307,7 @@ import { useAuthStore } from '~/stores/auth'
 import type { Person, IntegrationAccount } from '~/types/models'
 import type { Email, MailFolder, EmailPerson, EmailAttachment } from '~/stores/mail'
 import { getAccountStatusMessage, getAccountStatusColor } from '~/utils/api/emailUtils'
+import GoogleReauthManager from '~/components/mail/GoogleReauthManager.vue'
 
 // Stores
 const peopleStore = usePeopleStore()

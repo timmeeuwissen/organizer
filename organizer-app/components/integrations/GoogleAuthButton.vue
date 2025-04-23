@@ -59,15 +59,6 @@ async function handleGoogleAuth() {
     const auth = getAuth()
     const provider = new GoogleAuthProvider()
     
-    // Set client ID if available from environment variables
-    const clientId = process.env.GOOGLE_CLIENT_ID
-    if (clientId) {
-      console.log('Using client ID from environment variables')
-      provider.setCustomParameters({
-        client_id: clientId
-      })
-    }
-    
     // Add scopes for Google services we need access to
     // Gmail scopes - adding multiple scopes to ensure access
     provider.addScope('https://www.googleapis.com/auth/gmail.readonly')
@@ -80,13 +71,25 @@ async function handleGoogleAuth() {
     provider.addScope('https://www.googleapis.com/auth/contacts.readonly')
     provider.addScope('https://www.googleapis.com/auth/tasks.readonly')
     
-    // Request access type for refresh token
-    provider.setCustomParameters({
+    // Set all custom parameters in one call to avoid overwriting
+    const customParams = {
       // This forces a refresh token to be returned
       access_type: 'offline',
       // This ensures we always get a refresh token (not just first time)
       prompt: 'consent'
-    })
+    }
+    
+    // Add client ID if available from environment variables
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    if (clientId) {
+      console.log('Using client ID from environment variables')
+      customParams.client_id = clientId
+    }
+    
+    // Apply all custom parameters at once
+    provider.setCustomParameters(customParams)
+    
+    console.log('Setting Google auth parameters:', customParams)
     
     // Perform popup-based OAuth authentication
     const result = await signInWithPopup(auth, provider)
@@ -103,18 +106,19 @@ async function handleGoogleAuth() {
       accessToken: credential.accessToken
     })
     
-    // Google doesn't provide refresh tokens via Firebase popup auth
-    // We need to directly interact with Google's OAuth endpoints with 'server-side' code
+    // Check for stsTokenManager which contains refresh token in newer Firebase versions
+    const refreshToken = user.stsTokenManager?.refreshToken || credential.idToken
+    console.log('Found refresh token?', !!refreshToken)
     
     // Create tokens object to match the format expected by parent components
     const tokens = {
       accessToken: credential.accessToken,
-      refreshToken: user.refreshToken, // Use fixed token for debugging
+      refreshToken, // Use refresh token from Firebase auth
       userId: user.uid,
       email: user.email,
       provider: 'google',
       tokenExpiry: new Date(Date.now() + 3600 * 1000), // 1 hour expiry
-      idToken: user.uid
+      idToken: credential.idToken || user.uid
     }
     
     // Log tokens being passed

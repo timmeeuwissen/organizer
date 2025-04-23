@@ -2,6 +2,7 @@ import type { IntegrationAccount } from '~/types/models'
 import { hasValidOAuthTokens, refreshOAuthToken, updateAccountInStore } from '../core/oauthUtils'
 import { makeApiRequest, ApiError } from '../core/apiUtils'
 import type { ApiRequestOptions } from '../core/apiUtils'
+import { markAccountForReauth } from '../mailProviders/googleAuthUtils'
 
 /**
  * Base provider class with common functionality for all integration providers
@@ -98,6 +99,19 @@ export abstract class BaseProvider {
             log(`Received ${status} error (try ${retryCount}/${maxRetries}), refreshing token and retrying`);
             
             try {
+              // Log the token info for debugging
+              log(`Token refresh attempt for ${provider} account: ${email}`);
+              log(`Access token exists: ${!!this.account.oauthData.accessToken}`);
+              log(`Refresh token exists: ${!!this.account.oauthData.refreshToken}`);
+              
+              if (this.account.oauthData.refreshToken) {
+                log(`Refresh token length: ${this.account.oauthData.refreshToken.length}`);
+                // Only show a few characters for security
+                const firstChars = this.account.oauthData.refreshToken.substring(0, 5);
+                const lastChars = this.account.oauthData.refreshToken.substring(this.account.oauthData.refreshToken.length - 5);
+                log(`Refresh token: ${firstChars}...${lastChars}`);
+              }
+              
               // Force token refresh regardless of current token state
               this.account = await refreshOAuthToken(this.account);
               log(`Token refreshed successfully, retrying request`);
@@ -107,6 +121,14 @@ export abstract class BaseProvider {
                 ? refreshError.message 
                 : String(refreshError);
               log(`Token refresh failed: ${errorMessage}`);
+              
+              // Check if this is a Google account with an invalid_grant error
+              if (provider === 'google' && errorMessage.includes('invalid_grant')) {
+                // Use the markAccountForReauth utility to flag this account
+                markAccountForReauth(this.account);
+                log(`Marked ${email} account for reauthorization due to invalid_grant error`);
+              }
+              
               throw new Error(`Authentication error: Token refresh failed - ${errorMessage}`);
             }
           }

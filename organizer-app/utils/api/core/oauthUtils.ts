@@ -151,6 +151,35 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
     if (!response.ok) {
       const errorData = await response.json()
       console.error(`[OAuth] Token refresh failed for ${account.oauthData.email}:`, errorData)
+      
+      // Handle specific error cases
+      if (errorData.error === 'invalid_grant') {
+        // This indicates the refresh token is expired or revoked
+        // Mark the account as disconnected so the UI can prompt for re-auth
+        const updatedAccount = {
+          ...account,
+          oauthData: {
+            ...account.oauthData,
+            connected: false,
+            updatedAt: new Date()
+          }
+        };
+        
+        // Update in store to reflect disconnected status
+        updateAccountInStore(updatedAccount)
+        
+        // Mark this account for reauthorization
+        try {
+          const { markAccountForReauth } = await import('../mailProviders/googleAuthUtils')
+          markAccountForReauth(account)
+        } catch (importError) {
+          console.error('Failed to import googleAuthUtils:', importError)
+        }
+        
+        throw new Error(`Your Google account authorization has expired or been revoked. Please re-authorize your account.`)
+      }
+      
+      // General error handling for other cases
       throw new Error(`Token refresh failed: ${JSON.stringify(errorData)}`)
     }
     

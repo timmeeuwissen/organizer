@@ -3,6 +3,7 @@ import type { Email, EmailPerson } from '~/stores/mail'
 import { BaseMailProvider } from './BaseMailProvider'
 import type { EmailQuery, EmailPagination, EmailFetchResult } from './MailProvider'
 import { parseEmailAddress, decodeBase64UrlContent } from '~/utils/api/core/emailUtils'
+import { markAccountForReauth } from './googleAuthUtils'
 
 /**
  * Gmail provider implementation

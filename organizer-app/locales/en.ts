@@ -130,6 +130,14 @@ export default {
       info: 'Provider Information'
     }
   },
+  integrations: {
+    reauthorizeNeeded: 'Reauthorization Required',
+    googleTokenExpired: 'Your Google account authorization has expired or been revoked.',
+    reauthorizeInstructions: 'To continue using Gmail features, please reauthorize your account by clicking the button below.',
+    reauthorize: 'Reauthorize Google Account',
+    authorizationError: 'Authorization Error',
+    authorizationSuccess: 'Account successfully reauthorized'
+  },
   behaviors: {
     title: 'Behaviors',
     add: 'Add Behavior',
