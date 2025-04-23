@@ -47,9 +47,7 @@ v-app
             v-list-item-title {{ item.title }}
     
     // AI button - only shown if AI integrations are enabled
-    template(v-if="hasEnabledAiIntegrations")
-      v-btn(icon @click="showAiDialog = true" :title="$t('ai.analyze')")
-        v-icon mdi-brain
+    AIButton
     
     v-btn(icon @click="toggleTheme")
       v-icon {{ isDarkTheme ? 'mdi-weather-sunny' : 'mdi-weather-night' }}
@@ -173,6 +171,7 @@ import BehaviorForm from '~/components/behaviors/BehaviorForm.vue'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import AIAnalysisDialog from '~/components/ai/AIAnalysisDialog.vue'
+import AIButton from '~/components/ai/AIButton.vue'
 
 const i18n = useI18n()
 const theme = useTheme()

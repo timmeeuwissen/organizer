@@ -1,90 +1,62 @@
-// AI Integration type definitions
+/**
+ * AI Integration models and types
+ */
 
 /**
- * AI Integration Data
- * Represents configuration for an AI integration provider like XAI, OpenAI, or Gemini
+ * AI provider types supported by the application
+ */
+export type AIProviderType = 'openai' | 'gemini' | 'xai';
+
+/**
+ * Data about an AI integration - stored in user settings
  */
 export interface AIIntegrationData {
-  // Provider identifier
-  provider: 'xai' | 'openai' | 'gemini';
-  
-  // Display name for the integration
+  /** The provider type */
+  provider: AIProviderType;
+  /** Display name for the integration */
   name: string;
-  
-  // API Key (not needed for XAI as it's internal)
-  apiKey?: string;
-  
-  // Whether this integration is enabled
+  /** API key for authentication */
+  apiKey: string;
+  /** Whether this integration is enabled */
   enabled: boolean;
-  
-  // Whether this integration is connected successfully
+  /** Whether this integration is successfully connected */
   connected: boolean;
-  
-  // Timestamps
-  createdAt?: Date;
-  updatedAt?: Date;
+  /** Last time this integration was used */
   lastUsed?: Date;
+  /** When this integration was created */
+  createdAt?: Date;
+  /** When this integration was last updated */
+  updatedAt?: Date;
 }
 
 /**
- * AI Analysis Entity
- * Represents an entity recognized by AI in text analysis
+ * A single entity extracted by AI analysis
  */
 export interface AIAnalysisEntity {
-  // Type of entity
+  /** The type of entity */
   type: 'person' | 'project' | 'task' | 'behavior' | 'meeting';
-  
-  // Name or title of the entity
+  /** The name of the entity */
   name: string;
-  
-  // Confidence score (0-1) that this entity was correctly identified
+  /** Confidence score (0-1) */
   confidence: number;
-  
-  // Detailed properties for this entity
-  details: {
-    // Common fields
-    title?: string;
-    description?: string;
-    
-    // Person-specific fields
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    organization?: string;
-    notes?: string;
-    
-    // Project-specific fields
-    status?: string;
-    priority?: string;
-    
-    // Task-specific fields
-    dueDate?: Date;
-    
-    // Behavior-specific fields
-    type?: string;
-    
-    // Meeting-specific fields
-    location?: string;
-    startTime?: Date;
-    endTime?: Date;
-    
-    // Any other properties
-    [key: string]: any;
-  };
+  /** Additional details about the entity */
+  details: Record<string, any>;
 }
 
 /**
- * AI Analysis Result
- * Complete result returned from an AI text analysis
+ * Result of AI analysis on text
  */
 export interface AIAnalysisResult {
-  // Identified entities by type
+  /** People extracted from the text */
   people: AIAnalysisEntity[];
+  /** Projects extracted from the text */
   projects: AIAnalysisEntity[];
+  /** Tasks extracted from the text */
   tasks: AIAnalysisEntity[];
+  /** Behaviors extracted from the text */
   behaviors: AIAnalysisEntity[];
+  /** Meetings extracted from the text */
   meetings: AIAnalysisEntity[];
-  
-  // Overall text summary
+  /** Summary of the text */
   summary: string;
 }

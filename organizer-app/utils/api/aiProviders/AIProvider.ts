@@ -1,24 +1,25 @@
 import type { AIAnalysisResult, AIIntegrationData } from '~/types/models/aiIntegration'
 
 /**
- * Base interface for AI providers
+ * Interface for AI Providers (OpenAI, Gemini, Grok/XAI)
+ * All AI provider implementations must implement this interface
  */
 export interface AIProvider {
   /**
-   * The integration data for this provider
+   * The integration data used to initialize this provider
    */
   integration: AIIntegrationData;
   
   /**
-   * Test if the connection to the AI provider is working
-   * @returns Promise that resolves to a boolean indicating if the connection was successful
+   * Test the connection to the AI provider
+   * @returns Promise that resolves to true if connection is successful, false otherwise
    */
   testConnection(): Promise<boolean>;
   
   /**
-   * Analyze text to extract entities and generate a summary
+   * Analyze text using the AI provider
    * @param text The text to analyze
-   * @returns Promise that resolves to an AIAnalysisResult
+   * @returns Promise that resolves to the analysis result
    */
   analyzeText(text: string): Promise<AIAnalysisResult>;
   

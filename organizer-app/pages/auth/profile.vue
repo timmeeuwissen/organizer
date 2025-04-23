@@ -82,11 +82,68 @@ v-container
       
       // AI integrations
       v-card(class="mt-4")
-        v-card-text
-          AIIntegrationForm(
-            v-model="aiIntegrationsInput" 
-            @update:modelValue="handleAIIntegrationsChange"
+        v-card-title 
+          | {{ $t('ai.manageAIIntegrations') }}
+          v-spacer
+          v-btn(
+            color="primary" 
+            icon
+            @click="openAIIntegrationDialog()"
+            :disabled="isSaving"
           )
+            v-icon mdi-plus
+        
+        v-card-text
+          template(v-if="aiIntegrationsInput.length === 0")
+            v-alert(type="info" variant="tonal")
+              | {{ $t('ai.noAIIntegrations') }}
+              div.text-center.mt-3
+                v-btn(
+                  color="primary"
+                  @click="openAIIntegrationDialog()"
+                  :disabled="isSaving"
+                ) {{ $t('ai.addYourFirstAIIntegration') }}
+          
+          template(v-else)
+            v-list
+              v-list-item(
+                v-for="(integration, index) in aiIntegrationsInput"
+                :key="index"
+                :active="false"
+              )
+                template(v-slot:prepend)
+                  v-avatar(:color="getIntegrationColor(integration.provider)")
+                    v-icon(color="white") {{ getIntegrationIcon(integration.provider) }}
+                
+                v-list-item-title {{ integration.name }}
+                
+                v-list-item-subtitle
+                  | {{ getProviderName(integration.provider) }}
+                  v-chip(
+                    :color="integration.enabled ? 'success' : 'error'"
+                    size="x-small"
+                    class="ml-2"
+                  ) {{ integration.enabled ? $t('settings.enabled') : $t('settings.disabled') }}
+                
+                template(v-slot:append)
+                  v-btn(
+                    icon
+                    variant="text"
+                    size="small"
+                    @click="openAIIntegrationDialog(integration, index)"
+                    :title="$t('common.edit')"
+                  )
+                    v-icon mdi-pencil
+                  
+                  v-btn(
+                    icon
+                    variant="text"
+                    size="small"
+                    color="error"
+                    @click="removeAIIntegration(index)"
+                    :title="$t('common.delete')"
+                  )
+                    v-icon mdi-delete
       
       // External service integrations
       v-card(class="mt-4")
@@ -205,9 +262,15 @@ v-container
           @click="deleteIntegrationAccount"
           :loading="isDeletingAccount"
         ) {{ $t('common.delete') }}
+  // AI Integration dialog
+  AIIntegrationDialog(
+    v-model="showAIIntegrationDialog"
+    :integrationData="selectedAIIntegration"
+    @save="saveAIIntegration"
+  )
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useI18n } from 'vue-i18n'
@@ -216,7 +279,7 @@ import { useNetworkStatus } from '~/composables/useNetworkStatus'
 import { getAuth, updateProfile } from 'firebase/auth'
 import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import IntegrationAccountDialog from '~/components/integrations/IntegrationAccountDialog.vue'
-import AIIntegrationForm from '~/components/integrations/AIIntegrationForm.vue'
+import AIIntegrationDialog from '~/components/integrations/AIIntegrationDialog.vue'
 import { v4 as uuidv4 } from 'uuid'
 
 // Component state
@@ -252,6 +315,10 @@ const showIntegrationDialog = ref(false)
 const selectedIntegrationAccount = ref(null)
 const integrationErrorMsg = ref('')
 const integrationSuccessMsg = ref('')
+
+// AI integration
+const showAIIntegrationDialog = ref(false)
+const selectedAIIntegration = ref(null)
 
 // Delete dialog
 const showDeleteDialog = ref(false)
@@ -573,11 +640,103 @@ function handleSettingsChange() {
   updateUserSettings()
 }
 
+// AI Integration helpers
+function getIntegrationColor(provider) {
+  switch (provider) {
+    case 'openai':
+      return '#10a37f' // OpenAI green
+    case 'gemini':
+      return '#4285F4' // Google blue
+    case 'xai':
+      return '#7b3dbd' // Purple for XAI
+    default:
+      return '#607D8B' // Default gray
+  }
+}
+
+function getIntegrationIcon(provider) {
+  switch (provider) {
+    case 'openai':
+      return 'mdi-brain'
+    case 'gemini':
+      return 'mdi-google'
+    case 'xai':
+      return 'mdi-robot'
+    default:
+      return 'mdi-api'
+  }
+}
+
+function getProviderName(provider) {
+  switch (provider) {
+    case 'openai':
+      return 'OpenAI'
+    case 'gemini':
+      return 'Google Gemini'
+    case 'xai':
+      return 'XAI (Grok)'
+    default:
+      return provider
+  }
+}
+
+// Show AI Integration dialog
+function openAIIntegrationDialog(integration = null, index = -1) {
+  if (integration) {
+    // Edit existing integration - clone to avoid direct mutations
+    selectedAIIntegration.value = JSON.parse(JSON.stringify(integration))
+  } else {
+    // Create a new integration with default values
+    const now = new Date()
+    selectedAIIntegration.value = {
+      provider: 'openai',
+      name: i18n.t('ai.newIntegration'),
+      apiKey: '',
+      enabled: true,
+      connected: false,
+      createdAt: now
+    }
+  }
+  
+  // Show the dialog
+  showAIIntegrationDialog.value = true
+}
+
+// Remove AI Integration
+function removeAIIntegration(index) {
+  if (index >= 0 && index < aiIntegrationsInput.value.length) {
+    aiIntegrationsInput.value.splice(index, 1)
+  }
+}
+
+// Save AI Integration from dialog
+function saveAIIntegration(integration) {
+  console.log('Saving AI integration:', integration)
+  
+  // Check if this is an update or new integration
+  const existingIndex = aiIntegrationsInput.value.findIndex(
+    i => i.provider === integration.provider && i.apiKey === integration.apiKey
+  )
+  
+  if (existingIndex >= 0) {
+    // Update existing integration
+    aiIntegrationsInput.value[existingIndex] = integration
+  } else {
+    // Add new integration
+    aiIntegrationsInput.value.push(integration)
+  }
+}
+
 // Specific handler for AI integrations changes
 function handleAIIntegrationsChange(integrations) {
   console.log('AI integrations changed, will update in Firestore:', integrations)
-  // Update immediately in Firestore when AI integrations change
-  updateUserSettings()
+  
+  // Store the integrations in the local state but don't immediately save to Firestore
+  // This prevents unnecessary updates and recursive calls
+  aiIntegrationsInput.value = integrations
+  
+  // Setting this flag will make the Save button active
+  // User can then choose when to save the changes to Firestore
 }
 
 async function updateUserSettings() {

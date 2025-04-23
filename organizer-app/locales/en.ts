@@ -494,6 +494,29 @@ export default {
     // Provider hints
     xaiHint: 'Built-in AI analysis for emails and text in the Organizer app',
     openaiHint: 'Connect to OpenAI API (requires API key from openai.com)',
-    geminiHint: 'Connect to Google Gemini API (requires API key from Google AI Studio)'
+    geminiHint: 'Connect to Google Gemini API (requires API key from Google AI Studio)',
+    // Integration management
+    manageAIIntegrations: 'Manage AI Integrations',
+    providerSettings: 'Provider Settings',
+    test: 'Test Connection',
+    connectionSuccessful: 'Connection successful',
+    connectionFailed: 'Connection failed',
+    connectionError: 'Connection error',
+    missingApiKey: 'API key is required',
+    missingName: 'Name is required',
+    missingApiKeyEnabled: 'API key is required for enabled integrations',
+    saveSuccess: 'Settings saved successfully',
+    saveError: 'Error saving settings',
+    openaiKeyHint: 'Enter your OpenAI API key from openai.com',
+    geminiKeyHint: 'Enter your Google AI Studio API key',
+    xaiKeyHint: 'Enter your XAI service API key',
+    // AI Integration Dialog
+    addIntegration: 'Add Integration',
+    editIntegration: 'Edit Integration',
+    newIntegration: 'New Integration',
+    selectIntegrationType: 'Select Integration Type',
+    integrationDetails: 'Integration Details',
+    cancelAddIntegration: 'Cancel',
+    saveIntegration: 'Save Integration'
   }
 };

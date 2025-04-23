@@ -614,35 +614,35 @@ async function analyzeText() {
   error.value = ''
   
   try {
-    // Get the integration with the selected provider
-    const integration = user.value.settings.aiIntegrations.find(
-      i => i.provider === selectedProvider.value
-    )
+    // Get the selected provider ID
+    const providerId = selectedProvider.value
     
-    if (!integration) {
-      throw new Error('Selected AI provider not found')
+    if (!providerId) {
+      throw new Error('No AI provider selected')
     }
     
-    // Get the AI provider implementation
-    const aiProvider = getProvider(integration)
-    const result = await aiProvider.analyzeText(textToAnalyze.value)
-    
-    // Update the integration's last used timestamp
-    const updatedIntegrations = [...(user.value.settings.aiIntegrations || [])]
-    const index = updatedIntegrations.findIndex(i => i.provider === integration.provider)
-    if (index >= 0) {
-      updatedIntegrations[index] = {
-        ...updatedIntegrations[index],
-        lastUsed: new Date()
-      }
-      
-      // Update user settings
-      await authStore.updateUserSettings({
-        aiIntegrations: updatedIntegrations
+    // Use the API directly from the server rather than going through client-side providers
+    try {
+      // Call the server-side API endpoint to analyze the text
+      const { result } = await $fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+        },
+        body: {
+          providerId,
+          text: textToAnalyze.value
+        }
       })
+      
+      // Update the analysis result
+      analysisResult.value = result
+    } catch (fetchErr) {
+      console.error('AI analysis fetch error:', fetchErr)
+      throw new Error(fetchErr.message || 'Failed to analyze text')
     }
     
-    analysisResult.value = result
+    // The lastUsed field will be updated automatically by the server when an integration is used
   } catch (err) {
     console.error('AI analysis error:', err)
     error.value = err.message || 'Failed to analyze text'

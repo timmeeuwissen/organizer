@@ -5,7 +5,8 @@
 
 import type { AIIntegrationData } from '~/types/models/aiIntegration'
 import type { AIProvider } from './aiProviders/AIProvider'
-import { getAIProvider } from './aiProviders/index'
+import { getProvider as getProviderFromIndex } from './aiProviders/index'
+import { isValidAIIntegration } from './aiProviders/index'
 
 // Important: We're not using export * to avoid circular dependency issues
 // Instead, we're explicitly exporting functions needed by the application
@@ -16,7 +17,7 @@ import { getAIProvider } from './aiProviders/index'
  * @returns Provider implementation for the account type
  */
 export function getProvider(integration: AIIntegrationData): AIProvider {
-  return getAIProvider(integration)
+  return getProviderFromIndex(integration)
 }
 
 /**
@@ -25,10 +26,5 @@ export function getProvider(integration: AIIntegrationData): AIProvider {
  * @returns True if the integration is valid and can be used
  */
 export function isValidIntegration(integration: AIIntegrationData): boolean {
-  return (
-    integration &&
-    integration.enabled &&
-    integration.connected &&
-    !!integration.apiKey
-  )
+  return isValidAIIntegration(integration)
 }

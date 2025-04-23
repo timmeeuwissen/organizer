@@ -1,30 +1,31 @@
-import type { AIAnalysisResult, AIIntegrationData, AIAnalysisEntity } from '~/types/models/aiIntegration'
-import type { AIProvider } from './AIProvider'
-import { useAuthStore } from '~/stores/auth'
+import type { AIAnalysisResult } from '~/types/models/aiIntegration'
+import { BaseAIProvider } from './BaseAIProvider'
 
 // Gemini API endpoints
+// Use the server proxy for external APIs to avoid CORS issues
+const USE_PROXY = true
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta'
 const GEMINI_MODEL = 'models/gemini-pro' // Using Gemini Pro model
 const GEMINI_GENERATE_CONTENT = `/${GEMINI_MODEL}:generateContent`
 
+// Helper to get the API URL, either direct or through proxy
+function getApiUrl(endpoint: string): string {
+  if (USE_PROXY) {
+    // Use the server's proxy endpoint
+    return `/api/proxy?url=${encodeURIComponent(`${GEMINI_API_BASE_URL}${endpoint}`)}`
+  }
+  return `${GEMINI_API_BASE_URL}${endpoint}`
+}
+
 /**
  * Implementation of the Gemini provider API
  */
-export class GeminiProvider implements AIProvider {
-  private apiKey: string;
-  
-  /**
-   * Constructor
-   * @param integration The integration data
-   */
-  constructor(public integration: AIIntegrationData) {
+export class GeminiProvider extends BaseAIProvider {
+  constructor(integration: any) {
+    super(integration);
+    
     if (integration.provider !== 'gemini') {
       throw new Error('Invalid provider type for GeminiProvider');
-    }
-    
-    this.apiKey = integration.apiKey || '';
-    if (!this.apiKey) {
-      console.warn('Gemini initialized without an API key');
     }
   }
   
@@ -39,7 +40,8 @@ export class GeminiProvider implements AIProvider {
       }
       
       // Send a simple request to verify the API key works
-      const response = await fetch(`${GEMINI_API_BASE_URL}/${GEMINI_MODEL}?key=${this.apiKey}`, {
+      const apiUrl = getApiUrl(`/${GEMINI_MODEL}`);
+      const response = await fetch(`${apiUrl}?key=${this.apiKey}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -55,7 +57,7 @@ export class GeminiProvider implements AIProvider {
       // If we get here, we successfully accessed the API
       return true;
     } catch (error) {
-      console.error('Gemini connection test failed:', error);
+      this.logError(error, 'Gemini connection test failed');
       return false;
     }
   }
@@ -74,40 +76,14 @@ export class GeminiProvider implements AIProvider {
         throw new Error('No text provided for analysis');
       }
       
-      // Prepare the system prompt that instructs Gemini how to analyze the text
-      const systemPrompt = `
-        You are an AI assistant that analyzes text and extracts structured information.
-        Extract the following types of entities from the provided text:
-        1. People: Identify individuals mentioned, with details like names, roles, and contact info.
-        2. Projects: Identify projects mentioned, with details like title, status, and priority.
-        3. Tasks: Identify tasks or action items, with details like title, status, and due dates.
-        4. Behaviors: Identify behaviors or patterns mentioned, with details like type and description.
-        5. Meetings: Identify meetings mentioned, with details like title, location, and time.
-        
-        Also provide a brief summary of the text.
-        
-        Format your response as a valid JSON object with the following structure:
-        {
-          "people": [{"name": "Person Name", "confidence": 0.95, "details": {"firstName": "...", "lastName": "...", "email": "...", "organization": "...", "notes": "..."}}],
-          "projects": [{"name": "Project Name", "confidence": 0.9, "details": {"title": "...", "description": "...", "status": "...", "priority": "..."}}],
-          "tasks": [{"name": "Task Name", "confidence": 0.85, "details": {"title": "...", "description": "...", "status": "...", "priority": "...", "dueDate": "..."}}],
-          "behaviors": [{"name": "Behavior Name", "confidence": 0.8, "details": {"title": "...", "description": "...", "type": "..."}}],
-          "meetings": [{"name": "Meeting Name", "confidence": 0.9, "details": {"title": "...", "description": "...", "location": "...", "startTime": "..."}}],
-          "summary": "Brief summary of the text..."
-        }
-        
-        For status and priority fields, use values like: 
-        - Status: "notStarted", "inProgress", "onHold", "completed", "cancelled", "active", "planning"
-        - Priority: "low", "medium", "high", "urgent"
-        - Behavior types: "doWell", "wantToDoBetter", "needToImprove"
-        
-        Provide confidence scores between 0 and 1 indicating how confident you are in each entity extraction.
-        If a field is not applicable or not mentioned, omit it from the details.
-        Return only the JSON with no additional text.
-      `;
+      // Get the system prompt from the base provider
+      const systemPrompt = this.getAnalysisSystemPrompt();
       
       // Send request to Gemini API
-      const response = await fetch(`${GEMINI_API_BASE_URL}${GEMINI_GENERATE_CONTENT}?key=${this.apiKey}`, {
+      const apiUrl = getApiUrl(GEMINI_GENERATE_CONTENT);
+      console.log(`Sending request to Gemini API: ${apiUrl}`);
+      
+      const response = await fetch(`${apiUrl}?key=${this.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -160,9 +136,11 @@ export class GeminiProvider implements AIProvider {
       const aiResult = JSON.parse(jsonString);
       
       // Process the result to ensure it matches our expected format
-      return this.processGeminiResult(aiResult);
+      return this.processAnalysisResult(aiResult);
     } catch (error) {
-      console.error('Gemini analysis failed:', error);
+      this.logError(error, 'Gemini analysis failed');
+      
+      // Rethrow the error for the UI to handle
       throw error;
     } finally {
       // Update the last used timestamp
@@ -170,120 +148,4 @@ export class GeminiProvider implements AIProvider {
     }
   }
   
-  /**
-   * Process the Gemini response to ensure it matches our AIAnalysisResult format
-   */
-  private processGeminiResult(result: any): AIAnalysisResult {
-    // Create a default result structure
-    const processed: AIAnalysisResult = {
-      people: [],
-      projects: [],
-      tasks: [],
-      behaviors: [],
-      meetings: [],
-      summary: result.summary || 'No summary available'
-    };
-    
-    // Process people
-    if (Array.isArray(result.people)) {
-      processed.people = result.people.map((person: any) => this.validateEntity(person, 'person'));
-    }
-    
-    // Process projects
-    if (Array.isArray(result.projects)) {
-      processed.projects = result.projects.map((project: any) => this.validateEntity(project, 'project'));
-    }
-    
-    // Process tasks
-    if (Array.isArray(result.tasks)) {
-      processed.tasks = result.tasks.map((task: any) => {
-        const validTask = this.validateEntity(task, 'task');
-        
-        // Convert date strings to Date objects for special fields
-        if (validTask.details.dueDate && typeof validTask.details.dueDate === 'string') {
-          try {
-            validTask.details.dueDate = new Date(validTask.details.dueDate);
-          } catch (e) {
-            delete validTask.details.dueDate;
-          }
-        }
-        
-        return validTask;
-      });
-    }
-    
-    // Process behaviors
-    if (Array.isArray(result.behaviors)) {
-      processed.behaviors = result.behaviors.map((behavior: any) => this.validateEntity(behavior, 'behavior'));
-    }
-    
-    // Process meetings
-    if (Array.isArray(result.meetings)) {
-      processed.meetings = result.meetings.map((meeting: any) => {
-        const validMeeting = this.validateEntity(meeting, 'meeting');
-        
-        // Convert date strings to Date objects for special fields
-        if (validMeeting.details.startTime && typeof validMeeting.details.startTime === 'string') {
-          try {
-            validMeeting.details.startTime = new Date(validMeeting.details.startTime);
-          } catch (e) {
-            delete validMeeting.details.startTime;
-          }
-        }
-        
-        if (validMeeting.details.endTime && typeof validMeeting.details.endTime === 'string') {
-          try {
-            validMeeting.details.endTime = new Date(validMeeting.details.endTime);
-          } catch (e) {
-            delete validMeeting.details.endTime;
-          }
-        }
-        
-        return validMeeting;
-      });
-    }
-    
-    return processed;
-  }
-  
-  /**
-   * Validate an entity and ensure it conforms to our expected format
-   */
-  private validateEntity(entity: any, type: 'person' | 'project' | 'task' | 'behavior' | 'meeting'): AIAnalysisEntity {
-    return {
-      type: type,
-      name: entity.name || 'Unnamed ' + type,
-      confidence: typeof entity.confidence === 'number' ? entity.confidence : 0.5,
-      details: entity.details || {}
-    };
-  }
-  
-  /**
-   * Update the last used timestamp for this integration
-   */
-  async updateLastUsed(): Promise<void> {
-    const authStore = useAuthStore();
-    
-    try {
-      if (!authStore.currentUser?.settings?.aiIntegrations) return;
-
-      // Find the integration and update its lastUsed timestamp
-      const integrations = [...authStore.currentUser.settings.aiIntegrations];
-      const index = integrations.findIndex(i => i.provider === this.integration.provider);
-      
-      if (index >= 0) {
-        integrations[index] = {
-          ...integrations[index],
-          lastUsed: new Date()
-        };
-        
-        // Update user settings
-        await authStore.updateUserSettings({
-          aiIntegrations: integrations
-        });
-      }
-    } catch (error) {
-      console.error('Error updating lastUsed timestamp:', error);
-    }
-  }
 }
