@@ -64,21 +64,7 @@ export default defineEventHandler(async (event) => {
       // Process the response
       if (!response.ok) {
         console.error('Problem occurred in response ro refresh token')
-        console.error('https://accounts.google.com/o/oauth2/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-          },
-          body: (new URLSearchParams({
-            client_id: GOOGLE_CLIENT_ID,
-            client_secret: GOOGLE_CLIENT_SECRET,
-            refresh_token: refreshToken,
-            grant_type: 'refresh_token',
-          })).toString(),
-        })
 
-        console.error(response)
         let errorData;
         const contentType = response.headers.get('content-type');
         

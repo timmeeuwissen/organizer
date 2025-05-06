@@ -35,6 +35,7 @@ export default {
     addItem: 'Add Item',
     editItem: 'Edit Item',
     storageLocation: 'Storage Location',
+    original: 'Original Text',
     organizerApplication: 'Organizer Application',
     selectProvider: 'Select Provider',
     noIntegrationsAvailable: 'No integrations available for this data type',
@@ -480,6 +481,9 @@ export default {
     ignore: 'Ignore',
     selectExisting: 'Select Existing',
     newAnalysis: 'Start New Analysis',
+    // Action-related messages
+    selectAction: 'Select an action',
+    actionRequired: 'Please select an action for all identified items',
     // No entities found messages
     noPeopleFound: 'No people were identified in the text',
     noProjectsFound: 'No projects were identified in the text',

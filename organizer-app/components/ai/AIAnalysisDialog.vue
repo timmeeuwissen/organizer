@@ -97,77 +97,35 @@ v-dialog(
     // Results section
     template(v-if="!isAnalyzing && analysisResult")
       v-card-text
-        // Summary section
-        v-card(variant="outlined" class="mb-4")
-          v-card-title {{ $t('ai.summary') }}
-          v-card-text {{ analysisResult.summary }}
+        // Summary and original text section
+        text-summary(
+          :summary="analysisResult.summary"
+          :original-text="textToAnalyze"
+        )
         
         // Tabs for different entity types
-        v-tabs(v-model="activeTab" color="primary")
-          v-tab(value="people") 
-            v-icon(start) mdi-account
-            | {{ $t('people.title') }} ({{ analysisResult.people.length }})
-          v-tab(value="projects") 
-            v-icon(start) mdi-folder-multiple
-            | {{ $t('projects.title') }} ({{ analysisResult.projects.length }})
-          v-tab(value="tasks") 
-            v-icon(start) mdi-checkbox-marked-outline
-            | {{ $t('tasks.title') }} ({{ analysisResult.tasks.length }})
-          v-tab(value="behaviors") 
-            v-icon(start) mdi-account-cog
-            | {{ $t('behaviors.title') }} ({{ analysisResult.behaviors.length }})
-          v-tab(value="meetings") 
-            v-icon(start) mdi-account-group
-            | {{ $t('meetings.title') }} ({{ analysisResult.meetings.length }})
-        
-        v-window(v-model="activeTab")
+        entity-tabs(
+          v-model="activeTab"
+          :tabs="entityTabs"
+          :invalid-items="invalidItems"
+        )
           // People tab
-          v-window-item(value="people")
-            v-list(v-if="analysisResult.people.length > 0" variant="flat")
-              v-list-item(
-                v-for="(person, index) in analysisResult.people"
-                :key="index"
-                :title="person.name"
-                :subtitle="`${$t('ai.confidence')}: ${Math.round(person.confidence * 100)}%`"
-              )
-                template(v-slot:prepend)
-                  v-avatar(color="primary" size="36")
-                    v-icon(color="white") mdi-account
-                
-                template(v-slot:append)
-                  v-btn-group
-                    v-btn(
-                      variant="text"
-                      color="primary"
-                      @click="createEntity('person', person)"
-                      :title="$t('ai.createNew')"
-                    )
-                      v-icon mdi-plus
-                    
-                    v-menu(location="bottom end")
-                      template(v-slot:activator="{ props }")
-                        v-btn(
-                          variant="text"
-                          color="primary"
-                          v-bind="props"
-                          :title="$t('ai.relateExisting')"
-                        )
-                          v-icon mdi-link
-                      
-                      v-list
-                        v-list-item(
-                          @click="relateToExisting('person', person)"
-                        ) {{ $t('ai.selectExisting') }}
-                    
-                    v-btn(
-                      variant="text"
-                      color="error"
-                      @click="ignoreEntity('person', index)"
-                      :title="$t('ai.ignore')"
-                    )
-                      v-icon mdi-close
-              
-              v-sheet(v-if="selectedItemDetails.type === 'person'" class="mt-3 pa-3" color="background" rounded)
+          template(#people)
+            entity-list(
+              :entities="analysisResult.people"
+              entity-type="person"
+              entity-color="primary"
+              entity-icon="mdi-account"
+              :available-items="availablePeople"
+              :empty-message="$t('ai.noPeopleFound')"
+              :entity-actions="entityActions"
+              :entity-relations="entityRelations"
+              :invalids="invalidItems.people || []"
+              @update:actions="(actions) => updateActions('people', actions)"
+              @update:relations="(relations) => updateRelations('people', relations)"
+              @edit="setupEditState"
+            )
+              template(#details-form="{ entity, onChange }")
                 v-row(align="center")
                   v-col(cols="12" lg="6")
                     v-text-field(
@@ -205,56 +163,25 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-            
-            v-alert(v-else type="info" variant="tonal") {{ $t('ai.noPeopleFound') }}
           
           // Projects tab
-          v-window-item(value="projects")
-            v-list(v-if="analysisResult.projects.length > 0" variant="flat")
-              v-list-item(
-                v-for="(project, index) in analysisResult.projects"
-                :key="index"
-                :title="project.name"
-                :subtitle="`${$t('ai.confidence')}: ${Math.round(project.confidence * 100)}%`"
-              )
-                template(v-slot:prepend)
-                  v-avatar(color="teal" size="36")
-                    v-icon(color="white") mdi-folder-multiple
-                
-                template(v-slot:append)
-                  v-btn-group
-                    v-btn(
-                      variant="text"
-                      color="primary"
-                      @click="createEntity('project', project)"
-                      :title="$t('ai.createNew')"
-                    )
-                      v-icon mdi-plus
-                    
-                    v-menu(location="bottom end")
-                      template(v-slot:activator="{ props }")
-                        v-btn(
-                          variant="text"
-                          color="primary"
-                          v-bind="props"
-                          :title="$t('ai.relateExisting')"
-                        )
-                          v-icon mdi-link
-                      
-                      v-list
-                        v-list-item(
-                          @click="relateToExisting('project', project)"
-                        ) {{ $t('ai.selectExisting') }}
-                    
-                    v-btn(
-                      variant="text"
-                      color="error"
-                      @click="ignoreEntity('project', index)"
-                      :title="$t('ai.ignore')"
-                    )
-                      v-icon mdi-close
-              
-              v-sheet(v-if="selectedItemDetails.type === 'project'" class="mt-3 pa-3" color="background" rounded)
+          template(#projects)
+            entity-list(
+              :entities="analysisResult.projects"
+              entity-type="project"
+              entity-color="teal"
+              entity-icon="mdi-folder-multiple"
+              :available-items="availableProjects"
+              item-title-prop="title"
+              :empty-message="$t('ai.noProjectsFound')"
+              :entity-actions="entityActions"
+              :entity-relations="entityRelations"
+              :invalids="invalidItems.projects || []"
+              @update:actions="(actions) => updateActions('projects', actions)"
+              @update:relations="(relations) => updateRelations('projects', relations)"
+              @edit="setupEditState"
+            )
+              template(#details-form="{ entity, onChange }")
                 v-row(align="center")
                   v-col(cols="12")
                     v-text-field(
@@ -287,56 +214,25 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-            
-            v-alert(v-else type="info" variant="tonal") {{ $t('ai.noProjectsFound') }}
           
           // Tasks tab
-          v-window-item(value="tasks")
-            v-list(v-if="analysisResult.tasks.length > 0" variant="flat")
-              v-list-item(
-                v-for="(task, index) in analysisResult.tasks"
-                :key="index"
-                :title="task.name"
-                :subtitle="`${$t('ai.confidence')}: ${Math.round(task.confidence * 100)}%`"
-              )
-                template(v-slot:prepend)
-                  v-avatar(color="primary" size="36")
-                    v-icon(color="white") mdi-checkbox-marked-outline
-                
-                template(v-slot:append)
-                  v-btn-group
-                    v-btn(
-                      variant="text"
-                      color="primary"
-                      @click="createEntity('task', task)"
-                      :title="$t('ai.createNew')"
-                    )
-                      v-icon mdi-plus
-                    
-                    v-menu(location="bottom end")
-                      template(v-slot:activator="{ props }")
-                        v-btn(
-                          variant="text"
-                          color="primary"
-                          v-bind="props"
-                          :title="$t('ai.relateExisting')"
-                        )
-                          v-icon mdi-link
-                      
-                      v-list
-                        v-list-item(
-                          @click="relateToExisting('task', task)"
-                        ) {{ $t('ai.selectExisting') }}
-                    
-                    v-btn(
-                      variant="text"
-                      color="error"
-                      @click="ignoreEntity('task', index)"
-                      :title="$t('ai.ignore')"
-                    )
-                      v-icon mdi-close
-              
-              v-sheet(v-if="selectedItemDetails.type === 'task'" class="mt-3 pa-3" color="background" rounded)
+          template(#tasks)
+            entity-list(
+              :entities="analysisResult.tasks"
+              entity-type="task"
+              entity-color="primary"
+              entity-icon="mdi-checkbox-marked-outline"
+              :available-items="availableTasks"
+              item-title-prop="title"
+              :empty-message="$t('ai.noTasksFound')"
+              :entity-actions="entityActions"
+              :entity-relations="entityRelations"
+              :invalids="invalidItems.tasks || []"
+              @update:actions="(actions) => updateActions('tasks', actions)"
+              @update:relations="(relations) => updateRelations('tasks', relations)"
+              @edit="setupEditState"
+            )
+              template(#details-form="{ entity, onChange }")
                 v-row(align="center")
                   v-col(cols="12")
                     v-text-field(
@@ -369,56 +265,25 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-            
-            v-alert(v-else type="info" variant="tonal") {{ $t('ai.noTasksFound') }}
           
           // Behaviors tab
-          v-window-item(value="behaviors")
-            v-list(v-if="analysisResult.behaviors.length > 0" variant="flat")
-              v-list-item(
-                v-for="(behavior, index) in analysisResult.behaviors"
-                :key="index"
-                :title="behavior.name"
-                :subtitle="`${$t('ai.confidence')}: ${Math.round(behavior.confidence * 100)}%`"
-              )
-                template(v-slot:prepend)
-                  v-avatar(color="indigo" size="36")
-                    v-icon(color="white") mdi-account-cog
-                
-                template(v-slot:append)
-                  v-btn-group
-                    v-btn(
-                      variant="text"
-                      color="primary"
-                      @click="createEntity('behavior', behavior)"
-                      :title="$t('ai.createNew')"
-                    )
-                      v-icon mdi-plus
-                    
-                    v-menu(location="bottom end")
-                      template(v-slot:activator="{ props }")
-                        v-btn(
-                          variant="text"
-                          color="primary"
-                          v-bind="props"
-                          :title="$t('ai.relateExisting')"
-                        )
-                          v-icon mdi-link
-                      
-                      v-list
-                        v-list-item(
-                          @click="relateToExisting('behavior', behavior)"
-                        ) {{ $t('ai.selectExisting') }}
-                    
-                    v-btn(
-                      variant="text"
-                      color="error"
-                      @click="ignoreEntity('behavior', index)"
-                      :title="$t('ai.ignore')"
-                    )
-                      v-icon mdi-close
-              
-              v-sheet(v-if="selectedItemDetails.type === 'behavior'" class="mt-3 pa-3" color="background" rounded)
+          template(#behaviors)
+            entity-list(
+              :entities="analysisResult.behaviors"
+              entity-type="behavior"
+              entity-color="indigo"
+              entity-icon="mdi-account-cog"
+              :available-items="availableBehaviors"
+              item-title-prop="title"
+              :empty-message="$t('ai.noBehaviorsFound')"
+              :entity-actions="entityActions"
+              :entity-relations="entityRelations"
+              :invalids="invalidItems.behaviors || []"
+              @update:actions="(actions) => updateActions('behaviors', actions)"
+              @update:relations="(relations) => updateRelations('behaviors', relations)"
+              @edit="setupEditState"
+            )
+              template(#details-form="{ entity, onChange }")
                 v-row(align="center")
                   v-col(cols="12")
                     v-text-field(
@@ -443,56 +308,25 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-            
-            v-alert(v-else type="info" variant="tonal") {{ $t('ai.noBehaviorsFound') }}
           
           // Meetings tab
-          v-window-item(value="meetings")
-            v-list(v-if="analysisResult.meetings.length > 0" variant="flat")
-              v-list-item(
-                v-for="(meeting, index) in analysisResult.meetings"
-                :key="index"
-                :title="meeting.name"
-                :subtitle="`${$t('ai.confidence')}: ${Math.round(meeting.confidence * 100)}%`"
-              )
-                template(v-slot:prepend)
-                  v-avatar(color="deep-purple" size="36")
-                    v-icon(color="white") mdi-account-group
-                
-                template(v-slot:append)
-                  v-btn-group
-                    v-btn(
-                      variant="text"
-                      color="primary"
-                      @click="createEntity('meeting', meeting)"
-                      :title="$t('ai.createNew')"
-                    )
-                      v-icon mdi-plus
-                    
-                    v-menu(location="bottom end")
-                      template(v-slot:activator="{ props }")
-                        v-btn(
-                          variant="text"
-                          color="primary"
-                          v-bind="props"
-                          :title="$t('ai.relateExisting')"
-                        )
-                          v-icon mdi-link
-                      
-                      v-list
-                        v-list-item(
-                          @click="relateToExisting('meeting', meeting)"
-                        ) {{ $t('ai.selectExisting') }}
-                    
-                    v-btn(
-                      variant="text"
-                      color="error"
-                      @click="ignoreEntity('meeting', index)"
-                      :title="$t('ai.ignore')"
-                    )
-                      v-icon mdi-close
-              
-              v-sheet(v-if="selectedItemDetails.type === 'meeting'" class="mt-3 pa-3" color="background" rounded)
+          template(#meetings)
+            entity-list(
+              :entities="analysisResult.meetings"
+              entity-type="meeting"
+              entity-color="deep-purple"
+              entity-icon="mdi-account-group"
+              :available-items="availableMeetings"
+              item-title-prop="title"
+              :empty-message="$t('ai.noMeetingsFound')"
+              :entity-actions="entityActions"
+              :entity-relations="entityRelations"
+              :invalids="invalidItems.meetings || []"
+              @update:actions="(actions) => updateActions('meetings', actions)"
+              @update:relations="(relations) => updateRelations('meetings', relations)"
+              @edit="setupEditState"
+            )
+              template(#details-form="{ entity, onChange }")
                 v-row(align="center")
                   v-col(cols="12")
                     v-text-field(
@@ -516,13 +350,19 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-            
-            v-alert(v-else type="info" variant="tonal") {{ $t('ai.noMeetingsFound') }}
       
       v-card-actions
         template(v-if="!isAnalyzing && analysisResult")
           v-btn(variant="text" color="primary" @click="newAnalysis") {{ $t('ai.newAnalysis') }}
           v-spacer
+          v-btn(
+            color="primary"
+            variant="tonal"
+            @click="saveResults"
+            :disabled="!canSaveResults"
+          )
+            v-icon(start) mdi-content-save
+            | {{ $t('common.save') }}
           v-btn(variant="text" @click="close") {{ $t('common.close') }}
 </template>
 
@@ -535,6 +375,12 @@ import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useTasksStore } from '~/stores/tasks'
 import { useBehaviorsStore } from '~/stores/behaviors'
+import { useMeetingsStore } from '~/stores/meetings'
+
+// Import our custom components
+import TextSummary from './analysis/TextSummary.vue'
+import EntityTabs from './analysis/EntityTabs.vue'
+import EntityList from './analysis/EntityList.vue'
 
 const props = defineProps({
   modelValue: {
@@ -555,6 +401,17 @@ const analysisResult = ref(null)
 const activeTab = ref('people')
 const selectedItemDetails = ref({ type: null, entity: null })
 
+// Entity management state
+const entityActions = ref({}) // Maps entity ID to action type ('ignore', 'relate', 'add')
+const entityRelations = ref({}) // Maps entity ID to selected relation object
+const invalidItems = ref({
+  people: [],
+  projects: [],
+  tasks: [],
+  behaviors: [],
+  meetings: []
+})
+
 // Validation rules
 const rules = {
   required: (v) => !!v || 'This field is required'
@@ -566,7 +423,82 @@ const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const tasksStore = useTasksStore()
 const behaviorsStore = useBehaviorsStore()
+const meetingsStore = useMeetingsStore()
 const i18n = useI18n()
+
+// Available entities from stores for relation selection
+const availablePeople = computed(() => peopleStore.people || [])
+const availableProjects = computed(() => projectsStore.projects || [])
+const availableTasks = computed(() => tasksStore.tasks || [])
+const availableBehaviors = computed(() => behaviorsStore.behaviors || [])
+const availableMeetings = computed(() => meetingsStore.meetings || [])
+
+// Entity tabs configuration
+const entityTabs = computed(() => {
+  if (!analysisResult.value) return []
+  
+  return [
+    {
+      value: 'people',
+      label: i18n.t('people.title'),
+      icon: 'mdi-account',
+      count: analysisResult.value.people.length
+    },
+    {
+      value: 'projects',
+      label: i18n.t('projects.title'),
+      icon: 'mdi-folder-multiple',
+      count: analysisResult.value.projects.length
+    },
+    {
+      value: 'tasks',
+      label: i18n.t('tasks.title'),
+      icon: 'mdi-checkbox-marked-outline',
+      count: analysisResult.value.tasks.length
+    },
+    {
+      value: 'behaviors',
+      label: i18n.t('behaviors.title'),
+      icon: 'mdi-account-cog',
+      count: analysisResult.value.behaviors.length
+    },
+    {
+      value: 'meetings',
+      label: i18n.t('meetings.title'),
+      icon: 'mdi-account-group',
+      count: analysisResult.value.meetings.length
+    }
+  ]
+})
+
+// Check if we can save results - requires every entity to have an action selected
+// and all required fields to be filled
+const canSaveResults = computed(() => {
+  if (!analysisResult.value) return false
+  
+  const allEntities = getAllEntities()
+  
+  // Every entity must have an action selected
+  const allHaveActions = allEntities.every((_, entityIndex) => entityActions.value[entityIndex] !== undefined)
+  
+  // No validation errors
+  const noValidationErrors = Object.values(invalidItems.value).every(arr => arr.length === 0)
+  
+  return allHaveActions && noValidationErrors
+})
+
+// Helper to get all entities across all tabs
+function getAllEntities() {
+  if (!analysisResult.value) return []
+  
+  return [
+    ...(analysisResult.value.people || []),
+    ...(analysisResult.value.projects || []),
+    ...(analysisResult.value.tasks || []),
+    ...(analysisResult.value.behaviors || []),
+    ...(analysisResult.value.meetings || [])
+  ]
+}
 
 // Computed
 const user = computed(() => authStore.currentUser)
@@ -650,6 +582,9 @@ watch(() => dialogVisible.value, (newVal) => {
   emit('update:modelValue', newVal)
 })
 
+watch(() => entityActions.value, validateRelationships, { deep: true })
+watch(() => entityRelations.value, validateRelationships, { deep: true })
+
 // Methods
 // Add CSS for max-width to style scope
 const style = document.createElement('style')
@@ -669,6 +604,8 @@ async function analyzeText() {
   
   isAnalyzing.value = true
   error.value = ''
+  entityActions.value = {} // Reset entity actions
+  entityRelations.value = {} // Reset entity relations
   
   try {
     // Get the selected integration
@@ -698,6 +635,14 @@ async function analyzeText() {
       // Update the analysis result
       analysisResult.value = response.result
       console.log('the server responded with the following message:' , response)
+      
+      // Initialize actions as 'ignore' for all entities
+      if (analysisResult.value) {
+        const allEntities = getAllEntities()
+        allEntities.forEach((entity, index) => {
+          entityActions.value[index] = 'ignore'
+        })
+      }
     } catch (fetchErr) {
       console.error('AI analysis fetch error:', fetchErr)
       throw new Error(fetchErr.message || 'Failed to analyze text')
@@ -712,55 +657,131 @@ async function analyzeText() {
   }
 }
 
-// Entity management methods
-function createEntity(type, entity) {
-  console.log('Creating entity:', { type, entity })
-  
-  // Set the selected item details for editing in the form
+// Entity action and relation management
+function updateActions(entityType, actions) {
+  // Update actions for the specific entity type
+  entityActions.value = { ...entityActions.value, ...actions }
+  validateRelationships()
+}
+
+function updateRelations(entityType, relations) {
+  // Update relations for the specific entity type
+  entityRelations.value = { ...entityRelations.value, ...relations }
+  validateRelationships()
+}
+
+// Setup edit state for an entity and mark it as edited
+function setupEditState(entity) {
+  // Deep clone to avoid modifying original
   selectedItemDetails.value = {
-    type,
-    entity: JSON.parse(JSON.stringify(entity)) // Deep clone to avoid modifying original
+    type: getEntityType(entity),
+    entity: JSON.parse(JSON.stringify(entity))
   }
+}
+
+// Validate all relationships to ensure required relations are set
+function validateRelationships() {
+  // Reset invalid items
+  const newInvalidItems = {
+    people: [],
+    projects: [],
+    tasks: [],
+    behaviors: [],
+    meetings: []
+  }
+  
+  // Check each entity with 'relate' action
+  const allEntities = getAllEntities()
+  
+  allEntities.forEach((entity, index) => {
+    const action = entityActions.value[index]
+    const type = getEntityType(entity)
+    const pluralType = type === 'person' ? 'people' : `${type}s`
+    
+    // If action is relate, check that a relation is selected
+    if (action === 'relate') {
+      const relation = entityRelations.value[index]
+      
+      if (!relation) {
+        // Add to invalid items for this type
+        newInvalidItems[pluralType].push(index)
+      }
+    }
+  })
+  
+  // Update the invalid items ref
+  invalidItems.value = newInvalidItems
+}
+
+// Save all results
+function saveResults() {
+  if (!canSaveResults.value) return
+  
+  const allEntities = getAllEntities()
+  
+  // Process each entity based on its action
+  allEntities.forEach((entity, index) => {
+    const action = entityActions.value[index]
+    const entityType = getEntityType(entity)
+    
+    if (action === 'add') {
+      // Create new entity
+      createNewEntity(entityType, entity)
+    } else if (action === 'relate') {
+      // Relate to existing entity
+      relateToEntity(entityType, entity, entityRelations.value[index])
+    }
+    // Ignore action does nothing
+  })
+  
+  // Close dialog after saving
+  close()
+}
+
+// Helper to determine entity type
+function getEntityType(entity) {
+  // Check which array the entity is in
+  if (!analysisResult.value) return null
+  
+  if (analysisResult.value.people && analysisResult.value.people.includes(entity)) {
+    return 'person'
+  } else if (analysisResult.value.projects && analysisResult.value.projects.includes(entity)) {
+    return 'project'
+  } else if (analysisResult.value.tasks && analysisResult.value.tasks.includes(entity)) {
+    return 'task'
+  } else if (analysisResult.value.behaviors && analysisResult.value.behaviors.includes(entity)) {
+    return 'behavior'
+  } else if (analysisResult.value.meetings && analysisResult.value.meetings.includes(entity)) {
+    return 'meeting'
+  }
+  return null
+}
+
+// Create a new entity in the appropriate store
+function createNewEntity(type, entity) {
+  console.log('Creating new entity:', { type, entity })
   
   // TODO: In a real implementation, this would create the entity in the appropriate store
   // For example:
-  // if (type === 'person') {
-  //   peopleStore.createPerson({
-  //     firstName: entity.details.firstName,
-  //     lastName: entity.details.lastName,
-  //     ...
-  //   })
-  // }
-}
-
-function relateToExisting(type, entity) {
-  console.log('Relating to existing:', { type, entity })
-  
-  // TODO: In a real implementation, this would open a dialog to select an existing entity
-  // and then create a relationship between them
-}
-
-function ignoreEntity(type, index) {
-  console.log('Ignoring entity:', { type, index })
-  
-  // Remove the entity from the analysis results
   if (type === 'person') {
-    analysisResult.value.people.splice(index, 1)
+    peopleStore.createPerson(entity.details)
   } else if (type === 'project') {
-    analysisResult.value.projects.splice(index, 1)
+    projectsStore.createProject(entity.details)
   } else if (type === 'task') {
-    analysisResult.value.tasks.splice(index, 1)
+    tasksStore.createTask(entity.details)
   } else if (type === 'behavior') {
-    analysisResult.value.behaviors.splice(index, 1)
+    behaviorsStore.createBehavior(entity.details)
   } else if (type === 'meeting') {
-    analysisResult.value.meetings.splice(index, 1)
+    meetingsStore.createMeeting(entity.details)
   }
+}
+
+// Relate to an existing entity
+function relateToEntity(type, entity, relatedEntity) {
+  console.log('Relating to existing entity:', { type, entity, relatedEntity })
   
-  // Clear selected item if it was this one
-  if (selectedItemDetails.value.type === type && 
-      selectedItemDetails.value.entity === analysisResult.value[type + 's'][index]) {
-    selectedItemDetails.value = { type: null, entity: null }
-  }
+  // TODO: Create relationship between entities
+  // This would depend on the specific data model of the application
 }
 
 function close() {
@@ -769,6 +790,15 @@ function close() {
   textToAnalyze.value = ''
   analysisResult.value = null
   selectedItemDetails.value = { type: null, entity: null }
+  entityActions.value = {}
+  entityRelations.value = {}
+  invalidItems.value = {
+    people: [],
+    projects: [],
+    tasks: [],
+    behaviors: [],
+    meetings: []
+  }
   error.value = ''
 }
 
@@ -777,6 +807,19 @@ function newAnalysis() {
   textToAnalyze.value = ''
   analysisResult.value = null
   selectedItemDetails.value = { type: null, entity: null }
+  entityActions.value = {}
+  entityRelations.value = {}
+  invalidItems.value = {
+    people: [],
+    projects: [],
+    tasks: [],
+    behaviors: [],
+    meetings: []
+  }
   error.value = ''
 }
 </script>
+
+<style scoped>
+/* Additional styles can be added here */
+</style>
