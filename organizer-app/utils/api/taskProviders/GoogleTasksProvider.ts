@@ -267,14 +267,16 @@ export class GoogleTasksProvider extends BaseTaskProvider {
         }
       })
       
+      // Include all tasks in the response, not just root tasks
+      // This ensures that both parent and child tasks are available to the application
       return {
         success: true,
-        tasks: rootTasks,
+        tasks: allTasks,
         page: {
           current: 1,
-          pageSize: rootTasks.length,
+          pageSize: allTasks.length,
           hasMore: !!response.nextPageToken,
-          totalCount: rootTasks.length
+          totalCount: allTasks.length
         }
       }
     } catch (error: any) {

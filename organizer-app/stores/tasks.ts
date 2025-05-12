@@ -650,6 +650,14 @@ export const useTasksStore = defineStore('tasks', {
         // Get all the synced tasks flattened into a single array
         const allSyncedTasks: Task[] = Object.values(this.syncedProviderTasks).flat()
         
+        // Create a map of provider tasks by ID for quick lookup
+        const providerTasksById = new Map<string, Task>()
+        allSyncedTasks.forEach(task => {
+          if (task.providerId) {
+            providerTasksById.set(task.providerId, task)
+          }
+        })
+        
         // Find tasks that need to be created in Firestore (don't exist locally)
         for (const task of allSyncedTasks) {
           // Check if this task already exists in the local state by providerId and providerAccountId
@@ -696,7 +704,13 @@ export const useTasksStore = defineStore('tasks', {
             // Optional string fields
             taskData.description = task.description || ''
             taskData.assignedTo = task.assignedTo || null
-            taskData.parentTask = task.parentTask || null
+            
+            // Handle parent-child relationships - map the provider's 'parent' field to our 'parentTask'
+            if (task.parent) {
+              taskData.parentTask = task.parent
+            } else {
+              taskData.parentTask = task.parentTask || null
+            }
             
             // Add to Firestore
             await addDoc(tasksRef, taskData)

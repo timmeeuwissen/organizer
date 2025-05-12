@@ -792,12 +792,16 @@ const processedTasks = computed(() => {
   const taskMap = new Map<string, Task[]>()
   
   // First, group all tasks by their parent ID
+  // Handle both parentTask field and parent field from Google Tasks
   tasks.forEach(task => {
-    if (task.parentTask) {
-      if (!taskMap.has(task.parentTask)) {
-        taskMap.set(task.parentTask, [])
+    // Check for parentTask (internal app field) or parent (Google Tasks field)
+    const parentId = task.parentTask || task.parent;
+    
+    if (parentId) {
+      if (!taskMap.has(parentId)) {
+        taskMap.set(parentId, [])
       }
-      taskMap.get(task.parentTask)!.push(task)
+      taskMap.get(parentId)!.push(task)
     }
   })
   
@@ -874,7 +878,21 @@ const processedTasks = computed(() => {
   
   // Start with an empty result and process from top level (null parent, level 0)
   const result: Array<Task & { level: number, hasSubtasks: boolean }> = []
-  processTasksRecursively(null, 0, result)
+  // Only show hierarchical structure in All Tasks tab
+  if (activeTab.value === 'all') {
+    // In All Tasks tab, show proper hierarchy and filter out subtasks from root level
+    processTasksRecursively(null, 0, result)
+  } else {
+    // In other tabs, just show flat list of tasks without hierarchy
+    // Filter out subtasks that should be under parent tasks
+    tasks.filter(t => !t.parentTask && !t.parent).forEach(task => {
+      result.push({
+        ...task,
+        level: 0,
+        hasSubtasks: hasSubtasks(task.id)
+      })
+    })
+  }
   
   return result
 })
