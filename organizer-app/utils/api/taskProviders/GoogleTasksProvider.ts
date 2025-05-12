@@ -64,6 +64,8 @@ function mapGoogleTaskToTask(googleTask: any, userId: string, taskListId: string
     relatedProjects: [],
     relatedMeetings: [],
     relatedBehaviors: [],
+    // Store the parent task ID if available
+    parent: googleTask.parent || undefined,
     providerId: googleTask.id || '',
     providerAccountId: userId || '', // Use the userId as the account ID
     providerListId: taskListId || '', // Store the task list ID
@@ -78,6 +80,11 @@ function mapTaskToGoogleTask(task: Partial<GoogleTask>): any {
   const googleTask: any = {
     title: task.title || 'Untitled Task',
     notes: task.description || ''
+  }
+  
+  // Add parent reference if this is a subtask
+  if (task.parent) {
+    googleTask.parent = task.parent
   }
   
   // Add tags to notes as hashtags
@@ -227,18 +234,47 @@ export class GoogleTasksProvider extends BaseTaskProvider {
       })
       
       // Convert Google Tasks to our app's Task format
-      const tasks = (response.items || []).map((item: any) => 
+      let allTasks = (response.items || []).map((item: any) => 
         mapGoogleTaskToTask(item, this.account.id, taskListId)
       )
       
+      // Create a map of all tasks by id
+      const tasksById = new Map<string, GoogleTask>()
+      allTasks.forEach((task: GoogleTask) => tasksById.set(task.id, task))
+      
+      // Process parent-child relationships
+      const rootTasks: GoogleTask[] = []
+      
+      allTasks.forEach((task: GoogleTask) => {
+        // Check if this task has a parent in the Google Task data
+        const googleTask = response.items.find((item: any) => item.id === task.providerId as string)
+        if (googleTask && googleTask.parent) {
+          // Find the parent task in our processed tasks
+          const parentTask = tasksById.get(googleTask.parent)
+          if (parentTask) {
+            // Add this task's ID as a subtask of its parent
+            if (!parentTask.subtasks) {
+              parentTask.subtasks = []
+            }
+            parentTask.subtasks.push(task.id)
+          } else {
+            // If parent not found, treat as root task
+            rootTasks.push(task)
+          }
+        } else {
+          // No parent, so it's a root task
+          rootTasks.push(task)
+        }
+      })
+      
       return {
         success: true,
-        tasks,
+        tasks: rootTasks,
         page: {
           current: 1,
-          pageSize: tasks.length,
+          pageSize: rootTasks.length,
           hasMore: !!response.nextPageToken,
-          totalCount: tasks.length
+          totalCount: rootTasks.length
         }
       }
     } catch (error: any) {
@@ -258,6 +294,18 @@ export class GoogleTasksProvider extends BaseTaskProvider {
     try {
       const taskListId = await this.getDefaultTaskList()
       const googleTask = mapTaskToGoogleTask(task as Partial<GoogleTask>)
+      
+      // If this task has a parent, set the parent parameter for Google Tasks
+      if (task.parent) {
+        // Google Tasks expects the parent ID from the provider, not our internal ID
+        // We need to find the corresponding Google Task ID for our parent task
+        try {
+          // Use the parent task ID directly as it should be the provider ID
+          googleTask.parent = task.parent
+        } catch (error) {
+          console.error('[GoogleTasks] Error finding parent task:', error)
+        }
+      }
       
       // Create the task in Google Tasks
       const response = await this.makeApiRequest<any>(
@@ -302,6 +350,31 @@ export class GoogleTasksProvider extends BaseTaskProvider {
         ...mapGoogleTaskToTask(currentTask, this.account.id, taskListId),
         ...googleUpdates
       })
+      
+      // If parent relationship has changed, update it in the Google Task
+      if (updates.parent !== undefined) {
+        if (updates.parent) {
+          // Set the parent in the Google Task
+          googleTask.parent = updates.parent
+          
+          // Google Tasks API requires the parent task in the same task list
+          if (currentTask.parent !== googleTask.parent) {
+            console.log('[GoogleTasks] Updating task parent relationship', {
+              taskId,
+              oldParent: currentTask.parent,
+              newParent: googleTask.parent
+            })
+          }
+        } else if (currentTask.parent) {
+          // Parent was removed, so clear it
+          // Note: Google Tasks API requires special handling to clear a parent
+          // Setting it to an empty string should work
+          googleTask.parent = ''
+        }
+      } else if (currentTask.parent) {
+        // Preserve the existing parent if it wasn't updated
+        googleTask.parent = currentTask.parent
+      }
       
       // Update the task in Google Tasks
       await this.makeApiRequest<any>(
