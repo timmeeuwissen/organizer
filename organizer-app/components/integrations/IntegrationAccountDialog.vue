@@ -40,6 +40,7 @@ v-dialog(
               color="error"
               :text="$t('settings.connectGoogle')"
               block
+              @click="handleGoogleAuthClick"
               @auth-success="handleGoogleAuthSuccess"
               @auth-error="handleGoogleAuthError"
               :loading="isGoogleLoading"
@@ -53,6 +54,7 @@ v-dialog(
               :text="$t('settings.connectMicrosoft')"
               :icon="'mdi-microsoft'"
               block
+              @authorize="handleMicrosoftAuthClick"
               @tokens-updated="handleMicrosoftAuthSuccess"
               :loading="isMicrosoftLoading"
             )
@@ -65,6 +67,8 @@ v-dialog(
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useNotificationStore } from '~/stores/notification'
+import { useAuthStore } from '~/stores/auth'
 import IntegrationAccountForm from './IntegrationAccountForm.vue'
 import GoogleAuthButton from './GoogleAuthButton'
 import OAuthAuthorizeButton from './OAuthAuthorizeButton'
@@ -100,16 +104,28 @@ const isSaving = ref(false)
 
 // Composables
 const i18n = useI18n()
+const notificationStore = useNotificationStore()
 
 // State for auth providers
 const isGoogleLoading = ref(false);
 const isMicrosoftLoading = ref(false);
 
 // Functions for handling auth results from components
-function handleGoogleAuthSuccess(tokens) {
+function handleGoogleAuthClick() {
+  // Close dialog immediately after button click
+  dialogVisible.value = false;
+  
+  // Show notification that authentication is in progress
+  notificationStore.info(i18n.t('settings.authenticatingWithGoogle') || 'Authenticating with Google...', {
+    timeout: 10000 // longer timeout since auth might take time
+  });
+}
+
+// Get authStore
+const authStore = useAuthStore();
+
+async function handleGoogleAuthSuccess(tokens) {
   console.log('Google auth success:', tokens);
-  errorMsg.value = '';
-  successMsg.value = '';
   
   try {
     // Create account with tokens from Google
@@ -140,30 +156,67 @@ function handleGoogleAuthSuccess(tokens) {
       }
     };
     
-    // Show success and save
-    successMsg.value = i18n.t('settings.connectionSuccessful');
-    emit('save', account);
+    // Check if user is authenticated and has settings
+    if (!authStore.isAuthenticated || !authStore.currentUser) {
+      console.error('Cannot add integration account: User not authenticated');
+      throw new Error('User not authenticated');
+    }
     
-    // Close after delay
-    setTimeout(() => {
-      dialogVisible.value = false;
-    }, 1500);
+    // Get current integration accounts
+    const currentAccounts = [...(authStore.currentUser.settings?.integrationAccounts || [])];
+    
+    // Check if account with the same email already exists
+    const existingAccountIndex = currentAccounts.findIndex(
+      acc => acc.oauthData?.email === account.oauthData.email
+    );
+    
+    if (existingAccountIndex >= 0) {
+      // Replace existing account with the same email
+      console.log('Updating existing account with same email:', account.oauthData.email);
+      currentAccounts[existingAccountIndex] = account;
+    } else {
+      // Add new account
+      console.log('Adding new integration account:', account.oauthData.email);
+      currentAccounts.push(account);
+    }
+    
+    // Update user settings with the new/updated integration account
+    await authStore.updateUserSettings({
+      integrationAccounts: currentAccounts
+    });
+    
+    console.log(`Successfully ${existingAccountIndex >= 0 ? 'updated' : 'added'} Google account to user settings`);
+    console.log('Updated integration accounts count:', currentAccounts.length);
+    
+    // Show success notification
+    notificationStore.success(i18n.t('settings.connectionSuccessful') || 'Successfully connected to Google');
+    
+    // Still emit the save event for any parent components that need to know
+    emit('save', account);
   }
   catch (error) {
     console.error('Error processing Google auth:', error);
-    errorMsg.value = error.message || 'Failed to process Google authentication';
+    notificationStore.error(error.message || 'Failed to process Google authentication');
   }
 }
 
 function handleGoogleAuthError(error) {
   console.error('Google auth error:', error);
-  errorMsg.value = error.message || 'Failed to connect to Google';
+  notificationStore.error(error.message || 'Failed to connect to Google');
 }
 
-function handleMicrosoftAuthSuccess(tokens) {
+function handleMicrosoftAuthClick() {
+  // Close dialog immediately after button click
+  dialogVisible.value = false;
+  
+  // Show notification that authentication is in progress
+  notificationStore.info(i18n.t('settings.authenticatingWithMicrosoft') || 'Authenticating with Microsoft...', {
+    timeout: 10000 // longer timeout since auth might take time
+  });
+}
+
+async function handleMicrosoftAuthSuccess(tokens) {
   console.log('Microsoft auth success:', tokens);
-  errorMsg.value = '';
-  successMsg.value = '';
   
   try {
     // Create account with tokens from Microsoft
@@ -195,18 +248,47 @@ function handleMicrosoftAuthSuccess(tokens) {
       }
     };
     
-    // Show success and save
-    successMsg.value = i18n.t('settings.connectionSuccessful');
-    emit('save', account);
+    // Check if user is authenticated and has settings
+    if (!authStore.isAuthenticated || !authStore.currentUser) {
+      console.error('Cannot add integration account: User not authenticated');
+      throw new Error('User not authenticated');
+    }
     
-    // Close after delay
-    setTimeout(() => {
-      dialogVisible.value = false;
-    }, 1500);
+    // Get current integration accounts
+    const currentAccounts = [...(authStore.currentUser.settings?.integrationAccounts || [])];
+    
+    // Check if account with the same email already exists
+    const existingAccountIndex = currentAccounts.findIndex(
+      acc => acc.oauthData?.email === account.oauthData.email
+    );
+    
+    if (existingAccountIndex >= 0) {
+      // Replace existing account with the same email
+      console.log('Updating existing account with same email:', account.oauthData.email);
+      currentAccounts[existingAccountIndex] = account;
+    } else {
+      // Add new account
+      console.log('Adding new integration account:', account.oauthData.email);
+      currentAccounts.push(account);
+    }
+    
+    // Update user settings with the new/updated integration account
+    await authStore.updateUserSettings({
+      integrationAccounts: currentAccounts
+    });
+    
+    console.log(`Successfully ${existingAccountIndex >= 0 ? 'updated' : 'added'} Microsoft account to user settings`);
+    console.log('Updated integration accounts count:', currentAccounts.length);
+    
+    // Show success notification
+    notificationStore.success(i18n.t('settings.connectionSuccessful') || 'Successfully connected to Microsoft');
+    
+    // Still emit the save event for any parent components that need to know
+    emit('save', account);
   }
   catch (error) {
     console.error('Error processing Microsoft auth:', error);
-    errorMsg.value = error.message || 'Failed to process Microsoft authentication';
+    notificationStore.error(error.message || 'Failed to process Microsoft authentication');
   }
 }
 

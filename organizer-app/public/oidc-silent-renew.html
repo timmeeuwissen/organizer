@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OIDC Silent Renewal</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <script>
+    // Try to dynamically load the oidc-client-ts library
+    function loadScript(url) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    // Process the silent renew
+    async function processSilentRenew() {
+      try {
+        // First try to load from the node_modules path
+        await loadScript('/node_modules/oidc-client-ts/dist/browser/oidc-client-ts.min.js');
+      } catch (error) {
+        // If that fails, try a CDN as fallback
+        console.warn('Failed to load from node_modules, trying CDN');
+        await loadScript('https://cdn.jsdelivr.net/npm/oidc-client-ts@2.2.1/dist/browser/oidc-client-ts.min.js');
+      }
+
+      // Once loaded, process the callback
+      if (window.oidc) {
+        new window.oidc.UserManager().signinSilentCallback()
+          .catch(function(error) {
+            console.error('Silent renewal error:', error);
+          });
+      } else {
+        console.error('OIDC client library not loaded');
+      }
+    }
+
+    // Start the process
+    processSilentRenew();
+  </script>
+</body>
+</html>

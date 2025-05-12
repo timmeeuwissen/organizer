@@ -147,6 +147,9 @@ v-app
     
   // AI Analysis Dialog
   AIAnalysisDialog(v-model="showAiDialog")
+  
+  // Global notification system
+  NotificationSnackbar
 </template>
 
 <script setup lang="ts">
@@ -155,6 +158,7 @@ import { useI18n } from 'vue-i18n'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+import { useNotificationStore } from '~/stores/notification'
 import { useDataRefresh } from '~/composables/useDataRefresh'
 import DemoModeToggle from '~/components/auth/DemoModeToggle.vue'
 import FeedbackButton from '~/components/feedback/FeedbackButton.vue'
@@ -172,6 +176,7 @@ import ProjectForm from '~/components/projects/ProjectForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import AIAnalysisDialog from '~/components/ai/AIAnalysisDialog.vue'
 import AIButton from '~/components/ai/AIButton.vue'
+import NotificationSnackbar from '~/components/common/NotificationSnackbar.vue'
 
 const i18n = useI18n()
 const theme = useTheme()

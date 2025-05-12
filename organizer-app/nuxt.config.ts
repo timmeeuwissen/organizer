@@ -20,7 +20,8 @@ export default defineNuxtConfig({
     '~/plugins/vuetify', 
     '~/plugins/firebase',
     '~/plugins/theme',
-    '~/plugins/pinia-persistence'
+    '~/plugins/pinia-persistence',
+    '~/plugins/oidc'
   ],
 
   runtimeConfig: {
@@ -33,7 +34,13 @@ export default defineNuxtConfig({
         messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
         appId: process.env.FIREBASE_APP_ID || '',
         measurementId: process.env.FIREBASE_MEASUREMENT_ID || '',
-      }
+      },
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID || '',
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET || ''
+      },
+      // Debug options
+      debugAuthRedirect: process.env.DEBUG_AUTH_REDIR || 'false'
     }
   },
 

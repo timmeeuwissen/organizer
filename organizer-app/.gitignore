@@ -100,3 +100,7 @@ tmp/
 
 # Secrets
 .google-oauth-tokens.json
+
+# Log files
+logs/
+*.log
