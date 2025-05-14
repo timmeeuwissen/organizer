@@ -129,12 +129,16 @@ const props = defineProps({
 
 const emit = defineEmits(['update:action', 'update:relation', 'edit']);
 
+// Create a computed property to access the action prop more directly
+const action = computed(() => props.action);
+
 // State for editing
 const isEditing = ref(false);
 const isEdited = ref(false);
 
 // Watch for action changes
 watch(() => props.action, () => {
+  console.log('Action changed:', props.action);
   // If action changes, reset editing state
   if (props.action !== 'add') {
     isEditing.value = false;

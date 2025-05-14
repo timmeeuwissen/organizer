@@ -78,7 +78,6 @@ const props = defineProps({
 const emit = defineEmits(['update:actions', 'update:relations', 'edit']);
 
 function updateEntityAction(entityIndex, action) {
-  console.log(`updating ${entityIndex} for action ${action}`)
   const newActions = { ...props.entityActions, [entityIndex]: action };
   emit('update:actions', newActions);
 }
