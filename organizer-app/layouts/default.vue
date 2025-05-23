@@ -145,6 +145,13 @@ v-app
       @submit="onMeetingSubmit"
     )
     
+  dialog-form(v-model="coachingDialog" max-width="800px")
+    coaching-form(
+      v-if="coachingDialog"
+      :loading="false" 
+      @submit="onCoachingSubmit"
+    )
+    
   // AI Analysis Dialog
   AIAnalysisDialog(v-model="showAiDialog")
   
@@ -169,11 +176,13 @@ import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
 import { useBehaviorsStore } from '~/stores/behaviors'
 import { useProjectsStore } from '~/stores/projects'
+import { useCoachingStore } from '~/stores/coaching'
 import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
 import MailComposeForm from '~/components/mail/MailComposeForm.vue'
 import BehaviorForm from '~/components/behaviors/BehaviorForm.vue'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
+import CoachingForm from '~/components/coaching/CoachingForm.vue'
 import AIAnalysisDialog from '~/components/ai/AIAnalysisDialog.vue'
 import AIButton from '~/components/ai/AIButton.vue'
 import NotificationSnackbar from '~/components/common/NotificationSnackbar.vue'
@@ -205,6 +214,7 @@ const mailDialog = ref(false)
 const behaviorDialog = ref(false)
 const projectDialog = ref(false)
 const meetingDialog = ref(false)
+const coachingDialog = ref(false)
 const showAiDialog = ref(false)
 
 // Add Button Menu Items
@@ -244,6 +254,12 @@ const addMenuItems = [
     icon: 'mdi-account-group-outline', 
     color: 'deep-purple',
     action: () => meetingDialog.value = true
+  },
+  { 
+    title: i18n.t('coaching.title'), 
+    icon: 'mdi-account-heart', 
+    color: 'pink',
+    action: () => coachingDialog.value = true
   },
   { 
     title: i18n.t('mail.compose'), 
@@ -316,6 +332,12 @@ const navItems = [
     to: '/mail',
     addAction: () => mailDialog.value = true
   },
+  { 
+    title: 'coaching.title', 
+    icon: 'mdi-account-heart', 
+    to: '/coaching',
+    addAction: () => coachingDialog.value = true
+  },
   { title: 'statistics.title', icon: 'mdi-chart-bar', to: '/statistics' },
   { title: 'network.title', icon: 'mdi-graph', to: '/network' },
   { title: 'feedback.adminTitle', icon: 'mdi-message-text-outline', to: '/feedback' },
@@ -343,6 +365,7 @@ const tasksStore = useTasksStore()
 const peopleStore = usePeopleStore()
 const behaviorsStore = useBehaviorsStore()
 const projectsStore = useProjectsStore()
+const coachingStore = useCoachingStore()
 
 // Form submission handlers
 const onTaskSubmit = async (taskData) => {
@@ -479,6 +502,17 @@ const onMeetingSubmit = async (meetingData) => {
     meetingDialog.value = false
   } catch (error) {
     console.error('Failed to create meeting:', error)
+  }
+}
+
+// Coaching handler
+const onCoachingSubmit = async (coachingData) => {
+  try {
+    // Store in organizer (Firestore)
+    await coachingStore.createRecord(coachingData)
+    coachingDialog.value = false
+  } catch (error) {
+    console.error('Failed to create coaching record:', error)
   }
 }
 
