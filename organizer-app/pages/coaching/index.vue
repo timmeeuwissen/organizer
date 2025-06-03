@@ -86,6 +86,13 @@
       </v-col>
     </v-row>
     
+    <!-- Knowledge Base -->
+    <v-row class="px-4 mt-4">
+      <v-col cols="12">
+        <knowledge-base></knowledge-base>
+      </v-col>
+    </v-row>
+    
     <!-- Dialogs -->
     <v-dialog
       v-model="coachingDialogOpen"
@@ -137,13 +144,15 @@ import { useCoachingStore } from '~/stores/coaching'
 import { usePeopleStore } from '~/stores/people'
 import CoachingCard from '~/components/coaching/CoachingCard.vue'
 import CoachingForm from '~/components/coaching/CoachingForm.vue'
+import KnowledgeBase from '~/components/coaching/KnowledgeBase.vue'
 
 export default {
   name: 'CoachingIndexPage',
   
   components: {
     CoachingCard,
-    CoachingForm
+    CoachingForm,
+    KnowledgeBase
   },
   
   data() {
@@ -226,7 +235,11 @@ export default {
           await this.peopleStore.fetchPeople()
         }
         
-        await this.coachingStore.fetchRecords()
+        // Load coaching records and knowledge documents
+        await Promise.all([
+          this.coachingStore.fetchRecords(),
+          this.coachingStore.fetchKnowledgeDocuments()
+        ])
       } catch (error) {
         console.error('Error fetching data:', error)
       }

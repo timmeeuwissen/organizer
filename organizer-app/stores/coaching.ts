@@ -10,17 +10,20 @@ import {
   updateDoc, 
   deleteDoc,
   serverTimestamp,
-  orderBy
+  orderBy,
+  setDoc
 } from 'firebase/firestore'
 import { getFirestore } from 'firebase/firestore'
 import { useAuthStore } from './auth'
 import { usePeopleStore } from './people'
 import type { CoachingRecord } from '~/types/models/coaching'
+import type { KnowledgeDocument } from '~/types/models/knowledgeDocument'
 
 export const useCoachingStore = defineStore('coaching', {
   state: () => ({
     records: [] as CoachingRecord[],
     currentRecord: null as CoachingRecord | null,
+    knowledgeDocuments: [] as KnowledgeDocument[],
     loading: false,
     error: null as string | null,
   }),
@@ -42,6 +45,209 @@ export const useCoachingStore = defineStore('coaching', {
   },
 
   actions: {
+    // Knowledge Document Actions
+    async fetchKnowledgeDocuments() {
+      const authStore = useAuthStore()
+      if (!authStore.user) return
+
+      this.loading = true
+      this.error = null
+      
+      try {
+        const db = getFirestore()
+        const knowledgeRef = collection(db, 'knowledgeDocuments')
+        const q = query(
+          knowledgeRef, 
+          where('userId', '==', authStore.user.id),
+          orderBy('updatedAt', 'desc')
+        )
+        const querySnapshot = await getDocs(q)
+        
+        this.knowledgeDocuments = querySnapshot.docs.map(doc => {
+          const data = doc.data()
+          
+          // Helper function to convert Firebase timestamps to Date objects
+          const convertTimestamps = (obj: any) => {
+            if (!obj) return obj
+            
+            // Convert createdAt/updatedAt at the top level
+            if (obj.createdAt?.toDate) obj.createdAt = obj.createdAt.toDate()
+            if (obj.updatedAt?.toDate) obj.updatedAt = obj.updatedAt.toDate()
+            
+            return obj
+          }
+          
+          return {
+            ...convertTimestamps(data),
+            id: doc.id,
+          } as KnowledgeDocument
+        })
+      } catch (error: any) {
+        this.error = error.message || 'Failed to fetch knowledge documents'
+        console.error('Error fetching knowledge documents:', error)
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async fetchKnowledgeDocument(id: string) {
+      const authStore = useAuthStore()
+      if (!authStore.user) return
+      
+      this.loading = true
+      this.error = null
+      
+      try {
+        const db = getFirestore()
+        const docRef = doc(db, 'knowledgeDocuments', id)
+        const docSnap = await getDoc(docRef)
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data()
+          
+          // Ensure this document belongs to the current user
+          if (data.userId !== authStore.user.id) {
+            throw new Error('Unauthorized access to knowledge document')
+          }
+          
+          // Convert timestamps
+          if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate()
+          if (data.updatedAt?.toDate) data.updatedAt = data.updatedAt.toDate()
+          
+          const document = {
+            ...data,
+            id: docSnap.id,
+          } as KnowledgeDocument
+          
+          // Update the document in the local state
+          const index = this.knowledgeDocuments.findIndex(d => d.id === id)
+          if (index !== -1) {
+            this.knowledgeDocuments[index] = document
+          } else {
+            this.knowledgeDocuments.push(document)
+          }
+          
+          return document
+        } else {
+          throw new Error('Knowledge document not found')
+        }
+      } catch (error: any) {
+        this.error = error.message || 'Failed to fetch knowledge document'
+        console.error('Error fetching knowledge document:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async saveKnowledgeDocument(document: KnowledgeDocument) {
+      const authStore = useAuthStore()
+      if (!authStore.user) return
+      
+      this.loading = true
+      this.error = null
+      
+      try {
+        const db = getFirestore()
+        
+        // Add the userId if it's not already there
+        if (!document.userId) {
+          document.userId = authStore.user.id
+        }
+        
+        // Set timestamps
+        const now = serverTimestamp()
+        const clientNow = new Date()
+        
+        // Create a clean object without undefined values
+        const documentData = Object.fromEntries(
+          Object.entries(document).filter(([_, v]) => v !== undefined)
+        )
+        
+        // Add timestamps
+        if (!documentData.createdAt) {
+          documentData.createdAt = now
+        }
+        documentData.updatedAt = now
+        
+        // Save the document
+        let docId = document.id
+        
+        if (docId) {
+          // Update existing document
+          const docRef = doc(db, 'knowledgeDocuments', docId)
+          await setDoc(docRef, documentData)
+        } else {
+          // Create new document with auto-generated ID
+          const docRef = collection(db, 'knowledgeDocuments')
+          const newDocRef = await addDoc(docRef, documentData)
+          docId = newDocRef.id
+        }
+        
+        // Update the document in the local state with client-side dates for immediate UI updates
+        const updatedDocument = {
+          ...document,
+          id: docId,
+          updatedAt: clientNow,
+          createdAt: document.createdAt || clientNow
+        }
+        
+        const index = this.knowledgeDocuments.findIndex(d => d.id === docId)
+        if (index !== -1) {
+          this.knowledgeDocuments[index] = updatedDocument
+        } else {
+          this.knowledgeDocuments.push(updatedDocument)
+        }
+        
+        return docId
+      } catch (error: any) {
+        this.error = error.message || 'Failed to save knowledge document'
+        console.error('Error saving knowledge document:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async deleteKnowledgeDocument(id: string) {
+      const authStore = useAuthStore()
+      if (!authStore.user) return
+      
+      this.loading = true
+      this.error = null
+      
+      try {
+        const db = getFirestore()
+        const docRef = doc(db, 'knowledgeDocuments', id)
+        
+        // First, get the document to verify ownership
+        const docSnap = await getDoc(docRef)
+        
+        if (!docSnap.exists()) {
+          throw new Error('Knowledge document not found')
+        }
+        
+        const docData = docSnap.data()
+        
+        // Ensure this document belongs to the current user
+        if (docData.userId !== authStore.user.id) {
+          throw new Error('Unauthorized access to knowledge document')
+        }
+        
+        await deleteDoc(docRef)
+        
+        // Remove the document from the local state
+        this.knowledgeDocuments = this.knowledgeDocuments.filter(d => d.id !== id)
+      } catch (error: any) {
+        this.error = error.message || 'Failed to delete knowledge document'
+        console.error('Error deleting knowledge document:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    // Coaching Record Actions
     async fetchRecords() {
       const authStore = useAuthStore()
       if (!authStore.user) return
