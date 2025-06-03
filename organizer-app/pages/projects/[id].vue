@@ -117,11 +117,7 @@ v-container
             v-card-title.d-flex
               span {{ $t('projects.tasks') }}
               v-spacer
-              v-btn(
-                color="primary"
-                size="small"
-                prepend-icon="mdi-plus"
-              ) {{ $t('projects.addTask') }}
+              add-button(:items="taskItems")
             v-card-text
               // Task list would go here
               p {{ $t('projects.noTasks') }}
@@ -131,11 +127,7 @@ v-container
             v-card-title.d-flex
               span {{ $t('projects.notes') }}
               v-spacer
-              v-btn(
-                color="primary"
-                size="small"
-                prepend-icon="mdi-plus"
-              ) {{ $t('projects.addNote') }}
+              add-button(:items="noteItems")
             v-card-text
               // Notes would go here
               p {{ $t('projects.noNotes') }}
@@ -145,15 +137,12 @@ v-container
             v-card-title.d-flex
               span {{ $t('projects.meetings') }}
               v-spacer
-              v-btn(
-                color="primary"
-                size="small"
-                prepend-icon="mdi-plus"
-              ) {{ $t('projects.addMeeting') }}
+              add-button(:items="meetingItems")
             v-card-text
               // Meetings would go here
               p {{ $t('projects.noMeetings') }}
 
+  // Project edit dialog
   v-dialog(v-model="editDialog" max-width="800px")
     v-card(v-if="editDialog && project")
       v-card-title.d-flex.align-center
@@ -167,6 +156,54 @@ v-container
         @submit="updateProject"
         @delete="deleteProject"
       )
+  
+  // Task dialog
+  v-dialog(v-model="taskDialog" max-width="800px")
+    v-card(v-if="taskDialog")
+      task-form(
+        :loading="taskLoading"
+        :error="taskError"
+        :task="taskDefaults"
+        @submit="createTask"
+      )
+  
+  // Note dialog
+  v-dialog(v-model="noteDialog" max-width="800px")
+    v-card(v-if="noteDialog")
+      v-card-title {{ $t('projects.addNote') }}
+      v-card-text
+        v-form(@submit.prevent="createNote")
+          v-text-field(
+            v-model="noteTitle"
+            :label="$t('common.title')"
+            required
+          )
+          
+          v-textarea(
+            v-model="noteContent"
+            :label="$t('common.content')"
+            rows="5"
+            required
+          )
+      
+      v-card-actions
+        v-spacer
+        v-btn(
+          color="primary"
+          :loading="noteLoading"
+          :disabled="!noteTitle || !noteContent || noteLoading"
+          @click="createNote"
+        ) {{ $t('common.save') }}
+  
+  // Meeting dialog
+  v-dialog(v-model="meetingDialog" max-width="800px")
+    v-card(v-if="meetingDialog")
+      meeting-form(
+        :loading="meetingLoading"
+        :error="meetingError"
+        :meeting="meetingDefaults"
+        @submit="createMeeting"
+      )
 </template>
 
 <script setup lang="ts">
@@ -174,8 +211,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProjectsStore } from '~/stores/projects'
 import { usePeopleStore } from '~/stores/people'
-import type { Project } from '~/types/models'
+import { useTasksStore } from '~/stores/tasks'
+import { useMeetingsStore } from '~/stores/meetings'
+import type { Project, Task, Meeting } from '~/types/models'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
+import TaskForm from '~/components/tasks/TaskForm.vue'
+import MeetingForm from '~/components/meetings/MeetingForm.vue'
+import AddButton from '~/components/common/AddButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -189,6 +231,42 @@ const activeTab = ref('tasks')
 const editDialog = ref(false)
 const formLoading = ref(false)
 const formError = ref('')
+
+// Task dialog
+const taskDialog = ref(false)
+const taskLoading = ref(false)
+const taskError = ref('')
+const tasksStore = useTasksStore()
+const taskDefaults = ref({
+  title: '',
+  description: '',
+  status: 'todo',
+  priority: 3,
+  dueDate: null
+})
+
+// Note dialog
+const noteDialog = ref(false)
+const noteTitle = ref('')
+const noteContent = ref('')
+const noteLoading = ref(false)
+const noteError = ref('')
+
+// Meeting dialog
+const meetingDialog = ref(false)
+const meetingLoading = ref(false)
+const meetingError = ref('')
+const meetingsStore = useMeetingsStore()
+const meetingDefaults = ref({
+  subject: '',
+  summary: '',
+  category: '',
+  plannedStatus: 'to_be_planned',
+  date: new Date().toISOString().substr(0, 10),
+  time: '09:00',
+  location: '',
+  participants: []
+})
 
 // Get project ID from route
 const projectId = computed(() => route.params.id as string)
@@ -215,9 +293,150 @@ watch(projectId, fetchProject, { immediate: true })
 // Get current project
 const project = computed(() => projectsStore.currentProject)
 
+// AddButton menu items
+const taskItems = computed(() => [
+  {
+    title: 'Add Task',
+    icon: 'mdi-checkbox-marked-circle-outline',
+    color: 'primary',
+    action: openTaskDialog
+  }
+])
+
+const noteItems = computed(() => [
+  {
+    title: 'Add Note',
+    icon: 'mdi-note-outline',
+    color: 'info',
+    action: openNoteDialog
+  }
+])
+
+const meetingItems = computed(() => [
+  {
+    title: 'Add Meeting',
+    icon: 'mdi-account-group',
+    color: 'success',
+    action: openMeetingDialog
+  }
+])
+
 // Navigation
 const goToProjects = () => {
   router.push('/projects')
+}
+
+// Task methods
+const openTaskDialog = () => {
+  // Reset task form data and set defaults
+  taskDefaults.value = {
+    title: '',
+    description: '',
+    status: 'todo',
+    priority: 3,
+    dueDate: null
+  }
+  taskDialog.value = true
+}
+
+const createTask = async (taskData: Partial<Task>) => {
+  if (!project.value) return
+  
+  taskLoading.value = true
+  taskError.value = ''
+  
+  try {
+    // Add the project ID to the related projects array
+    const updatedTaskData = {
+      ...taskData,
+      relatedProjects: [project.value.id]
+    }
+    
+    // Create the task
+    const taskId = await tasksStore.createTask(updatedTaskData)
+    taskDialog.value = false
+    
+    // Reset form data
+    taskError.value = ''
+  } catch (error: any) {
+    taskError.value = error.message || 'Failed to create task'
+  } finally {
+    taskLoading.value = false
+  }
+}
+
+// Note methods
+const openNoteDialog = () => {
+  noteTitle.value = ''
+  noteContent.value = ''
+  noteDialog.value = true
+}
+
+const createNote = async () => {
+  if (!project.value || !noteTitle.value || !noteContent.value) return
+  
+  noteLoading.value = true
+  noteError.value = ''
+  
+  try {
+    // Currently there's no dedicated notes store, so we'll create a project page instead
+    await projectsStore.createProjectPage(project.value.id, {
+      title: noteTitle.value,
+      content: noteContent.value,
+      order: 0, // Set a default order for the page
+      tags: []
+    })
+    
+    noteDialog.value = false
+    noteTitle.value = ''
+    noteContent.value = ''
+  } catch (error: any) {
+    noteError.value = error.message || 'Failed to create note'
+  } finally {
+    noteLoading.value = false
+  }
+}
+
+// Meeting methods
+const openMeetingDialog = () => {
+  // Reset meeting form data and set defaults
+  meetingDefaults.value = {
+    subject: '',
+    summary: '',
+    category: '',
+    plannedStatus: 'to_be_planned',
+    date: new Date().toISOString().substr(0, 10),
+    time: '09:00',
+    location: '',
+    participants: []
+  }
+  meetingDialog.value = true
+}
+
+const createMeeting = async (meetingData: Partial<Meeting>) => {
+  if (!project.value) return
+  
+  meetingLoading.value = true
+  meetingError.value = ''
+  
+  try {
+    // Add the project ID to the related projects array
+    const updatedMeetingData = {
+      ...meetingData,
+      relatedProjects: [project.value.id]
+    }
+    
+    // Create the meeting
+    const meetingId = await meetingsStore.createMeeting(updatedMeetingData)
+    meetingDialog.value = false
+    
+    // Reset form data
+    meetingError.value = ''
+  } catch (error: any) {
+    meetingError.value = error.message || 'Failed to create meeting'
+  } finally {
+    meetingLoading.value = false
+  }
 }
 
 // Helper functions

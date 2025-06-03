@@ -100,6 +100,13 @@ v-container(fluid)
           span {{ $t('people.allPeople') }}
           v-spacer
           v-btn(
+            color="info"
+            prepend-icon="mdi-refresh"
+            @click="syncContacts"
+            :loading="syncingContacts"
+            class="mr-2"
+          ) {{ $t('people.syncContacts') }}
+          v-btn(
             color="primary"
             prepend-icon="mdi-plus"
             @click="addDialog = true"
@@ -186,6 +193,7 @@ const personDialog = ref(false)
 const addDialog = ref(false)
 const selectedPerson = ref<Person | null>(null)
 const search = ref('')
+const syncingContacts = ref(false)
 
 // Filters
 const selectedOrganizations = ref<string[]>([])
@@ -367,5 +375,22 @@ const deletePerson = async () => {
 
 const contactPerson = async (person: Person) => {
   await peopleStore.updateLastContactDate(person.id)
+}
+
+// Sync contacts from all providers
+const syncContacts = async () => {
+  syncingContacts.value = true
+  try {
+    await peopleStore.syncContactsFromAllProviders()
+    // Show success notification
+    // This assumes you have a notification system
+    // If not, you can use alert or another method
+    alert('All contacts have been successfully synchronized')
+  } catch (error: any) {
+    console.error('Error syncing contacts:', error)
+    alert(`Error syncing contacts: ${error.message || 'Unknown error'}`)
+  } finally {
+    syncingContacts.value = false
+  }
 }
 </script>

@@ -185,6 +185,7 @@ export default {
     byTeam: 'Op team',
     byRole: 'Op rol',
     allPeople: 'Alle personen',
+    syncContacts: 'Contacten Synchroniseren',
   },
   projects: {
     title: 'Projecten',

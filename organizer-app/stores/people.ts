@@ -527,6 +527,7 @@ export const usePeopleStore = defineStore({
 
     /**
      * Synchronize contacts from all enabled integration accounts
+     * This function handles pagination to make sure all contacts are fetched
      */
     async syncContactsFromAllProviders() {
       const authStore = useAuthStore()
@@ -542,10 +543,36 @@ export const usePeopleStore = defineStore({
         
         for (const account of enabledAccounts) {
           try {
-            // The fetchContactsFromProvider method now handles storing contacts in the Pinia store
-            // No need to call mergeProviderContacts separately
-            const result = await this.fetchContactsFromProvider(account, undefined, undefined, true)
-            console.log(`Synced ${result.contacts.length} contacts from ${account.type} account (${account.oauthData.email})`)
+            let totalContactsFetched = 0
+            let currentPage = 0
+            let hasMorePages = true
+            const pageSize = 50 // Fetch 50 contacts per page
+            
+            console.log(`Starting contact sync from ${account.type} account (${account.oauthData.email})`)
+            
+            // Continue fetching pages until there are no more
+            while (hasMorePages) {
+              // Fetch the current page of contacts
+              const result = await this.fetchContactsFromProvider(
+                account, 
+                undefined, 
+                { page: currentPage, pageSize }, 
+                true
+              )
+              
+              totalContactsFetched += result.contacts.length
+              console.log(`Fetched page ${currentPage + 1} with ${result.contacts.length} contacts from ${account.type} account (${account.oauthData.email})`)
+              
+              // Check if there are more pages
+              hasMorePages = result.hasMore
+              
+              // Move to the next page if there are more
+              if (hasMorePages) {
+                currentPage++
+              }
+            }
+            
+            console.log(`Completed sync of ${totalContactsFetched} total contacts from ${account.type} account (${account.oauthData.email})`)
           } catch (error) {
             console.error(`Error syncing contacts from ${account.type} account:`, error)
             // Continue with other accounts even if one fails

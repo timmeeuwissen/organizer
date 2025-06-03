@@ -152,6 +152,13 @@ v-app
       @submit="onCoachingSubmit"
     )
     
+  dialog-form(v-model="knowledgeDocumentDialog" max-width="900px" scrollable)
+    knowledge-document-form(
+      v-if="knowledgeDocumentDialog"
+      @close="knowledgeDocumentDialog = false"
+      @saved="onKnowledgeDocumentSaved"
+    )
+    
   // AI Analysis Dialog
   AIAnalysisDialog(v-model="showAiDialog")
   
@@ -183,6 +190,7 @@ import BehaviorForm from '~/components/behaviors/BehaviorForm.vue'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import CoachingForm from '~/components/coaching/CoachingForm.vue'
+import KnowledgeDocumentForm from '~/components/coaching/KnowledgeDocumentForm.vue'
 import AIAnalysisDialog from '~/components/ai/AIAnalysisDialog.vue'
 import AIButton from '~/components/ai/AIButton.vue'
 import NotificationSnackbar from '~/components/common/NotificationSnackbar.vue'
@@ -215,6 +223,7 @@ const behaviorDialog = ref(false)
 const projectDialog = ref(false)
 const meetingDialog = ref(false)
 const coachingDialog = ref(false)
+const knowledgeDocumentDialog = ref(false)
 const showAiDialog = ref(false)
 
 // Add Button Menu Items
@@ -260,6 +269,12 @@ const addMenuItems = [
     icon: 'mdi-account-heart', 
     color: 'pink',
     action: () => coachingDialog.value = true
+  },
+  { 
+    title: 'Knowledge Document', 
+    icon: 'mdi-file-document-edit', 
+    color: 'cyan',
+    action: () => knowledgeDocumentDialog.value = true
   },
   { 
     title: i18n.t('mail.compose'), 
@@ -514,6 +529,11 @@ const onCoachingSubmit = async (coachingData) => {
   } catch (error) {
     console.error('Failed to create coaching record:', error)
   }
+}
+
+// Knowledge Document handler
+const onKnowledgeDocumentSaved = () => {
+  knowledgeDocumentDialog.value = false
 }
 
 // Helper function to find an integration by its ID

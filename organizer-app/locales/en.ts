@@ -251,6 +251,7 @@ export default {
     byTeam: 'By Team',
     byRole: 'By Role',
     allPeople: 'All People',
+    syncContacts: 'Sync Contacts',
   },
   projects: {
     title: 'Projects',
