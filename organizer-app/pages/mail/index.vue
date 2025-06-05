@@ -38,24 +38,17 @@ v-container(fluid)
             template(v-slot:append)
               v-chip(size="x-small" v-if="getUnreadCount(folder.id) > 0") {{ getUnreadCount(folder.id) }}
       
-      v-card(class="mb-4" v-if="connectedAccounts.length > 0")
-        v-card-title {{ $t('mail.accounts') }}
-        v-list(density="compact")
-          v-list-item(
-            v-for="account in connectedAccounts"
-            :key="account.id"
-            :title="account.type"
-            :subtitle="account.oauthData.email"
-          )
-            template(v-slot:prepend)
-              v-avatar(size="32" :color="account.color")
-                span {{ getInitialsFromString(account.name) }}
-            
-            template(v-slot:append)
-              v-chip(
-                size="small"
-                :color="getAccountStatusColor(account)"
-              ) {{ getAccountStatusMessage(account) }}
+      ProviderAccountsCard(
+        :accounts="connectedAccounts"
+        v-model="selectedProviders"
+        :title="$t('mail.accounts')"
+        class="mb-4"
+      )
+        template(v-slot:account-chip="{ account }")
+          v-chip(
+            size="small"
+            :color="getAccountStatusColor(account)"
+          ) {{ getAccountStatusMessage(account) }}
       
       v-card
         v-card-title {{ $t('mail.contacts') }}
@@ -124,11 +117,13 @@ v-container(fluid)
               item-value="id"
             )
               template(v-slot:item.read="{ item }")
-                v-icon(
-                  :icon="item.read ? 'mdi-email-open' : 'mdi-email'"
-                  :color="item.read ? 'gray' : 'primary'"
-                  size="small"
-                )
+                div.position-relative.d-flex.align-center
+                  div.account-indicator(:style="{ backgroundColor: getEmailProviderColor(item) }")
+                  v-icon.ml-2(
+                    :icon="item.read ? 'mdi-email-open' : 'mdi-email'"
+                    :color="item.read ? 'gray' : 'primary'"
+                    size="small"
+                  )
               
               template(v-slot:item.from="{ item }")
                 span(:class="{ 'font-weight-bold': !item.read }") {{ item.from.name }}
@@ -300,7 +295,7 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { usePeopleStore } from '~/stores/people'
 import { useMailStore } from '~/stores/mail'
 import { useAuthStore } from '~/stores/auth'
@@ -308,6 +303,7 @@ import type { Person, IntegrationAccount } from '~/types/models'
 import type { Email, MailFolder, EmailPerson, EmailAttachment } from '~/stores/mail'
 import { getAccountStatusMessage, getAccountStatusColor } from '~/utils/api/emailUtils'
 import GoogleReauthManager from '~/components/mail/GoogleReauthManager.vue'
+import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
 
 // Stores
 const peopleStore = usePeopleStore()
@@ -334,6 +330,7 @@ const itemsPerPage = ref(20) // Match this with store's pageSize for consistency
 // Search and filters
 const emailSearch = ref('')
 const contactSearch = ref('')
+const selectedProviders = ref<string[]>([])
 
 // Dialog state
 const showComposeDialog = ref(false)
@@ -353,9 +350,19 @@ const filteredEmails = computed(() => {
     return []
   }
   
-  // Just return the emails from the store - filtering will be done at the provider level
-  // when search is performed, so we don't need to filter them again here
-  let result = mailStore.emails
+  // Filter by provider accounts
+  let result = [...mailStore.emails]
+  
+  // Filter by provider accounts
+  if (selectedProviders.value.length === 0) {
+    // If no providers are selected, only show emails without an account ID
+    result = result.filter(email => !email.accountId)
+  } else if (connectedAccounts.value.length > 0) {
+    result = result.filter(email => 
+      !email.accountId || // Include emails without an account ID (shouldn't happen normally)
+      selectedProviders.value.includes(email.accountId)
+    )
+  }
   
   // Minimize reactive dependencies in this function
   const count = result.length
@@ -390,10 +397,40 @@ const filteredContacts = computed(() => {
   return result.slice(0, 10) // Limit to 10 for performance
 })
 
+// Get email provider color based on the accountId
+const getEmailProviderColor = (email: Email) => {
+  if (!email.accountId) return 'primary'
+  
+  const account = connectedAccounts.value.find(acc => acc.id === email.accountId)
+  if (!account) return 'primary'
+  
+  // Check if the account has a predefined color
+  if (account.color) {
+    return account.color
+  }
+  
+  // Generate deterministic color based on account ID
+  let hash = 0
+  const id = account.id
+  for (let i = 0; i < id.length; i++) {
+    // Simple hash calculation for TypeScript compatibility
+    hash = Math.imul(hash, 31) + id.charCodeAt(i)
+  }
+  
+  const hue = Math.abs(hash % 360)
+  return `hsl(${hue}, 70%, 60%)`
+}
+
 // Watch for folder changes to reload emails
 watch(selectedFolder, (newFolder) => {
   // Reset pagination and fetch emails for the new folder
   mailStore.fetchEmails({ folder: newFolder })
+})
+
+// Watch for changes in selectedProviders
+watch(selectedProviders, (newProviders) => {
+  console.log('Mail provider filter changed:', newProviders)
+  // The filteredEmails computed property will automatically update
 })
 
 // Load data
@@ -411,6 +448,11 @@ onMounted(async () => {
   
   // Display integrated accounts info if available
   console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`);
+  
+  // Initialize selectedProviders with all providers by default
+  nextTick(() => {
+    selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  });
 });
 
 // Refresh unread counts periodically but less frequently
@@ -704,5 +746,13 @@ const saveDraft = () => {
   min-height: 200px;
   background-color: #f9f9f9;
   border-radius: 4px;
+}
+
+.account-indicator {
+  position: absolute;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  border-radius: 2px 0 0 2px;
 }
 </style>

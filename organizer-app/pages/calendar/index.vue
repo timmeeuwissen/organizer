@@ -27,6 +27,13 @@ v-container(fluid)
           elevation="0"
           width="100%"
         )
+      
+      ProviderAccountsCard(
+        :accounts="connectedAccounts"
+        v-model="selectedProviders"
+        :title="$t('mail.accounts')"
+        class="mb-4"
+      )
         
       v-card
         v-card-title {{ $t('common.filters') }}
@@ -107,7 +114,7 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
 import { useAuthStore } from '~/stores/auth'
 import { useCalendarStore } from '~/stores/calendar'
@@ -119,6 +126,7 @@ import MonthView from '~/components/calendar/MonthView.vue'
 import WeekView from '~/components/calendar/WeekView.vue'
 import DayView from '~/components/calendar/DayView.vue'
 import ScheduleView from '~/components/calendar/ScheduleView.vue'
+import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
 
 // Stores
 const tasksStore = useTasksStore()
@@ -136,6 +144,32 @@ const {
   getWeekDayNames,
   getFirstDayOfWeek
 } = useCalendarHelpers()
+
+// Connected accounts
+const connectedAccounts = computed(() => {
+  const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
+  
+  // Only return accounts that are connected and have syncCalendar and showInCalendar set to true
+  return integrationAccounts.filter(account => 
+    account.oauthData.connected && account.syncCalendar && account.showInCalendar
+  )
+})
+
+// Provider filters
+const selectedProviders = ref<string[]>([])
+
+// Initialize selectedProviders with all providers by default
+onMounted(() => {
+  // After the accounts are loaded, select all by default
+  nextTick(() => {
+    selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  })
+})
+
+// Watch for changes in selectedProviders
+watch(selectedProviders, (newProviders) => {
+  console.log('Calendar provider filter changed:', newProviders)
+})
 
 // Check if user has connected calendar integrations
 const hasCalendarIntegrations = computed(() => {
@@ -231,6 +265,29 @@ watch(selectedDate, (newDate) => {
   }
 })
 
+// Get provider color based on the account ID
+const getProviderColor = (accountId: string | undefined) => {
+  if (!accountId) return 'primary'
+  
+  const account = connectedAccounts.value.find(acc => acc.id === accountId)
+  if (!account) return 'primary'
+  
+  // Check if the account has a predefined color
+  if (account.color) {
+    return account.color
+  }
+  
+  // Generate deterministic color based on account ID
+  let hash = 0
+  const id = account.id
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  
+  const hue = Math.abs(hash % 360)
+  return `hsl(${hue}, 70%, 60%)`
+}
+
 // Generate calendar days for month view
 const calendarDays = computed(() => {
   const date = new Date(selectedDate.value)
@@ -246,14 +303,14 @@ const calendarDays = computed(() => {
   let dayOfWeek = (firstDay.getDay() - weekStartDay + 7) % 7
   
   // Create first week with days from previous month if needed
-  let week = []
+  let week: any[] = []
   const prevMonth = new Date(date)
   prevMonth.setMonth(prevMonth.getMonth() - 1)
   const daysInPrevMonth = getDaysInMonth(prevMonth)
   
   for (let i = 0; i < dayOfWeek; i++) {
-    const prevMonthDay = daysInPrevMonth - dayOfWeek + i + 1
-    const dayDate = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), prevMonthDay)
+    const prevMonthDay: number = daysInPrevMonth - dayOfWeek + i + 1
+    const dayDate: Date = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), prevMonthDay)
     
     week.push({
       date: dayDate,
@@ -352,7 +409,7 @@ const selectedDateEvents = computed(() => {
 
 // Use computed for combined events to make it reactive to store changes
 const combinedEvents = computed(() => {
-  const result = []
+  let result: any[] = []
   
   // Add tasks as events
   if (showTasks.value) {
@@ -387,11 +444,22 @@ const combinedEvents = computed(() => {
     })
   }
   
+  // Filter by provider accounts
+  if (selectedProviders.value.length === 0) {
+    // If no providers are selected, only show events without a calendarId
+    result = result.filter(event => !event.calendarId)
+  } else if (connectedAccounts.value.length > 0) {
+    result = result.filter(event => 
+      !event.calendarId || // Include events without calendar ID (like tasks)
+      selectedProviders.value.includes(event.calendarId)
+    )
+  }
+  
   return result
 })
 
 // Navigation handlers
-const handleNavigation = (direction) => {
+const handleNavigation = (direction: string) => {
   if (direction === 'previous') {
     navigatePrevious()
   } else if (direction === 'next') {
@@ -434,7 +502,7 @@ const navigateToday = () => {
 }
 
 // Selection handlers
-const selectDay = (date) => {
+const selectDay = (date: Date) => {
   selectedDate.value = date.toISOString().slice(0, 10)
   
   if (currentView.value === 'month') {
@@ -442,18 +510,18 @@ const selectDay = (date) => {
   }
 }
 
-const selectDayFromWeekView = (date) => {
+const selectDayFromWeekView = (date: Date) => {
   selectedDate.value = date.toISOString().slice(0, 10)
   currentView.value = 'day'
 }
 
-const selectWeek = (date) => {
+const selectWeek = (date: Date) => {
   selectedDate.value = date.toISOString().slice(0, 10)
   currentView.value = 'week'
 }
 
 // Event helpers
-const getEventsForDay = (date) => {
+const getEventsForDay = (date: Date | null) => {
   if (!date) return []
   
   return combinedEvents.value.filter(event => {
@@ -467,7 +535,7 @@ const getEventsForDay = (date) => {
   })
 }
 
-const getEventsForHour = (date, hour) => {
+const getEventsForHour = (date: Date | null, hour: number | undefined) => {
   if (!date || hour === undefined) return []
   
   return combinedEvents.value.filter(event => {
@@ -490,8 +558,19 @@ const getEventsForHour = (date, hour) => {
     return {
       ...event,
       minutesFromHourStart,
-      durationHours
+      durationHours,
+      providerColor: event.calendarId ? getProviderColor(event.calendarId) : 'primary'
     }
   })
 }
 </script>
+
+<style>
+.account-indicator {
+  position: absolute;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  border-radius: 2px 0 0 2px;
+}
+</style>

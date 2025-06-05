@@ -252,6 +252,7 @@ export default {
     byRole: 'By Role',
     allPeople: 'All People',
     syncContacts: 'Sync Contacts',
+    accounts: 'Connected Accounts',
   },
   projects: {
     title: 'Projects',

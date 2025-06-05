@@ -70,7 +70,14 @@ v-container(fluid)
                   hide-details
                 )
       
-      v-card
+      ProviderAccountsCard(
+        :accounts="connectedAccounts"
+        v-model="selectedProviders"
+        :title="$t('people.accounts')"
+        class="mb-4"
+      )
+      
+      v-card(class="mb-4" v-if="recentlyContacted.length > 0 || loading")
         v-card-title {{ $t('people.recentlyContacted') }}
         v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-avatar-two-line" v-for="i in 3" :key="i")
@@ -126,8 +133,14 @@ v-container(fluid)
           )
             template(v-slot:item.name="{ item }")
               div.d-flex.align-center
-                v-avatar(size="32" color="primary" class="mr-2")
-                  span {{ getInitials(item) }}
+                div.position-relative.d-flex.align-center
+                  div.account-indicator(:style="{ backgroundColor: getProviderColor(item) }")
+                  v-avatar(
+                    size="32" 
+                    :color="getProviderColor(item)"
+                    class="ml-2 mr-2"
+                  )
+                    span {{ getInitials(item) }}
                 span {{ `${item.firstName} ${item.lastName}` }}
                 
             template(v-slot:item.lastContacted="{ item }")
@@ -178,12 +191,15 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { usePeopleStore } from '~/stores/people'
-import type { Person } from '~/types/models'
+import { useAuthStore } from '~/stores/auth'
+import type { Person, IntegrationAccount } from '~/types/models'
 import PersonForm from '~/components/people/PersonForm.vue'
+import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
 
 const peopleStore = usePeopleStore()
+const authStore = useAuthStore()
 
 // UI state
 const loading = ref(true)
@@ -194,6 +210,9 @@ const addDialog = ref(false)
 const selectedPerson = ref<Person | null>(null)
 const search = ref('')
 const syncingContacts = ref(false)
+
+// Provider filters
+const selectedProviders = ref<string[]>([])
 
 // Filters
 const selectedOrganizations = ref<string[]>([])
@@ -222,6 +241,64 @@ onMounted(async () => {
   }
 })
 
+// Connected accounts
+const connectedAccounts = computed(() => {
+  const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
+  
+  // Only return accounts that are connected and have syncContacts and showInContacts set to true
+  return integrationAccounts.filter(account => 
+    account.oauthData.connected && account.syncContacts && account.showInContacts
+  )
+})
+
+// Initialize selectedProviders with all providers by default
+onMounted(() => {
+  // After the accounts are loaded, select all by default
+  nextTick(() => {
+    selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  })
+})
+
+// Watch for changes in selectedProviders
+watch(selectedProviders, (newProviders) => {
+  console.log('Provider filter changed:', newProviders)
+  // The filteredPeople computed property will automatically update
+})
+
+// Helper functions for accounts
+const getInitialsFromString = (name: string) => {
+  if (!name) return ''
+  const parts = name.split(' ')
+  if (parts.length >= 2) {
+    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`
+  }
+  return name.substring(0, 2).toUpperCase()
+}
+
+// Get the provider color based on the account ID
+const getProviderColor = (person: Person) => {
+  if (!person.providerAccountId) return 'primary'
+  
+  const account = connectedAccounts.value.find(acc => acc.id === person.providerAccountId)
+  if (!account) return 'primary'
+  
+  // Check if the account has a predefined color
+  if (account.color) {
+    return account.color
+  }
+  
+  // Generate deterministic color based on account ID
+  let hash = 0
+  const id = account.id
+  for (let i = 0; i < id.length; i++) {
+    // Simple hash calculation for TypeScript compatibility
+    hash = Math.imul(hash, 31) + id.charCodeAt(i)
+  }
+  
+  const hue = Math.abs(hash % 360)
+  return `hsl(${hue}, 70%, 60%)`
+}
+
 // Computed properties
 const organizations = computed(() => {
   return [...new Set(peopleStore.people
@@ -248,11 +325,25 @@ const recentlyContacted = computed(() => {
 const hasFilters = computed(() => {
   return selectedOrganizations.value.length > 0 ||
     selectedTeams.value.length > 0 ||
-    selectedRoles.value.length > 0
+    selectedRoles.value.length > 0 ||
+    // Add provider filter check
+    (selectedProviders.value.length > 0 && 
+     selectedProviders.value.length < connectedAccounts.value.length)
 })
 
 const filteredPeople = computed(() => {
   let result = [...peopleStore.people]
+  
+  // Filter by provider accounts
+  if (selectedProviders.value.length === 0) {
+    // If no providers are selected, only show records without a provider
+    result = result.filter(p => !p.providerAccountId)
+  } else if (connectedAccounts.value.length > 0) {
+    result = result.filter(p => 
+      !p.providerAccountId || // Include records without provider
+      selectedProviders.value.includes(p.providerAccountId)
+    )
+  }
   
   if (selectedOrganizations.value.length > 0) {
     result = result.filter(p => 
@@ -317,6 +408,8 @@ const clearFilters = () => {
   selectedOrganizations.value = []
   selectedTeams.value = []
   selectedRoles.value = []
+  // Reset providers to select all
+  selectedProviders.value = connectedAccounts.value.map(account => account.id)
 }
 
 // Dialog functions
@@ -394,3 +487,13 @@ const syncContacts = async () => {
   }
 }
 </script>
+
+<style>
+.account-indicator {
+  position: absolute;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  border-radius: 2px 0 0 2px;
+}
+</style>

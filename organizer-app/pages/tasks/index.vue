@@ -90,6 +90,13 @@ v-container(fluid)
                   hide-details
                 )
       
+      ProviderAccountsCard(
+        :accounts="connectedAccounts"
+        v-model="selectedProviders"
+        :title="$t('mail.accounts')"
+        class="mb-4"
+      )
+      
       v-card(class="mb-4")
         v-card-title {{ $t('tasks.upcomingTasks') }}
         v-card-text(v-if="loading") 
@@ -108,13 +115,15 @@ v-container(fluid)
             :disabled="task.status === 'completed'"
           )
             template(v-slot:prepend)
-              v-checkbox(
-                v-model="task.completed"
-                :value="task.status === 'completed'"
-                color="success"
-                @click.stop="toggleTaskStatus(task)"
-                :disabled="task.status === 'completed'"
-              )
+              div.position-relative.d-flex.align-center
+                div.account-indicator(v-if="task.providerAccountId" :style="{ backgroundColor: getProviderColor(task) }")
+                v-checkbox(
+                  v-model="task.completed"
+                  :value="task.status === 'completed'"
+                  color="success"
+                  @click.stop="toggleTaskStatus(task)"
+                  :disabled="task.status === 'completed'"
+                )
             template(v-slot:append)
               v-btn(icon size="small" @click.stop="openTask(task)")
                 v-icon mdi-pencil
@@ -138,13 +147,15 @@ v-container(fluid)
             :disabled="task.status === 'completed'"
           )
             template(v-slot:prepend)
-              v-checkbox(
-                v-model="task.completed"
-                :value="task.status === 'completed'"
-                color="success"
-                @click.stop="toggleTaskStatus(task)"
-                :disabled="task.status === 'completed'"
-              )
+              div.position-relative.d-flex.align-center
+                div.account-indicator(v-if="task.providerAccountId" :style="{ backgroundColor: getProviderColor(task) }")
+                v-checkbox(
+                  v-model="task.completed"
+                  :value="task.status === 'completed'"
+                  color="success"
+                  @click.stop="toggleTaskStatus(task)"
+                  :disabled="task.status === 'completed'"
+                )
             template(v-slot:append)
               v-chip(
                 size="small"
@@ -188,13 +199,15 @@ v-container(fluid)
                   @click="openTask(task)"
                 )
                   td(style="width: 50px")
-                    v-checkbox(
-                      v-model="task.completed"
-                      :value="task.status === 'completed'"
-                      color="success"
-                      @click.stop="toggleTaskStatus(task)"
-                      :disabled="task.status === 'completed'"
-                    )
+                    div.position-relative.d-flex.align-center
+                      div.account-indicator(v-if="task.providerAccountId" :style="{ backgroundColor: getProviderColor(task) }")
+                      v-checkbox(
+                        v-model="task.completed"
+                        :value="task.status === 'completed'"
+                        color="success"
+                        @click.stop="toggleTaskStatus(task)"
+                        :disabled="task.status === 'completed'"
+                      )
                   td(class="d-flex align-center")
                     div(
                       v-if="task.level > 0"
@@ -285,7 +298,7 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, nextTick, watch } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
@@ -293,10 +306,12 @@ import { useAuthStore } from '~/stores/auth'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import type { Task } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
+import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
 
 const tasksStore = useTasksStore()
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
+const authStore = useAuthStore()
 
 // UI state
 const loading = ref(true)
@@ -314,6 +329,7 @@ const selectedTypes = ref<string[]>([])
 const selectedTags = ref<string[]>([])
 const selectedProjects = ref<string[]>([])
 const selectedAssignees = ref<string[]>([])
+const selectedProviders = ref<string[]>([])
 
 // Status options
 const statusOptions = [
@@ -333,10 +349,54 @@ const typeOptions = [
 ]
 
 // Connected accounts
-const integrationAccounts = ref([])
+const integrationAccounts = ref<any[]>([])
 const providerSyncEnabled = ref(false)
 const syncLoading = ref(false)
 const syncError = ref('')
+
+// Connected accounts for the provider card
+const connectedAccounts = computed(() => {
+  return integrationAccounts.value.filter(account => 
+    account.oauthData?.connected && account.syncTasks && account.showInTasks
+  )
+})
+
+// Initialize selectedProviders with all providers by default
+onMounted(() => {
+  // After the accounts are loaded, select all by default
+  nextTick(() => {
+    selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  })
+})
+
+// Watch for changes in selectedProviders
+watch(selectedProviders, (newProviders) => {
+  console.log('Task provider filter changed:', newProviders)
+})
+
+// Get provider color based on the account ID
+const getProviderColor = (task: Task) => {
+  if (!task.providerAccountId) return 'primary'
+  
+  const account = connectedAccounts.value.find(acc => acc.id === task.providerAccountId)
+  if (!account) return 'primary'
+  
+  // Check if the account has a predefined color
+  if (account.color) {
+    return account.color
+  }
+  
+  // Generate deterministic color based on account ID
+  let hash = 0
+  const id = account.id
+  for (let i = 0; i < id.length; i++) {
+    // Simple hash calculation for TypeScript compatibility
+    hash = Math.imul(hash, 31) + id.charCodeAt(i)
+  }
+  
+  const hue = Math.abs(hash % 360)
+  return `hsl(${hue}, 70%, 60%)`
+}
 
 // Initialize data
 onMounted(async () => {
@@ -349,17 +409,20 @@ onMounted(async () => {
     
     if (auth.user) {
       // Get user settings to find connected accounts with task sync enabled
-      const db = getFirestore($firebase)
+      const db = getFirestore($firebase as any)
       const userRef = doc(db, 'users', auth.user.id)
       const userSnap = await getDoc(userRef)
       
       if (userSnap.exists() && userSnap.data().settings?.integrationAccounts) {
         const accounts = userSnap.data().settings.integrationAccounts
-        integrationAccounts.value = accounts.filter(a => a.syncTasks && a.oauthData.connected)
+        integrationAccounts.value = accounts.filter((a: any) => a.syncTasks && a.oauthData.connected)
         providerSyncEnabled.value = integrationAccounts.value.length > 0
         
         // Set the accounts in the tasks store
         tasksStore.setIntegrationAccounts(integrationAccounts.value)
+        
+        // Initialize selectedProviders with all providers
+        selectedProviders.value = connectedAccounts.value.map(account => account.id)
       }
     }
     
@@ -417,15 +480,46 @@ const hasFilters = computed(() => {
     selectedTags.value.length > 0 ||
     selectedProjects.value.length > 0 ||
     selectedAssignees.value.length > 0 ||
+    // Add provider filter check
+    (selectedProviders.value.length > 0 && 
+     selectedProviders.value.length < connectedAccounts.value.length) ||
     search.value !== ''
 })
 
 const upcomingTasks = computed(() => {
-  return tasksStore.upcomingTasks.slice(0, 5)
+  // Filter by provider first
+  let tasks = tasksStore.upcomingTasks
+  
+  // Filter by provider accounts
+  if (selectedProviders.value.length === 0) {
+    // If no providers are selected, only show tasks without a providerAccountId
+    tasks = tasks.filter(task => !task.providerAccountId)
+  } else if (connectedAccounts.value.length > 0) {
+    tasks = tasks.filter(task => 
+      !task.providerAccountId || // Include tasks without provider
+      selectedProviders.value.includes(task.providerAccountId)
+    )
+  }
+  
+  return tasks.slice(0, 5)
 })
 
 const overdueTasks = computed(() => {
-  return tasksStore.overdueTasks.slice(0, 5)
+  // Filter by provider first
+  let tasks = tasksStore.overdueTasks
+  
+  // Filter by provider accounts
+  if (selectedProviders.value.length === 0) {
+    // If no providers are selected, only show tasks without a providerAccountId
+    tasks = tasks.filter(task => !task.providerAccountId)
+  } else if (connectedAccounts.value.length > 0) {
+    tasks = tasks.filter(task => 
+      !task.providerAccountId || // Include tasks without provider
+      selectedProviders.value.includes(task.providerAccountId)
+    )
+  }
+  
+  return tasks.slice(0, 5)
 })
 
 const filteredTasks = computed(() => {
@@ -436,6 +530,17 @@ const filteredTasks = computed(() => {
     result = [...tasksStore.tasks]
   } else {
     result = tasksStore.tasks.filter(task => task.status === activeTab.value)
+  }
+  
+  // Filter by provider accounts
+  if (selectedProviders.value.length === 0) {
+    // If no providers are selected, only show tasks without a providerAccountId
+    result = result.filter(task => !task.providerAccountId)
+  } else if (connectedAccounts.value.length > 0) {
+    result = result.filter(task => 
+      !task.providerAccountId || // Include tasks without provider
+      selectedProviders.value.includes(task.providerAccountId)
+    )
   }
   
   // Then apply additional filters
@@ -464,10 +569,10 @@ const filteredTasks = computed(() => {
     )
   }
   
-  // By assignee
+    // By assignee
   if (selectedAssignees.value.length > 0) {
     result = result.filter(task => 
-      selectedAssignees.value.includes(task.assignedTo || '')
+      task.assignedTo && selectedAssignees.value.includes(task.assignedTo)
     )
   }
   
@@ -623,6 +728,8 @@ const clearFilters = () => {
   selectedTags.value = []
   selectedProjects.value = []
   selectedAssignees.value = []
+  // Reset providers to select all
+  selectedProviders.value = connectedAccounts.value.map(account => account.id)
   search.value = ''
 }
 
@@ -638,10 +745,11 @@ const createTask = async (taskData: Partial<Task>) => {
   formError.value = ''
   
   try {
-    // Check if the task should be created with a provider
-    if (taskData.storageProvider && taskData.storageProvider !== 'organizer') {
-      // Find the provider account
-      const account = integrationAccounts.value.find(a => a.id === taskData.storageProvider)
+  // Check if the task should be created with a provider
+  const taskDataAny = taskData as any;
+  if (taskDataAny.storageProvider && taskDataAny.storageProvider !== 'organizer') {
+    // Find the provider account
+    const account = integrationAccounts.value.find(a => a.id === taskDataAny.storageProvider)
       
       if (account) {
         // Create in provider
@@ -801,7 +909,10 @@ const processedTasks = computed(() => {
       if (!taskMap.has(parentId)) {
         taskMap.set(parentId, [])
       }
-      taskMap.get(parentId)!.push(task)
+      const tasks = taskMap.get(parentId);
+      if (tasks) {
+        tasks.push(task);
+      }
     }
   })
   
@@ -909,7 +1020,7 @@ const getTaskRowClasses = (task: Task & { level: number, hasSubtasks: boolean })
 const getTaskRowStyle = (task: Task & { level: number, hasSubtasks: boolean }) => {
   return { 
     cursor: 'pointer',
-    backgroundColor: task.level > 0 ? `rgba(0, 0, 0, ${0.03 * task.level})` : ''
+    backgroundColor: task.level > 0 ? `rgba(0, 0, 0, ${0.03 * (task.level as number)})` : ''
   }
 }
 
@@ -940,17 +1051,16 @@ const toggleTaskStatus = async (task: Task) => {
 }
 </script>
 
-<style scoped>
+<style>
+.account-indicator {
+  position: absolute;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  border-radius: 2px 0 0 2px;
+}
+
 .rotate-icon {
   transform: rotate(-90deg);
-  transition: transform 0.3s ease;
-}
-
-.task-parent {
-  font-weight: 500;
-}
-
-.task-child {
-  border-left: 2px solid rgba(0, 0, 0, 0.1);
 }
 </style>

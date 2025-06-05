@@ -105,7 +105,9 @@ export default {
     changeColor: 'Kleur Wijzigen',
     provider: {
       info: 'Provider Informatie'
-    }
+    },
+    enabled: 'Ingeschakeld',
+    disabled: 'Uitgeschakeld'
   },
   behaviors: {
     title: 'Gedragingen',
@@ -186,6 +188,7 @@ export default {
     byRole: 'Op rol',
     allPeople: 'Alle personen',
     syncContacts: 'Contacten Synchroniseren',
+    accounts: 'Verbonden Accounts',
   },
   projects: {
     title: 'Projecten',
