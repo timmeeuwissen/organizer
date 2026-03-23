@@ -447,7 +447,7 @@ export default {
     viewAndColumns: 'List view',
     emailsPerPage: 'Emails per page',
     visibleColumns: 'Visible columns',
-    pageSizeHint: 'Loads this many messages per request from each account (list shows all loaded rows).',
+    pageSizeHint: 'How many messages appear in the list per page (and requested from each account).',
     columnsHint: 'Show fields in the message list. Links jump to other modules when possible.',
     openPeopleModule: 'Open People (search this address)',
     matchedPerson: 'Known contact',

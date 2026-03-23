@@ -136,7 +136,7 @@ v-container(fluid)
           v-card-title(:class="{ 'pa-0': true }")
             v-data-table-virtual(
               :headers="emailHeaders"
-              :items="filteredEmails"
+              :items="tableEmails"
               :sort-by="[{ key: 'date', order: 'desc' }]"
               hover
               @click:row="handleEmailClick"
@@ -209,7 +209,7 @@ v-container(fluid)
                 
                 div.d-flex.align-center.justify-space-between.px-4.py-2(v-else)
                   div.text-caption 
-                    span Showing {{ filteredEmails.length }} of {{ paginationInfo.totalEmails }} emails
+                    span Showing {{ tableEmails.length }} of {{ paginationInfo.totalEmails }} emails
                   
                   div.d-flex.align-center
                     v-btn(
@@ -458,6 +458,12 @@ const filteredEmails = computed(() => {
   }
   
   return result
+})
+
+/** Rows bound to the table — capped by mailPageSize so the list matches the chosen page size. */
+const tableEmails = computed(() => {
+  const cap = normalizeMailPageSize(mailPageSize.value)
+  return filteredEmails.value.slice(0, cap)
 })
 
 function applyMailUiFromUserSettings() {

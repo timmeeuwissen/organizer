@@ -256,16 +256,19 @@ export const useMailStore = defineStore('mail', {
           }
         }
         
-        // Always replace the emails array with the new results
-        // This ensures the view is updated for each page
+        // Replace with merged results, sort newest first, then cap to page size for the list UI
         this.emails = allEmails
-        
-        // Sort emails by date (newest first)
         this.emails.sort((a, b) => b.date.getTime() - a.date.getTime())
-        
+        const cap = pageSetting.pageSize
+        const mergedLen = this.emails.length
+        if (mergedLen > cap) {
+          this.emails = this.emails.slice(0, cap)
+        }
+        // More to show if any provider has a next page, or merged batch exceeded one page (multi-account)
+        this.hasMoreEmails = anyHasMore || mergedLen > cap
+
         // Update pagination state
         this.totalEmails = totalEmailCount
-        this.hasMoreEmails = anyHasMore
       } catch (error: any) {
         console.error('Error fetching emails:', error)
         this.error = error.message || 'Failed to fetch emails'

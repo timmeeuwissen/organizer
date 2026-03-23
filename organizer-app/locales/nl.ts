@@ -362,7 +362,7 @@ export default {
     viewAndColumns: 'Lijstweergave',
     emailsPerPage: 'E-mails per pagina',
     visibleColumns: 'Zichtbare kolommen',
-    pageSizeHint: 'Haalt dit aantal berichten per aanvraag op per account (de lijst toont alle opgehaalde rijen).',
+    pageSizeHint: 'Hoeveel berichten in de lijst per pagina (en per account opgehaald).',
     columnsHint: 'Velden in de berichtenlijst. Koppelingen gaan waar mogelijk naar andere modules.',
     openPeopleModule: 'Open Personen (zoek dit adres)',
     matchedPerson: 'Bekend contact',
