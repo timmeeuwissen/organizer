@@ -112,12 +112,11 @@ const isMicrosoftLoading = ref(false);
 
 // Functions for handling auth results from components
 function handleGoogleAuthClick() {
-  // Close dialog immediately after button click
+  // Close dialog immediately after button click (Google auth uses a separate window)
   dialogVisible.value = false;
-  
-  // Show notification that authentication is in progress
-  notificationStore.info(i18n.t('settings.authenticatingWithGoogle') || 'Authenticating with Google...', {
-    timeout: 10000 // longer timeout since auth might take time
+
+  notificationStore.info(i18n.t('settings.authenticatingWithGoogle'), {
+    timeout: 10000
   });
 }
 
@@ -189,7 +188,7 @@ async function handleGoogleAuthSuccess(tokens) {
     console.log('Updated integration accounts count:', currentAccounts.length);
     
     // Show success notification
-    notificationStore.success(i18n.t('settings.connectionSuccessful') || 'Successfully connected to Google');
+    notificationStore.success(i18n.t('settings.connectionSuccessful'));
     
     // Still emit the save event for any parent components that need to know
     emit('save', account);
@@ -206,13 +205,13 @@ function handleGoogleAuthError(error) {
 }
 
 function handleMicrosoftAuthClick() {
-  // Close dialog immediately after button click
-  dialogVisible.value = false;
-  
-  // Show notification that authentication is in progress
-  notificationStore.info(i18n.t('settings.authenticatingWithMicrosoft') || 'Authenticating with Microsoft...', {
-    timeout: 10000 // longer timeout since auth might take time
-  });
+  // Unlike Google (separate popup), Microsoft uses OAuthAuthorizeButton's in-dialog
+  // credential flow. Closing the integration dialog here would unmount that component
+  // and the inner dialog would never appear.
+  notificationStore.info(
+    i18n.t('settings.microsoftOAuthDialogHint'),
+    { timeout: 12000 }
+  );
 }
 
 async function handleMicrosoftAuthSuccess(tokens) {
@@ -281,8 +280,10 @@ async function handleMicrosoftAuthSuccess(tokens) {
     console.log('Updated integration accounts count:', currentAccounts.length);
     
     // Show success notification
-    notificationStore.success(i18n.t('settings.connectionSuccessful') || 'Successfully connected to Microsoft');
-    
+    notificationStore.success(i18n.t('settings.connectionSuccessful'));
+
+    dialogVisible.value = false;
+
     // Still emit the save event for any parent components that need to know
     emit('save', account);
   }

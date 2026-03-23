@@ -129,6 +129,9 @@ export default {
     selectAuthMethod: 'Select Authentication Method',
     connectGoogle: 'Connect Google',
     connectMicrosoft: 'Connect Microsoft',
+    authenticatingWithGoogle: 'Authenticating with Google…',
+    microsoftOAuthDialogHint:
+      'Use the dialog to enter your Microsoft OAuth credentials (from your terminal / make oauth-ms-setup).',
     changeColor: 'Change Color',
     provider: {
       info: 'Provider Information'

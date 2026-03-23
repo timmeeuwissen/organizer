@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const MODULE_I18N: Record<string, string> = {
@@ -24,6 +24,7 @@ const MODULE_I18N: Record<string, string> = {
  */
 export function useAppNavigationContext() {
   const route = useRoute()
+  const router = useRouter()
   const { t } = useI18n()
 
   const segments = computed(() => {
@@ -40,9 +41,15 @@ export function useAppNavigationContext() {
       const key = MODULE_I18N[parts[i]]
       const title = key ? String(t(key)) : parts[i]
       const isLast = i === parts.length - 1
+      // Only link prefixes that match a real route (e.g. avoid /auth when only /auth/profile exists).
+      let to: string | undefined
+      if (!isLast) {
+        const { matched } = router.resolve(acc)
+        to = matched.length > 0 ? acc : undefined
+      }
       items.push({
         title,
-        to: isLast ? undefined : acc,
+        to,
       })
     }
     return items

@@ -105,6 +105,9 @@ export default {
     selectAuthMethod: 'Selecteer Authenticatiemethode',
     connectGoogle: 'Verbind Google',
     connectMicrosoft: 'Verbind Microsoft',
+    authenticatingWithGoogle: 'Bezig met authenticeren bij Google…',
+    microsoftOAuthDialogHint:
+      'Gebruik het dialoogvenster om je Microsoft OAuth-gegevens in te voeren (via je terminal / make oauth-ms-setup).',
     changeColor: 'Kleur Wijzigen',
     provider: {
       info: 'Provider Informatie'
