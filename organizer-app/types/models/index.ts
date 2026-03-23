@@ -34,6 +34,13 @@ export interface IntegrationAccount {
 }
 
 import type { AIIntegrationData } from './aiIntegration';
+import type { MailColumnKey, MailPageSize } from '~/config/mailUi';
+
+/** Persisted mail list UI (page size, visible columns). */
+export interface MailUiSettings {
+  pageSize?: MailPageSize;
+  visibleColumns?: Partial<Record<MailColumnKey, boolean>>;
+}
 
 export interface UserSettings {
   defaultLanguage: string;
@@ -43,6 +50,7 @@ export interface UserSettings {
   weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   integrationAccounts: IntegrationAccount[];
   aiIntegrations?: AIIntegrationData[]; // AI integrations like XAI, OpenAI, Gemini
+  mailUi?: MailUiSettings;
 }
 
 export interface User {

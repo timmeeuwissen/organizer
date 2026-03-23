@@ -134,6 +134,7 @@ v-container(fluid)
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { usePeopleStore } from '~/stores/people'
 import { useAuthStore } from '~/stores/auth'
 import type { Person, IntegrationAccount } from '~/types/models'
@@ -143,6 +144,7 @@ import FilterContainer from '~/components/common/FilterContainer.vue'
 
 const peopleStore = usePeopleStore()
 const authStore = useAuthStore()
+const route = useRoute()
 
 // UI state
 const loading = ref(true)
@@ -203,6 +205,10 @@ const headers = [
 
 // Initialize data
 onMounted(async () => {
+  const q = route.query.search
+  if (typeof q === 'string' && q.trim()) {
+    search.value = q.trim()
+  }
   try {
     await peopleStore.fetchPeople()
   } catch (error: any) {

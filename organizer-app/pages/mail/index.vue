@@ -50,6 +50,33 @@ v-container(fluid)
             :color="getAccountStatusColor(account)"
           ) {{ getAccountStatusMessage(account) }}
       
+      v-card(class="mb-4")
+        v-card-title {{ $t('mail.viewAndColumns') }}
+        v-card-text
+          v-select(
+            :model-value="mailPageSize"
+            :items="mailPageSizeSelectItems"
+            :label="$t('mail.emailsPerPage')"
+            item-title="title"
+            item-value="value"
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="mb-3"
+            @update:model-value="commitMailPageSize"
+          )
+          .text-caption.text-medium-emphasis {{ $t('mail.pageSizeHint') }}
+          .text-caption.text-medium-emphasis.mb-2 {{ $t('mail.columnsHint') }}
+          .text-subtitle-2.mb-1 {{ $t('mail.visibleColumns') }}
+          v-checkbox(
+            v-for="col in MAIL_COLUMNS_FOR_PICKER"
+            :key="col.key"
+            v-model="visibleColumns[col.key]"
+            :label="$t(col.titleKey)"
+            density="compact"
+            hide-details
+          )
+      
       v-card
         v-card-title {{ $t('mail.contacts') }}
         v-card-text
@@ -108,7 +135,6 @@ v-container(fluid)
         template(v-if="!selectedEmail")
           v-card-title(:class="{ 'pa-0': true }")
             v-data-table-virtual(
-              v-model:items-per-page="itemsPerPage"
               :headers="emailHeaders"
               :items="filteredEmails"
               :sort-by="[{ key: 'date', order: 'desc' }]"
@@ -128,11 +154,47 @@ v-container(fluid)
               template(v-slot:item.from="{ item }")
                 span(:class="{ 'font-weight-bold': !item.read }") {{ item.from.name }}
               
+              template(v-slot:item.fromEmail="{ item }")
+                span.text-caption(:class="{ 'font-weight-bold': !item.read }") {{ item.from.email }}
+              
+              template(v-slot:item.to="{ item }")
+                span.text-caption(:class="{ 'font-weight-bold': !item.read }") {{ formatToSummary(item) }}
+              
               template(v-slot:item.subject="{ item }")
                 span(:class="{ 'font-weight-bold': !item.read }") {{ item.subject }}
               
               template(v-slot:item.date="{ item }")
                 span(:class="{ 'font-weight-bold': !item.read }") {{ formatDate(item.date) }}
+              
+              template(v-slot:item.attachments="{ item }")
+                v-icon(
+                  v-if="item.attachments && item.attachments.length"
+                  size="small"
+                  color="primary"
+                ) mdi-paperclip
+                span.text-caption.text-medium-emphasis(v-else) —
+              
+              template(v-slot:item.account="{ item }")
+                span.text-caption.text-truncate(style="max-width: 7rem") {{ getAccountLabel(item.accountId) }}
+              
+              template(v-slot:item.people="{ item }")
+                nuxt-link.text-decoration-none(
+                  v-if="item.from?.email"
+                  :to="{ path: '/people', query: { search: item.from.email } }"
+                  :title="$t('mail.openPeopleModule')"
+                )
+                  v-chip(
+                    v-if="findPersonByEmail(item.from.email)"
+                    size="x-small"
+                    color="success"
+                    prepend-icon="mdi-account-check"
+                  ) {{ $t('mail.matchedPerson') }}
+                  v-chip(
+                    v-else
+                    size="x-small"
+                    variant="tonal"
+                    prepend-icon="mdi-account-search"
+                  ) {{ $t('people.title') }}
               
               template(v-slot:item.actions="{ item }")
                 v-btn(icon variant="text" @click.stop="markAsRead(item)")
@@ -295,20 +357,30 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick, toRaw } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePeopleStore } from '~/stores/people'
 import { useMailStore } from '~/stores/mail'
 import { useAuthStore } from '~/stores/auth'
-import type { Person, IntegrationAccount } from '~/types/models'
+import type { Person, IntegrationAccount, MailUiSettings } from '~/types/models'
 import type { Email, MailFolder, EmailPerson, EmailAttachment } from '~/stores/mail'
 import { getAccountStatusMessage, getAccountStatusColor } from '~/utils/api/emailUtils'
 import GoogleReauthManager from '~/components/mail/GoogleReauthManager.vue'
 import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
+import {
+  MAIL_COLUMNS_FOR_PICKER,
+  MAIL_PAGE_SIZE_OPTIONS,
+  MAIL_TABLE_COLUMNS,
+  mergeMailColumnVisibility,
+  normalizeMailPageSize,
+  type MailColumnKey,
+} from '~/config/mailUi'
 
 // Stores
 const peopleStore = usePeopleStore()
 const mailStore = useMailStore()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 // State
 const selectedEmail = ref<Email | null>(null)
@@ -317,15 +389,24 @@ const mailFolders = computed(() => mailStore.folders)
 const connectedAccounts = computed(() => mailStore.getConnectedAccounts)
 const loading = computed(() => mailStore.loading)
 
-// Table config
-const emailHeaders = [
-  { title: '', key: 'read', sortable: false, width: '40px' },
-  { title: 'From', key: 'from', sortable: true },
-  { title: 'Subject', key: 'subject', sortable: true },
-  { title: 'Date', key: 'date', sortable: true, width: '150px' },
-  { title: 'Actions', key: 'actions', sortable: false, width: '100px' },
-]
-const itemsPerPage = ref(20) // Match this with store's pageSize for consistency
+const mailPageSize = ref<ReturnType<typeof normalizeMailPageSize>>(20)
+const mailPageSizeSelectItems = MAIL_PAGE_SIZE_OPTIONS.map((n) => ({ title: String(n), value: n }))
+const visibleColumns = reactive<Record<MailColumnKey, boolean>>(mergeMailColumnVisibility())
+const mailUiReady = ref(false)
+
+const emailHeaders = computed(() => {
+  return MAIL_TABLE_COLUMNS.filter((def) => {
+    if (def.optional === false) {
+      return true
+    }
+    return visibleColumns[def.key]
+  }).map((def) => ({
+    title: def.key === 'read' ? '' : t(def.titleKey),
+    key: def.key,
+    sortable: def.sortable ?? false,
+    width: def.width,
+  }))
+})
 
 // Search and filters
 const emailSearch = ref('')
@@ -379,6 +460,93 @@ const filteredEmails = computed(() => {
   return result
 })
 
+function applyMailUiFromUserSettings() {
+  const s = authStore.currentUser?.settings?.mailUi
+  mailPageSize.value = normalizeMailPageSize(s?.pageSize)
+  const merged = mergeMailColumnVisibility(s?.visibleColumns)
+  for (const col of MAIL_TABLE_COLUMNS) {
+    visibleColumns[col.key] = merged[col.key]
+  }
+}
+
+let persistMailUiTimer: ReturnType<typeof setTimeout> | null = null
+async function commitMailPageSize(raw: unknown) {
+  const size = normalizeMailPageSize(raw)
+  mailPageSize.value = size
+  if (!mailUiReady.value) {
+    return
+  }
+  selectedEmail.value = null
+  await mailStore.fetchEmails(
+    mailStore.currentQuery || { folder: selectedFolder.value },
+    { page: 0, pageSize: size }
+  )
+  schedulePersistMailUi()
+}
+
+function schedulePersistMailUi() {
+  if (!mailUiReady.value || !authStore.currentUser) {
+    return
+  }
+  if (persistMailUiTimer) {
+    clearTimeout(persistMailUiTimer)
+  }
+  persistMailUiTimer = setTimeout(async () => {
+    persistMailUiTimer = null
+    try {
+      const payload: MailUiSettings = {
+        pageSize: mailPageSize.value,
+        visibleColumns: { ...(toRaw(visibleColumns) as Record<MailColumnKey, boolean>) },
+      }
+      await authStore.updateUserSettings({ mailUi: payload })
+    } catch (e) {
+      console.error('Failed to persist mail UI settings', e)
+    }
+  }, 450)
+}
+
+watch(
+  visibleColumns,
+  () => {
+    if (!mailUiReady.value) {
+      return
+    }
+    schedulePersistMailUi()
+  },
+  { deep: true }
+)
+
+function formatToSummary(item: Email) {
+  if (!item.to?.length) {
+    return '—'
+  }
+  const first = item.to[0]
+  const label = first.name || first.email || '—'
+  if (item.to.length === 1) {
+    return label
+  }
+  return `${label} +${item.to.length - 1}`
+}
+
+function findPersonByEmail(email: string | undefined) {
+  if (!email) {
+    return null
+  }
+  const lower = email.toLowerCase()
+  return peopleStore.people.find((p) => p.email?.toLowerCase() === lower) ?? null
+}
+
+function getAccountLabel(accountId: string | undefined) {
+  if (!accountId) {
+    return '—'
+  }
+  const acc = connectedAccounts.value.find((a) => a.id === accountId)
+  if (!acc) {
+    return '—'
+  }
+  return acc.oauthData?.name || acc.oauthData?.email || acc.type
+}
+
 const paginationInfo = computed(() => mailStore.paginationInfo)
 
 const filteredContacts = computed(() => {
@@ -423,8 +591,10 @@ const getEmailProviderColor = (email: Email) => {
 
 // Watch for folder changes to reload emails
 watch(selectedFolder, (newFolder) => {
-  // Reset pagination and fetch emails for the new folder
-  mailStore.fetchEmails({ folder: newFolder })
+  mailStore.fetchEmails(
+    { folder: newFolder },
+    { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) }
+  )
 })
 
 // Watch for changes in selectedProviders
@@ -435,25 +605,35 @@ watch(selectedProviders, (newProviders) => {
 
 // Load data
 onMounted(async () => {
-  // Load people data
-  await peopleStore.fetchPeople();
-  
-  // First load folder counts (faster) to populate sidebar with unread counts
-  console.log('Loading folder counts for sidebar...');
-  await mailStore.loadFolderCounts();
-  
-  // Then fetch the actual emails for the current folder
-  console.log('Fetching emails for current folder...');
-  await mailStore.fetchEmails({ folder: selectedFolder.value });
-  
-  // Display integrated accounts info if available
-  console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`);
-  
-  // Initialize selectedProviders with all providers by default
-  nextTick(() => {
-    selectedProviders.value = connectedAccounts.value.map(account => account.id)
-  });
-});
+  applyMailUiFromUserSettings()
+
+  try {
+    // Load people data (needed for People link column)
+    await peopleStore.fetchPeople()
+
+    // First load folder counts (faster) to populate sidebar with unread counts
+    console.log('Loading folder counts for sidebar...')
+    await mailStore.loadFolderCounts()
+
+    // Then fetch the actual emails for the current folder
+    console.log('Fetching emails for current folder...')
+    await mailStore.fetchEmails(
+      { folder: selectedFolder.value },
+      { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) }
+    )
+
+    // Display integrated accounts info if available
+    console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`)
+
+    // Initialize selectedProviders with all providers by default
+    nextTick(() => {
+      selectedProviders.value = connectedAccounts.value.map((account) => account.id)
+    })
+  } finally {
+    // Must stay true even when a step fails, or page-size changes never refetch
+    mailUiReady.value = true
+  }
+})
 
 // Refresh unread counts periodically but less frequently
 const refreshUnreadCountsTimer = setInterval(() => {
@@ -539,8 +719,10 @@ const deleteEmail = (email?: Email) => {
 }
 
 const refreshEmails = async () => {
-  // Reset to page 0 and refresh emails
-  await mailStore.fetchEmails({ folder: selectedFolder.value })
+  await mailStore.fetchEmails(
+    { folder: selectedFolder.value },
+    { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) }
+  )
 }
 
 const loadNextPage = async () => {
@@ -558,7 +740,7 @@ const loadPreviousPage = async () => {
   const prevPage = mailStore.currentPage - 1
   await mailStore.fetchEmails(
     mailStore.currentQuery || { folder: selectedFolder.value },
-    { page: prevPage, pageSize: mailStore.pageSize }
+    { page: prevPage, pageSize: normalizeMailPageSize(mailPageSize.value) }
   )
   console.log(`After loadPreviousPage: page ${mailStore.currentPage + 1}, ${mailStore.emails.length} emails`)
 }
@@ -572,8 +754,7 @@ const performSearch = async () => {
   
   console.log('Performing search at provider level:', query)
   
-  // Reset to page 0 with the search query
-  await mailStore.fetchEmails(query)
+  await mailStore.fetchEmails(query, { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) })
 }
 
 const getContactInitials = (contact: Person) => {

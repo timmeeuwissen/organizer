@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import type { IntegrationAccount } from '~/types/models'
+import { normalizeMailPageSize } from '~/config/mailUi'
 import { hasValidOAuthTokens, refreshOAuthToken } from '~/utils/api/emailUtils'
 import { getMailProvider } from '~/utils/api/mailProviders'
 import type { EmailQuery, EmailPagination, EmailFetchResult } from '~/utils/api/mailProviders/MailProvider'
@@ -227,8 +228,11 @@ export const useMailStore = defineStore('mail', {
         this.currentQuery = query || { folder: 'inbox' }
         this.currentFolder = query?.folder || 'inbox'
         
-        // Set pagination parameters
-        const pageSetting = pagination || { page: this.currentPage, pageSize: this.pageSize }
+        // Set pagination parameters (coerce so API always gets a valid numeric page size)
+        const pageSetting: EmailPagination = {
+          page: Math.max(0, Math.floor(Number(pagination?.page ?? this.currentPage)) || 0),
+          pageSize: normalizeMailPageSize(pagination?.pageSize ?? this.pageSize),
+        }
         this.currentPage = pageSetting.page
         this.pageSize = pageSetting.pageSize
         
