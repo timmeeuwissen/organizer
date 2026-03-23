@@ -9,8 +9,8 @@ div.ai-button
   )
     v-icon mdi-brain
   
-  // AI Analysis Dialog
-  AIAnalysisDialog(v-model="showDialog")
+  // Mount only when open — avoids running dialog setup/watchers on every page (e.g. Mail).
+  AIAnalysisDialog(v-if="showDialog" v-model="showDialog")
 </template>
 
 <script setup>

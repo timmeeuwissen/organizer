@@ -110,7 +110,10 @@ export default {
       info: 'Provider Informatie'
     },
     enabled: 'Ingeschakeld',
-    disabled: 'Uitgeschakeld'
+    disabled: 'Uitgeschakeld',
+    integrationModuleActive: '{module} is verbonden en actief in deze module.',
+    integrationModulePending: '{module} staat aan voor dit account — verbind het account om het te gebruiken.',
+    integrationModuleOff: '{module} staat niet aan voor deze integratie.',
   },
   behaviors: {
     title: 'Gedragingen',

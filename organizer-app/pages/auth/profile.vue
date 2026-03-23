@@ -183,15 +183,25 @@ v-container
                   v-avatar(:color="account.color")
                     v-icon(color="white") {{ getAccountIcon(account.type) }}
                 
-                v-list-item-title {{ account.oauthData.name }}
-                
-                v-list-item-subtitle
-                  | {{ getAccountTypeName(account.type) }} | {{ account.oauthData.email }}
-                  v-chip(
-                    :color="account.oauthData.connected ? 'success' : 'error'"
-                    size="x-small"
-                    class="ml-2"
-                  ) {{ account.oauthData.connected ? $t('settings.connected') : $t('settings.disconnected') }}
+                .flex-grow-1.min-width-0.pr-2
+                  v-list-item-title {{ account.oauthData.name }}
+                  v-list-item-subtitle
+                    span {{ getAccountTypeName(account.type) }} | {{ account.oauthData.email }}
+                    v-chip(
+                      :color="account.oauthData.connected ? 'success' : 'error'"
+                      size="x-small"
+                      class="ml-2"
+                    ) {{ account.oauthData.connected ? $t('settings.connected') : $t('settings.disconnected') }}
+                  .d-flex.flex-wrap.gap-1.mt-2
+                    v-chip(
+                      v-for="mod in getIntegrationModuleUsage(account)"
+                      :key="mod.key"
+                      size="x-small"
+                      :prepend-icon="integrationModuleIcon(mod.key)"
+                      :color="integrationModuleChipColor(mod.state)"
+                      :variant="mod.state === 'off' ? 'tonal' : 'flat'"
+                      :title="integrationModuleTooltip(mod)"
+                    ) {{ integrationModuleLabel(mod.key) }}
                 
                 template(v-slot:append)
                   // Color picker
@@ -282,6 +292,12 @@ import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import IntegrationAccountDialog from '~/components/integrations/IntegrationAccountDialog.vue'
 import AIIntegrationDialog from '~/components/integrations/AIIntegrationDialog.vue'
 import { v4 as uuidv4 } from 'uuid'
+import {
+  getIntegrationModuleUsage,
+  type IntegrationModuleKey,
+  type IntegrationModuleUsage,
+  type ModuleUsageState,
+} from '~/utils/integrationModuleUsage'
 
 // Component state
 const isLoading = ref(true)
@@ -485,6 +501,46 @@ function getAccountTypeName(type) {
     default:
       return type
   }
+}
+
+const INTEGRATION_MODULE_META: Record<
+  IntegrationModuleKey,
+  { titleKey: string; icon: string }
+> = {
+  mail: { titleKey: 'mail.title', icon: 'mdi-email' },
+  calendar: { titleKey: 'calendar.title', icon: 'mdi-calendar' },
+  tasks: { titleKey: 'tasks.title', icon: 'mdi-checkbox-marked-outline' },
+  people: { titleKey: 'people.title', icon: 'mdi-account-group' },
+  meetings: { titleKey: 'meetings.title', icon: 'mdi-calendar-account' },
+}
+
+function integrationModuleLabel(key: IntegrationModuleKey): string {
+  return String(i18n.t(INTEGRATION_MODULE_META[key].titleKey))
+}
+
+function integrationModuleIcon(key: IntegrationModuleKey): string {
+  return INTEGRATION_MODULE_META[key].icon
+}
+
+function integrationModuleChipColor(state: ModuleUsageState): string {
+  if (state === 'active') {
+    return 'success'
+  }
+  if (state === 'pending') {
+    return 'warning'
+  }
+  return 'default'
+}
+
+function integrationModuleTooltip(mod: IntegrationModuleUsage): string {
+  const moduleName = integrationModuleLabel(mod.key)
+  if (mod.state === 'active') {
+    return String(i18n.t('settings.integrationModuleActive', { module: moduleName }))
+  }
+  if (mod.state === 'pending') {
+    return String(i18n.t('settings.integrationModulePending', { module: moduleName }))
+  }
+  return String(i18n.t('settings.integrationModuleOff', { module: moduleName }))
 }
 
 function showAddIntegrationDialog() {

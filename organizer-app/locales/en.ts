@@ -134,7 +134,10 @@ export default {
       info: 'Provider Information'
     },
     enabled: 'Enabled',
-    disabled: 'Disabled'
+    disabled: 'Disabled',
+    integrationModuleActive: '{module} is connected and used in this module.',
+    integrationModulePending: '{module} is enabled for this account — connect the account to use it.',
+    integrationModuleOff: '{module} is not enabled for this integration.',
   },
   integrations: {
     reauthorizeNeeded: 'Reauthorization Required',

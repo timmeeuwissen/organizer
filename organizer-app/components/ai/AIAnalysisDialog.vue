@@ -391,8 +391,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-// Component state
-const dialogVisible = ref(false)
+// Single source of truth with parent — avoids props ↔ local ref watch ping-pong (recursive updates).
+const dialogVisible = computed({
+  get: () => props.modelValue,
+  set: (v) => emit('update:modelValue', v),
+})
 const form = ref(null)
 const isAnalyzing = ref(false)
 const error = ref('')
@@ -522,6 +525,20 @@ const availableProviders = computed(() => {
 // Selected integration ref (the whole integration object)
 const selectedIntegration = ref(null)
 
+// Syncs with header integration picker; inner v-select uses provider id (when multiple integrations).
+const selectedProvider = computed({
+  get: () => selectedIntegration.value?.provider ?? null,
+  set: (provider) => {
+    if (!provider) {
+      return
+    }
+    const found = availableIntegrations.value.find((i) => i.provider === provider)
+    if (found) {
+      selectedIntegration.value = found
+    }
+  },
+})
+
 // Status and type options for entities
 const projectStatusOptions = [
   'notStarted',
@@ -568,33 +585,21 @@ function getProviderIcon(provider) {
   }
 }
 
-// Watch for dialog visibility change
-watch(() => props.modelValue, (newVal) => {
-  dialogVisible.value = newVal
-  
-  // Initialize the selected integration when dialog opens
-  if (newVal && availableIntegrations.value.length > 0) {
-    selectedIntegration.value = availableIntegrations.value[0]
-  }
-})
-
-watch(() => dialogVisible.value, (newVal) => {
-  emit('update:modelValue', newVal)
-})
+// When dialog opens, default to first integration (header + analyze use selectedIntegration).
+watch(
+  () => props.modelValue,
+  (open) => {
+    if (open && availableIntegrations.value.length > 0) {
+      selectedIntegration.value = availableIntegrations.value[0]
+    }
+  },
+  { immediate: true }
+)
 
 watch(() => entityActions.value, validateRelationships, { deep: true })
 watch(() => entityRelations.value, validateRelationships, { deep: true })
 
 // Methods
-// Add CSS for max-width to style scope
-const style = document.createElement('style')
-style.textContent = `
-.max-width-200 {
-  max-width: 200px;
-}
-`
-document.head.appendChild(style)
-
 async function analyzeText() {
   console.log('user asks to analyze the text')
   if (!textToAnalyze.value) {
@@ -786,7 +791,7 @@ function relateToEntity(type, entity, relatedEntity) {
 
 function close() {
   // Reset state and close the dialog
-  dialogVisible.value = false
+  emit('update:modelValue', false)
   textToAnalyze.value = ''
   analysisResult.value = null
   selectedItemDetails.value = { type: null, entity: null }
@@ -821,5 +826,7 @@ function newAnalysis() {
 </script>
 
 <style scoped>
-/* Additional styles can be added here */
+.max-width-200 {
+  max-width: 200px;
+}
 </style>
