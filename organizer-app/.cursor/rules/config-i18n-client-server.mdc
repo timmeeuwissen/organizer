@@ -1,0 +1,47 @@
+---
+description: Configuration, no hard-coded values, i18n, client-server interaction and Node.js
+alwaysApply: true
+---
+
+# Configuration and No Hard-Coded Values
+
+- Do not hardcode business or configuration definitions directly in code.
+- Store such definitions in a `config` directory and always read them from configuration.
+
+# Internationalization
+
+- When the project becomes multilingual:
+  - Store internationalization resources in YAML files in an `i18n` folder.
+
+# Client–Server Interaction
+
+- Assume connectivity can be unreliable and design for resilience.
+- Use web workers as an intermediary to:
+  - Temporarily store non-GET HTTP requests when connectivity is lost.
+  - Replay these requests when connectivity is restored.
+- Communicate connectivity issues to the user in a non-intrusive way.
+- Use Pinia on the client side for state management and client–server interaction:
+  - Route client–server communication through Pinia stores.
+  - Debounce outbound requests where appropriate.
+- For GET requests:
+  - Honor HTTP cache headers.
+- Default to JSON as the wire format unless another serialization method is clearly more suitable.
+- Use sockets (for example WebSockets) when streaming or realtime interaction is needed.
+- Never hardcode URLs:
+  - Read them from environment variables.
+  - Or derive them from runtime processes when targeting the application itself.
+
+# Nuxt and Service Layer
+
+- In Nuxt-based projects:
+  - Implement APIs using Nuxt’s native API mechanism where appropriate.
+- When business logic grows too extensive or complex:
+  - Create a separate project under `services/<service-name>/`.
+  - Apply these baseline rules per service.
+  - Provide logical `make` targets that start the entire service layer.
+
+# Node.js Versioning
+
+- When a Node.js version conflict occurs:
+  - Prefer upgrading to a later compatible version rather than downgrading.
+

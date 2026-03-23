@@ -253,6 +253,12 @@ const addMenuItems = [
     action: () => personDialog.value = true
   },
   { 
+    title: i18n.t('teams.createTeam'), 
+    icon: 'mdi-account-multiple-plus', 
+    color: 'deep-orange',
+    action: () => router.push({ path: '/teams', query: { new: '1' } })
+  },
+  { 
     title: i18n.t('calendar.event'), 
     icon: 'mdi-calendar-plus', 
     color: 'info',
@@ -309,6 +315,12 @@ const navItems = [
     icon: 'mdi-account-group', 
     to: '/people',
     addAction: () => personDialog.value = true
+  },
+  { 
+    title: 'teams.title', 
+    icon: 'mdi-account-multiple-outline', 
+    to: '/teams',
+    addAction: () => router.push({ path: '/teams', query: { new: '1' } })
   },
   { 
     title: 'projects.title', 

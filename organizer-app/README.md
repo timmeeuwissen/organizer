@@ -1,6 +1,6 @@
 # Organizer App
 
-A comprehensive personal organization platform built with Nuxt 3, Vue 3, and Vuetify.
+A comprehensive personal organization platform built with Nuxt 4, Vue 3, and Vuetify.
 
 ## Features
 
@@ -17,7 +17,7 @@ A comprehensive personal organization platform built with Nuxt 3, Vue 3, and Vue
 ## Technology Stack
 
 - **Frontend**: 
-  - Nuxt 3
+  - Nuxt 4
   - Vue 3
   - Vuetify 3
   - Pinia for state management
@@ -36,7 +36,7 @@ A comprehensive personal organization platform built with Nuxt 3, Vue 3, and Vue
 
 ### Prerequisites
 
-- Node.js 16+
+- Node.js 20+ (required for Nuxt 4)
 - npm or yarn
 - Firebase account (for data storage)
 
@@ -121,6 +121,14 @@ make k8s-deploy
 make ha-addon
 make ha-run
 ```
+
+## Documentation
+
+Project documentation lives under `docs/`:
+
+- **`docs/rules-overview.md`** — Summary of all project rules and conventions
+- **`docs/architecture.md`** — Architecture derived from the codebase
+- **`docs/product/`** — Product vision, feature requests, user flows, roadmap, **[module specifications](docs/product/modules.md)**, and **[Teams spec](docs/product/teams.md)**
 
 ## Architecture
 

@@ -1,0 +1,34 @@
+---
+description: AI usage and development workflow conventions
+alwaysApply: true
+---
+
+# AI & Development Workflow
+
+- Prefer `make` targets over direct `yarn` commands (for example, use `make test` instead of `yarn test`).
+- When debugging or running scripts, check both the server and client consoles for clues.
+- Run dev/listening applications (such as `make dev`) in the background, and read their output buffers when diagnosing problems.
+- When diagnosing an issue, always consider the versions of tools/frameworks in use and ensure proposed solutions match those versions.
+
+## Verification & Testing
+
+- **Always verify work through logs**: After making changes, check both server logs (terminal output, Nitro logs) and client logs (browser console) to ensure the application works correctly. Look for errors, warnings, and unexpected behavior in both environments.
+
+- **Unit tests for business logic**: Always write unit tests for business logic, including:
+  - Repository methods (data access and transformation)
+  - Utility functions and helpers
+  - Calculation logic (e.g., progress calculations, filtering logic)
+  - Data validation and transformation
+  - Any non-trivial algorithms or business rules
+
+- **Behavior tests for user flows**: Always write behavioral/integration tests for user flows, including:
+  - Complete user journeys as described in `docs/product/user-flows.md`
+  - API endpoint behavior (request/response cycles)
+  - End-to-end workflows (e.g., creating an organization → adding nodes → creating objectives → tracking progress)
+  - Cross-component interactions
+  - Error scenarios and edge cases
+
+- When implementing new features, write tests alongside the implementation, not as an afterthought.
+- Tests should be located in `tests/` directory, mirroring the structure of `server/` and `components/`.
+- Use Vitest for unit tests and behavioral tests.
+

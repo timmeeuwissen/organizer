@@ -1,0 +1,156 @@
+---
+description: GUI conventions for domain modules (bounded contexts) - module menu, icons, quick-add, admin card, forms, unsaved changes guard, references, topbar, breadcrumbs
+alwaysApply: true
+---
+
+# GUI Module Conventions
+
+**"Module" here means a domain module (bounded context in DDD)**—a topic or area the user can work on, such as Organizations, Objectives, Initiatives, Key Results, Focus Areas. This is not about Nuxt modules or technical modules.
+
+Apply these conventions consistently to every domain module in the GUI.
+
+## Icons
+
+- Each module has a **consistently used icon** that appears everywhere there is a link to that module.
+
+## Module Menu
+
+- All modules as defined in these conventions are shown in a **menu**.
+- The menu can **collapse** and expand.
+- A **button to open** the menu is placed in the **top bar** of the application (like a drawer).
+- When opened, the drawer reveals the full list of modules for navigation.
+
+## Top Bar and Module Name
+
+- Each GUI module presents its **module name** in the top bar, next to the application's name.
+- The module name reflects the current context (e.g., "Organizations", "Objectives", "Key Results").
+
+## Breadcrumbs
+
+- Each page starts with a component that displays a **clickable breadcrumb**.
+- The **root node** of the breadcrumb is always **Welcome**.
+- **Path retention**: When the user navigates by clicking through from one module (or record) to another—for example, from an Organization to its Objectives, or from a referenced value to its detail page—the breadcrumb **retains the path** and shows the full trail (e.g., `Welcome > Organizations > Acme Corp > Objectives`).
+- **Path reset**: When the user navigates via the **menu** or the **welcome page**, the breadcrumb is **reset**. Any prior navigations are lost, and the path becomes `Welcome > [modulename]` (e.g., `Welcome > Organizations`).
+- Breadcrumb segments are clickable and navigate back to that point in the path.
+
+## Unsaved Changes on Navigation
+
+- Before any navigation between modules occurs, the application **checks if there are unsaved changes** in any input forms.
+- If unsaved changes exist:
+  - **Prompt the user** with a choice:
+    - Navigate and abandon the changes.
+    - Stay on the current page and keep editing.
+  - Do not navigate until the user explicitly chooses one option.
+- This applies to all navigation triggers: menu clicks, links, back/forward, and any other way the user might leave the current module.
+
+## Quick-Add Feature
+
+- Each module has a **quick-add** feature that opens an overlay over the current page.
+- Quick-add is accessible from every location in the application.
+- **Invocation**: A `+` icon in the top-right bar. When clicked, a small overlay appears with:
+  - A list of modules to choose from.
+  - Each option shows the module icon and the module name.
+  - Selecting an option opens that module's quick-add overlay.
+- **Content parity**: The quick-add overlay must show the **same form and fields** as the module's normal add flow (e.g. the "Create New" page). It is the same functionality, presented in an overlay instead of a full page.
+- **Actions**: The quick-add overlay has:
+  - **Cancel**: Closes the overlay without saving.
+  - **Save**: Persists the new record and closes the overlay.
+
+## Internationalization
+
+- Every piece of text in the application is stored in a **translation file per module** (in the `i18n` folder).
+
+## Relations Between Modules
+
+- Relations between modules are managed by **searchable dropdowns** that let users search records within the related module.
+- When a reference is shown in a dropdown, display records according to the **module template** (see below).
+
+## Form Validation
+
+- When a form is invalid:
+  - Invalid fields are **immediately shown** (inline validation).
+  - The **Save button is greyed out** until the form is valid.
+
+## Module Overview References (Cards)
+
+- References to a module's overview page use **cards** that display:
+  - The module icon.
+  - The module title.
+  - A short description.
+
+## Delete with References
+
+- Users can delete records.
+- When a record has references from other modules:
+  - **Inform the user** which records will be affected.
+  - Show the **referencing module** and a **filter icon**.
+  - When the user clicks the filter icon:
+    - Navigate to the referencing module's overview page.
+    - Apply a filter to show only the affected records.
+    - **Cancel** the delete operation.
+
+## Module Templates
+
+- Each module has a **template** that defines how a record is represented elsewhere.
+- The template specifies which fields are shown when the record is referenced.
+- Dropdowns and references display records according to this template.
+
+## Detail Page Headers
+
+- When a detail page displays a single record, the **page header** (e.g. the main title) must be formatted **congruently** with how the record is shown elsewhere.
+- Use the **module template** to format the header—the same format used for breadcrumbs, dropdowns, and references.
+- Avoid showing only the primary field (e.g. name or title) in the header. Use the full template format so the visitor sees a consistent representation of the record across the application.
+
+## Admin Card
+
+Each module's overview page has an **admin card** above the data table. The admin card contains:
+
+### Data Model Icon
+
+- An icon representing the data model. When clicked, a **dialog** asks which format the user wants for the data model of this module:
+  - **JSON** — schema or structure as JSON.
+  - **CREATE TABLE statements** — SQL DDL for the tables.
+  - **Visual diagram** — navigates to a page that shows the data model visually and hierarchically (tables, structures, and how they interrelate).
+
+### Export Data Icon
+
+- An icon to export the current set of data shown in the table below. When clicked, a **dialog** asks:
+  - **CSV** — export the visible rows as CSV.
+  - **INSERT statements** — export as SQL INSERT statements, with a **checkbox** to optionally include CREATE TABLE statements in the output.
+
+## Overview Mode
+
+- Opening a module always enters **overview mode** first.
+- This table form also applies **within detail pages** where the user manages records within the parent record (e.g. positions within organization structures, key results within an objective).
+- Overview mode uses a **v-data-table** implemented as a **server-side table** (see [Vuetify server-side tables](https://vuetifyjs.com/en/components/data-tables/basics/#server-side-tables)), with:
+  - **Header row**: Describes the shown information in each column. Use the header row for the adding functionality of the module (e.g. add button or link in the header).
+  - **Pagination**: Always show pagination controls.
+  - **Logical sorting**: Support sortable columns with server-side sorting.
+  - **Filtering**: Support filtering with server-side filtering.
+  - **Left column**: Fixed checkbox for bulk-mode, then icon to start edit mode.
+  - **Right column**: Fixed icon to start delete (always followed by the delete confirmation dialogue).
+  - **Middle columns**: Relevant record data; these columns may scroll horizontally.
+  - Outer icons and checkboxes remain **stationary**; only the middle content scrolls.
+  - **Icon, checkbox, and color-indicator columns**: All columns that contain only an icon, checkbox, or color indicator use the **same small fixed width**, just large enough to accommodate their contents.
+
+### Bulk-Mode Checkbox
+
+- Next to the edit icon, each row has a **checkbox for bulk-mode**.
+- When the module has a **color value** for records, display the color in a **circle next to the checkbox**.
+- **Header row checkbox** behavior:
+  - When **none selected**: Checking selects all visible rows (respecting current page/filter).
+  - When **some selected**: The header checkbox shows as checked (or indeterminate). Checking it **deselects all** first.
+  - When **all selected**: Checking deselects all.
+
+### Bulk Actions
+
+When one or more rows are selected in bulk-mode, the following actions are available:
+
+- **Export all selected records** — Starts the export modal, scoped to the selected records.
+- **Delete all selected records** — Starts the delete modal, adjusted for bulk-mode (e.g. shows count of selected records, confirms deletion of all selected).
+
+## Referenced Values in Overview
+
+- When a referenced value is shown in the overview:
+  - Format it according to the **module template**.
+  - Show an **icon next to it**; clicking it navigates to the detail page of that record.

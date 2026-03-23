@@ -260,3 +260,9 @@ export interface Feedback {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type {
+  Team,
+  TeamMailMeta,
+  TeamColumnLayoutMode,
+} from './team'

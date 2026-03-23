@@ -1,0 +1,40 @@
+---
+description: API design, contracts, OpenAPI and MCP exposure
+alwaysApply: true
+---
+
+# API Design and Responsibilities
+
+- Keep business logic, persistent storage, and data retrieval on the server side in APIs.
+
+# API Specifications and Documentation
+
+- Each API must:
+  - Provide an OpenAPI specification.
+  - Have a `make` target that opens a browser page showing API usage and documentation.
+
+# MCP Exposure
+
+- Expose each API as an MCP server where applicable.
+- Store MCP definitions in an `MCP` directory.
+- Provide a `make` target that opens a browser view showing:
+  - Available MCP endpoints.
+  - How they are used.
+  - Example inputs and outputs.
+
+# Contracts and Validation
+
+- Define a machine-readable contract for each API endpoint that can be used by other services or clients to validate requests.
+- Validate all incoming requests against the contract:
+  - Reject requests that are malformed according to the contract definition.
+
+# Caching and HTTP Behavior
+
+- For GET endpoints:
+  - Always respond with appropriate HTTP cache headers.
+  - Tailor cache policies to:
+    - The type of information returned.
+    - The variety of arguments or context (for example, device or country).
+    - The expected volatility of the data.
+  - Prefer shorter cache lifetimes by default.
+

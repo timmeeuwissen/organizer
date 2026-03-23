@@ -1,0 +1,51 @@
+---
+description: Product vision, goals, and feature context for the OKR app
+alwaysApply: true
+---
+
+# Product Context & Workflow
+
+This project uses dedicated product documentation as the long-term memory for:
+
+- Overall application vision and non-negotiable goals.
+- Concrete feature requests and ideas.
+- User journeys and behavioural expectations.
+- Roadmap and delivery priorities.
+
+The canonical product docs live under `docs/product/`:
+
+- `docs/product/vision.md`
+- `docs/product/feature-requests.md`
+- `docs/product/user-flows.md`
+- `docs/product/roadmap.md`
+
+## How the AI should use these docs
+
+- Treat these files as the **single source of truth** for product intent.
+- When answering questions or proposing implementation details:
+  - Prefer solutions that align with the documented vision and roadmap.
+  - Use `feature-requests.md` as the canonical list of requested features.
+  - Use `user-flows.md` to keep UX consistent with existing flows.
+  - Call out when a suggestion appears to conflict with documented goals or priorities.
+- When new, significant feature requests or product goals appear in conversation:
+  - Assume they should be added or updated in the corresponding `docs/product/*.md` file.
+  - Keep these docs as the long-term memory; avoid duplicating full details inside rules.
+
+## Process & Workflow
+
+We follow this high-level workflow:
+
+1. **Clarify & refine product docs first**
+   - Collaboratively refine `vision.md`, `feature-requests.md`, `user-flows.md`, and `roadmap.md` until they clearly describe what the application should do and why.
+2. **Derive implementation plans from the docs**
+   - Only then propose architecture, technical design, and concrete tasks that implement the documented behaviour.
+3. **Implement iteratively, updating docs**
+   - As we build and learn, update the product docs to match reality.
+   - Treat changes to behaviour or scope as documentation updates first, then code changes.
+
+The AI assistant should default to:
+
+- Asking for clarification in the product docs (or helping update them) when requirements are ambiguous.
+- Suggesting doc updates when new scope emerges during implementation discussions.
+- Using the product docs as the primary reference when resolving trade-offs.
+

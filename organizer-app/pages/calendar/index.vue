@@ -35,27 +35,15 @@ v-container(fluid)
         class="mb-4"
       )
         
-      v-card
-        v-card-title {{ $t('common.filters') }}
-        v-card-text
-          v-switch(
-            v-model="showMeetings"
-            color="primary"
-            :label="$t('meetings.title')"
-            hide-details
-          )
-          v-switch(
-            v-model="showTasks"
-            color="info"
-            :label="$t('tasks.title')"
-            hide-details
-          )
-          v-switch(
-            v-model="showCompletedTasks"
-            color="success"
-            :label="$t('tasks.completedTasks')"
-            hide-details
-          )
+      FilterContainer(
+        :title="$t('common.filters')"
+        :switchFilters="switchFilters"
+        v-model="selectedProviders"
+        :accounts="connectedAccounts"
+        :accountsTitle="$t('mail.accounts')"
+        @filter-change="handleFilterChange"
+        @clear-filters="clearFilters"
+      )
             
     v-col(cols="12" md="9")
       v-card
@@ -127,6 +115,7 @@ import WeekView from '~/components/calendar/WeekView.vue'
 import DayView from '~/components/calendar/DayView.vue'
 import ScheduleView from '~/components/calendar/ScheduleView.vue'
 import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
+import FilterContainer from '~/components/common/FilterContainer.vue'
 
 // Stores
 const tasksStore = useTasksStore()
@@ -226,6 +215,45 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+// Filter configuration for FilterContainer
+const switchFilters = computed(() => [
+  {
+    title: 'Show Meetings',
+    selected: showMeetings,
+    color: 'primary'
+  },
+  {
+    title: 'Show Tasks',
+    selected: showTasks,
+    color: 'info'
+  },
+  {
+    title: 'Show Completed Tasks',
+    selected: showCompletedTasks,
+    color: 'success'
+  }
+])
+
+// Handle filter changes
+const handleFilterChange = (filters: any) => {
+  console.log('[Calendar] Filter changed:', filters)
+  // Update the switch values based on the filter container's state
+  if (filters.switchFilters && filters.switchFilters.length === 3) {
+    showMeetings.value = filters.switchFilters[0].selected
+    showTasks.value = filters.switchFilters[1].selected
+    showCompletedTasks.value = filters.switchFilters[2].selected
+  }
+}
+
+// Clear all filters
+const clearFilters = () => {
+  showMeetings.value = true
+  showTasks.value = true
+  showCompletedTasks.value = false
+  // Reset providers to select all
+  selectedProviders.value = connectedAccounts.value.map(account => account.id)
+}
 
 // Watch for filter changes
 watch([showMeetings, showTasks, showCompletedTasks], () => {

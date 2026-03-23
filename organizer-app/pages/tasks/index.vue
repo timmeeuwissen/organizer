@@ -6,95 +6,19 @@ v-container(fluid)
       
   v-row
     v-col(cols="12" md="3")
-      v-card(class="mb-4")
-        v-card-title.d-flex {{ $t('tasks.filters') }}
-          v-spacer
-          v-btn(
-            icon
-            variant="text"
-            size="small"
-            @click="clearFilters"
-            v-if="hasFilters"
-          )
-            v-icon mdi-filter-remove
-            
-        v-card-text
-          v-text-field(
-            v-model="search"
-            :label="$t('common.search')"
-            prepend-inner-icon="mdi-magnify"
-            hide-details
-            variant="outlined"
-            density="compact"
-            class="mb-4"
-            clearable
-          )
-          
-          v-select(
-            v-model="selectedStatus"
-            :items="statusOptions"
-            :label="$t('tasks.status')"
-            multiple
-            chips
-            closable-chips
-            hide-details
-            class="mb-4"
-          )
-          
-          v-select(
-            v-model="selectedTypes"
-            :items="typeOptions"
-            :label="$t('tasks.type')"
-            multiple
-            chips
-            closable-chips
-            hide-details
-            class="mb-4"
-          )
-          
-          v-expansion-panels(variant="accordion")
-            v-expansion-panel
-              v-expansion-panel-title {{ $t('tasks.byTag') }}
-              v-expansion-panel-text
-                v-chip-group(v-model="selectedTags" multiple column)
-                  v-chip(
-                    v-for="tag in tags"
-                    :key="tag"
-                    filter
-                    variant="outlined"
-                  ) {{ tag }}
-                    
-            v-expansion-panel
-              v-expansion-panel-title {{ $t('tasks.byProject') }}
-              v-expansion-panel-text
-                v-checkbox(
-                  v-for="project in projects" 
-                  :key="project.id"
-                  v-model="selectedProjects"
-                  :label="project.title"
-                  :value="project.id"
-                  density="compact"
-                  hide-details
-                )
-                
-            v-expansion-panel
-              v-expansion-panel-title {{ $t('tasks.byAssignee') }}
-              v-expansion-panel-text
-                v-checkbox(
-                  v-for="person in people" 
-                  :key="person.id"
-                  v-model="selectedAssignees"
-                  :label="`${person.firstName} ${person.lastName}`"
-                  :value="person.id"
-                  density="compact"
-                  hide-details
-                )
-      
-      ProviderAccountsCard(
-        :accounts="connectedAccounts"
+      FilterContainer(
+        :title="$t('tasks.filters')"
+        :searchable="true"
+        :searchLabel="$t('common.search')"
         v-model="selectedProviders"
-        :title="$t('mail.accounts')"
-        class="mb-4"
+        :accounts="connectedAccounts"
+        :accountsTitle="$t('mail.accounts')"
+        :selectFilters="selectFilters"
+        :checkboxFilters="checkboxFilters"
+        :chipFilters="chipFilters"
+        @search-change="search = $event"
+        @filter-change="handleFilterChange"
+        @clear-filters="clearFilters"
       )
       
       v-card(class="mb-4")
@@ -299,6 +223,7 @@ v-container(fluid)
 
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
@@ -308,6 +233,8 @@ import type { Task } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
 
+const route = useRoute()
+const router = useRouter()
 const tasksStore = useTasksStore()
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
@@ -374,6 +301,54 @@ watch(selectedProviders, (newProviders) => {
   console.log('Task provider filter changed:', newProviders)
 })
 
+// FilterContainer configurations
+const selectFilters = computed(() => [
+  {
+    title: 'Status',
+    items: statusOptions,
+    selected: selectedStatus,
+    multiple: true
+  },
+  {
+    title: 'Type',
+    items: typeOptions,
+    selected: selectedTypes,
+    multiple: true
+  }
+])
+
+const checkboxFilters = computed(() => [
+  {
+    title: 'Project',
+    items: projects.value.map(project => ({
+      title: project.title,
+      value: project.id
+    })),
+    selected: selectedProjects
+  },
+  {
+    title: 'Assignee',
+    items: people.value.map(person => ({
+      title: `${person.firstName} ${person.lastName}`,
+      value: person.id
+    })),
+    selected: selectedAssignees
+  }
+])
+
+const chipFilters = computed(() => [
+  {
+    title: 'Tags',
+    items: tags.value.map(tag => ({ value: tag })),
+    selected: selectedTags
+  }
+])
+
+// Handle filter changes
+const handleFilterChange = (filters: any) => {
+  console.log('Filter change:', filters)
+}
+
 // Get provider color based on the account ID
 const getProviderColor = (task: Task) => {
   if (!task.providerAccountId) return 'primary'
@@ -436,6 +411,19 @@ onMounted(async () => {
     // If providers are connected, sync tasks from them
     if (providerSyncEnabled.value) {
       await syncTasksFromProviders()
+    }
+
+    // Deep link: /tasks?id=<taskId> (e.g. from Teams board)
+    const rawId = route.query.id
+    const taskId = typeof rawId === 'string' ? rawId : Array.isArray(rawId) ? rawId[0] : null
+    if (taskId) {
+      const task = tasksStore.getById(taskId)
+      if (task) {
+        openTask(task)
+        const q = { ...route.query } as Record<string, string | string[] | undefined>
+        delete q.id
+        await router.replace({ path: route.path, query: q })
+      }
     }
   } catch (error: any) {
     formError.value = error.message || 'Failed to load tasks'
@@ -909,9 +897,9 @@ const processedTasks = computed(() => {
       if (!taskMap.has(parentId)) {
         taskMap.set(parentId, [])
       }
-      const tasks = taskMap.get(parentId);
-      if (tasks) {
-        tasks.push(task);
+      const childTasks = taskMap.get(parentId);
+      if (childTasks) {
+        childTasks.push(task);
       }
     }
   })
@@ -1020,7 +1008,7 @@ const getTaskRowClasses = (task: Task & { level: number, hasSubtasks: boolean })
 const getTaskRowStyle = (task: Task & { level: number, hasSubtasks: boolean }) => {
   return { 
     cursor: 'pointer',
-    backgroundColor: task.level > 0 ? `rgba(0, 0, 0, ${0.03 * (task.level as number)})` : ''
+    backgroundColor: task.level > 0 ? `rgba(0, 0, 0, ${0.03 * task.level})` : ''
   }
 }
 

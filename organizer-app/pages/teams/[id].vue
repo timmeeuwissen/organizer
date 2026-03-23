@@ -1,0 +1,539 @@
+<template lang="pug">
+v-container(fluid)
+  v-row.align-center
+    v-col(cols="auto")
+      v-btn(icon variant="text" to="/teams" :title="$t('common.back')")
+        v-icon mdi-arrow-left
+    v-col
+      h1.text-h4.text-truncate {{ team?.name || $t('teams.title') }}
+      p.text-caption.text-medium-emphasis(v-if="team?.description") {{ team.description }}
+
+  v-row(v-if="loading && !team")
+    v-col(cols="12")
+      v-skeleton-loader(type="article")
+
+  v-alert(v-else-if="!team" type="warning") {{ $t('teams.notFound') }}
+
+  template(v-else)
+    v-row.align-center.mb-2
+      v-col(cols="12" md="4")
+        v-select(
+          :model-value="team?.columnLayoutMode"
+          :items="layoutItems"
+          item-title="title"
+          item-value="value"
+          :label="$t('teams.columnLayout')"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          @update:model-value="onLayoutChange"
+        )
+      v-col(cols="12" md="8").d-flex.flex-wrap.gap-2.justify-end
+        v-chip(v-if="mailStore.getConnectedAccounts.length === 0" color="warning" variant="tonal")
+          | {{ $t('teams.noMailIntegration') }}
+        v-btn(color="primary" prepend-icon="mdi-account-plus" @click="openAddMember = true") {{ $t('teams.addMember') }}
+        v-btn(
+          v-if="unassignedEmails.length"
+          variant="tonal"
+          color="secondary"
+          prepend-icon="mdi-email-alert-outline"
+          @click="openAssign = true"
+        ) {{ $t('teams.assignInbox', { n: unassignedEmails.length }) }}
+        v-btn(icon variant="text" @click="refreshBoard" :loading="refreshing")
+          v-icon mdi-refresh
+        v-menu
+          template(v-slot:activator="{ props }")
+            v-btn(icon variant="text" v-bind="props")
+              v-icon mdi-dots-vertical
+          v-list
+            v-list-item(@click="confirmDelete = true" base-color="error")
+              template(v-slot:prepend)
+                v-icon mdi-delete
+              v-list-item-title {{ $t('teams.deleteTeam') }}
+
+    v-row.mb-2
+      v-col(cols="12")
+        v-chip.mr-2(color="primary" variant="flat" size="small")
+          | {{ $t('teams.attention') }}: {{ totalWeight }}
+        span.text-caption.text-medium-emphasis {{ $t('teams.boardHint') }}
+
+    //- Kanban columns (emails + tasks assigned to column person)
+    .d-flex.overflow-x-auto.pb-4(style="gap: 12px; align-items: flex-start")
+      template(v-for="(person, colIndex) in orderedMembers" :key="person.id")
+        v-sheet.rounded-lg.pa-2(
+          min-width="280"
+          max-width="320"
+          class="team-column flex-shrink-0"
+          border
+        )
+          .d-flex.align-center.mb-2.px-1
+            v-avatar(size="36" color="primary")
+              span.text-caption {{ initials(person) }}
+            .ml-2.flex-grow-1.min-width-0
+              .text-subtitle-2.text-truncate {{ person.firstName }} {{ person.lastName }}
+              .text-caption.text-truncate.text-medium-emphasis {{ person.email || '—' }}
+            template(v-if="team.columnLayoutMode !== 'alphabetical'")
+              v-btn(icon size="x-small" variant="text" @click="moveMember(person.id, -1)" :disabled="colIndex === 0")
+                v-icon mdi-chevron-left
+              v-btn(icon size="x-small" variant="text" @click="moveMember(person.id, 1)" :disabled="colIndex >= orderedMembers.length - 1")
+                v-icon mdi-chevron-right
+            v-btn(icon size="x-small" variant="text" color="primary" @click="openAddTaskFor(person.id)" :title="$t('teams.addTaskForMember')")
+              v-icon mdi-plus
+            v-btn(icon size="x-small" variant="text" color="error" @click="removeMember(person.id)" :title="$t('teams.removeMember')")
+              v-icon mdi-close
+
+          .d-flex.flex-column.gap-2(style="min-height: 120px")
+            template(v-if="!columnItems(person.id).length")
+              v-card(variant="tonal" class="pa-4 text-center text-medium-emphasis text-caption")
+                | {{ $t('teams.noCards') }}
+            v-card(
+              v-for="item in columnItems(person.id)"
+              :key="boardItemKey(item)"
+              variant="outlined"
+              class="team-card"
+              hover
+              @click="onBoardItemClick(item)"
+            )
+              v-card-text.py-2.px-3
+                template(v-if="item.kind === 'email'")
+                  .d-flex.align-center.mb-1
+                    v-chip(v-if="item.assignment === 'manual'" size="x-small" class="mr-1") {{ $t('teams.manual') }}
+                    v-chip(size="x-small" color="secondary" variant="tonal") {{ $t('teams.email') }}
+                  .text-body-2.font-weight-medium.text-truncate {{ item.email.subject || $t('teams.noSubject') }}
+                  .text-caption.text-primary.mt-1(v-if="projectTitle(item.projectId)") {{ projectTitle(item.projectId) }}
+                  .text-caption.text-medium-emphasis.mt-1 {{ formatDate(item.email.date) }}
+                  .mt-2
+                    v-select(
+                      :model-value="item.projectId"
+                      :items="projectItems"
+                      item-title="title"
+                      item-value="value"
+                      density="compact"
+                      variant="solo-filled"
+                      flat
+                      hide-details
+                      :placeholder="$t('teams.project')"
+                      @update:model-value="(v) => setEmailProject(item, v)"
+                      @click.stop
+                    )
+                template(v-else)
+                  .d-flex.align-center.mb-1.flex-wrap.gap-1
+                    v-chip(size="x-small" color="teal" variant="tonal") {{ $t('teams.task') }}
+                    v-chip(size="x-small" variant="outlined") {{ taskStatusLabel(item.task.status) }}
+                  .text-body-2.font-weight-medium.text-truncate {{ item.task.title }}
+                  .text-caption.text-primary.mt-1(v-if="taskProjectTitle(item.task)") {{ taskProjectTitle(item.task) }}
+                  .text-caption.text-medium-emphasis.mt-1
+                    template(v-if="item.task.dueDate") {{ $t('tasks.dueDate') }}: {{ formatDate(item.task.dueDate) }}
+                    template(v-else) {{ formatDate(item.task.updatedAt) }}
+                  .mt-2
+                    v-select(
+                      :model-value="taskPrimaryProjectId(item.task)"
+                      :items="projectItems"
+                      item-title="title"
+                      item-value="value"
+                      density="compact"
+                      variant="solo-filled"
+                      flat
+                      hide-details
+                      :placeholder="$t('teams.project')"
+                      @update:model-value="(v) => setTaskBoardProject(item, v)"
+                      @click.stop
+                    )
+
+    v-dialog(v-model="openAddMember" max-width="480")
+      v-card
+        v-card-title {{ $t('teams.addMember') }}
+        v-card-text
+          v-autocomplete(
+            v-model="selectedPersonToAdd"
+            :items="peopleToAdd"
+            item-title="label"
+            item-value="id"
+            :label="$t('people.title')"
+            variant="outlined"
+            clearable
+          )
+        v-card-actions
+          v-spacer
+          v-btn(@click="openAddMember = false") {{ $t('common.cancel') }}
+          v-btn(color="primary" :disabled="!selectedPersonToAdd" @click="addMember") {{ $t('common.add') }}
+
+    v-dialog(v-model="openAssign" max-width="560" scrollable)
+      v-card
+        v-card-title {{ $t('teams.assignInboxTitle') }}
+        v-card-text
+          p.text-body-2.mb-4 {{ $t('teams.assignInboxHelp') }}
+          v-list
+            v-list-item(v-for="em in unassignedEmails" :key="(em.accountId || '') + em.id")
+              v-list-item-title.text-truncate {{ em.subject || $t('teams.noSubject') }}
+              v-list-item-subtitle {{ em.from?.email }} · {{ formatDate(em.date) }}
+              template(v-slot:append)
+                v-btn(size="small" color="primary" @click="openAssignOne(em)") {{ $t('teams.assign') }}
+
+        v-card-actions
+          v-spacer
+          v-btn(@click="openAssign = false") {{ $t('common.close') }}
+
+    v-dialog(v-model="assignOneOpen" max-width="420")
+      v-card(v-if="assignOneEmail")
+        v-card-title.text-truncate {{ assignOneEmail.subject || $t('teams.noSubject') }}
+        v-card-text
+          v-select(
+            v-model="assignPersonId"
+            :items="memberSelectItems"
+            item-title="title"
+            item-value="value"
+            :label="$t('teams.assignToColumn')"
+            variant="outlined"
+          )
+          v-select(
+            v-model="assignProjectId"
+            :items="projectItems"
+            item-title="title"
+            item-value="value"
+            :label="$t('teams.project')"
+            clearable
+            variant="outlined"
+            class="mt-2"
+          )
+        v-card-actions
+          v-spacer
+          v-btn(@click="assignOneOpen = false") {{ $t('common.cancel') }}
+          v-btn(color="primary" :disabled="!assignPersonId" @click="submitAssignOne") {{ $t('teams.assign') }}
+
+    v-dialog(v-model="addTaskDialog" max-width="800px" scrollable)
+      task-form(
+        v-if="addTaskDialog && team"
+        :key="addTaskForPersonId || 'new-task'"
+        :task="null"
+        :loading="addTaskLoading"
+        :error="addTaskError"
+        :assignee-person-ids-filter="team.memberPersonIds"
+        :initial-assigned-to-id="addTaskForPersonId || ''"
+        @submit="onAddTaskSubmit"
+      )
+
+    v-dialog(v-model="confirmDelete" max-width="400")
+      v-card
+        v-card-title {{ $t('teams.deleteTeam') }}
+        v-card-text {{ $t('teams.deleteConfirm') }}
+        v-card-actions
+          v-spacer
+          v-btn(@click="confirmDelete = false") {{ $t('common.cancel') }}
+          v-btn(color="error" @click="deleteTeam") {{ $t('common.delete') }}
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import { useTeamsStore } from '~/stores/teams'
+import { usePeopleStore } from '~/stores/people'
+import { useMailStore } from '~/stores/mail'
+import { useProjectsStore } from '~/stores/projects'
+import { useNotificationStore } from '~/stores/notification'
+import type { TeamColumnLayoutMode, Task } from '~/types/models'
+import TaskForm from '~/components/tasks/TaskForm.vue'
+import type { Email } from '~/stores/mail'
+import type { TeamBoardItem } from '~/composables/useTeamAttentionBoard'
+import {
+  buildAllBoardItems,
+  boardItemsByPersonId,
+  orderedTeamMembers,
+  totalAttentionWeight,
+  unassignedInboxEmails,
+  taskPrimaryProjectId,
+} from '~/composables/useTeamAttentionBoard'
+import { useTasksStore } from '~/stores/tasks'
+
+const route = useRoute()
+const router = useRouter()
+const { t } = useI18n()
+const teamsStore = useTeamsStore()
+const peopleStore = usePeopleStore()
+const mailStore = useMailStore()
+const projectsStore = useProjectsStore()
+const tasksStore = useTasksStore()
+const notify = useNotificationStore()
+
+const teamId = computed(() => route.params.id as string)
+const team = computed(() => teamsStore.currentTeam)
+const loading = computed(() => teamsStore.loading)
+
+const openAddMember = ref(false)
+const selectedPersonToAdd = ref<string | null>(null)
+const openAssign = ref(false)
+const confirmDelete = ref(false)
+const refreshing = ref(false)
+
+const addTaskDialog = ref(false)
+const addTaskForPersonId = ref<string | null>(null)
+const addTaskLoading = ref(false)
+const addTaskError = ref('')
+
+const assignOneOpen = ref(false)
+const assignOneEmail = ref<Email | null>(null)
+const assignPersonId = ref<string | null>(null)
+const assignProjectId = ref<string | null>(null)
+
+const peopleById = computed(() => {
+  const m = new Map<string, (typeof peopleStore.people)[0]>()
+  for (const p of peopleStore.people) m.set(p.id, p)
+  return m
+})
+
+const orderedMembers = computed(() => {
+  if (!team.value) return []
+  return orderedTeamMembers(team.value, peopleById.value)
+})
+
+const boardItems = computed(() => {
+  if (!team.value) return []
+  const members = team.value.memberPersonIds
+    .map((id) => peopleById.value.get(id))
+    .filter(Boolean) as typeof peopleStore.people
+  const meta = teamsStore.mailMetaForTeam(teamId.value)
+  return buildAllBoardItems(
+    team.value,
+    mailStore.emails,
+    meta,
+    members,
+    tasksStore.tasks,
+  )
+})
+
+const itemsByPerson = computed(() => boardItemsByPersonId(boardItems.value))
+
+const totalWeight = computed(() => totalAttentionWeight(boardItems.value))
+
+const unassignedEmails = computed(() => {
+  if (!team.value) return []
+  const members = team.value.memberPersonIds
+    .map((id) => peopleById.value.get(id))
+    .filter(Boolean) as typeof peopleStore.people
+  const meta = teamsStore.mailMetaForTeam(teamId.value)
+  return unassignedInboxEmails(mailStore.emails, team.value, meta, members)
+})
+
+const projectItems = computed(() => [
+  { title: '—', value: null as string | null },
+  ...projectsStore.projects.map((p) => ({ title: p.title, value: p.id })),
+])
+
+const layoutItems = computed(() => [
+  { title: t('teams.layoutAlphabetical'), value: 'alphabetical' as TeamColumnLayoutMode },
+  { title: t('teams.layoutManual'), value: 'manual' as TeamColumnLayoutMode },
+  { title: t('teams.layoutDrag'), value: 'drag' as TeamColumnLayoutMode },
+])
+
+function columnItems(personId: string) {
+  return itemsByPerson.value[personId] || []
+}
+
+function boardItemKey(item: TeamBoardItem) {
+  if (item.kind === 'email') {
+    return `e-${item.email.accountId || ''}-${item.email.id}`
+  }
+  return `t-${item.task.id}`
+}
+
+function initials(person: { firstName: string; lastName: string }) {
+  const a = (person.firstName || '?')[0] || ''
+  const b = (person.lastName || '')[0] || ''
+  return (a + b).toUpperCase()
+}
+
+function formatDate(d: Date) {
+  try {
+    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(d)
+  } catch {
+    return String(d)
+  }
+}
+
+function projectTitle(projectId: string | null) {
+  if (!projectId) return ''
+  return projectsStore.getById(projectId)?.title || ''
+}
+
+function taskProjectTitle(task: Task) {
+  const pid = taskPrimaryProjectId(task)
+  return pid ? projectTitle(pid) : ''
+}
+
+function taskStatusLabel(status: Task['status']) {
+  switch (status) {
+    case 'todo':
+      return t('tasks.todoTasks')
+    case 'inProgress':
+      return t('tasks.inProgressTasks')
+    case 'delegated':
+      return t('tasks.delegated')
+    default:
+      return status
+  }
+}
+
+async function load() {
+  await teamsStore.fetchTeam(teamId.value)
+  await teamsStore.fetchTeamMailMeta(teamId.value)
+  await peopleStore.fetchPeople()
+  await projectsStore.fetchProjects()
+  await tasksStore.fetchTasks()
+  if (mailStore.getConnectedAccounts.length) {
+    await mailStore.fetchEmails({ folder: 'inbox' }, { page: 0, pageSize: 100 })
+  }
+}
+
+async function refreshBoard() {
+  refreshing.value = true
+  try {
+    await load()
+  } finally {
+    refreshing.value = false
+  }
+}
+
+async function onLayoutChange(v: TeamColumnLayoutMode) {
+  if (!team.value) return
+  await teamsStore.updateTeam(team.value.id, { columnLayoutMode: v })
+  notify.success(t('teams.layoutSaved'))
+}
+
+async function moveMember(personId: string, dir: -1 | 1) {
+  if (!team.value) return
+  await teamsStore.moveMember(team.value.id, personId, dir)
+  await teamsStore.fetchTeam(team.value.id)
+}
+
+async function removeMember(personId: string) {
+  if (!team.value) return
+  await teamsStore.removeMember(team.value.id, personId)
+  notify.success(t('teams.memberRemoved'))
+}
+
+const peopleToAdd = computed(() => {
+  const ids = new Set(team.value?.memberPersonIds || [])
+  return peopleStore.people
+    .filter((p) => !ids.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      label: `${p.firstName} ${p.lastName}${p.email ? ` · ${p.email}` : ''}`,
+    }))
+})
+
+const memberSelectItems = computed(() =>
+  orderedMembers.value.map((p) => ({
+    title: `${p.firstName} ${p.lastName}`,
+    value: p.id,
+  })),
+)
+
+function openAddTaskFor(personId: string) {
+  addTaskForPersonId.value = personId
+  addTaskDialog.value = true
+}
+
+async function onAddTaskSubmit(taskData: Partial<Task>) {
+  addTaskLoading.value = true
+  addTaskError.value = ''
+  try {
+    await tasksStore.createTask(taskData)
+    addTaskDialog.value = false
+    addTaskForPersonId.value = null
+    await tasksStore.fetchTasks()
+    notify.success(t('teams.taskCreated'))
+  } catch (e: unknown) {
+    addTaskError.value = e instanceof Error ? e.message : 'Failed to create task'
+  } finally {
+    addTaskLoading.value = false
+  }
+}
+
+async function addMember() {
+  if (!team.value || !selectedPersonToAdd.value) return
+  await teamsStore.addMember(team.value.id, selectedPersonToAdd.value)
+  selectedPersonToAdd.value = null
+  openAddMember.value = false
+  notify.success(t('teams.memberAdded'))
+}
+
+function onBoardItemClick(item: TeamBoardItem) {
+  if (item.kind === 'email') {
+    router.push({ path: '/mail' })
+    return
+  }
+  router.push({ path: '/tasks', query: { id: item.task.id } })
+}
+
+async function setEmailProject(item: TeamBoardItem, projectId: string | null) {
+  if (!team.value || item.kind !== 'email') return
+  const acc = item.email.accountId || ''
+  await teamsStore.upsertTeamMailMeta({
+    teamId: team.value.id,
+    accountId: acc,
+    emailId: item.email.id,
+    personId: item.personId,
+    projectId: projectId || null,
+  })
+  notify.success(t('teams.projectLinked'))
+}
+
+async function setTaskBoardProject(item: TeamBoardItem, projectId: string | null) {
+  if (item.kind !== 'task') return
+  const pid = projectId || undefined
+  await tasksStore.updateTask(item.task.id, {
+    projectId: pid,
+    relatedProjects: pid ? [pid] : [],
+  })
+  await tasksStore.fetchTasks()
+  notify.success(t('teams.projectLinked'))
+}
+
+function openAssignOne(em: Email) {
+  assignOneEmail.value = em
+  assignPersonId.value = orderedMembers.value[0]?.id ?? null
+  assignProjectId.value = null
+  assignOneOpen.value = true
+}
+
+async function submitAssignOne() {
+  if (!team.value || !assignOneEmail.value || !assignPersonId.value) return
+  const em = assignOneEmail.value
+  await teamsStore.upsertTeamMailMeta({
+    teamId: team.value.id,
+    accountId: em.accountId || '',
+    emailId: em.id,
+    personId: assignPersonId.value,
+    projectId: assignProjectId.value,
+  })
+  assignOneOpen.value = false
+  assignOneEmail.value = null
+  openAssign.value = false
+  notify.success(t('teams.assigned'))
+  await teamsStore.fetchTeamMailMeta(team.value.id)
+}
+
+async function deleteTeam() {
+  if (!team.value) return
+  const id = team.value.id
+  await teamsStore.deleteTeam(id)
+  confirmDelete.value = false
+  notify.success(t('teams.deleted'))
+  await router.push('/teams')
+}
+
+watch(
+  () => route.params.id as string,
+  () => load(),
+)
+
+onMounted(() => load())
+</script>
+
+<style scoped lang="sass">
+.team-card
+  cursor: pointer
+.team-column
+  background: rgba(var(--v-theme-surface-variant), 0.15)
+</style>

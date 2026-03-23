@@ -38,9 +38,7 @@ export interface MailFolder {
   icon: string
 }
 
-export const useMailStore = defineStore({
-  id: 'mail',
-  
+export const useMailStore = defineStore('mail', {
   state: () => ({
     emails: [] as Email[],
     folders: [

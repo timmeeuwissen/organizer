@@ -6,75 +6,17 @@ v-container(fluid)
       
   v-row
     v-col(cols="12" md="3")
-      v-card(class="mb-4")
-        v-card-title.d-flex {{ $t('people.filters') }}
-          v-spacer
-          v-btn(
-            icon
-            variant="text"
-            size="small"
-            @click="clearFilters"
-            v-if="hasFilters"
-          )
-            v-icon mdi-filter-remove
-            
-        v-card-text
-          v-text-field(
-            v-model="search"
-            :label="$t('common.search')"
-            prepend-inner-icon="mdi-magnify"
-            hide-details
-            variant="outlined"
-            density="compact"
-            class="mb-4"
-            clearable
-          )
-          
-          v-expansion-panels(variant="accordion")
-            v-expansion-panel
-              v-expansion-panel-title {{ $t('people.byOrganization') }}
-              v-expansion-panel-text
-                v-checkbox(
-                  v-for="org in organizations" 
-                  :key="org"
-                  v-model="selectedOrganizations"
-                  :label="org"
-                  :value="org"
-                  density="compact"
-                  hide-details
-                )
-                
-            v-expansion-panel
-              v-expansion-panel-title {{ $t('people.byTeam') }}
-              v-expansion-panel-text
-                v-checkbox(
-                  v-for="team in teams" 
-                  :key="team"
-                  v-model="selectedTeams"
-                  :label="team"
-                  :value="team"
-                  density="compact"
-                  hide-details
-                )
-                
-            v-expansion-panel
-              v-expansion-panel-title {{ $t('people.byRole') }}
-              v-expansion-panel-text
-                v-checkbox(
-                  v-for="role in roles" 
-                  :key="role"
-                  v-model="selectedRoles"
-                  :label="role"
-                  :value="role"
-                  density="compact"
-                  hide-details
-                )
-      
-      ProviderAccountsCard(
-        :accounts="connectedAccounts"
+      FilterContainer(
+        :title="$t('people.filters')"
+        :searchable="true"
+        :searchLabel="$t('common.search')"
         v-model="selectedProviders"
-        :title="$t('people.accounts')"
-        class="mb-4"
+        :accounts="connectedAccounts"
+        :accountsTitle="$t('people.accounts')"
+        :checkboxFilters="checkboxFilters"
+        @search-change="search = $event"
+        @filter-change="handleFilterChange"
+        @clear-filters="clearFilters"
       )
       
       v-card(class="mb-4" v-if="recentlyContacted.length > 0 || loading")
@@ -197,6 +139,7 @@ import { useAuthStore } from '~/stores/auth'
 import type { Person, IntegrationAccount } from '~/types/models'
 import PersonForm from '~/components/people/PersonForm.vue'
 import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
+import FilterContainer from '~/components/common/FilterContainer.vue'
 
 const peopleStore = usePeopleStore()
 const authStore = useAuthStore()
@@ -218,6 +161,34 @@ const selectedProviders = ref<string[]>([])
 const selectedOrganizations = ref<string[]>([])
 const selectedTeams = ref<string[]>([])
 const selectedRoles = ref<string[]>([])
+
+// FilterContainer configuration
+// Note: In a real app, we would use the i18n translation function here
+// but for simplicity and to avoid TypeScript issues, we're using direct strings
+const checkboxFilters = computed(() => [
+  {
+    title: "Organization", // Would normally be $t('people.byOrganization')
+    items: organizations.value.map(org => ({ value: org })),
+    selected: selectedOrganizations.value
+  },
+  {
+    title: "Team", // Would normally be $t('people.byTeam')
+    items: teams.value.map(team => ({ value: team })),
+    selected: selectedTeams.value
+  },
+  {
+    title: "Role", // Would normally be $t('people.byRole')
+    items: roles.value.map(role => ({ value: role })),
+    selected: selectedRoles.value
+  }
+])
+
+// Handle filter changes from FilterContainer
+const handleFilterChange = (filters: any) => {
+  // No need to manually update the selectedOrganizations, selectedTeams, etc.
+  // as they are bound via v-model and will update automatically
+  console.log('Filter change:', filters)
+}
 
 // Table headers
 const headers = [

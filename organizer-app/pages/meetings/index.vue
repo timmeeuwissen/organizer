@@ -6,43 +6,18 @@ v-container(fluid)
   
   v-row
     v-col(cols="12" md="3")
-      v-card(class="mb-4")
-        v-card-title {{ $t('common.filters') }}
-        v-card-text
-          v-select(
-            v-model="categoryFilter"
-            :items="categoryOptions"
-            :label="$t('meetings.category')"
-            clearable
-            variant="outlined"
-            density="comfortable"
-          )
-          
-          v-select(
-            v-model="projectFilter"
-            :items="projectOptions"
-            :label="$t('projects.title')"
-            clearable
-            variant="outlined"
-            density="comfortable"
-          )
-          
-          v-select(
-            v-model="personFilter"
-            :items="personOptions"
-            :label="$t('people.title')"
-            clearable
-            variant="outlined"
-            density="comfortable"
-          )
-          
-          v-select(
-            v-model="periodFilter"
-            :items="periodOptions"
-            :label="$t('common.period')"
-            variant="outlined"
-            density="comfortable"
-          )
+      FilterContainer(
+        :title="$t('meetings.filters')"
+        :searchable="true"
+        :searchLabel="$t('common.search')"
+        v-model="selectedProviders"
+        :accounts="connectedAccounts"
+        :accountsTitle="$t('mail.accounts')"
+        :selectFilters="selectFilters"
+        @search-change="search = $event"
+        @filter-change="handleFilterChange"
+        @clear-filters="clearFilters"
+      )
       
       v-card
         v-card-title {{ $t('meetings.categories') }}
@@ -225,14 +200,16 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
+import FilterContainer from '~/components/common/FilterContainer.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { useCalendarStore } from '~/stores/calendar'
+import { useAuthStore } from '~/stores/auth'
 import type { Meeting } from '~/types/models'
 
 // Define stores
@@ -241,14 +218,17 @@ const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const categoriesStore = useMeetingCategoriesStore()
 const calendarStore = useCalendarStore()
+const authStore = useAuthStore()
 
 // UI state
 const loading = ref(true)
 const viewMode = ref('list')
-const categoryFilter = ref(null)
-const projectFilter = ref(null)
-const personFilter = ref(null)
+const categoryFilter = ref('')
+const projectFilter = ref('')
+const personFilter = ref('')
 const periodFilter = ref('all')
+const search = ref('')
+const selectedProviders = ref<string[]>([])
 
 // Dialog states
 const showNewMeetingDialog = ref(false)
@@ -258,6 +238,30 @@ const formError = ref('')
 const calendarFormLoading = ref(false)
 const calendarFormError = ref('')
 const pendingMeetingId = ref<string | null>(null)
+
+// Connected accounts
+const connectedAccounts = computed(() => {
+  const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
+  
+  // Only return accounts that are connected and can sync calendar events
+  return integrationAccounts.filter(account => 
+    account.oauthData?.connected && account.syncCalendar
+  )
+})
+
+// Initialize selectedProviders with all providers by default
+onMounted(() => {
+  // After the accounts are loaded, select all by default
+  nextTick(() => {
+    selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  })
+})
+
+// Watch for changes in selectedProviders
+watch(selectedProviders, (newProviders) => {
+  console.log('Provider filter changed:', newProviders)
+  // The filteredPeople computed property will automatically update
+})
 
 // Meeting categories from store
 const meetingCategories = computed(() => categoriesStore.categories)
@@ -300,6 +304,54 @@ const periodOptions = [
   { title: 'Last 3 months', value: 'quarter' },
   { title: 'This year', value: 'year' },
 ]
+
+// Filter configuration for FilterContainer
+const selectFilters = computed(() => [
+  {
+    title: 'Category',
+    items: categoryOptions.value,
+    selected: categoryFilter.value
+  },
+  {
+    title: 'Project',
+    items: projectOptions.value,
+    selected: projectFilter.value
+  },
+  {
+    title: 'Person',
+    items: personOptions.value,
+    selected: personFilter.value
+  },
+  {
+    title: 'Period',
+    items: periodOptions,
+    selected: periodFilter.value
+  }
+])
+
+// Handle filter changes
+const handleFilterChange = (filters: any) => {
+  console.log('[Meetings] Filter changed:', filters)
+  
+  // Update filter values from the select filters
+  if (filters.selectFilters && filters.selectFilters.length >= 4) {
+    categoryFilter.value = filters.selectFilters[0].selected
+    projectFilter.value = filters.selectFilters[1].selected
+    personFilter.value = filters.selectFilters[2].selected
+    periodFilter.value = filters.selectFilters[3].selected
+  }
+}
+
+// Clear all filters
+const clearFilters = () => {
+  categoryFilter.value = ''
+  projectFilter.value = ''
+  personFilter.value = ''
+  periodFilter.value = 'all'
+  search.value = ''
+  // Reset providers to select all
+  selectedProviders.value = connectedAccounts.value.map(account => account.id)
+}
 
 // Filtered meetings
 const filteredMeetings = computed(() => {
@@ -446,7 +498,7 @@ const handleMeetingSubmit = async (meetingData: any) => {
     
     // Close dialog on success
     showNewMeetingDialog.value = false
-  } catch (error) {
+  } catch (error: any) {
     formError.value = error.message || 'Error creating meeting'
   } finally {
     formLoading.value = false
@@ -468,12 +520,16 @@ const handleMeetingPlan = async (meetingData: any) => {
     
     const meetingId = await meetingsStore.createMeeting(createData)
     
-    pendingMeetingId.value = meetingId
+    if (meetingId) {
+      pendingMeetingId.value = meetingId
+    } else {
+      throw new Error('Failed to create meeting - no ID returned')
+    }
     
     // Close meeting dialog and open calendar dialog
     showNewMeetingDialog.value = false
     showCalendarDialog.value = true
-  } catch (error) {
+  } catch (error: any) {
     formError.value = error.message || 'Error creating meeting'
   } finally {
     formLoading.value = false
@@ -510,7 +566,7 @@ const handleCalendarEventSubmit = async (eventData: any) => {
     // Reset and close dialog
     pendingMeetingId.value = null
     showCalendarDialog.value = false
-  } catch (error) {
+  } catch (error: any) {
     calendarFormError.value = error.message || 'Error creating calendar event'
   } finally {
     calendarFormLoading.value = false
@@ -567,7 +623,7 @@ onMounted(async () => {
     if (categoriesStore.categories.length === 0) {
       await categoriesStore.seedDefaultCategories()
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error loading meetings data:', error)
   } finally {
     loading.value = false

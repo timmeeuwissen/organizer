@@ -1,0 +1,31 @@
+---
+description: Containerization and environment variable conventions
+alwaysApply: true
+---
+
+# Containerization
+
+- Use Docker and Kubernetes as the primary container platforms.
+- Provide `make` targets to build, start, stop, and test the application inside containers.
+- Mock any external endpoints used by the application and run them alongside the application container.
+- Use Helm charts/scripts to define and manage Kubernetes deployments.
+- When running the development server inside a container:
+  - Account for differences between container and host environments (for example, `node_modules` contents or OS-level dependencies).
+
+# Environment Variables
+
+- Use environment variables to centrally configure:
+  - Operating modes (for example: development, production).
+  - Connectivity parameters and external endpoints.
+- Maintain an up-to-date example env file that includes descriptions for each variable.
+- When starting the application in development mode without a valid env configuration:
+  - Run a `make` target that constructs the real env file by:
+    - Reading the example file.
+    - Prompting the user according to the descriptions.
+    - Writing the resulting values to the env file.
+- When starting the application in any non-development mode and required env vars are missing:
+  - The application must list which variables are missing.
+  - The application must stop instead of running with incomplete configuration.
+- Never hardcode values that belong in env files; always read them from environment or configuration.
+- Ensure env files are excluded from version control and build artifacts.
+

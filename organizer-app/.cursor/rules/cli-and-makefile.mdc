@@ -1,0 +1,50 @@
+---
+description: CLI, OS compatibility, Makefile and scripting conventions
+alwaysApply: true
+---
+
+# OS & CLI Conventions
+
+- CLI commands must run on macOS, Linux, and any operating system used inside containers.
+- Where possible, provide tab-completion for CLI commands.
+- Color-code CLI output by message type:
+  - Informational messages in blue.
+  - Warnings in yellow or orange.
+  - Errors and fatal messages in red.
+
+# Makefile & Script Rules
+
+- The `Makefile` must provide a default `help` target:
+  - Output is generated from comments and targets, not hardcoded.
+  - The help output uses two columns and color for readability.
+- All CLI commands should be represented as `make` targets.
+- Targets that start something should have a corresponding target that stops it.
+- Behavior of `make <target> --help`:
+  - Stop the target and display the contents of a Markdown file with the same name if it exists.
+  - If the Markdown file does not exist, call the corresponding script in the `scripts` folder with `--help` if it has a help routine.
+  - If no help is available, output a gray “No help available” message.
+- Place any non-trivial shell logic in `.sh` files under a `scripts` directory rather than inline in the `Makefile`.
+
+# Dependency Scripts
+
+- Provide a script that lists all OS-level dependencies required during development.
+- If there are more than four dependencies:
+  - Split them into separate files in a `deps/` folder.
+  - Prefix each file with two digits to indicate execution order.
+  - Have `deps.sh` iterate over these files when the appropriate `make` target is run.
+
+# Make Targets for Environments
+
+- Provide `make` targets to:
+  - Run and develop the project locally on the host machine.
+  - Run and develop the project inside containers on a local Kubernetes cluster.
+  - Start all dependent services (such as databases) in containers as needed.
+- When a database is involved:
+  - Provide `make` targets to import data from, and export data to, a `data/` folder.
+- Make targets must echo clear, human-readable messages about what they are doing:
+  - Prefix lines with an appropriate icon.
+  - Use dark green for these informational messages where possible.
+- When multiple instances of the application are running and a script or target (for example `make test`) needs to act on one:
+  - List the running instances and ask the user to choose.
+  - If only one instance is running, automatically target that instance.
+

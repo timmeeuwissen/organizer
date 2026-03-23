@@ -1,0 +1,59 @@
+---
+description: Database fixture conventions and make targets for loading example data
+alwaysApply: true
+---
+
+# Database Fixtures
+
+## Fixture Requirement
+
+- There must **always** be a fixture that can be loaded into the database via a `make` target.
+- The fixture contains **example data** that demonstrates how the application works.
+- Store fixture files under `data/fixtures/` (or equivalent `data/` subfolder).
+
+## Insertion Order
+
+- The fixture must honor **logical insertion order** so that foreign key constraints are satisfied.
+- Insert in dependency order: parent tables before child tables (e.g. `organization_structures` → `organization_layers` → `organization_nodes` → `objectives` → `key_results`).
+- Self-referencing tables (e.g. `objectives.contributes_to_objective_id`) require ordering: insert parent rows before rows that reference them.
+
+## Model Changes and Fixture Updates
+
+- **Each change to the data model** must be reflected in the fixture.
+- When the schema changes (e.g. new tables, columns): update `server/utils/database.ts` and `data/fixtures/schema.sql` so both stay in sync.
+- The fixture must represent **all cases that can occur** in the domain:
+  - Typical/happy-path examples.
+  - Edge cases (e.g. optional fields, null references, minimal records).
+  - Different statuses, cycles, or enum-like values where applicable.
+
+## Truncate and Load Flow
+
+- Before loading the fixture, the **truncate** `make` target must be executed.
+- The truncate target must:
+  1. **Ask the user for confirmation** with a clear warning that data will be deleted.
+  2. Require the user to type **explicitly `yes`** (case-sensitive or as documented) to proceed.
+  3. If the user cancels, presses Enter without typing, or types anything other than `yes`:
+     - **Stop immediately** — do not truncate.
+     - **Do not load the fixture** — abort the load target as well.
+  4. Only when `yes` is provided: truncate tables (respecting foreign key order) and allow the load to proceed.
+
+## Make Targets
+
+- `make db-truncate` — Truncates all fixture-relevant tables after confirmation. Fails if user does not type `yes`.
+- `make db-load-fixture` — Runs `make db-truncate` first, then loads the fixture. If truncate is cancelled, the load is skipped.
+- Implement truncate and load logic in scripts under `scripts/` (e.g. `scripts/db-truncate.sh`, `scripts/db-load-fixture.sh`), invoked from the Makefile.
+
+## Example Confirmation Flow
+
+```
+⚠️  This will delete all data in the database. Type 'yes' to confirm:
+> no
+❌ Truncate cancelled. Fixture load aborted.
+```
+
+```
+⚠️  This will delete all data in the database. Type 'yes' to confirm:
+> yes
+✓ Truncating tables...
+✓ Loading fixture...
+```

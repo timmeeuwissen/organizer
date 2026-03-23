@@ -1,0 +1,85 @@
+---
+description: Centralized messaging system for user feedback and audit logging - snackbar display and disk audit trail
+alwaysApply: true
+---
+
+# GUI Messaging System
+
+A **centralized messaging system** handles all user-facing feedback and audit logging. Every action that manipulates data pushes a message to this system.
+
+## Message Types
+
+Use standard message types for consistent UX and audit parsing:
+
+- `success` — Operation completed successfully
+- `error` — Operation failed or validation error
+- `info` — Informational notice
+- `warning` — Caution or non-fatal issue
+
+## Centralized Messaging Store
+
+- A **single Pinia store** (or equivalent) owns the messaging state.
+- Components and services **push** messages; they do not render snackbars directly.
+- The store exposes methods such as `pushSuccess`, `pushError`, `pushInfo`, `pushWarning`, or a generic `push({ type, text, ... })`.
+
+## UI Display
+
+- Messages are shown via a **v-snackbar** at the **bottom** of the page.
+- The snackbar **color** is derived from the message type:
+  - `success` → green
+  - `error` → red
+  - `info` → blue
+  - `warning` → orange/amber
+- Only one snackbar is visible at a time; messages queue or replace according to UX needs.
+- The snackbar is rendered once at the app layout level, not per page.
+
+## When to Push Messages
+
+- **Every data-manipulating action** (create, update, delete, import, export) pushes a message on completion.
+- On success: push a `success` message with a clear description.
+- On failure: push an `error` message with the reason.
+- For long-running or background operations: push `info` or `warning` as appropriate.
+
+## Audit Trail on Disk
+
+- Each message is **written to an audit log file** on the server (or client-side log when no server is involved).
+- The log format is **parseable** (e.g. structured JSON lines or a well-defined text format).
+- Include:
+  - **Timestamp** (ISO 8601)
+  - **Type** in capitals (e.g. `SUCCESS`, `ERROR`, `INFO`, `WARNING`)
+  - **Message text**
+  - **User identifier** (optional field, populated when user context is available)
+
+### Example Log Format (JSON Lines)
+
+```json
+{"ts":"2025-02-18T14:32:01.234Z","type":"SUCCESS","text":"Organization 'Acme' created","userId":null}
+{"ts":"2025-02-18T14:32:15.567Z","type":"ERROR","text":"Failed to delete objective: constraint violation","userId":"user-123"}
+```
+
+### Example Log Format (Plain Text, Parseable)
+
+```
+2025-02-18T14:32:01.234Z | SUCCESS | Organization 'Acme' created | userId=
+2025-02-18T14:32:15.567Z | ERROR | Failed to delete objective: constraint violation | userId=user-123
+```
+
+- Use a consistent delimiter (e.g. ` | `) and escape message text if it can contain delimiters.
+- Store logs under a configurable path (e.g. `logs/audit.log` or from env).
+
+## Message Payload Structure
+
+Prepare the message payload so it can be extended later:
+
+```typescript
+interface MessagePayload {
+  type: 'success' | 'error' | 'info' | 'warning'
+  text: string
+  userId?: string | null   // Populated when user context exists
+  timestamp?: string      // ISO 8601, set at push time
+  // Extensible: action, entityType, entityId, etc.
+}
+```
+
+- `userId` is optional and set when the application has user context (e.g. after auth).
+- `timestamp` is set when the message is pushed, for both display and audit logging.

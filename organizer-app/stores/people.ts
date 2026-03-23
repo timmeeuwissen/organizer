@@ -18,9 +18,7 @@ import { useAuthStore } from './auth'
 import type { Person, IntegrationAccount } from '~/types/models'
 import { createContactsProvider } from '~/utils/api/contactProviders'
 
-export const usePeopleStore = defineStore({
-  id: 'people',
-  
+export const usePeopleStore = defineStore('people', {
   state: () => ({
     people: [] as Person[],
     currentPerson: null as Person | null,

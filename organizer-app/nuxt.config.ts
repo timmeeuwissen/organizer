@@ -1,5 +1,25 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  hooks: {
+    /**
+     * Pinia options stores use `state: () => ({...})`. Unimport's directory scan
+     * incorrectly treats `state` as a named export, so `#imports` re-exports
+     * `state` from `stores/auth.ts` and the app 500s ("does not provide an export named 'state'").
+     */
+    'imports:extend'(imports) {
+      for (let i = imports.length - 1; i >= 0; i--) {
+        const imp = imports[i]
+        if (
+          imp.name === 'state' &&
+          typeof imp.from === 'string' &&
+          /[/\\]stores[/\\]auth\.ts$/.test(imp.from.replace(/\\/g, '/'))
+        ) {
+          imports.splice(i, 1)
+        }
+      }
+    },
+  },
+
   devtools: { enabled: true },
 
   css: [

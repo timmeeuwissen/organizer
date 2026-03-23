@@ -243,7 +243,7 @@ v-form(
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, type PropType } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
@@ -261,6 +261,16 @@ const props = defineProps({
     default: false
   },
   error: {
+    type: String,
+    default: ''
+  },
+  /** When set, "Assigned to" only lists these person IDs (e.g. current team members). */
+  assigneePersonIdsFilter: {
+    type: Array as PropType<string[] | null>,
+    default: null
+  },
+  /** When creating a task, pre-select this person as assignee (e.g. team column). */
+  initialAssignedToId: {
     type: String,
     default: ''
   }
@@ -347,10 +357,16 @@ const availableTags = computed(() => {
 })
 
 const availablePeople = computed(() => {
-  return peopleStore.people.map(person => ({
+  const list = peopleStore.people.map(person => ({
     id: person.id,
     name: `${person.firstName} ${person.lastName}`
   }))
+  const filter = props.assigneePersonIdsFilter
+  if (filter?.length) {
+    const allow = new Set(filter)
+    return list.filter((p) => allow.has(p.id))
+  }
+  return list
 })
 
 const availableProjects = computed(() => {
@@ -576,6 +592,17 @@ onMounted(async () => {
     loadSubtasks()
   }
 })
+
+// Pre-fill assignee when creating from team column (etc.)
+watch(
+  () => props.initialAssignedToId,
+  (id) => {
+    if (!props.task && id) {
+      assignedTo.value = id
+    }
+  },
+  { immediate: true },
+)
 
 // Watch for changes to the task and update form
 watch(() => props.task, (newTask) => {

@@ -1,0 +1,35 @@
+---
+description: Documentation, versioning, linting and base rules
+alwaysApply: true
+---
+
+# Documentation and Change Tracking
+
+- Store all project changes as Markdown files under a `docs` directory.
+- Maintain a running list of changes and summaries of what changed between versions.
+- Define versions using Git tags.
+
+# Code Versioning and Security
+
+- Implement build routines using GitHub Actions.
+- Maintain a robust root-level `.gitignore`:
+  - Do not commit generated files, external repositories, or sensitive information.
+- Provide a pre-commit hook that scans for sensitive information and blocks unsafe commits.
+
+# Linting and Quality Gates
+
+- Provide linting scripts for all languages used in the project.
+- Add `make` targets to:
+  - Run lint checks.
+  - Auto-correct lint issues where possible.
+- Run linting as part of a pre-commit step:
+  - Only allow commits when lint checks pass.
+
+# Base Rules Integration
+
+- Where possible, derive linting rules from a base rules file in the `AI` folder.
+- Use these base rules to:
+  - Know when the project needs to be re-checked against them.
+  - Notify the user to ask AI to check the project against the base rules or perform the check when possible.
+- Prefer languages where indentation has semantic meaning when it makes sense for the domain.
+

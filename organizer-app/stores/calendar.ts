@@ -52,9 +52,7 @@ export interface Calendar {
   accountId?: string
 }
 
-export const useCalendarStore = defineStore({
-  id: 'calendar',
-  
+export const useCalendarStore = defineStore('calendar', {
   state: () => ({
     events: [] as CalendarEvent[],
     calendars: [] as Calendar[],
