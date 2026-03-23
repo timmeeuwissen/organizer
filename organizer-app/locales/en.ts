@@ -1,6 +1,9 @@
 export default {
   common: {
     appName: 'Organizer',
+    welcome: 'Welcome',
+    unsavedNavigationWarning:
+      'You have unsaved changes. Leave this page and discard them?',
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',

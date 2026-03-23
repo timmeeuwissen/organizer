@@ -1,0 +1,1 @@
+- **Firebase CLI** — optional; for emulator and `firebase deploy` targets.

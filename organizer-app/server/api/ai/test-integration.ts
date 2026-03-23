@@ -1,5 +1,17 @@
-import { defineEventHandler, readBody } from 'h3'
+import {
+  defineEventHandler,
+  readBody,
+  createError,
+  setResponseHeader,
+  isError,
+} from 'h3'
+import { z } from 'zod'
 import { getProvider } from '~/utils/api/aiProviders'
+
+const BodySchema = z.object({
+  provider: z.enum(['openai', 'gemini', 'xai']),
+  apiKey: z.string().min(1),
+})
 
 /**
  * API endpoint to test an AI integration token
@@ -7,16 +19,20 @@ import { getProvider } from '~/utils/api/aiProviders'
  * to validate the API key for the specified provider
  */
 export default defineEventHandler(async (event) => {
+  setResponseHeader(event, 'Cache-Control', 'no-store')
+
   try {
-    // Get request body
-    const body = await readBody(event)
-    
-    if (!body.provider || !body.apiKey) {
-      return {
-        success: false,
-        error: 'Missing required fields: provider and apiKey'
-      }
+    const raw = await readBody(event)
+    const parsed = BodySchema.safeParse(raw)
+    if (!parsed.success) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Invalid request body',
+        data: parsed.error.flatten(),
+      })
     }
+
+    const body = parsed.data
 
     // Create a temporary integration object
     const testIntegration = {
@@ -46,11 +62,15 @@ export default defineEventHandler(async (event) => {
         error: err.message || `Error testing connection: ${body.provider}`
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (isError(error)) {
+      throw error
+    }
+    const message = error instanceof Error ? error.message : String(error)
     console.error('Error testing AI integration:', error)
     return {
       success: false,
-      error: error.message || 'An error occurred while testing the integration'
+      error: message || 'An error occurred while testing the integration',
     }
   }
 })

@@ -28,7 +28,11 @@ v-app
   
   v-app-bar(app)
     v-app-bar-nav-icon(v-if="isAuthenticated" @click.stop="drawer = !drawer")
-    v-app-bar-title {{ $t('common.appName') }}
+    v-app-bar-title
+      template(v-if="isAuthenticated")
+        span.text-caption.text-medium-emphasis.mr-2 {{ $t('common.appName') }}
+        span {{ appBarModuleTitle }}
+      template(v-else) {{ $t('common.appName') }}
     v-spacer
     template(v-if="isAuthenticated")
       v-menu(location="bottom end" :offset="[0, 5]")
@@ -82,6 +86,7 @@ v-app
   
   v-main
     v-container(fluid)
+      AppBreadcrumbs(v-if="isAuthenticated")
       DemoModeToggle(v-if="authBypassEnabled")
       slot
       
@@ -172,7 +177,6 @@ import { useI18n } from 'vue-i18n'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
-import { useNotificationStore } from '~/stores/notification'
 import { useDataRefresh } from '~/composables/useDataRefresh'
 import DemoModeToggle from '~/components/auth/DemoModeToggle.vue'
 import FeedbackButton from '~/components/feedback/FeedbackButton.vue'
@@ -194,11 +198,15 @@ import KnowledgeDocumentForm from '~/components/coaching/KnowledgeDocumentForm.v
 import AIAnalysisDialog from '~/components/ai/AIAnalysisDialog.vue'
 import AIButton from '~/components/ai/AIButton.vue'
 import NotificationSnackbar from '~/components/common/NotificationSnackbar.vue'
+import AppBreadcrumbs from '~/components/common/AppBreadcrumbs.vue'
+import { useAppNavigationContext } from '~/composables/useAppNavigationContext'
 
 const i18n = useI18n()
 const theme = useTheme()
 const authStore = useAuthStore()
 const router = useRouter()
+const { moduleTitle } = useAppNavigationContext()
+const appBarModuleTitle = moduleTitle
 
 // Data refresh
 const { isRefreshing, lastRefreshed, refreshError, refreshAllData } = useDataRefresh()

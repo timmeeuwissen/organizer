@@ -1,124 +1,96 @@
-import { defineEventHandler, readBody } from 'h3'
+import {
+  defineEventHandler,
+  readBody,
+  setResponseHeader,
+  setResponseStatus,
+} from 'h3'
+import { exchangeGoogleRefreshToken } from '~/server/utils/oauth/googleTokenRefresh'
 
-// Extract environment variables
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 
 /**
- * Server-side token refresh endpoint for OAuth providers
- * This endpoint allows the frontend to securely refresh OAuth tokens without
- * exposing client secrets in the browser
+ * Server-side token refresh for OAuth providers.
+ * Uses real HTTP status codes so clients can use response.ok and parse errors correctly.
  */
 export default defineEventHandler(async (event) => {
-  // Get request body
-  const body = await readBody(event)
+  setResponseHeader(event, 'Cache-Control', 'no-store')
+
+  let body: { refreshToken?: string; provider?: string; email?: string }
+  try {
+    body = await readBody(event)
+  } catch {
+    setResponseStatus(event, 400)
+    return { error: 'bad_request', error_description: 'Invalid JSON body' }
+  }
+
   const { refreshToken, provider, email } = body
 
   if (!refreshToken) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Refresh token is required' })
-    }
+    setResponseStatus(event, 400)
+    return { error: 'bad_request', error_description: 'Refresh token is required' }
   }
-  
+
   try {
-    // Handle different providers
     if (provider === 'google') {
-      // Check for required environment variables
       if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
         console.error('Missing Google API credentials in environment variables')
+        setResponseStatus(event, 500)
         return {
-          statusCode: 500,
-          body: JSON.stringify({ 
-            error: 'Server configuration error - missing Google API credentials' 
-          })
+          error: 'server_configuration',
+          error_description: 'Server is missing Google API credentials',
         }
       }
-      
-      console.log(`Refreshing Google OAuth token for ${email}`)
-      
-      // Log refresh request details (masking sensitive info)
-      console.log('Google OAuth refresh request:', {
-        clientIdPresent: !!GOOGLE_CLIENT_ID,
-        clientSecretPresent: !!GOOGLE_CLIENT_SECRET,
-        refreshTokenPresent: !!refreshToken,
-        refreshTokenLength: refreshToken?.length || 0,
-        refreshToken: refreshToken ? `${refreshToken.substring(0, 5)}...${refreshToken.substring(refreshToken.length - 5)}` : null
-      })
-      
-      // Construct refresh token request
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        },
-        body: new URLSearchParams({
-          client_id: GOOGLE_CLIENT_ID,
-          client_secret: GOOGLE_CLIENT_SECRET,
-          refresh_token: refreshToken,
-          grant_type: 'refresh_token',
-        }),
-      })
-      
-      // Process the response
-      if (!response.ok) {
-        console.error('Problem occurred in response ro refresh token')
 
-        let errorData;
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-          errorData = await response.json();
-          console.error('Google refresh token error:', errorData);
-        } else {
-          errorData = await response.text();
-          console.error('Google refresh token error (non-JSON):', errorData);
-        }
-        
-        // Handle invalid_grant error specifically
-        if (typeof errorData === 'object' && errorData.error === 'invalid_grant') {
+      console.log(`Refreshing Google OAuth token for ${email ?? '(no email)'}`)
+
+      const result = await exchangeGoogleRefreshToken(
+        refreshToken,
+        GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET
+      )
+
+      if (!result.ok) {
+        const { failure } = result
+        console.error('Google refresh token error:', failure)
+
+        if (failure.error === 'invalid_grant') {
+          setResponseStatus(event, 400)
           return {
-            statusCode: response.status,
-            body: JSON.stringify({
-              error: 'invalid_grant',
-              error_description: errorData.error_description || 'Refresh token is invalid or has expired. You may need to re-authenticate your account.'
-            })
+            error: 'invalid_grant',
+            error_description:
+              failure.error_description ||
+              'Refresh token is invalid or has expired. Re-authenticate your account.',
           }
         }
-        
+
+        setResponseStatus(event, failure.httpStatus >= 400 ? failure.httpStatus : 502)
         return {
-          statusCode: response.status,
-          body: JSON.stringify({ 
-            error: `Google OAuth error: ${response.status} ${response.statusText}`,
-            details: errorData
-          })
+          error: failure.error,
+          error_description: failure.error_description,
+          details: failure.details,
         }
       }
-      
-      // Return the new tokens
-      const tokens = await response.json()
-      return tokens
-    } 
-    else if (provider === 'microsoft') {
-      // Similar implementation for Microsoft refresh would go here
-      // For now, return an error
-      return {
-        statusCode: 501,
-        body: JSON.stringify({ error: 'Microsoft refresh not yet implemented' })
-      }
-    } 
-    else {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: `Unsupported provider: ${provider}` })
-      }
+
+      return result.tokens
+    }
+
+    if (provider === 'microsoft') {
+      setResponseStatus(event, 501)
+      return { error: 'not_implemented', error_description: 'Microsoft refresh not yet implemented' }
+    }
+
+    setResponseStatus(event, 400)
+    return {
+      error: 'unsupported_provider',
+      error_description: `Unsupported provider: ${provider ?? '(missing)'}`,
     }
   } catch (error) {
     console.error(`Error refreshing token for ${provider}:`, error)
+    setResponseStatus(event, 500)
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error during token refresh' })
+      error: 'internal_error',
+      error_description: 'Internal server error during token refresh',
     }
   }
 })

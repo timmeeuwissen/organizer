@@ -276,8 +276,19 @@ export class Office365TasksProvider implements TaskProvider {
         },
         body: body ? JSON.stringify(body) : undefined
       })
-      
-      return response
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '')
+        throw new Error(
+          `Microsoft Graph request failed: ${response.status} ${response.statusText} ${errText}`
+        )
+      }
+
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        return await response.json()
+      }
+      return await response.text()
     } catch (error: any) {
       if (error.status === 401) {
         // Token expired, refresh and try again

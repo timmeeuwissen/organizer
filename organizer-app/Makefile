@@ -1,4 +1,12 @@
-.PHONY: help
+.PHONY: help deps setup-env install dev dev-stop build preview generate \
+	test test-e2e test-e2e-run lint lint-fix clean \
+	docker-build docker-run docker-stop \
+	k8s-deploy k8s-status k8s-delete \
+	feedback-rules feedback-review feedback-to-claude feedback-diagnostic feedback-demo-mode \
+	ha-addon ha-run ha-stop firebase-setup firebase-deploy firebase-rules firebase-fix \
+	firebase-emulate firebase-emulate-stop firebase-init-db-legacy firebase-init-db \
+	oauth-google-setup oauth-ms-setup oauth-setup init \
+	api-docs dev-help docker-run-help firebase-emulate-help ha-run-help
 .DEFAULT_GOAL := help
 
 # Colors for terminal output
@@ -15,9 +23,16 @@ setup-env: ## Set up environment variables
 help: ## Show this help message
 	@echo "${COLOR_BLUE}Organizer App${COLOR_RESET} - Personal Organization Platform"
 	@echo ""
-	@echo "${COLOR_YELLOW}Available targets:${COLOR_RESET}"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  ${COLOR_CYAN}%-20s${COLOR_RESET} %s\n", $$1, $$2}'
+	@echo "${COLOR_YELLOW}Extended help:${COLOR_RESET} make dev-help, docker-run-help, firebase-emulate-help, ha-run-help"
+	@echo "${COLOR_YELLOW}Note:${COLOR_RESET} GNU Make handles \`make dev --help\` as global help — use \`make dev-help\` instead."
 	@echo ""
+	@echo "${COLOR_YELLOW}Available targets:${COLOR_RESET}"
+	@COLOR_CYAN="$(COLOR_CYAN)" COLOR_RESET="$(COLOR_RESET)" bash scripts/make-help.sh $(MAKEFILE_LIST)
+	@echo ""
+
+deps: ## List OS / dev dependencies (deps/*.md)
+	@echo "${COLOR_GREEN}Dependency list:${COLOR_RESET}"
+	@bash deps/deps.sh
 
 install: ## Install dependencies
 	@echo "${COLOR_GREEN}Installing dependencies...${COLOR_RESET}"
@@ -26,6 +41,14 @@ install: ## Install dependencies
 dev: ## Start development server
 	@echo "${COLOR_GREEN}Starting development server...${COLOR_RESET}"
 	npm run dev
+
+dev-stop: ## Stop local Nuxt dev processes (best-effort)
+	@echo "${COLOR_YELLOW}Stopping Nuxt dev (pkill)...${COLOR_RESET}"
+	-pkill -f "nuxt dev" 2>/dev/null || true
+	-pkill -f "node.*nuxt" 2>/dev/null || true
+
+dev-help: ## Show extended help for dev (docs/make/dev.md)
+	@cat docs/make/dev.md
 
 build: ## Build for production
 	@echo "${COLOR_GREEN}Building for production...${COLOR_RESET}"
@@ -47,6 +70,10 @@ test-e2e: ## Run end-to-end tests
 	@echo "${COLOR_GREEN}Running end-to-end tests...${COLOR_RESET}"
 	npm run test:e2e
 
+test-e2e-run: ## Run Cypress headless (CI-style)
+	@echo "${COLOR_GREEN}Running Cypress headless...${COLOR_RESET}"
+	npm run test:e2e:run
+
 lint: ## Lint code
 	@echo "${COLOR_GREEN}Linting code...${COLOR_RESET}"
 	npm run lint
@@ -66,6 +93,19 @@ docker-build: ## Build Docker image
 docker-run: ## Run app in Docker
 	@echo "${COLOR_GREEN}Running app in Docker...${COLOR_RESET}"
 	docker run -p 3000:3000 organizer-app
+
+docker-stop: ## Stop organizer-app Docker containers (best-effort)
+	@echo "${COLOR_YELLOW}Stopping organizer-app containers...${COLOR_RESET}"
+	@ids=$$(docker ps -q --filter ancestor=organizer-app 2>/dev/null); \
+		if [ -n "$$ids" ]; then docker stop $$ids; else echo "No matching containers."; fi
+
+docker-run-help: ## Show extended help for docker-run
+	@cat docs/make/docker-run.md
+
+api-docs: ## OpenAPI spec path + open on macOS if possible
+	@echo "${COLOR_GREEN}OpenAPI:${COLOR_RESET} $(CURDIR)/openapi/openapi.yaml"
+	@echo "${COLOR_GREEN}MCP:${COLOR_RESET} $(CURDIR)/MCP/README.md"
+	@command -v open >/dev/null 2>&1 && open "$(CURDIR)/openapi/openapi.yaml" || true
 
 k8s-deploy: ## Deploy to Kubernetes
 	@echo "${COLOR_GREEN}Deploying to Kubernetes...${COLOR_RESET}"
@@ -121,6 +161,14 @@ ha-run: ## Run Home Assistant add-on locally
 	@echo "${COLOR_GREEN}Running Home Assistant add-on locally...${COLOR_RESET}"
 	docker run -p 8099:8099 organizer-ha-addon
 
+ha-stop: ## Stop Home Assistant add-on container (best-effort)
+	@echo "${COLOR_YELLOW}Stopping organizer-ha-addon containers...${COLOR_RESET}"
+	@ids=$$(docker ps -q --filter ancestor=organizer-ha-addon 2>/dev/null); \
+		if [ -n "$$ids" ]; then docker stop $$ids; else echo "No matching containers."; fi
+
+ha-run-help: ## Show extended help for ha-run
+	@cat docs/make/ha-run.md
+
 firebase-setup: ## Set up Firebase project and Firestore database
 	@echo "${COLOR_GREEN}Setting up Firebase and Firestore...${COLOR_RESET}"
 	node scripts/firebase-setup.js
@@ -142,6 +190,13 @@ firebase-fix: ## Fix Firebase permission issues
 firebase-emulate: ## Run Firebase emulators
 	@echo "${COLOR_GREEN}Running Firebase emulators...${COLOR_RESET}"
 	firebase emulators:start
+
+firebase-emulate-stop: ## Stop Firebase emulator processes (best-effort)
+	@echo "${COLOR_YELLOW}Stopping Firebase emulators (pkill)...${COLOR_RESET}"
+	-pkill -f "firebase emulators" 2>/dev/null || true
+
+firebase-emulate-help: ## Show extended help for firebase-emulate
+	@cat docs/make/firebase-emulate.md
 
 firebase-init-db-legacy: ## Initialize Firestore database structure (requires firebase-admin)
 	@echo "${COLOR_GREEN}Initializing Firestore database structure...${COLOR_RESET}"

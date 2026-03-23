@@ -37,14 +37,17 @@ export default defineNuxtConfig({
   ],
   
   plugins: [
-    '~/plugins/vuetify', 
+    '~/plugins/vuetify',
     '~/plugins/firebase',
     '~/plugins/theme',
     '~/plugins/pinia-persistence',
-    '~/plugins/oidc'
+    '~/plugins/oidc',
+    '~/plugins/unsaved-navigation.client',
   ],
 
   runtimeConfig: {
+    /** Server-only: JSONL audit log path (gui-messaging). Override with AUDIT_LOG_PATH. */
+    auditLogPath: process.env.AUDIT_LOG_PATH || 'logs/audit.log',
     public: {
       firebase: {
         apiKey: process.env.FIREBASE_API_KEY || '',

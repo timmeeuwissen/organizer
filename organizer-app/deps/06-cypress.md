@@ -1,0 +1,1 @@
+- **Cypress** — installed via npm; required for `make test-e2e` / `npm run test:e2e:run`.

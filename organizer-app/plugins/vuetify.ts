@@ -47,4 +47,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   })
 
   nuxtApp.vueApp.use(vuetify)
+  // For plugins/composables outside component setup (e.g. theme.ts) — useTheme() is invalid there.
+  nuxtApp.provide('vuetifyThemeEngine', vuetify.theme)
 })

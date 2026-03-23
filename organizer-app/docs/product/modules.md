@@ -270,7 +270,7 @@ Full product spec and decisions: [`teams.md`](./teams.md).
 | **Notifications** | `NotificationSnackbar` + Pinia `notification` store for success/error/info/warning toasts. |
 | **i18n** | Most modules use `locales/en.ts` and `locales/nl.ts`; Coaching overview still mixes hardcoded English in places. |
 
----
+---t
 
 ## Module index (quick reference)
 

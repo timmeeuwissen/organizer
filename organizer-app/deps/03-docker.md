@@ -1,0 +1,1 @@
+- **Docker** — optional; for `make docker-build`, `make docker-run`, Home Assistant add-on builds.

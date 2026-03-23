@@ -1,0 +1,1 @@
+- **Node.js** — LTS ≥ 20 (see `package.json` engines).

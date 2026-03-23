@@ -7,68 +7,81 @@ vi.mock('../../../stores/auth', () => ({
   }))
 }))
 
-// Define Firestore mock functions first
-const mockGetDocs = vi.fn(() => Promise.resolve({
-  docs: [
-    {
-      id: 'behavior1',
-      data: () => ({
-        type: 'doWell',
-        title: 'Test Behavior 1',
-        rationale: 'Test Rationale 1',
-        examples: ['Example 1'],
-        categories: ['Category 1'],
-        userId: 'test-user-id',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
-    },
-    {
-      id: 'behavior2',
-      data: () => ({
-        type: 'wantToDoBetter',
-        title: 'Test Behavior 2',
-        rationale: 'Test Rationale 2',
-        examples: ['Example 2'],
-        categories: ['Category 2'],
-        userId: 'test-user-id',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
-    }
-  ]
-}))
-
-const mockGetDoc = vi.fn(() => Promise.resolve({
-  exists: () => true,
-  id: 'behavior1',
-  data: () => ({
-    type: 'doWell',
-    title: 'Test Behavior 1',
-    rationale: 'Test Rationale 1',
-    examples: ['Example 1'],
-    categories: ['Category 1'],
-    userId: 'test-user-id',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  })
-}))
-
 // Mock Firestore module - must be before importing the stores
-vi.mock('firebase/firestore', () => ({
-  collection: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
-  orderBy: vi.fn(),
-  getDocs: mockGetDocs,
-  getDoc: mockGetDoc,
-  doc: vi.fn(),
-  addDoc: vi.fn(() => Promise.resolve({ id: 'newBehaviorId' })),
-  updateDoc: vi.fn(() => Promise.resolve()),
-  deleteDoc: vi.fn(() => Promise.resolve()),
-  serverTimestamp: vi.fn(() => new Date()),
-  getFirestore: vi.fn(() => ({}))
-}))
+vi.mock('firebase/firestore', () => {
+  const mockGetDocs = vi.fn(() => Promise.resolve({
+    docs: [
+      {
+        id: 'behavior1',
+        data: () => ({
+          type: 'doWell',
+          title: 'Test Behavior 1',
+          rationale: 'Test Rationale 1',
+          examples: ['Example 1'],
+          categories: ['Category 1'],
+          userId: 'test-user-id',
+          createdAt: { toDate: () => new Date('2020-01-01') },
+          updatedAt: { toDate: () => new Date('2020-01-02') }
+        })
+      },
+      {
+        id: 'behavior2',
+        data: () => ({
+          type: 'wantToDoBetter',
+          title: 'Test Behavior 2',
+          rationale: 'Test Rationale 2',
+          examples: ['Example 2'],
+          categories: ['Category 2'],
+          userId: 'test-user-id',
+          createdAt: { toDate: () => new Date('2020-02-01') },
+          updatedAt: { toDate: () => new Date('2020-02-02') }
+        })
+      }
+    ]
+  }))
+
+  const mockGetDoc = vi.fn(() => Promise.resolve({
+    exists: () => true,
+    id: 'behavior1',
+    data: () => ({
+      type: 'doWell',
+      title: 'Test Behavior 1',
+      rationale: 'Test Rationale 1',
+      examples: ['Example 1'],
+      categories: ['Category 1'],
+      userId: 'test-user-id',
+      createdAt: { toDate: () => new Date() },
+      updatedAt: { toDate: () => new Date() }
+    })
+  }))
+
+  const mockAddDoc = vi.fn(() => Promise.resolve({ id: 'newBehaviorId' }))
+  const mockUpdateDoc = vi.fn(() => Promise.resolve())
+  const mockDeleteDoc = vi.fn(() => Promise.resolve())
+
+  globalThis.__behaviorsFirestoreMocks = {
+    mockGetDocs,
+    mockGetDoc,
+    mockAddDoc,
+    mockUpdateDoc,
+    mockDeleteDoc
+  }
+
+  return {
+    collection: vi.fn(),
+    query: vi.fn(),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    getDocs: mockGetDocs,
+    getDoc: mockGetDoc,
+    doc: vi.fn(),
+    addDoc: mockAddDoc,
+    updateDoc: mockUpdateDoc,
+    deleteDoc: mockDeleteDoc,
+    serverTimestamp: vi.fn(() => new Date()),
+    getFirestore: vi.fn(() => ({}))
+  }
+})
 
 // Import after mocks are defined
 import { setActivePinia, createPinia } from 'pinia'
@@ -120,10 +133,14 @@ describe('Behaviors Store', () => {
     const store = useBehaviorsStore()
     
     // Override the mocked implementation for this test
-    mockGetDocs.mockResolvedValueOnce({
+    globalThis.__behaviorsFirestoreMocks.mockGetDocs.mockResolvedValueOnce({
       docs: mockBehaviorData.map(behavior => ({
         id: behavior.id,
-        data: () => ({ ...behavior })
+        data: () => ({
+          ...behavior,
+          createdAt: { toDate: () => behavior.createdAt },
+          updatedAt: { toDate: () => behavior.updatedAt }
+        })
       }))
     })
     
@@ -147,7 +164,7 @@ describe('Behaviors Store', () => {
     }
     
     // Mock the implementation for this test
-    mockAddDoc.mockResolvedValueOnce({ id: 'newBehaviorId' })
+    globalThis.__behaviorsFirestoreMocks.mockAddDoc.mockResolvedValueOnce({ id: 'newBehaviorId' })
     
     // Call the method
     await store.createBehavior(newBehavior)
@@ -188,7 +205,7 @@ describe('Behaviors Store', () => {
     }
     
     // Mock update to actually modify the store data
-    mockUpdateDoc.mockImplementationOnce(() => {
+    globalThis.__behaviorsFirestoreMocks.mockUpdateDoc.mockImplementationOnce(() => {
       store.behaviors[0] = {
         ...store.behaviors[0],
         ...updatedData,
@@ -222,7 +239,7 @@ describe('Behaviors Store', () => {
     }]
     
     // Mock delete to actually modify the store data
-    mockDeleteDoc.mockImplementationOnce(() => {
+    globalThis.__behaviorsFirestoreMocks.mockDeleteDoc.mockImplementationOnce(() => {
       store.behaviors = store.behaviors.filter(b => b.id !== 'behavior1')
       return Promise.resolve()
     })

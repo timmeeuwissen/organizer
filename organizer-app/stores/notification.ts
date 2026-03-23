@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useNuxtApp } from '#app'
 
 export interface Notification {
   id: string
@@ -8,98 +9,139 @@ export interface Notification {
   dismissible?: boolean
 }
 
+/** Payload aligned with gui-messaging.mdc (extensible). */
+export interface MessagePayload {
+  type: 'success' | 'error' | 'info' | 'warning'
+  text: string
+  userId?: string | null
+  timestamp?: string
+  timeout?: number
+  dismissible?: boolean
+}
+
+function auditTypeUpper(t: Notification['type']): string {
+  return t.toUpperCase()
+}
+
+async function postAuditLog(entry: {
+  type: string
+  text: string
+  userId?: string | null
+  timestamp?: string
+}): Promise<void> {
+  if (!import.meta.client) return
+  try {
+    const nuxt = useNuxtApp()
+    await nuxt.$fetch('/api/system/audit', {
+      method: 'POST',
+      body: entry,
+    })
+  } catch {
+    // Non-blocking; UI still shows the snackbar
+  }
+}
+
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
+    /** FIFO queue; only the first item is shown in the snackbar at a time. */
     notifications: [] as Notification[],
-    nextId: 1
+    nextId: 1,
   }),
-  
+
   actions: {
     /**
-     * Add a notification to the store
+     * Queue a notification (gui-messaging: one visible at a time).
      */
     add(notification: Partial<Notification>) {
       const id = `notification-${this.nextId++}`
-      
+
       const newNotification: Notification = {
         id,
         message: notification.message || '',
         type: notification.type || 'info',
         timeout: notification.timeout === undefined ? 5000 : notification.timeout,
-        dismissible: notification.dismissible === undefined ? true : notification.dismissible
+        dismissible:
+          notification.dismissible === undefined ? true : notification.dismissible,
       }
-      
+
       this.notifications.push(newNotification)
-      
-      // Auto-dismiss if timeout is set
-      if (newNotification.timeout && newNotification.timeout > 0) {
-        setTimeout(() => {
-          this.dismiss(id)
-        }, newNotification.timeout)
-      }
-      
+
+      void postAuditLog({
+        type: auditTypeUpper(newNotification.type),
+        text: newNotification.message,
+        userId: null,
+        timestamp: new Date().toISOString(),
+      })
+
       return id
     },
-    
-    /**
-     * Remove a notification by ID
-     */
+
     dismiss(id: string) {
-      const index = this.notifications.findIndex(n => n.id === id)
+      const index = this.notifications.findIndex((n) => n.id === id)
       if (index !== -1) {
         this.notifications.splice(index, 1)
       }
     },
-    
-    /**
-     * Add a success notification
-     */
+
     success(message: string, options: Partial<Notification> = {}) {
       return this.add({
         message,
         type: 'success',
-        ...options
+        ...options,
       })
     },
-    
-    /**
-     * Add an info notification
-     */
+
     info(message: string, options: Partial<Notification> = {}) {
       return this.add({
         message,
         type: 'info',
-        ...options
+        ...options,
       })
     },
-    
-    /**
-     * Add a warning notification
-     */
+
     warning(message: string, options: Partial<Notification> = {}) {
       return this.add({
         message,
         type: 'warning',
-        ...options
+        ...options,
       })
     },
-    
-    /**
-     * Add an error notification
-     */
+
     error(message: string, options: Partial<Notification> = {}) {
       return this.add({
         message,
         type: 'error',
-        ...options
+        ...options,
       })
     },
-    
-    /**
-     * Clear all notifications
-     */
+
+    pushSuccess(text: string, options: Partial<Notification> = {}) {
+      return this.success(text, options)
+    },
+
+    pushError(text: string, options: Partial<Notification> = {}) {
+      return this.error(text, options)
+    },
+
+    pushInfo(text: string, options: Partial<Notification> = {}) {
+      return this.info(text, options)
+    },
+
+    pushWarning(text: string, options: Partial<Notification> = {}) {
+      return this.warning(text, options)
+    },
+
+    push(payload: MessagePayload) {
+      const { text, type, userId: _userId, timestamp: _ts, ...rest } = payload
+      return this.add({
+        message: text,
+        type,
+        ...rest,
+      })
+    },
+
     clear() {
       this.notifications = []
-    }
-  }
+    },
+  },
 })

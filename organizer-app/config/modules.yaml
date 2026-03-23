@@ -1,0 +1,29 @@
+# Module route roots and locale keys (organizer-app incremental GUI conventions).
+# Titles resolve via vue-i18n: locales/en.ts, locales/nl.ts
+modules:
+  - segment: dashboard
+    titleKey: dashboard.title
+  - segment: behaviors
+    titleKey: behaviors.title
+  - segment: calendar
+    titleKey: calendar.title
+  - segment: coaching
+    titleKey: coaching.title
+  - segment: mail
+    titleKey: mail.title
+  - segment: meetings
+    titleKey: meetings.title
+  - segment: people
+    titleKey: people.title
+  - segment: projects
+    titleKey: projects.title
+  - segment: tasks
+    titleKey: tasks.title
+  - segment: teams
+    titleKey: teams.title
+  - segment: statistics
+    titleKey: statistics.title
+  - segment: network
+    titleKey: network.title
+  - segment: feedback
+    titleKey: feedback.title

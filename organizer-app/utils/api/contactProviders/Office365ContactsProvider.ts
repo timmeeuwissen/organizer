@@ -33,14 +33,15 @@ export class Office365ContactsProvider implements ContactProvider {
       return false
     }
     
-    // Verify proper MS Graph scopes if scope is specified
+    // Verify proper MS Graph scopes if scope is specified (Graph uses e.g. Contacts.Read)
     if (this.account.oauthData.scope) {
-      const hasContactsScope = 
-        this.account.oauthData.scope.includes('contacts') || 
-        this.account.oauthData.scope.includes('contacts.read') || 
-        this.account.oauthData.scope.includes('https://graph.microsoft.com/contacts.read') ||
-        this.account.oauthData.scope.includes('https://graph.microsoft.com/contacts');
-        
+      const s = this.account.oauthData.scope.toLowerCase()
+      const hasContactsScope =
+        s.includes('contacts.read') ||
+        s.includes('contacts.readwrite') ||
+        s.includes('people.read') ||
+        s.includes('https://graph.microsoft.com/contacts')
+
       if (!hasContactsScope) {
         console.warn(`[O365Contacts] ${this.account.oauthData.email}: Office 365 account missing required contacts scopes:`, this.account.oauthData.scope)
         return false

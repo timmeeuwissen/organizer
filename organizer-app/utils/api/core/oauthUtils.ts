@@ -176,7 +176,9 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
           console.error('Failed to import googleAuthUtils:', importError)
         }
         
-        throw new Error(`Your Google account authorization has expired or been revoked. Please re-authorize your account.`)
+        throw new Error(
+          `Your Google account authorization has expired or been revoked (invalid_grant). Please re-authorize your account.`
+        )
       }
       
       // General error handling for other cases

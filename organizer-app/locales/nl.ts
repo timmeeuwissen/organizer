@@ -1,6 +1,9 @@
 export default {
   common: {
     appName: 'Organizer',
+    welcome: 'Welkom',
+    unsavedNavigationWarning:
+      'Je hebt niet-opgeslagen wijzigingen. Pagina verlaten en wijzigingen weggooien?',
     save: 'Opslaan',
     cancel: 'Annuleren',
     delete: 'Verwijderen',

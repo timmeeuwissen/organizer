@@ -139,6 +139,8 @@ This document summarizes the rules defined in `.cursor/rules/`. All rules are ma
 | **Contracts** | Machine-readable contract per endpoint; validate requests; reject malformed |
 | **Caching** | HTTP cache headers on GET; tune by data type and volatility |
 
+**Organizer-app (incremental):** OpenAPI draft at `openapi/openapi.yaml`; `make api-docs` prints paths and opens the spec on macOS; MCP notes in `MCP/README.md`. Selected `POST` bodies are validated with Zod; Nitro handlers set `Cache-Control` where applicable (`/api/proxy` GET, `/api/icons`, AI and auth routes, audit).
+
 ---
 
 ## 9. ai-workflow.mdc
@@ -171,6 +173,8 @@ This document summarizes the rules defined in `.cursor/rules/`. All rules are ma
 | **Truncate** | `make db-truncate`; require typing `yes`; no truncate without confirmation |
 | **Load** | `make db-load-fixture` runs truncate first; abort if truncate cancelled |
 | **Scripts** | Truncate/load logic in `scripts/db-truncate.sh`, `scripts/db-load-fixture.sh` |
+
+**Organizer App:** This product uses **Firebase/Firestore** as the primary store and does **not** implement SQL fixtures or truncate/load targets. See [`docs/product/data-storage.md`](product/data-storage.md).
 
 ---
 

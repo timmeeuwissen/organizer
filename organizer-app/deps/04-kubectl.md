@@ -1,0 +1,1 @@
+- **kubectl** — optional; for `make k8s-deploy` and related Kubernetes targets.

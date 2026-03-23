@@ -1,4 +1,11 @@
-import { defineEventHandler, getQuery, readBody, createError } from 'h3'
+import {
+  defineEventHandler,
+  getQuery,
+  readBody,
+  createError,
+  setResponseHeader,
+} from 'h3'
+import { isAllowedProxyUrl } from '../utils/proxyAllowlist'
 
 /**
  * API proxy endpoint that forwards requests to external APIs
@@ -18,6 +25,13 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Missing required url parameter'
+    })
+  }
+
+  if (!isAllowedProxyUrl(targetUrl)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'URL is not allowed for proxy'
     })
   }
 
@@ -70,6 +84,10 @@ export default defineEventHandler(async (event) => {
       data = await response.json()
     } catch (e) {
       data = await response.text()
+    }
+
+    if (method === 'GET') {
+      setResponseHeader(event, 'Cache-Control', 'private, no-store')
     }
 
     // Return the data from the proxied request

@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: Organizer App API (Nitro)
+  version: 1.0.0
+  description: |
+    HTTP routes exposed under `/api/*` by the Nuxt/Nitro server.
+    See `MCP/README.md` for MCP exposure notes.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /api/proxy:
+    get:
+      summary: Proxy GET to allowlisted URL
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema:
+            type: string
+            format: uri
+      responses:
+        '200':
+          description: Proxied response body (JSON or text)
+        '400':
+          description: Missing url or URL not allowlisted
+    post:
+      summary: Proxy POST with JSON body to allowlisted URL
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Proxied response
+  /api/icons:
+    get:
+      summary: Icon lookup (cached)
+      responses:
+        '200':
+          description: Icon payload
+  /api/ai/analyze:
+    post:
+      summary: Analyze text with configured AI provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [integration, text]
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                integration:
+                  type: object
+                  required: [provider, apiKey]
+                  properties:
+                    provider:
+                      type: string
+                      enum: [openai, gemini, xai]
+                    apiKey:
+                      type: string
+      responses:
+        '200':
+          description: Analysis result or error envelope
+        '400':
+          description: Validation error (Zod)
+  /api/ai/test-integration:
+    post:
+      summary: Test AI API key / connectivity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, apiKey]
+              properties:
+                provider:
+                  type: string
+                  enum: [openai, gemini, xai]
+                apiKey:
+                  type: string
+      responses:
+        '200':
+          description: success flag and optional error
+        '400':
+          description: Validation error
+  /api/auth/refresh:
+    post:
+      summary: Refresh OAuth tokens (Google/Microsoft stub)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                provider:
+                  type: string
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Token payload or legacy status envelope
+  /api/auth/oidc-callback:
+    get:
+      summary: Exchange OAuth code for tokens (Google)
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+        - in: query
+          name: state
+          schema:
+            type: string
+        - in: query
+          name: error
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token exchange result
+  /api/system/audit:
+    post:
+      summary: Append GUI audit line (JSONL)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, text]
+              properties:
+                type:
+                  type: string
+                  enum: [SUCCESS, ERROR, INFO, WARNING]
+                text:
+                  type: string
+                  maxLength: 20000
+                userId:
+                  type: string
+                  nullable: true
+                timestamp:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: "{ ok: true }"
+        '400':
+          description: Invalid payload

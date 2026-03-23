@@ -14,34 +14,34 @@ export class Office365CalendarProvider implements CalendarProvider {
   }
   
   isAuthenticated(): boolean {
-    console.log(`Office365CalendarProvider.isAuthenticated check for ${this.account.email}:`, {
-      hasAccessToken: !!this.account.accessToken,
-      tokenExpiry: this.account.tokenExpiry,
+    console.log(`Office365CalendarProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
+      hasAccessToken: !!this.account.oauthData.accessToken,
+      tokenExpiry: this.account.oauthData.tokenExpiry,
       currentTime: new Date(),
-      isTokenExpired: this.account.tokenExpiry ? new Date(this.account.tokenExpiry) < new Date() : 'No expiry set',
-      scope: this.account.scope
+      isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
+      scope: this.account.oauthData.scope
     });
     
     // Check access token
-    if (!this.account.accessToken) {
-      console.log(`${this.account.email}: No access token found`);
+    if (!this.account.oauthData.accessToken) {
+      console.log(`${this.account.oauthData.email}: No access token found`);
       return false;
     }
     
     // Check token expiry
     // If tokenExpiry is not set, consider the token expired and force a refresh
-    if (!this.account.tokenExpiry) {
-      console.log(`${this.account.email}: No token expiry date set, assuming expired`);
+    if (!this.account.oauthData.tokenExpiry) {
+      console.log(`${this.account.oauthData.email}: No token expiry date set, assuming expired`);
       return false;
     }
     
     // Check if token is expired
-    if (new Date(this.account.tokenExpiry) < new Date()) {
-      console.log(`${this.account.email}: Token expired`);
+    if (new Date(this.account.oauthData.tokenExpiry) < new Date()) {
+      console.log(`${this.account.oauthData.email}: Token expired`);
       return false;
     }
     
-    console.log(`${this.account.email}: Authentication valid`);
+    console.log(`${this.account.oauthData.email}: Authentication valid`);
     return true;
   }
   
@@ -50,7 +50,7 @@ export class Office365CalendarProvider implements CalendarProvider {
       return true
     }
     
-    if (this.account.refreshToken) {
+    if (this.account.oauthData.refreshToken) {
       try {
         this.account = await refreshOAuthToken(this.account)
         return true
@@ -121,7 +121,7 @@ export class Office365CalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Prefer': 'outlook.timezone="UTC"'
@@ -257,7 +257,7 @@ export class Office365CalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
@@ -363,7 +363,7 @@ export class Office365CalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
@@ -462,7 +462,7 @@ export class Office365CalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Accept': 'application/json'
       }
       
@@ -506,7 +506,7 @@ export class Office365CalendarProvider implements CalendarProvider {
       
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.accessToken}`,
+        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
         'Accept': 'application/json'
       }
       

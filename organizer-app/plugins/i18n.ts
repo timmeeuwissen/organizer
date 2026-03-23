@@ -3,16 +3,19 @@ import en from '~/locales/en'
 import nl from '~/locales/nl'
 import { defineNuxtPlugin } from '#app'
 
-export default defineNuxtPlugin(({ vueApp }) => {
-  const i18n = createI18n({
-    legacy: false,
-    globalInjection: true,
-    locale: 'en',
-    messages: {
-      en,
-      nl
-    }
-  })
+export default defineNuxtPlugin({
+  name: 'i18n',
+  setup({ vueApp }) {
+    const i18n = createI18n({
+      legacy: false,
+      globalInjection: true,
+      locale: 'en',
+      messages: {
+        en,
+        nl
+      }
+    })
 
-  vueApp.use(i18n)
+    vueApp.use(i18n)
+  },
 })

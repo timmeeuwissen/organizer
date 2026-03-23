@@ -209,7 +209,7 @@ v-container
                     v-card(min-width="300" class="pa-3")
                       v-card-title(class="text-subtitle-1 pb-0") {{ $t('settings.changeColor') }}
                       v-color-picker(
-                        v-model="account.color"
+                        :model-value="account.color"
                         :swatches="colorSwatches"
                         show-swatches
                         hide-inputs
@@ -271,7 +271,8 @@ v-container
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, inject } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useNuxtApp } from '#app'
 import { useAuthStore } from '~/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -284,6 +285,8 @@ import { v4 as uuidv4 } from 'uuid'
 
 // Component state
 const isLoading = ref(true)
+/** When false, ignore auto-save from v-select/v-switch sync (avoids recursive update loops). */
+const profileFormReady = ref(false)
 const isSaving = ref(false)
 const isEditing = ref(false)
 const errorMsg = ref('')
@@ -343,7 +346,7 @@ const authStore = useAuthStore()
 const i18n = useI18n()
 const router = useRouter()
 const networkStatus = useNetworkStatus()
-const themeService = inject('theme')
+const { $theme: themeService } = useNuxtApp()
 
 // Computed properties
 const user = computed(() => authStore.currentUser)
@@ -368,6 +371,7 @@ const hasProfileChanges = computed(() => {
     displayNameInput.value !== (user.value.displayName || '') ||
     darkModeInput.value !== (user.value.settings?.darkMode || false) ||
     languageInput.value !== (user.value.settings?.defaultLanguage || 'en') ||
+    weekStartsDayInput.value !== (user.value.settings?.weekStartsOn ?? 1) ||
     emailNotificationsInput.value !== (user.value.settings?.emailNotifications || true) ||
     calendarSyncInput.value !== (user.value.settings?.calendarSync || false)
   )
@@ -394,7 +398,8 @@ const languageList = [
 // Lifecycle hooks
 onMounted(async () => {
   isLoading.value = true
-  
+  profileFormReady.value = false
+
   try {
     // Check authentication
     if (!authStore.isAuthenticated) {
@@ -402,13 +407,15 @@ onMounted(async () => {
         // Wait for auth state to resolve
         const unwatch = watch(
           () => authStore.loading,
-          (val) => {
+          async (val) => {
             if (!val) {
               unwatch()
               if (!authStore.isAuthenticated) {
                 router.push('/auth/login')
               } else {
                 loadUserData()
+                await nextTick()
+                profileFormReady.value = true
               }
             }
           }
@@ -420,6 +427,8 @@ onMounted(async () => {
     } else {
       // Already authenticated, load data
       loadUserData()
+      await nextTick()
+      profileFormReady.value = true
     }
   } catch (err) {
     console.error('Error in profile mount:', err)
@@ -504,16 +513,36 @@ function showAddIntegrationDialog() {
   showIntegrationDialog.value = true
 }
 
+function normalizePickerColor(value: unknown): string {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (value && typeof value === 'object' && 'hex' in value) {
+    const hex = (value as { hex?: string }).hex
+    if (typeof hex === 'string') {
+      return hex
+    }
+  }
+  return ''
+}
+
 // Update integration color
 async function updateIntegrationColor(accountId, newColor) {
-  const index = integrationAccounts.value.findIndex(account => account.id === accountId);
+  const normalized = normalizePickerColor(newColor)
+  if (!normalized) {
+    return
+  }
+  const index = integrationAccounts.value.findIndex(account => account.id === accountId)
   if (index >= 0) {
-    // Update the color
-    integrationAccounts.value[index].color = newColor;
-    integrationAccounts.value[index].updatedAt = new Date();
-    
+    if (integrationAccounts.value[index].color === normalized) {
+      return
+    }
+    // Update the color (single writer — avoid v-model + handler double updates)
+    integrationAccounts.value[index].color = normalized
+    integrationAccounts.value[index].updatedAt = new Date()
+
     // Update settings
-    await updateUserSettings();
+    await updateUserSettings()
     
     // Show success message
     integrationSuccessMsg.value = 'Integration color updated';
@@ -613,6 +642,9 @@ function handleDarkModeChange() {
   if (themeService) {
     themeService.toggle(darkModeInput.value)
   }
+  if (!profileFormReady.value) {
+    return
+  }
   handleSettingsChange()
 }
 
@@ -626,16 +658,22 @@ function handleLanguageChange() {
     console.error('Error changing language:', err)
     // Continue with settings update even if language change fails
   }
-  
+
+  if (!profileFormReady.value) {
+    return
+  }
   handleSettingsChange()
 }
 
 function handleSettingsChange() {
+  if (!profileFormReady.value) {
+    return
+  }
   // Don't auto-save if not online
   if (!networkStatus.isOnline.value) {
     return
   }
-  
+
   console.log('Handling settings change, will update user settings')
   updateUserSettings()
 }

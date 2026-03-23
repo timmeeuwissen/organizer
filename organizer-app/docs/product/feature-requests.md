@@ -4,6 +4,8 @@ Canonical list of requested or planned features. Derived from codebase and rules
 
 For **per-module product specs** (purpose, routes, data, integrations), see [`modules.md`](./modules.md). **Teams** detail: [`teams.md`](./teams.md).
 
+**Persistence:** Firebase/Firestore only for primary app data—see [`data-storage.md`](./data-storage.md).
+
 ---
 
 ## Implemented
@@ -42,8 +44,13 @@ For **per-module product specs** (purpose, routes, data, integrations), see [`mo
 - OpenAPI for server API
 - MCP exposure for API
 - YAML i18n in `i18n/` folder (currently using `locales/*.ts`)
-- Database fixtures and `make db-truncate` / `make db-load-fixture` (Firebase-based; no SQL flow yet)
 - Web workers for request buffering when offline
+
+---
+
+## Explicitly out of scope (by product choice)
+
+- **SQL-backed primary storage** and the SQL fixture / truncate-load workflow from `database-fixtures.mdc`—see [`data-storage.md`](./data-storage.md).
 
 ---
 

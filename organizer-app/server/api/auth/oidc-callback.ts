@@ -1,4 +1,4 @@
-import { defineEventHandler, getQuery } from 'h3'
+import { defineEventHandler, getQuery, setResponseHeader } from 'h3'
 import { $fetch } from 'ofetch'
 
 /**
@@ -6,6 +6,7 @@ import { $fetch } from 'ofetch'
  * Handles the authorization code exchange for tokens
  */
 export default defineEventHandler(async (event) => {
+  setResponseHeader(event, 'Cache-Control', 'no-store')
   console.log('[API] OIDC Callback received')
   
   try {

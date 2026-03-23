@@ -1,4 +1,4 @@
-import { defineEventHandler } from 'h3'
+import { defineEventHandler, setResponseHeader } from 'h3'
 import { 
   loadIcons, 
   IconData, 
@@ -8,6 +8,7 @@ import {
 } from '../../../data/yamlLoader'
 
 export default defineEventHandler(async (event) => {
+  setResponseHeader(event, 'Cache-Control', 'public, max-age=300')
   try {
     // Load icons data from YAML file using the new structure
     const iconsData = loadIcons()

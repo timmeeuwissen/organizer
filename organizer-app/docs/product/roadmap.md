@@ -2,6 +2,8 @@
 
 High-level delivery priorities. Update as scope and priorities evolve.
 
+**Persistence model:** Firebase/Firestore—[`data-storage.md`](./data-storage.md). SQL fixtures are not on the roadmap for this app.
+
 ---
 
 ## Phase 1: Foundation (Current)
@@ -34,7 +36,6 @@ High-level delivery priorities. Update as scope and priorities evolve.
 
 - [ ] OpenAPI for server API
 - [ ] MCP exposure
-- [ ] Database fixtures and `make db-truncate` / `make db-load-fixture` (if moving to SQL or for demo)
 - [ ] Web workers for offline request buffering
 - [ ] GitHub Actions for build/CI
 

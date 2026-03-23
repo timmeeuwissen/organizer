@@ -1,0 +1,14 @@
+---
+description: Clarifies when SQL database fixture rules apply for this repo
+alwaysApply: true
+---
+
+# Database fixtures — organizer-app scope
+
+The global rule **database-fixtures.mdc** describes SQL fixtures, truncate/load scripts, and `data/fixtures/`.
+
+**For organizer-app:** The product uses **Firebase/Firestore** as the primary data store. SQL fixtures and `make db-truncate` / `make db-load-fixture` are **not required** and are **out of scope** unless the project explicitly adopts a SQL primary store.
+
+Canonical product documentation: `docs/product/data-storage.md`.
+
+When auditing this codebase, do **not** flag missing SQL fixtures as a compliance gap.

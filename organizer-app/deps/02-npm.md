@@ -1,0 +1,1 @@
+- **npm** — package manager used by Makefile targets (`npm install`, `npm run`).

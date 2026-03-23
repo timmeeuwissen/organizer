@@ -1,7 +1,8 @@
 import { defineNuxtPlugin } from '#app'
-import { useTheme } from 'vuetify'
 
 export default defineNuxtPlugin((nuxtApp) => {
+  const vuetifyThemeEngine = nuxtApp.$vuetifyThemeEngine
+
   // Create global theme service
   const theme = {
     isDark: false,
@@ -41,14 +42,11 @@ export default defineNuxtPlugin((nuxtApp) => {
     
     applyTheme() {
       try {
-        // Get Vuetify theme instance from current context
-        const vuetifyTheme = useTheme()
-        
-        if (vuetifyTheme && vuetifyTheme.global) {
-          // Apply through Vuetify API
-          vuetifyTheme.global.name.value = this.isDark ? 'dark' : 'light'
+        // useTheme() only works inside component setup; use engine from createVuetify (plugins/vuetify.ts).
+        if (vuetifyThemeEngine) {
+          vuetifyThemeEngine.change(this.isDark ? 'dark' : 'light')
         }
-        
+
         // Also apply to document as fallback
         if (typeof document !== 'undefined') {
           if (this.isDark) {

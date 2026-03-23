@@ -1,59 +1,65 @@
 <template lang="pug">
-div.notification-container
+.notification-container
   v-snackbar(
-    v-for="notification in notifications"
-    :key="notification.id"
-    v-model="notification.visible"
-    :color="notification.type"
-    :timeout="notification.timeout"
-    :location="location"
+    v-if="active"
+    :key="active.id"
+    v-model="snackbarVisible"
+    :color="snackbarColor"
+    :timeout="active.timeout"
+    location="bottom"
     :multi-line="multiLine"
     :vertical="vertical"
+    @update:model-value="onVisibilityChange"
   )
     div.notification-content
-      v-icon(v-if="showIcons" start) {{ getIconForType(notification.type) }}
-      span {{ notification.message }}
-    template(v-slot:actions v-if="notification.dismissible")
-      v-btn(variant="text" @click="dismiss(notification.id)") {{ $t('common.close') }}
+      v-icon(v-if="showIcons" start) {{ getIconForType(active.type) }}
+      span {{ active.message }}
+    template(v-slot:actions v-if="active.dismissible")
+      v-btn(variant="text" @click="closeCurrent") {{ $t('common.close') }}
 </template>
 
-<script setup>
-import { computed, watch } from 'vue'
-import { useNotificationStore } from '~/stores/notification.ts'
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { useNotificationStore } from '~/stores/notification'
 
-// Props
-const props = defineProps({
-  location: {
-    type: String,
-    default: 'top'
-  },
+defineProps({
   multiLine: {
     type: Boolean,
-    default: false
+    default: false,
   },
   vertical: {
     type: Boolean,
-    default: false
+    default: false,
   },
   showIcons: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 })
 
-// Notification store
 const notificationStore = useNotificationStore()
 
-// Make a reactive copy of notifications with an added 'visible' property
-const notifications = computed(() => 
-  notificationStore.notifications.map(notification => ({
-    ...notification,
-    visible: true
-  }))
+const active = computed(() => notificationStore.notifications[0] ?? null)
+
+const snackbarVisible = ref(false)
+
+watch(
+  () => active.value?.id,
+  (id) => {
+    snackbarVisible.value = Boolean(id)
+  },
+  { immediate: true }
 )
 
-// Helper function to get icon for notification type
-function getIconForType(type) {
+const snackbarColor = computed(() => {
+  const t = active.value?.type
+  if (t === 'success') return 'success'
+  if (t === 'error') return 'error'
+  if (t === 'warning') return 'warning'
+  return 'info'
+})
+
+function getIconForType(type: string) {
   switch (type) {
     case 'success':
       return 'mdi-check-circle'
@@ -68,13 +74,22 @@ function getIconForType(type) {
   }
 }
 
-// Dismiss a notification
-function dismiss(id) {
-  notificationStore.dismiss(id)
+function closeCurrent() {
+  const id = active.value?.id
+  if (id) {
+    snackbarVisible.value = false
+    notificationStore.dismiss(id)
+  }
+}
+
+function onVisibilityChange(visible: boolean) {
+  if (!visible && active.value) {
+    notificationStore.dismiss(active.value.id)
+  }
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .notification-container {
   position: fixed;
   z-index: 2000;
