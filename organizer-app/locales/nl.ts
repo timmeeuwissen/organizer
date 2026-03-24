@@ -373,6 +373,8 @@ export default {
     pageSizeHint: 'Hoeveel berichten in de lijst per pagina (en per account opgehaald).',
     columnsHint: 'Velden in de berichtenlijst. Koppelingen gaan waar mogelijk naar andere modules.',
     openPeopleModule: 'Open Personen (zoek dit adres)',
+    viewContactInPeople: 'Dit contact in Personen bekijken',
+    addPersonFromEmail: 'Persoon toevoegen met dit adres',
     matchedPerson: 'Bekend contact',
     columns: {
       read: 'Gelezen / ongelezen',

@@ -203,21 +203,6 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false }
 ]
 
-// Initialize data
-onMounted(async () => {
-  const q = route.query.search
-  if (typeof q === 'string' && q.trim()) {
-    search.value = q.trim()
-  }
-  try {
-    await peopleStore.fetchPeople()
-  } catch (error: any) {
-    formError.value = error.message || 'Failed to load people'
-  } finally {
-    loading.value = false
-  }
-})
-
 // Connected accounts
 const connectedAccounts = computed(() => {
   const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
@@ -228,11 +213,48 @@ const connectedAccounts = computed(() => {
   )
 })
 
-// Initialize selectedProviders with all providers by default
-onMounted(() => {
-  // After the accounts are loaded, select all by default
+const openPerson = (person: Person) => {
+  selectedPerson.value = person
+  personDialog.value = true
+}
+
+function tryOpenPersonFromRoute() {
+  const pid = route.query.person
+  if (typeof pid !== 'string' || !pid.trim()) {
+    return
+  }
+  const found = peopleStore.people.find((p) => p.id === pid.trim())
+  if (found) {
+    openPerson(found)
+  }
+}
+
+watch(
+  () => route.query.person,
+  () => {
+    if (loading.value) {
+      return
+    }
+    tryOpenPersonFromRoute()
+  }
+)
+
+// Initialize data
+onMounted(async () => {
+  const q = route.query.search
+  if (typeof q === 'string' && q.trim()) {
+    search.value = q.trim()
+  }
+  try {
+    await peopleStore.fetchPeople()
+    tryOpenPersonFromRoute()
+  } catch (error: any) {
+    formError.value = error.message || 'Failed to load people'
+  } finally {
+    loading.value = false
+  }
   nextTick(() => {
-    selectedProviders.value = connectedAccounts.value.map(account => account.id)
+    selectedProviders.value = connectedAccounts.value.map((account) => account.id)
   })
 })
 
@@ -387,12 +409,6 @@ const clearFilters = () => {
   selectedRoles.value = []
   // Reset providers to select all
   selectedProviders.value = connectedAccounts.value.map(account => account.id)
-}
-
-// Dialog functions
-const openPerson = (person: Person) => {
-  selectedPerson.value = person
-  personDialog.value = true
 }
 
 // CRUD operations

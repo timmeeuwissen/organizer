@@ -178,23 +178,25 @@ v-container(fluid)
                 span.text-caption.text-truncate(style="max-width: 7rem") {{ getAccountLabel(item.accountId) }}
               
               template(v-slot:item.people="{ item }")
-                nuxt-link.text-decoration-none(
-                  v-if="item.from?.email"
-                  :to="{ path: '/people', query: { search: item.from.email } }"
-                  :title="$t('mail.openPeopleModule')"
-                )
-                  v-chip(
+                template(v-if="item.from?.email")
+                  nuxt-link.text-decoration-none(
                     v-if="findPersonByEmail(item.from.email)"
-                    size="x-small"
-                    color="success"
-                    prepend-icon="mdi-account-check"
-                  ) {{ $t('mail.matchedPerson') }}
+                    :to="peopleContactLinkByEmail(item.from.email)"
+                    :title="$t('mail.viewContactInPeople')"
+                  )
+                    v-chip(
+                      size="x-small"
+                      color="success"
+                      prepend-icon="mdi-account-check"
+                    ) {{ $t('mail.matchedPerson') }}
                   v-chip(
                     v-else
                     size="x-small"
                     variant="tonal"
-                    prepend-icon="mdi-account-search"
-                  ) {{ $t('people.title') }}
+                    prepend-icon="mdi-account-plus"
+                    :title="$t('mail.addPersonFromEmail')"
+                    @click.stop="openAddPersonFromEmail(item.from)"
+                  ) {{ $t('people.addPerson') }}
               
               template(v-slot:item.actions="{ item }")
                 v-btn(icon variant="text" @click.stop="markAsRead(item)")
@@ -239,9 +241,28 @@ v-container(fluid)
                 div.d-flex.align-center.mb-2
                   v-avatar(size="32" :color="getRandomColor(selectedEmail.from.email)")
                     span {{ getInitialsFromEmail(selectedEmail.from) }}
-                  div.ml-2
+                  div.ml-2.flex-grow-1
                     div.font-weight-bold {{ selectedEmail.from.name }}
                     div.text-caption {{ selectedEmail.from.email }}
+                    div.mt-2(v-if="selectedEmail.from.email")
+                      nuxt-link.text-decoration-none(
+                        v-if="senderMatchedPerson"
+                        :to="peopleContactLink(senderMatchedPerson)"
+                        :title="$t('mail.viewContactInPeople')"
+                      )
+                        v-chip(
+                          size="small"
+                          color="success"
+                          prepend-icon="mdi-account-check"
+                        ) {{ $t('mail.matchedPerson') }}
+                      v-btn(
+                        v-else
+                        variant="tonal"
+                        size="small"
+                        prepend-icon="mdi-account-plus"
+                        :title="$t('mail.addPersonFromEmail')"
+                        @click="openAddPersonFromEmail(selectedEmail.from)"
+                      ) {{ $t('people.addPerson') }}
                   v-spacer
                   div.text-body-2 {{ formatDatetime(selectedEmail.date) }}
                 
@@ -375,12 +396,14 @@ import {
   normalizeMailPageSize,
   type MailColumnKey,
 } from '~/config/mailUi'
+import { usePersonDialog } from '~/composables/usePersonDialog'
 
 // Stores
 const peopleStore = usePeopleStore()
 const mailStore = useMailStore()
 const authStore = useAuthStore()
 const { t } = useI18n()
+const personDialogSvc = usePersonDialog()
 
 // State
 const selectedEmail = ref<Email | null>(null)
@@ -540,6 +563,50 @@ function findPersonByEmail(email: string | undefined) {
   }
   const lower = email.toLowerCase()
   return peopleStore.people.find((p) => p.email?.toLowerCase() === lower) ?? null
+}
+
+const senderMatchedPerson = computed(() =>
+  selectedEmail.value?.from?.email
+    ? findPersonByEmail(selectedEmail.value.from.email)
+    : null
+)
+
+function peopleContactLink(person: Person) {
+  return { path: '/people', query: { person: person.id } }
+}
+
+// Pug misparses `!)` inside `:to="..."`; keep link building in script.
+function peopleContactLinkByEmail(email: string | undefined) {
+  const p = findPersonByEmail(email)
+  if (!p) {
+    return { path: '/people' }
+  }
+  return peopleContactLink(p)
+}
+
+function buildPersonPrefillFromEmailSender(from: EmailPerson): Partial<Person> {
+  const email = from.email?.trim() || ''
+  const name = (from.name || '').trim()
+  if (!email && !name) {
+    return {}
+  }
+  if (!name) {
+    return { email, firstName: '', lastName: '' }
+  }
+  const parts = name.split(/\s+/).filter(Boolean)
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: '', email }
+  }
+  return { firstName: parts[0], lastName: parts.slice(1).join(' '), email }
+}
+
+function openAddPersonFromEmail(from: EmailPerson) {
+  const prefill = buildPersonPrefillFromEmailSender(from)
+  if (personDialogSvc) {
+    personDialogSvc.openAdd(Object.keys(prefill).length > 0 ? prefill : null)
+    return
+  }
+  navigateTo({ path: '/people', query: { search: from.email || undefined } })
 }
 
 function getAccountLabel(accountId: string | undefined) {

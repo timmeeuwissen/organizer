@@ -111,6 +111,7 @@ v-app
     person-form(
       v-if="personDialog"
       :loading="false"
+      :initial-values="personDialogInitialValues"
       @submit="onPersonSubmit"
     )
     
@@ -173,6 +174,8 @@ v-app
 
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
+import type { Person } from '~/types/models'
+import { providePersonDialog } from '~/composables/usePersonDialog'
 import { useI18n } from 'vue-i18n'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '~/stores/auth'
@@ -225,6 +228,15 @@ const hasEnabledAiIntegrations = computed(() => {
 // Add dialog states for each type
 const taskDialog = ref(false)
 const personDialog = ref(false)
+const personDialogInitialValues = ref<Partial<Person> | null>(null)
+
+function openAddPersonDialog(prefill?: Partial<Person> | null) {
+  personDialogInitialValues.value =
+    prefill != null && Object.keys(prefill).length > 0 ? { ...prefill } : null
+  personDialog.value = true
+}
+
+providePersonDialog({ openAdd: openAddPersonDialog })
 const calendarDialog = ref(false)
 const mailDialog = ref(false)
 const behaviorDialog = ref(false)
@@ -258,7 +270,7 @@ const addMenuItems = [
     title: i18n.t('people.addPerson'), 
     icon: 'mdi-account-plus', 
     color: 'success',
-    action: () => personDialog.value = true
+    action: () => openAddPersonDialog()
   },
   { 
     title: i18n.t('teams.createTeam'), 
@@ -322,7 +334,7 @@ const navItems = [
     title: 'people.title', 
     icon: 'mdi-account-group', 
     to: '/people',
-    addAction: () => personDialog.value = true
+    addAction: () => openAddPersonDialog()
   },
   { 
     title: 'teams.title', 

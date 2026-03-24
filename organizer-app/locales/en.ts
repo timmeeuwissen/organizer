@@ -458,6 +458,8 @@ export default {
     pageSizeHint: 'How many messages appear in the list per page (and requested from each account).',
     columnsHint: 'Show fields in the message list. Links jump to other modules when possible.',
     openPeopleModule: 'Open People (search this address)',
+    viewContactInPeople: 'View this contact in People',
+    addPersonFromEmail: 'Add person using this address',
     matchedPerson: 'Known contact',
     columns: {
       read: 'Read / unread',

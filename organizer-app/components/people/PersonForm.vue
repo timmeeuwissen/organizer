@@ -121,6 +121,11 @@ const props = defineProps({
     type: Object as () => Person | null,
     default: null
   },
+  /** When creating (no `person`), seed fields — does not enable edit mode */
+  initialValues: {
+    type: Object as () => Partial<Person> | null,
+    default: null
+  },
   loading: {
     type: Boolean,
     default: false
@@ -202,8 +207,7 @@ const submit = () => {
   emit('submit', personData)
 }
 
-// When person changes, update form values
-onMounted(() => {
+function applyPersonOrInitialValues() {
   if (props.person) {
     firstName.value = props.person.firstName
     lastName.value = props.person.lastName
@@ -214,6 +218,27 @@ onMounted(() => {
     team.value = props.person.team || ''
     contactFrequency.value = props.person.contactFrequency || null
     notes.value = props.person.notes || ''
+    return
   }
+  const iv = props.initialValues as
+    | (Partial<Person> & { storageProvider?: string; contactFrequency?: number | null })
+    | null
+  if (!iv) {
+    return
+  }
+  if (iv.firstName != null) firstName.value = iv.firstName
+  if (iv.lastName != null) lastName.value = iv.lastName
+  if (iv.email != null) email.value = iv.email
+  if (iv.phone != null) phone.value = iv.phone
+  if (iv.organization != null) organization.value = iv.organization
+  if (iv.role != null) role.value = iv.role
+  if (iv.team != null) team.value = iv.team
+  if (iv.storageProvider != null) storageProvider.value = iv.storageProvider
+  if (iv.contactFrequency != null) contactFrequency.value = iv.contactFrequency
+  if (iv.notes != null) notes.value = iv.notes
+}
+
+onMounted(() => {
+  applyPersonOrInitialValues()
 })
 </script>
