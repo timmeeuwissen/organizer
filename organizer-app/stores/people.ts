@@ -18,6 +18,18 @@ import { useAuthStore } from './auth'
 import type { Person, IntegrationAccount } from '~/types/models'
 import { createContactsProvider } from '~/utils/api/contactProviders'
 
+/** Firestore rejects `undefined` for any field; omit those keys before write. */
+function omitUndefinedFields<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const key of Object.keys(obj)) {
+    const v = obj[key]
+    if (v !== undefined) {
+      out[key] = v
+    }
+  }
+  return out
+}
+
 export const usePeopleStore = defineStore('people', {
   state: () => ({
     people: [] as Person[],
@@ -136,17 +148,18 @@ export const usePeopleStore = defineStore('people', {
         const db = getFirestore()
         const peopleRef = collection(db, 'people')
         
-        const personData = {
+        const raw: Record<string, unknown> = {
           ...newPerson,
           userId: authStore.user.id,
-          // Set default values for related items
           relatedMeetings: [],
           relatedProjects: newPerson.relatedProjects || [],
           relatedTasks: [],
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         }
-        
+        delete raw.storageProvider
+        const personData = omitUndefinedFields(raw)
+
         const docRef = await addDoc(peopleRef, personData)
         
         // Add the new person to the local state
@@ -195,17 +208,16 @@ export const usePeopleStore = defineStore('people', {
           throw new Error('Unauthorized access to person')
         }
         
-        // Prepare update data
-        const updateData = {
+        const rawUpdate: Record<string, unknown> = {
           ...updates,
           updatedAt: serverTimestamp(),
         }
-        
-        // Remove fields that shouldn't be directly updated
-        delete updateData.id
-        delete updateData.userId
-        delete updateData.createdAt
-        
+        delete rawUpdate.id
+        delete rawUpdate.userId
+        delete rawUpdate.createdAt
+        delete rawUpdate.storageProvider
+        const updateData = omitUndefinedFields(rawUpdate)
+
         await updateDoc(personRef, updateData)
         
         // Update local state

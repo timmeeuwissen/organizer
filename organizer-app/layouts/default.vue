@@ -174,7 +174,7 @@ v-app
 
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
-import type { Person } from '~/types/models'
+import type { Person, IntegrationAccount } from '~/types/models'
 import { providePersonDialog } from '~/composables/usePersonDialog'
 import { useI18n } from 'vue-i18n'
 import { useTheme } from 'vuetify'
@@ -424,9 +424,9 @@ const onTaskSubmit = async (taskData) => {
     } else {
       // Find the integration that matches the provider ID
       const integration = getIntegrationById(taskData.storageProvider)
-      if (integration && integration.syncTasks) {
+      if (integration?.oauthData?.connected && integration.syncTasks) {
         // Handle external provider
-        console.log(`Storing task in ${integration.provider} (${integration.email}):`, taskData)
+        console.log(`Storing task in ${integration.type} (${integration.oauthData.email}):`, taskData)
         // In a real implementation, this would call the appropriate provider API
         // e.g., tasksStore.createExternalTask(integration, taskData)
       } else {
@@ -446,13 +446,13 @@ const onPersonSubmit = async (personData) => {
       // Store in organizer (Firestore)
       await peopleStore.createPerson(personData)
     } else {
-      // Find the integration that matches the provider ID
       const integration = getIntegrationById(personData.storageProvider)
-      if (integration && integration.syncContacts) {
-        // Handle external provider
-        console.log(`Storing contact in ${integration.provider} (${integration.email}):`, personData)
-        // In a real implementation, this would call the appropriate provider API
-        // e.g., peopleStore.createExternalContact(integration, personData)
+      if (integration?.oauthData?.connected && integration.syncContacts) {
+        // Persist in Organizer linked to this account until provider create API exists
+        await peopleStore.createPerson({
+          ...personData,
+          providerAccountId: integration.id,
+        })
       } else {
         throw new Error('Selected integration does not support contacts or is not connected')
       }
@@ -476,9 +476,9 @@ const onCalendarEventSubmit = async (eventData) => {
     } else {
       // Find the integration that matches the provider ID
       const integration = getIntegrationById(eventData.storageProvider)
-      if (integration && integration.syncCalendar) {
+      if (integration?.oauthData?.connected && integration.syncCalendar) {
         // Handle external provider
-        console.log(`Storing calendar event in ${integration.provider} (${integration.email}):`, eventData)
+        console.log(`Storing calendar event in ${integration.type} (${integration.oauthData.email}):`, eventData)
         // In a real implementation, this would call the appropriate provider API
         // e.g., calendarStore.createExternalEvent(integration, eventData)
       } else {
@@ -502,9 +502,9 @@ const onMailSubmit = async (mailData) => {
     } else {
       // Find the integration that matches the provider ID
       const integration = getIntegrationById(mailData.storageProvider)
-      if (integration && integration.syncMail) {
+      if (integration?.oauthData?.connected && integration.syncMail) {
         // Handle external provider
-        console.log(`Sending mail through ${integration.provider} (${integration.email}):`, mailData)
+        console.log(`Sending mail through ${integration.type} (${integration.oauthData.email}):`, mailData)
         // In a real implementation, this would call the appropriate provider API
         // e.g., mailStore.sendExternalMail(integration, mailData)
       } else {
@@ -568,41 +568,12 @@ const onKnowledgeDocumentSaved = () => {
   knowledgeDocumentDialog.value = false
 }
 
-// Helper function to find an integration by its ID
-// In a real app, this would come from the auth store or integration store
-const getIntegrationById = (id) => {
-  // This is a mock function that simulates getting integrations from the user's profile
-  const mockIntegrations = [
-    {
-      id: 'google-1',
-      provider: 'Google',
-      email: 'user@gmail.com',
-      syncTasks: true,
-      syncCalendar: true,
-      syncContacts: true,
-      syncMail: true
-    },
-    {
-      id: 'microsoft-1',
-      provider: 'Microsoft',
-      email: 'user@outlook.com',
-      syncTasks: true,
-      syncCalendar: true,
-      syncContacts: true,
-      syncMail: true
-    },
-    {
-      id: 'exchange-1',
-      provider: 'Exchange',
-      email: 'user@company.com',
-      syncTasks: false,
-      syncCalendar: true,
-      syncContacts: true,
-      syncMail: true
-    }
-  ]
-  
-  return mockIntegrations.find(integration => integration.id === id)
+function getIntegrationById(id: string | undefined): IntegrationAccount | undefined {
+  if (!id || id === 'organizer') {
+    return undefined
+  }
+  const accounts = authStore.currentUser?.settings?.integrationAccounts ?? []
+  return accounts.find((a) => a.id === id)
 }
 </script>
 
