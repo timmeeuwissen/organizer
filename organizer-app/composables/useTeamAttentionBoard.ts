@@ -1,9 +1,11 @@
 import type { Team, Person, TeamMailMeta, Task } from '~/types/models'
-import type { Email } from '~/stores/mail'
+import type { Email, EmailPerson } from '~/stores/mail'
 import {
   resolveEmailPersonId,
   emailAttentionWeight,
+  normalizeEmail,
 } from '~/stores/teams'
+import { TEAM_LANE_RECENT_EMAIL_LIMIT } from '~/config/teamBoard'
 
 /** Unified Kanban item on the team attention board */
 export type TeamBoardItem =
@@ -189,6 +191,39 @@ export function cardsByPersonId(items: TeamBoardItem[]): Record<string, TeamBoar
 
 export function totalAttentionWeight(items: TeamBoardItem[]): number {
   return items.reduce((sum, c) => sum + c.weight, 0)
+}
+
+/** True if the person's email appears as sender or among to/cc (normalized). */
+export function emailInvolvesPerson(email: Email, person: Person): boolean {
+  const p = normalizeEmail(person.email)
+  if (!p) return false
+  if (normalizeEmail(email.from.email) === p) return true
+  const matches = (list?: EmailPerson[]) =>
+    (list || []).some((x) => normalizeEmail(x.email) === p)
+  return matches(email.to) || matches(email.cc)
+}
+
+/**
+ * Latest inbox messages involving this person (by date), for team lane context.
+ * Uses {@link TEAM_LANE_RECENT_EMAIL_LIMIT} when `limit` is omitted.
+ */
+export function recentInboxEmailsForPerson(
+  emails: Email[],
+  person: Person,
+  limit: number = TEAM_LANE_RECENT_EMAIL_LIMIT,
+): Email[] {
+  const filtered = emails.filter(
+    (e) => e.folder === 'inbox' && emailInvolvesPerson(e, person),
+  )
+  filtered.sort((a, b) => b.date.getTime() - a.date.getTime())
+  return filtered.slice(0, limit)
+}
+
+export function taskBoardItemsForPerson(
+  items: TeamBoardItem[],
+  personId: string,
+): TeamBoardItem[] {
+  return (items || []).filter((i) => i.kind === 'task' && i.personId === personId)
 }
 
 /** Column order: alphabetical by display name, or manual/drag = memberPersonIds order */

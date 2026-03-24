@@ -77,34 +77,34 @@ v-container(fluid)
                 v-icon mdi-chevron-left
               v-btn(icon size="x-small" variant="text" @click="moveMember(person.id, 1)" :disabled="colIndex >= orderedMembers.length - 1")
                 v-icon mdi-chevron-right
-            v-btn(icon size="x-small" variant="text" color="primary" @click="openAddTaskFor(person.id)" :title="$t('teams.addTaskForMember')")
-              v-icon mdi-plus
             v-btn(icon size="x-small" variant="text" color="error" @click="removeMember(person.id)" :title="$t('teams.removeMember')")
               v-icon mdi-close
 
           .d-flex.flex-column.gap-2(style="min-height: 120px")
-            template(v-if="!columnItems(person.id).length")
-              v-card(variant="tonal" class="pa-4 text-center text-medium-emphasis text-caption")
-                | {{ $t('teams.noCards') }}
-            v-card(
-              v-for="item in columnItems(person.id)"
-              :key="boardItemKey(item)"
-              variant="outlined"
-              class="team-card"
-              hover
-              @click="onBoardItemClick(item)"
-            )
+            //- Recent inbox involving this person (communication context)
+            v-card.team-lane-subcard(variant="outlined" rounded="lg")
+              v-card-title.text-subtitle-2.py-2.px-3 {{ $t('teams.recentMail') }}
               v-card-text.py-2.px-3
-                template(v-if="item.kind === 'email'")
-                  .d-flex.align-center.mb-1
-                    v-chip(v-if="item.assignment === 'manual'" size="x-small" class="mr-1") {{ $t('teams.manual') }}
-                    v-chip(size="x-small" color="secondary" variant="tonal") {{ $t('teams.email') }}
-                  .text-body-2.font-weight-medium.text-truncate {{ item.email.subject || $t('teams.noSubject') }}
-                  .text-caption.text-primary.mt-1(v-if="projectTitle(item.projectId)") {{ projectTitle(item.projectId) }}
-                  .text-caption.text-medium-emphasis.mt-1 {{ formatDate(item.email.date) }}
-                  .mt-2
-                    v-select(
-                      :model-value="item.projectId"
+                template(v-if="!(recentEmailsByPersonId[person.id] || []).length")
+                  .text-caption.text-medium-emphasis.text-center.py-2 {{ $t('teams.recentMailEmpty') }}
+                .d-flex.flex-column.gap-2(v-else)
+                  v-sheet.rounded.border.pa-2.team-recent-mail-row(
+                    v-for="em in recentEmailsByPersonId[person.id]"
+                    :key="emailRowKey(em)"
+                    color="surface"
+                    border
+                  )
+                    .d-flex.align-center.mb-1.flex-wrap.gap-1
+                      v-chip(v-if="teamMailMetaForEmail(em)" size="x-small") {{ $t('teams.manual') }}
+                      v-chip(size="x-small" color="secondary" variant="tonal") {{ $t('teams.email') }}
+                      v-chip(v-if="!em.read" size="x-small" color="warning" variant="tonal") {{ $t('teams.unread') }}
+                    .text-body-2.font-weight-medium.text-truncate.cursor-pointer(
+                      @click="onRecentEmailClick(em)"
+                    ) {{ em.subject || $t('teams.noSubject') }}
+                    .text-caption.text-primary.mt-1(v-if="projectTitle(projectIdForTeamEmail(em))") {{ projectTitle(projectIdForTeamEmail(em)) }}
+                    .text-caption.text-medium-emphasis.mt-1 {{ formatDate(em.date) }}
+                    v-select.mt-2(
+                      :model-value="projectIdForTeamEmail(em)"
                       :items="projectItems"
                       item-title="title"
                       item-value="value"
@@ -113,20 +113,42 @@ v-container(fluid)
                       flat
                       hide-details
                       :placeholder="$t('teams.project')"
-                      @update:model-value="(v) => setEmailProject(item, v)"
+                      @update:model-value="(v) => setEmailProjectForPerson(em, person.id, v)"
                       @click.stop
                     )
-                template(v-else)
-                  .d-flex.align-center.mb-1.flex-wrap.gap-1
-                    v-chip(size="x-small" color="teal" variant="tonal") {{ $t('teams.task') }}
-                    v-chip(size="x-small" variant="outlined") {{ taskStatusLabel(item.task.status) }}
-                  .text-body-2.font-weight-medium.text-truncate {{ item.task.title }}
-                  .text-caption.text-primary.mt-1(v-if="taskProjectTitle(item.task)") {{ taskProjectTitle(item.task) }}
-                  .text-caption.text-medium-emphasis.mt-1
-                    template(v-if="item.task.dueDate") {{ $t('tasks.dueDate') }}: {{ formatDate(item.task.dueDate) }}
-                    template(v-else) {{ formatDate(item.task.updatedAt) }}
-                  .mt-2
-                    v-select(
+
+            //- Tasks & deliverables for this column person
+            v-card.team-lane-subcard(variant="outlined" rounded="lg")
+              v-card-title.text-subtitle-2.py-2.px-3.d-flex.align-center.flex-wrap.gap-1
+                span.flex-grow-1 {{ $t('teams.tasksLane') }}
+                v-btn(
+                  size="x-small"
+                  color="primary"
+                  variant="tonal"
+                  prepend-icon="mdi-plus"
+                  @click="openAddTaskFor(person.id)"
+                ) {{ $t('teams.addTaskInLane') }}
+              v-card-text.py-2.px-3
+                template(v-if="!taskItemsForPerson(person.id).length")
+                  .text-caption.text-medium-emphasis.text-center.py-2 {{ $t('teams.tasksLaneEmpty') }}
+                .d-flex.flex-column.gap-2(v-else)
+                  v-sheet.rounded.border.pa-2.team-task-row(
+                    v-for="item in taskItemsForPerson(person.id)"
+                    :key="boardItemKey(item)"
+                    color="surface"
+                    border
+                  )
+                    .d-flex.align-center.mb-1.flex-wrap.gap-1
+                      v-chip(size="x-small" color="teal" variant="tonal") {{ $t('teams.task') }}
+                      v-chip(size="x-small" variant="outlined") {{ taskStatusLabel(item.task.status) }}
+                    .text-body-2.font-weight-medium.text-truncate.cursor-pointer(
+                      @click="onBoardItemClick(item)"
+                    ) {{ item.task.title }}
+                    .text-caption.text-primary.mt-1(v-if="taskProjectTitle(item.task)") {{ taskProjectTitle(item.task) }}
+                    .text-caption.text-medium-emphasis.mt-1
+                      template(v-if="item.task.dueDate") {{ $t('tasks.dueDate') }}: {{ formatDate(item.task.dueDate) }}
+                      template(v-else) {{ formatDate(item.task.updatedAt) }}
+                    v-select.mt-2(
                       :model-value="taskPrimaryProjectId(item.task)"
                       :items="projectItems"
                       item-title="title"
@@ -232,17 +254,18 @@ import { usePeopleStore } from '~/stores/people'
 import { useMailStore } from '~/stores/mail'
 import { useProjectsStore } from '~/stores/projects'
 import { useNotificationStore } from '~/stores/notification'
-import type { TeamColumnLayoutMode, Task } from '~/types/models'
+import type { TeamColumnLayoutMode, Task, TeamMailMeta } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 import type { Email } from '~/stores/mail'
 import type { TeamBoardItem } from '~/composables/useTeamAttentionBoard'
 import {
   buildAllBoardItems,
-  boardItemsByPersonId,
   orderedTeamMembers,
   totalAttentionWeight,
   unassignedInboxEmails,
   taskPrimaryProjectId,
+  recentInboxEmailsForPerson,
+  taskBoardItemsForPerson,
 } from '~/composables/useTeamAttentionBoard'
 import { useTasksStore } from '~/stores/tasks'
 
@@ -302,9 +325,29 @@ const boardItems = computed(() => {
   )
 })
 
-const itemsByPerson = computed(() => boardItemsByPersonId(boardItems.value))
-
 const totalWeight = computed(() => totalAttentionWeight(boardItems.value))
+
+const teamMailMetaRows = computed(() => teamsStore.mailMetaForTeam(teamId.value))
+
+const metaByEmailKey = computed(() => {
+  const m = new Map<string, TeamMailMeta>()
+  for (const row of teamMailMetaRows.value) {
+    m.set(`${row.accountId}::${row.emailId}`, row)
+  }
+  return m
+})
+
+const recentEmailsByPersonId = computed(() => {
+  const out: Record<string, Email[]> = {}
+  if (!team.value) return out
+  for (const id of team.value.memberPersonIds) {
+    const p = peopleById.value.get(id)
+    if (p) {
+      out[id] = recentInboxEmailsForPerson(mailStore.emails, p)
+    }
+  }
+  return out
+})
 
 const unassignedEmails = computed(() => {
   if (!team.value) return []
@@ -326,8 +369,24 @@ const layoutItems = computed(() => [
   { title: t('teams.layoutDrag'), value: 'drag' as TeamColumnLayoutMode },
 ])
 
-function columnItems(personId: string) {
-  return itemsByPerson.value[personId] || []
+function emailMetaKey(email: Email) {
+  return `${email.accountId || ''}::${email.id}`
+}
+
+function teamMailMetaForEmail(email: Email) {
+  return metaByEmailKey.value.get(emailMetaKey(email))
+}
+
+function projectIdForTeamEmail(email: Email): string | null {
+  return teamMailMetaForEmail(email)?.projectId ?? null
+}
+
+function taskItemsForPerson(personId: string) {
+  return taskBoardItemsForPerson(boardItems.value, personId)
+}
+
+function emailRowKey(em: Email) {
+  return `e-${em.accountId || ''}-${em.id}`
 }
 
 function boardItemKey(item: TeamBoardItem) {
@@ -466,17 +525,21 @@ function onBoardItemClick(item: TeamBoardItem) {
   router.push({ path: '/tasks', query: { id: item.task.id } })
 }
 
-async function setEmailProject(item: TeamBoardItem, projectId: string | null) {
-  if (!team.value || item.kind !== 'email') return
-  const acc = item.email.accountId || ''
+function onRecentEmailClick(_em: Email) {
+  router.push({ path: '/mail' })
+}
+
+async function setEmailProjectForPerson(email: Email, personId: string, projectId: string | null) {
+  if (!team.value) return
   await teamsStore.upsertTeamMailMeta({
     teamId: team.value.id,
-    accountId: acc,
-    emailId: item.email.id,
-    personId: item.personId,
+    accountId: email.accountId || '',
+    emailId: email.id,
+    personId,
     projectId: projectId || null,
   })
   notify.success(t('teams.projectLinked'))
+  await teamsStore.fetchTeamMailMeta(team.value.id)
 }
 
 async function setTaskBoardProject(item: TeamBoardItem, projectId: string | null) {
@@ -532,8 +595,10 @@ onMounted(() => load())
 </script>
 
 <style scoped lang="sass">
-.team-card
-  cursor: pointer
 .team-column
   background: rgba(var(--v-theme-surface-variant), 0.15)
+.team-lane-subcard
+  background: rgba(var(--v-theme-surface), 0.35)
+.cursor-pointer
+  cursor: pointer
 </style>
