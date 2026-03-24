@@ -46,17 +46,27 @@ v-dialog(
               :loading="isGoogleLoading"
             )
           
-          // Microsoft auth
-          v-col(cols="12" md="6" class="d-flex align-center justify-center my-3")
-            o-auth-authorize-button(
-              provider="microsoft"
+          // Microsoft — popup OAuth (same handshake pattern as Google)
+          v-col(cols="12" class="d-flex align-center justify-center my-3")
+            microsoft-auth-button(
               color="info"
               :text="$t('settings.connectMicrosoft')"
-              :icon="'mdi-microsoft'"
               block
-              @authorize="handleMicrosoftAuthClick"
+              @click="handleMicrosoftPopupAuthClick"
+              @auth-success="handleMicrosoftAuthSuccess"
+              @auth-error="handleMicrosoftPopupAuthError"
+            )
+
+          // Microsoft — manual tokens (make oauth-ms-setup / CLI)
+          v-col(cols="12" class="d-flex align-center justify-center my-3")
+            o-auth-authorize-button(
+              provider="microsoft"
+              color="secondary"
+              :text="$t('settings.connectMicrosoftManual')"
+              :icon="'mdi-console'"
+              block
+              @authorize="handleManualMicrosoftAuthClick"
               @tokens-updated="handleMicrosoftAuthSuccess"
-              :loading="isMicrosoftLoading"
             )
     
     v-card-actions
@@ -67,10 +77,12 @@ v-dialog(
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRuntimeConfig } from 'nuxt/app'
 import { useNotificationStore } from '~/stores/notification'
 import { useAuthStore } from '~/stores/auth'
 import IntegrationAccountForm from './IntegrationAccountForm.vue'
 import GoogleAuthButton from './GoogleAuthButton'
+import MicrosoftAuthButton from './MicrosoftAuthButton'
 import OAuthAuthorizeButton from './OAuthAuthorizeButton'
 
 // Props
@@ -104,11 +116,11 @@ const isSaving = ref(false)
 
 // Composables
 const i18n = useI18n()
+const runtimeConfig = useRuntimeConfig()
 const notificationStore = useNotificationStore()
 
 // State for auth providers
 const isGoogleLoading = ref(false);
-const isMicrosoftLoading = ref(false);
 
 // Functions for handling auth results from components
 function handleGoogleAuthClick() {
@@ -204,22 +216,43 @@ function handleGoogleAuthError(error) {
   notificationStore.error(error.message || 'Failed to connect to Google');
 }
 
-function handleMicrosoftAuthClick() {
-  // Unlike Google (separate popup), Microsoft uses OAuthAuthorizeButton's in-dialog
-  // credential flow. Closing the integration dialog here would unmount that component
-  // and the inner dialog would never appear.
-  notificationStore.info(
-    i18n.t('settings.microsoftOAuthDialogHint'),
-    { timeout: 12000 }
-  );
+function handleMicrosoftPopupAuthClick() {
+  dialogVisible.value = false
+  notificationStore.info(i18n.t('settings.authenticatingWithMicrosoft'), {
+    timeout: 10000,
+  })
+}
+
+function handleMicrosoftPopupAuthError(error) {
+  console.error('Microsoft popup auth error:', error)
+  notificationStore.error(error?.message || 'Failed to connect to Microsoft')
+}
+
+function handleManualMicrosoftAuthClick() {
+  notificationStore.info(i18n.t('settings.microsoftOAuthDialogHint'), { timeout: 12000 })
 }
 
 async function handleMicrosoftAuthSuccess(tokens) {
   console.log('Microsoft auth success:', tokens);
-  
+
   try {
-    // Create account with tokens from Microsoft
     const now = new Date();
+    const displayName = tokens.name || tokens.displayName || 'Microsoft Account'
+    const oauthData = {
+      name: displayName,
+      email: tokens.email || 'user@outlook.com',
+      connected: true,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      tokenExpiry: tokens.tokenExpiry,
+      clientId: tokens.clientId || runtimeConfig.public.microsoft?.clientId || '',
+      scope: tokens.scope,
+      lastSync: new Date(),
+    }
+    if (tokens.clientSecret) {
+      oauthData.clientSecret = tokens.clientSecret
+    }
+
     const account = {
       id: uuidv4(),
       type: 'office365',
@@ -234,17 +267,7 @@ async function handleMicrosoftAuthSuccess(tokens) {
       showInContacts: true,
       createdAt: now,
       updatedAt: now,
-      oauthData: {
-        name: 'Microsoft Account',
-        email: tokens.email || 'user@outlook.com',
-        connected: true,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        tokenExpiry: tokens.tokenExpiry,
-        clientId: tokens.clientId,
-        clientSecret: tokens.clientSecret,
-        lastSync: new Date()
-      }
+      oauthData,
     };
     
     // Check if user is authenticated and has settings

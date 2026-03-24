@@ -5,9 +5,13 @@ import {
   setResponseStatus,
 } from 'h3'
 import { exchangeGoogleRefreshToken } from '~/server/utils/oauth/googleTokenRefresh'
+import { exchangeMicrosoftRefreshToken } from '~/server/utils/oauth/microsoftTokenRefresh'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
+const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID
+const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET
+const MICROSOFT_TENANT_ID = process.env.MICROSOFT_TENANT_ID || 'common'
 
 /**
  * Server-side token refresh for OAuth providers.
@@ -76,8 +80,47 @@ export default defineEventHandler(async (event) => {
     }
 
     if (provider === 'microsoft') {
-      setResponseStatus(event, 501)
-      return { error: 'not_implemented', error_description: 'Microsoft refresh not yet implemented' }
+      if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET) {
+        console.error('Missing Microsoft API credentials in environment variables')
+        setResponseStatus(event, 500)
+        return {
+          error: 'server_configuration',
+          error_description: 'Server is missing Microsoft OAuth credentials',
+        }
+      }
+
+      console.log(`Refreshing Microsoft OAuth token for ${email ?? '(no email)'}`)
+
+      const result = await exchangeMicrosoftRefreshToken(
+        refreshToken,
+        MICROSOFT_CLIENT_ID,
+        MICROSOFT_CLIENT_SECRET,
+        MICROSOFT_TENANT_ID
+      )
+
+      if (!result.ok) {
+        const { failure } = result
+        console.error('Microsoft refresh token error:', failure)
+
+        if (failure.error === 'invalid_grant') {
+          setResponseStatus(event, 400)
+          return {
+            error: 'invalid_grant',
+            error_description:
+              failure.error_description ||
+              'Refresh token is invalid or has expired. Re-authenticate your account.',
+          }
+        }
+
+        setResponseStatus(event, failure.httpStatus >= 400 ? failure.httpStatus : 502)
+        return {
+          error: failure.error,
+          error_description: failure.error_description,
+          details: failure.details,
+        }
+      }
+
+      return result.tokens
     }
 
     setResponseStatus(event, 400)

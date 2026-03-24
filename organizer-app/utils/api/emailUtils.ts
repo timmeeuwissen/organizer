@@ -134,18 +134,29 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
       }
       
       if (response.ok) {
-        const tokens = await response.json();
-        console.log('Server-side token refresh successful');
-        
+        const tokens = await response.json() as Record<string, unknown>
+        console.log('Server-side token refresh successful')
+        const expiresIn =
+          typeof tokens.expires_in === 'number' ? tokens.expires_in : 3600
+        const access =
+          (typeof tokens.access_token === 'string' && tokens.access_token) ||
+          (typeof tokens.accessToken === 'string' && tokens.accessToken)
+        const refresh =
+          (typeof tokens.refresh_token === 'string' && tokens.refresh_token) ||
+          account.oauthData.refreshToken
+
         return {
           ...account,
           oauthData: {
-            ...account.oauthData, 
-            tokenExpiry: new Date(Date.now() + (tokens.expires_in * 1000)),
-            ...tokens, 
+            ...account.oauthData,
+            accessToken: access || account.oauthData.accessToken,
+            refreshToken: refresh,
+            scope:
+              typeof tokens.scope === 'string' ? tokens.scope : account.oauthData.scope,
+            tokenExpiry: new Date(Date.now() + expiresIn * 1000),
             updatedAt: new Date(),
-          }
-        };
+          },
+        }
       } else {
         // If server-side refresh fails with a JSON error, log it
         const errorData = await response.json();
@@ -186,19 +197,29 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
       }
       
       if (response.ok) {
-        const tokens = await response.json();
-        console.log('Token refresh successful');
-        
-        // Update the account with new token
+        const tokens = await response.json() as Record<string, unknown>
+        console.log('Token refresh successful')
+        const expiresIn =
+          typeof tokens.expires_in === 'number' ? tokens.expires_in : 3600
+        const access =
+          (typeof tokens.access_token === 'string' && tokens.access_token) ||
+          (typeof tokens.accessToken === 'string' && tokens.accessToken)
+        const refresh =
+          (typeof tokens.refresh_token === 'string' && tokens.refresh_token) ||
+          account.oauthData.refreshToken
+
         return {
           ...account,
           oauthData: {
-            ...account.oauthData, 
-            ...tokens, 
+            ...account.oauthData,
+            accessToken: access || account.oauthData.accessToken,
+            refreshToken: refresh,
+            scope:
+              typeof tokens.scope === 'string' ? tokens.scope : account.oauthData.scope,
+            tokenExpiry: new Date(Date.now() + expiresIn * 1000),
             updatedAt: new Date(),
-            tokenExpiry: new Date(Date.now() + (tokens.expires_in * 1000)),
-          }
-        };
+          },
+        }
       }
       
       // Fallback token when oauth refresh fails

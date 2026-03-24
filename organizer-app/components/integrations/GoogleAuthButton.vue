@@ -240,6 +240,7 @@ function handleGoogleAuth() {
       `&access_type=offline` +
       `&prompt=consent` +
       `&state=${encodeURIComponent(JSON.stringify({
+        provider: 'google',
         timestamp: Date.now(),
         origin: window.location.origin,
         debug: true

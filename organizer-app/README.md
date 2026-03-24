@@ -126,6 +126,7 @@ make ha-run
 
 Project documentation lives under `docs/`:
 
+- **[Integrations setup](docs/integrations-setup.md)** — Configure Firebase, Google & Microsoft OAuth, XAI, and AI providers; fix “Microsoft OAuth is not configured (missing public client ID)” and related env issues
 - **`docs/rules-overview.md`** — Summary of all project rules and conventions
 - **`docs/architecture.md`** — Architecture derived from the codebase
 - **`docs/product/`** — Product vision, feature requests, user flows, roadmap, **[module specifications](docs/product/modules.md)**, and **[Teams spec](docs/product/teams.md)**

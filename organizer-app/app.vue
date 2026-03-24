@@ -1,5 +1,6 @@
 <template>
   <v-app>
+    <AppBootOverlay :model-value="!isBootComplete" :progress="bootProgress" />
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
@@ -32,13 +33,11 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '~/stores/auth'
 import { useNetworkStatus } from '~/composables/useNetworkStatus'
 import { watch, ref } from 'vue'
 
-// Initialize i18n
-const { t } = useI18n()
+const { isBootComplete, bootProgress } = useAppInitialLoad()
 
 // Initialize auth store
 const authStore = useAuthStore()
