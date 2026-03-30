@@ -35,6 +35,7 @@ export interface IntegrationAccount {
 
 import type { AIIntegrationData } from './aiIntegration';
 import type { MailColumnKey, MailPageSize } from '~/config/mailUi';
+import type { TasksUiSettings } from '~/config/tasksUi';
 
 /** Persisted mail list UI (page size, visible columns). */
 export interface MailUiSettings {
@@ -51,6 +52,7 @@ export interface UserSettings {
   integrationAccounts: IntegrationAccount[];
   aiIntegrations?: AIIntegrationData[]; // AI integrations like XAI, OpenAI, Gemini
   mailUi?: MailUiSettings;
+  tasksUi?: TasksUiSettings;
 }
 
 export interface User {

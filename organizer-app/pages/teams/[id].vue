@@ -57,20 +57,52 @@ v-container(fluid)
           | {{ $t('teams.attention') }}: {{ totalWeight }}
         span.text-caption.text-medium-emphasis {{ $t('teams.boardHint') }}
 
+    v-row.mb-2
+      v-col(cols="12")
+        v-sheet.rounded-lg.pa-3(border)
+          .text-caption.text-medium-emphasis.mb-2 {{ $t('teams.displayOptions') }}
+          .d-flex.flex-wrap.align-center.gap-4
+            v-select(
+              v-model="display.density"
+              :items="densityItems"
+              item-title="title"
+              item-value="value"
+              :label="$t('teams.displayDensity')"
+              variant="outlined"
+              density="compact"
+              hide-details
+              style="min-width: 160px; max-width: 220px"
+            )
+            v-switch(
+              v-model="display.showRecentMail"
+              :label="$t('teams.showRecentMail')"
+              color="primary"
+              hide-details
+              density="compact"
+            )
+            v-switch(
+              v-model="display.showTasks"
+              :label="$t('teams.showTasks')"
+              color="primary"
+              hide-details
+              density="compact"
+            )
+
     //- Kanban columns (emails + tasks assigned to column person)
-    .d-flex.overflow-x-auto.pb-4(style="gap: 12px; align-items: flex-start")
+    .d-flex.overflow-x-auto.pb-4.team-board-columns(
+      :class="{ 'team-board-columns--compact': display.density === 'compact' }"
+      :style="{ gap: display.density === 'compact' ? '8px' : '12px', alignItems: 'flex-start' }"
+    )
       template(v-for="(person, colIndex) in orderedMembers" :key="person.id")
-        v-sheet.rounded-lg.pa-2(
-          min-width="280"
-          max-width="320"
-          class="team-column flex-shrink-0"
+        v-sheet.rounded-lg.flex-shrink-0(
+          :class="['team-column', { 'team-column--compact': display.density === 'compact' }]"
           border
         )
-          .d-flex.align-center.mb-2.px-1
-            v-avatar(size="36" color="primary")
+          .d-flex.align-center.px-1(:class="display.density === 'compact' ? 'mb-1' : 'mb-2'")
+            v-avatar(color="primary" :size="display.density === 'compact' ? 28 : 36")
               span.text-caption {{ initials(person) }}
             .ml-2.flex-grow-1.min-width-0
-              .text-subtitle-2.text-truncate {{ person.firstName }} {{ person.lastName }}
+              .text-truncate(:class="display.density === 'compact' ? 'text-body-2 font-weight-medium' : 'text-subtitle-2'") {{ person.firstName }} {{ person.lastName }}
               .text-caption.text-truncate.text-medium-emphasis {{ person.email || '—' }}
             template(v-if="team.columnLayoutMode !== 'alphabetical'")
               v-btn(icon size="x-small" variant="text" @click="moveMember(person.id, -1)" :disabled="colIndex === 0")
@@ -80,30 +112,47 @@ v-container(fluid)
             v-btn(icon size="x-small" variant="text" color="error" @click="removeMember(person.id)" :title="$t('teams.removeMember')")
               v-icon mdi-close
 
-          .d-flex.flex-column.gap-2(style="min-height: 120px")
+          .d-flex.flex-column(
+            :class="display.density === 'compact' ? 'gap-1 lane-stack--compact' : 'gap-2 lane-stack'"
+            style="min-height: 120px"
+          )
+            template(v-if="!display.showRecentMail && !display.showTasks")
+              .text-caption.text-medium-emphasis.text-center.py-4.px-2 {{ $t('teams.lanePanelsHidden') }}
+
             //- Recent inbox involving this person (communication context)
-            v-card.team-lane-subcard(variant="outlined" rounded="lg")
-              v-card-title.text-subtitle-2.py-2.px-3 {{ $t('teams.recentMail') }}
-              v-card-text.py-2.px-3
+            v-card.team-lane-subcard(
+              v-if="display.showRecentMail"
+              variant="outlined"
+              rounded="lg"
+              :class="{ 'team-lane-subcard--compact': display.density === 'compact' }"
+            )
+              v-card-title.px-3(:class="display.density === 'compact' ? 'text-body-2 py-1' : 'text-subtitle-2 py-2'") {{ $t('teams.recentMail') }}
+              v-card-text.px-3(:class="display.density === 'compact' ? 'py-1' : 'py-2'")
                 template(v-if="!(recentEmailsByPersonId[person.id] || []).length")
-                  .text-caption.text-medium-emphasis.text-center.py-2 {{ $t('teams.recentMailEmpty') }}
-                .d-flex.flex-column.gap-2(v-else)
-                  v-sheet.rounded.border.pa-2.team-recent-mail-row(
+                  .text-caption.text-medium-emphasis.text-center(:class="display.density === 'compact' ? 'py-1' : 'py-2'") {{ $t('teams.recentMailEmpty') }}
+                .d-flex.flex-column(v-else :class="display.density === 'compact' ? 'gap-1' : 'gap-2'")
+                  v-sheet.rounded.team-recent-mail-row(
                     v-for="em in recentEmailsByPersonId[person.id]"
                     :key="emailRowKey(em)"
                     color="surface"
                     border
+                    :class="display.density === 'compact' ? 'pa-1' : 'pa-2'"
                   )
-                    .d-flex.align-center.mb-1.flex-wrap.gap-1
+                    .d-flex.align-center.flex-wrap(:class="display.density === 'compact' ? 'mb-0 gap-1' : 'mb-1 gap-1'")
                       v-chip(v-if="teamMailMetaForEmail(em)" size="x-small") {{ $t('teams.manual') }}
                       v-chip(size="x-small" color="secondary" variant="tonal") {{ $t('teams.email') }}
                       v-chip(v-if="!em.read" size="x-small" color="warning" variant="tonal") {{ $t('teams.unread') }}
-                    .text-body-2.font-weight-medium.text-truncate.cursor-pointer(
+                    .text-truncate.cursor-pointer(
+                      :class="display.density === 'compact' ? 'text-body-2' : 'text-body-2 font-weight-medium'"
                       @click="onRecentEmailClick(em)"
                     ) {{ em.subject || $t('teams.noSubject') }}
-                    .text-caption.text-primary.mt-1(v-if="projectTitle(projectIdForTeamEmail(em))") {{ projectTitle(projectIdForTeamEmail(em)) }}
-                    .text-caption.text-medium-emphasis.mt-1 {{ formatDate(em.date) }}
-                    v-select.mt-2(
+                    .text-caption.text-primary(
+                      v-if="projectTitle(projectIdForTeamEmail(em))"
+                      :class="display.density === 'compact' ? 'mt-0' : 'mt-1'"
+                    ) {{ projectTitle(projectIdForTeamEmail(em)) }}
+                    .text-caption.text-medium-emphasis(:class="display.density === 'compact' ? 'mt-0' : 'mt-1'") {{ formatLaneDate(em.date) }}
+                    v-select(
+                      :class="display.density === 'compact' ? 'mt-1' : 'mt-2'"
                       :model-value="projectIdForTeamEmail(em)"
                       :items="projectItems"
                       item-title="title"
@@ -118,8 +167,13 @@ v-container(fluid)
                     )
 
             //- Tasks & deliverables for this column person
-            v-card.team-lane-subcard(variant="outlined" rounded="lg")
-              v-card-title.text-subtitle-2.py-2.px-3.d-flex.align-center.flex-wrap.gap-1
+            v-card.team-lane-subcard(
+              v-if="display.showTasks"
+              variant="outlined"
+              rounded="lg"
+              :class="{ 'team-lane-subcard--compact': display.density === 'compact' }"
+            )
+              v-card-title.px-3.d-flex.align-center.flex-wrap.gap-1(:class="display.density === 'compact' ? 'text-body-2 py-1' : 'text-subtitle-2 py-2'")
                 span.flex-grow-1 {{ $t('teams.tasksLane') }}
                 v-btn(
                   size="x-small"
@@ -128,27 +182,33 @@ v-container(fluid)
                   prepend-icon="mdi-plus"
                   @click="openAddTaskFor(person.id)"
                 ) {{ $t('teams.addTaskInLane') }}
-              v-card-text.py-2.px-3
+              v-card-text.px-3(:class="display.density === 'compact' ? 'py-1' : 'py-2'")
                 template(v-if="!taskItemsForPerson(person.id).length")
-                  .text-caption.text-medium-emphasis.text-center.py-2 {{ $t('teams.tasksLaneEmpty') }}
-                .d-flex.flex-column.gap-2(v-else)
-                  v-sheet.rounded.border.pa-2.team-task-row(
+                  .text-caption.text-medium-emphasis.text-center(:class="display.density === 'compact' ? 'py-1' : 'py-2'") {{ $t('teams.tasksLaneEmpty') }}
+                .d-flex.flex-column(v-else :class="display.density === 'compact' ? 'gap-1' : 'gap-2'")
+                  v-sheet.rounded.team-task-row(
                     v-for="item in taskItemsForPerson(person.id)"
                     :key="boardItemKey(item)"
                     color="surface"
                     border
+                    :class="display.density === 'compact' ? 'pa-1' : 'pa-2'"
                   )
-                    .d-flex.align-center.mb-1.flex-wrap.gap-1
+                    .d-flex.align-center.flex-wrap(:class="display.density === 'compact' ? 'mb-0 gap-1' : 'mb-1 gap-1'")
                       v-chip(size="x-small" color="teal" variant="tonal") {{ $t('teams.task') }}
                       v-chip(size="x-small" variant="outlined") {{ taskStatusLabel(item.task.status) }}
-                    .text-body-2.font-weight-medium.text-truncate.cursor-pointer(
+                    .text-truncate.cursor-pointer(
+                      :class="display.density === 'compact' ? 'text-body-2' : 'text-body-2 font-weight-medium'"
                       @click="onBoardItemClick(item)"
                     ) {{ item.task.title }}
-                    .text-caption.text-primary.mt-1(v-if="taskProjectTitle(item.task)") {{ taskProjectTitle(item.task) }}
-                    .text-caption.text-medium-emphasis.mt-1
-                      template(v-if="item.task.dueDate") {{ $t('tasks.dueDate') }}: {{ formatDate(item.task.dueDate) }}
-                      template(v-else) {{ formatDate(item.task.updatedAt) }}
-                    v-select.mt-2(
+                    .text-caption.text-primary(
+                      v-if="taskProjectTitle(item.task)"
+                      :class="display.density === 'compact' ? 'mt-0' : 'mt-1'"
+                    ) {{ taskProjectTitle(item.task) }}
+                    .text-caption.text-medium-emphasis(:class="display.density === 'compact' ? 'mt-0' : 'mt-1'")
+                      template(v-if="item.task.dueDate") {{ $t('tasks.dueDate') }}: {{ formatLaneDate(item.task.dueDate) }}
+                      template(v-else) {{ formatLaneDate(item.task.updatedAt) }}
+                    v-select(
+                      :class="display.density === 'compact' ? 'mt-1' : 'mt-2'"
                       :model-value="taskPrimaryProjectId(item.task)"
                       :items="projectItems"
                       item-title="title"
@@ -268,6 +328,7 @@ import {
   taskBoardItemsForPerson,
 } from '~/composables/useTeamAttentionBoard'
 import { useTasksStore } from '~/stores/tasks'
+import { useTeamBoardDisplay } from '~/composables/useTeamBoardDisplay'
 
 const route = useRoute()
 const router = useRouter()
@@ -282,6 +343,8 @@ const notify = useNotificationStore()
 const teamId = computed(() => route.params.id as string)
 const team = computed(() => teamsStore.currentTeam)
 const loading = computed(() => teamsStore.loading)
+
+const { display } = useTeamBoardDisplay(teamId)
 
 const openAddMember = ref(false)
 const selectedPersonToAdd = ref<string | null>(null)
@@ -369,6 +432,11 @@ const layoutItems = computed(() => [
   { title: t('teams.layoutDrag'), value: 'drag' as TeamColumnLayoutMode },
 ])
 
+const densityItems = computed(() => [
+  { title: t('teams.densityNormal'), value: 'normal' as const },
+  { title: t('teams.densityCompact'), value: 'compact' as const },
+])
+
 function emailMetaKey(email: Email) {
   return `${email.accountId || ''}::${email.id}`
 }
@@ -408,6 +476,17 @@ function formatDate(d: Date) {
   } catch {
     return String(d)
   }
+}
+
+function formatLaneDate(d: Date) {
+  if (display.value.density === 'compact') {
+    try {
+      return new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(d)
+    } catch {
+      return String(d)
+    }
+  }
+  return formatDate(d)
 }
 
 function projectTitle(projectId: string | null) {
@@ -597,6 +676,13 @@ onMounted(() => load())
 <style scoped lang="sass">
 .team-column
   background: rgba(var(--v-theme-surface-variant), 0.15)
+  min-width: 280px
+  max-width: 320px
+  padding: 8px
+.team-column--compact
+  min-width: 220px
+  max-width: 260px
+  padding: 6px
 .team-lane-subcard
   background: rgba(var(--v-theme-surface), 0.35)
 .cursor-pointer

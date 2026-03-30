@@ -1,0 +1,37 @@
+---
+description: Context menus (pointer) and touch alternatives — in-app action lists, no browser default menu, parity with native UX, no menu-only features, icons on actions
+alwaysApply: true
+---
+
+# Context Actions (Pointer) and Touch Equivalents
+
+## Pointer / Right-Click
+
+- **In-app action list only**: On primary interactive surfaces (lists, rows, cards, canvas areas, etc.), **right-click (contextmenu)** must open an **application** menu of actions for the clicked target. **Prevent the browser’s default context menu** on those surfaces so users never see the generic browser menu for app content.
+- **Native-like behaviour**: The menu should feel like a system context menu:
+  - Opens **near the cursor** (anchor to pointer position; flip or clamp within the viewport so it stays fully visible).
+  - **Dismiss** on click outside, Escape, or when choosing an action (unless a nested submenu requires otherwise).
+  - **Hover and keyboard** patterns should mirror common context-menu expectations where the component library allows (e.g. highlight on hover, Enter to activate when focused).
+- **Context-relevant items only**: Each entry must apply to the **specific element or record** under the pointer. Do not show a static global menu unrelated to the click target.
+
+## No “Menu-Only” Features
+
+- **Every action** exposed in the context menu must also be reachable **without** opening that menu — for example: visible toolbar or row actions, detail-page buttons, bulk actions, or other primary UI. The context menu is a **shortcut**, not the sole path to a capability.
+
+## Touch and Small Screens
+
+- **No reliance on right-click** on touch-only or mobile layouts: do **not** show a pointer-only context menu as the only way to act.
+- Provide **equivalent actions** through touch-native patterns, for example:
+  - **Swipe actions** on list/table rows (reveal delete, edit, or secondary actions).
+  - **Long-press** where appropriate and consistent with platform expectations, if it duplicates actions also available elsewhere.
+  - **Overflow / “more”** affordances on cards or rows when swipe is not used.
+- Parity: anything available from the desktop context menu for a given target should have a **discoverable** touch path (not hidden behind undocumented gestures).
+
+## Visual Language
+
+- **Icon per action**: Every menu or swipe action includes a **clear, consistent icon** (same icon as elsewhere in the app for that action when one exists) as a visual cue, plus a short label where space allows.
+
+## Implementation Notes
+
+- Use **configuration** for action sets per surface (e.g. config-driven menus) rather than hardcoding one-off lists in scattered components.
+- **Internationalization**: All labels for context and swipe actions live in the project’s i18n resources.

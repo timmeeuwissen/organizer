@@ -22,6 +22,23 @@ v-container(fluid)
       )
       
       v-card(class="mb-4")
+        v-card-title {{ $t('tasks.mainList') }}
+        v-card-text
+          v-select(
+            :model-value="tasksPageSize"
+            :items="tasksPageSizeSelectItems"
+            :label="$t('tasks.tasksPerPage')"
+            item-title="title"
+            item-value="value"
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="mb-2"
+            @update:model-value="commitTasksPageSize"
+          )
+          .text-caption.text-medium-emphasis {{ $t('tasks.pageSizeHint') }}
+      
+      v-card(class="mb-4")
         v-card-title {{ $t('tasks.upcomingTasks') }}
         v-card-text(v-if="loading") 
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
@@ -116,7 +133,7 @@ v-container(fluid)
                 th(style="width: 120px") {{ $t('tasks.type') }}
                 th
             tbody
-              template(v-for="(task, index) in processedTasks" :key="task.id")
+              template(v-for="(task, index) in pagedProcessedTasks" :key="task.id")
                 tr(
                   :class="getTaskRowClasses(task)"
                   :style="getTaskRowStyle(task)" 
@@ -132,25 +149,34 @@ v-container(fluid)
                         @click.stop="toggleTaskStatus(task)"
                         :disabled="task.status === 'completed'"
                       )
-                  td(class="d-flex align-center")
-                    div(
-                      v-if="task.level > 0"
-                      :style="{ width: `${task.level * 20}px` }"
-                    )
-                    v-btn(
-                      v-if="task.hasSubtasks"
-                      icon="mdi-chevron-down"
-                      size="x-small"
-                      variant="text"
-                      :class="{ 'rotate-icon': !isExpanded(task.id) }"
-                      @click.stop="toggleExpand(task.id)"
-                    )
-                    v-icon(
-                      v-else-if="task.level > 0"
-                      size="x-small"
-                      class="ms-6"
-                    ) mdi-subdirectory-arrow-right
-                    span {{ task.title }}
+                  td.tasks-overview__title-cell
+                    .d-flex.align-center.min-w-0
+                      div.flex-shrink-0(
+                        v-if="task.level > 0"
+                        :style="{ width: `${task.level * 20}px` }"
+                      )
+                      .tasks-disclosure-gutter.d-flex.justify-center.align-center.flex-shrink-0
+                        v-btn(
+                          v-if="activeTab === 'all' && task.hasSubtasks"
+                          icon
+                          size="x-small"
+                          variant="text"
+                          :aria-expanded="isExpanded(task.id)"
+                          :aria-label="isExpanded(task.id) ? $t('tasks.collapseSubtasks') : $t('tasks.expandSubtasks')"
+                          :title="isExpanded(task.id) ? $t('tasks.collapseSubtasks') : $t('tasks.expandSubtasks')"
+                          @click.stop="toggleExpand(task.id)"
+                        )
+                          v-icon(
+                            size="small"
+                            :icon="isExpanded(task.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
+                          )
+                      v-icon(
+                        v-if="activeTab === 'all' && task.level > 0 && !task.hasSubtasks"
+                        size="x-small"
+                        class="me-1 flex-shrink-0"
+                        icon="mdi-subdirectory-arrow-right"
+                      )
+                      span.tasks-overview__title-text.pl-1.min-w-0.text-truncate {{ task.title }}
                   td 
                     v-chip(
                       v-if="task.dueDate"
@@ -194,6 +220,28 @@ v-container(fluid)
                     )
                       v-icon mdi-plus-circle-outline
           
+          div.d-flex.align-center.justify-space-between.px-2.py-3(
+            v-if="!loading && filteredTasks.length > 0 && totalTaskRows > 0"
+          )
+            div.text-caption
+              span {{ $t('tasks.pagination.showing', { shown: pagedProcessedTasks.length, total: totalTaskRows }) }}
+            div.d-flex.align-center
+              v-btn(
+                variant="text"
+                size="small"
+                :disabled="!hasPrevTaskPage || loading"
+                @click="loadPreviousTaskPage"
+                prepend-icon="mdi-chevron-left"
+              ) {{ $t('tasks.pagination.previous') }}
+              span.mx-2 {{ $t('tasks.pagination.pageOf', { page: clampedTaskPage + 1, pages: totalTaskPages }) }}
+              v-btn(
+                variant="text"
+                size="small"
+                :disabled="!hasNextTaskPage || loading"
+                @click="loadNextTaskPage"
+                append-icon="mdi-chevron-right"
+              ) {{ $t('tasks.pagination.next') }}
+          
           template(v-else-if="loading")
             v-skeleton-loader(type="table")
           
@@ -232,6 +280,18 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import type { Task } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
+import {
+  TASKS_PAGE_SIZE_OPTIONS,
+  mergeTasksUiSettings,
+  normalizeTasksPageSize,
+  pruneExpandedTaskIds,
+  type TasksUiSettings,
+} from '~/config/tasksUi'
+import {
+  clampTaskListPageIndex,
+  sliceTaskListPage,
+  taskListTotalPages,
+} from '~/utils/tasksOverviewPagination'
 
 const route = useRoute()
 const router = useRouter()
@@ -249,6 +309,9 @@ const addDialog = ref(false)
 const selectedTask = ref<Task | null>(null)
 const search = ref('')
 const activeTab = ref('all')
+const tasksPageSize = ref(normalizeTasksPageSize(20))
+const tasksCurrentPage = ref(0)
+const tasksUiReady = ref(false)
 
 // Filters
 const selectedStatus = ref<string[]>([])
@@ -428,6 +491,8 @@ onMounted(async () => {
   } catch (error: any) {
     formError.value = error.message || 'Failed to load tasks'
   } finally {
+    applyTasksExpandedFromUserSettings()
+    tasksUiReady.value = true
     loading.value = false
   }
 })
@@ -840,6 +905,46 @@ const isExpanded = (taskId: string): boolean => {
   return expandedTasks.has(taskId)
 }
 
+function allLoadedTaskIds(): Set<string> {
+  return new Set(tasksStore.tasks.map((t) => t.id))
+}
+
+function applyTasksExpandedFromUserSettings() {
+  expandedTasks.clear()
+  const merged = mergeTasksUiSettings(authStore.currentUser?.settings?.tasksUi)
+  const valid = allLoadedTaskIds()
+  const pruned = pruneExpandedTaskIds(merged.expandedTaskIds, valid)
+  for (const id of pruned) {
+    expandedTasks.add(id)
+  }
+}
+
+let persistTasksExpandedTimer: ReturnType<typeof setTimeout> | null = null
+
+function schedulePersistTasksExpanded() {
+  if (!tasksUiReady.value || !authStore.currentUser) {
+    return
+  }
+  if (persistTasksExpandedTimer) {
+    clearTimeout(persistTasksExpandedTimer)
+  }
+  persistTasksExpandedTimer = setTimeout(async () => {
+    persistTasksExpandedTimer = null
+    try {
+      const valid = allLoadedTaskIds()
+      const ids = pruneExpandedTaskIds([...expandedTasks], valid)
+      const merged = mergeTasksUiSettings(authStore.currentUser?.settings?.tasksUi)
+      const payload: TasksUiSettings = {
+        ...merged,
+        expandedTaskIds: ids,
+      }
+      await authStore.updateUserSettings({ tasksUi: payload })
+    } catch (e) {
+      console.error('Failed to persist tasks UI expansion', e)
+    }
+  }, 450)
+}
+
 // Toggle task expansion
 const toggleExpand = (taskId: string) => {
   if (expandedTasks.has(taskId)) {
@@ -847,6 +952,7 @@ const toggleExpand = (taskId: string) => {
   } else {
     expandedTasks.add(taskId)
   }
+  schedulePersistTasksExpanded()
 }
 
 // Add a subtask to a parent task
@@ -870,14 +976,23 @@ const addSubtask = async (parentTask: Task) => {
   addDialog.value = true
 }
 
-// Initialize with parent tasks expanded by default
-onMounted(() => {
-  // Get parent tasks
-  const parentTasks = tasksStore.tasks.filter(task => task.subtasks?.length > 0);
-  parentTasks.forEach(task => {
-    expandedTasks.add(task.id);
-  });
-});
+const taskIdsFingerprint = computed(() =>
+  [...tasksStore.tasks.map((t) => t.id)].sort().join('\0'),
+)
+
+watch(taskIdsFingerprint, () => {
+  const valid = allLoadedTaskIds()
+  let changed = false
+  for (const id of [...expandedTasks]) {
+    if (!valid.has(id)) {
+      expandedTasks.delete(id)
+      changed = true
+    }
+  }
+  if (changed && tasksUiReady.value) {
+    schedulePersistTasksExpanded()
+  }
+})
 
 // Process tasks into a hierarchical structure
 const processedTasks = computed(() => {
@@ -996,6 +1111,85 @@ const processedTasks = computed(() => {
   return result
 })
 
+const tasksPageSizeSelectItems = computed(() =>
+  TASKS_PAGE_SIZE_OPTIONS.map((n) => ({
+    title: String(n),
+    value: n,
+  })),
+)
+
+const tasksPageSizeNorm = computed(() => normalizeTasksPageSize(tasksPageSize.value))
+
+const totalTaskRows = computed(() => processedTasks.value.length)
+
+const clampedTaskPage = computed(() =>
+  clampTaskListPageIndex(
+    tasksCurrentPage.value,
+    processedTasks.value.length,
+    tasksPageSizeNorm.value,
+  ),
+)
+
+const totalTaskPages = computed(() =>
+  taskListTotalPages(totalTaskRows.value, tasksPageSizeNorm.value),
+)
+
+const pagedProcessedTasks = computed(() =>
+  sliceTaskListPage(processedTasks.value, tasksCurrentPage.value, tasksPageSizeNorm.value),
+)
+
+const hasPrevTaskPage = computed(() => clampedTaskPage.value > 0)
+
+const hasNextTaskPage = computed(() => clampedTaskPage.value < totalTaskPages.value - 1)
+
+function commitTasksPageSize(raw: unknown) {
+  tasksPageSize.value = normalizeTasksPageSize(raw)
+  tasksCurrentPage.value = 0
+}
+
+function loadPreviousTaskPage() {
+  if (!hasPrevTaskPage.value) {
+    return
+  }
+  tasksCurrentPage.value -= 1
+}
+
+function loadNextTaskPage() {
+  if (!hasNextTaskPage.value) {
+    return
+  }
+  tasksCurrentPage.value += 1
+}
+
+watch(
+  () => processedTasks.value.length,
+  () => {
+    const size = normalizeTasksPageSize(tasksPageSize.value)
+    const total = processedTasks.value.length
+    const next = clampTaskListPageIndex(tasksCurrentPage.value, total, size)
+    if (next !== tasksCurrentPage.value) {
+      tasksCurrentPage.value = next
+    }
+  },
+)
+
+watch(
+  [
+    activeTab,
+    search,
+    selectedStatus,
+    selectedTypes,
+    selectedTags,
+    selectedProjects,
+    selectedAssignees,
+    selectedProviders,
+  ],
+  () => {
+    tasksCurrentPage.value = 0
+  },
+  { deep: true },
+)
+
 // Helper functions for task row display
 const getTaskRowClasses = (task: Task & { level: number, hasSubtasks: boolean }) => {
   return { 
@@ -1048,7 +1242,20 @@ const toggleTaskStatus = async (task: Task) => {
   border-radius: 2px 0 0 2px;
 }
 
-.rotate-icon {
-  transform: rotate(-90deg);
+/* Title column: tree gutter + ellipsis without breaking table layout */
+.tasks-overview__title-cell {
+  vertical-align: middle;
+  max-width: 0;
+}
+
+.tasks-overview__title-text {
+  flex: 1 1 auto;
+  display: block;
+}
+
+.tasks-disclosure-gutter {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
 }
 </style>
