@@ -4,6 +4,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -13,7 +15,10 @@ import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'
 import type { User, UserSettings } from '~/types/models'
 
 export const useAuthStore = defineStore('auth', {
-  persist: true,
+  persist: {
+    // Never persist transient UI state — only the user session
+    pick: ['user'],
+  },
   state: () => ({
     user: null as User | null,
     loading: true,
@@ -68,19 +73,30 @@ export const useAuthStore = defineStore('auth', {
         // Check if we're in development mode with auth bypass
         const isDev = import.meta.env.DEV
         const bypassAuth = isDev && import.meta.env.VITE_AUTH_BYPASS === 'true'
-        
+
         if (bypassAuth) {
           console.log('Development mode with auth bypass - creating demo user without Firebase')
           await this.createDemoUser()
           return this.user
         }
-        
+
         const auth = getAuth()
         this.loading = true
         this.error = null
-        
+
+        // Handle the result of a signInWithRedirect (popup-blocked fallback)
+        try {
+          const redirectResult = await getRedirectResult(auth)
+          if (redirectResult?.user) {
+            await this.setUser(redirectResult.user)
+            return this.user
+          }
+        } catch (_) {
+          // No pending redirect result — continue with normal auth state
+        }
+
         return new Promise<User | null>((resolve, reject) => {
-          const unsubscribe = onAuthStateChanged(auth, 
+          const unsubscribe = onAuthStateChanged(auth,
             async (firebaseUser) => {
               try {
                 if (firebaseUser) {
@@ -248,12 +264,34 @@ export const useAuthStore = defineStore('auth', {
     async loginWithGoogle() {
       this.loading = true
       this.error = null
-      
+
       try {
         const auth = getAuth()
         const provider = new GoogleAuthProvider()
-        const { user } = await signInWithPopup(auth, provider)
-        await this.setUser(user)
+
+        // When debugAuthRedirect is enabled, skip popup and go straight to redirect
+        const config = useRuntimeConfig()
+        const forceRedirect = config.public.debugAuthRedirect === 'true'
+
+        if (forceRedirect) {
+          await signInWithRedirect(auth, provider)
+          // Page will reload; result is handled in init() via getRedirectResult
+          return
+        }
+
+        try {
+          // Attempt popup first (best UX)
+          const { user } = await signInWithPopup(auth, provider)
+          await this.setUser(user)
+        } catch (popupError: any) {
+          // Fall back to redirect when popup is blocked (e.g. in preview environments)
+          if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/cancelled-popup-request') {
+            await signInWithRedirect(auth, provider)
+            // Page will reload; result is handled in init() via getRedirectResult
+          } else {
+            throw popupError
+          }
+        }
       } catch (error: any) {
         this.error = error.message || 'Google login failed'
         throw error
