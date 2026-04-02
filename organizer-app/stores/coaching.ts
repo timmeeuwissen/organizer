@@ -522,27 +522,13 @@ export const useCoachingStore = defineStore('coaching', {
           throw new Error('Unauthorized access to coaching record')
         }
         
-        // Filter out undefined values from the updates object
-        const filteredUpdates: Partial<CoachingRecord> = {}
-        
-        // Copy only defined values
-        Object.entries(updates).forEach(([key, value]) => {
-          if (value !== undefined) {
-            // Using type assertion to bypass TypeScript's index signature restriction
-            (filteredUpdates as any)[key] = value
-          }
-        })
-        
-        // Add server timestamp
-        const updateData = {
-          ...filteredUpdates,
-          updatedAt: serverTimestamp(),
+        // Build update payload excluding undefined values and immutable fields
+        const updateData: Record<string, unknown> = { updatedAt: serverTimestamp() }
+        for (const [key, value] of Object.entries(updates)) {
+          if (value === undefined) continue
+          if (key === 'id' || key === 'userId' || key === 'createdAt') continue
+          updateData[key] = value
         }
-        
-        // Remove fields that shouldn't be directly updated
-        delete updateData.id
-        delete updateData.userId
-        delete updateData.createdAt
         
         await updateDoc(recordRef, updateData)
         

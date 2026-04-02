@@ -10,6 +10,12 @@ import { markAccountForReauth } from './googleAuthUtils'
  */
 export class GmailProvider extends BaseMailProvider {
   private pageTokens: Record<number, string> = {}
+
+  protected override onTokenRefreshFailed(errorMessage: string): void {
+    if (errorMessage.includes('invalid_grant')) {
+      markAccountForReauth(this.account)
+    }
+  }
   
   // Utility methods for handling Gmail API responses
   private extractHeader(payload: any, name: string): string | null {

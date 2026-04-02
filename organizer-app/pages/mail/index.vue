@@ -88,17 +88,24 @@ v-container(fluid)
             prepend-inner-icon="mdi-magnify"
             clearable
           )
-        v-list(density="compact" v-if="filteredContacts.length > 0" class="contact-list")
-          v-list-item(
-            v-for="contact in filteredContacts"
-            :key="contact.id"
-            :title="`${contact.firstName} ${contact.lastName}`"
-            :subtitle="contact.email"
-            @click="composeToContact(contact)"
-          )
-            template(v-slot:prepend)
-              v-avatar(size="32" :color="getRandomColor(contact.id)")
-                span {{ getContactInitials(contact) }}
+        v-virtual-scroll(
+          v-if="filteredContacts.length > 0"
+          :items="filteredContacts"
+          :height="Math.min(filteredContacts.length * 56, 400)"
+          item-height="56"
+          class="contact-list"
+        )
+          template(v-slot:default="{ item: contact }")
+            v-list-item(
+              :key="contact.id"
+              :title="`${contact.firstName} ${contact.lastName}`"
+              :subtitle="contact.email"
+              density="compact"
+              @click="composeToContact(contact)"
+            )
+              template(v-slot:prepend)
+                v-avatar(size="32" :color="getRandomColor(contact.id)")
+                  span {{ getContactInitials(contact) }}
     
     v-col(cols="12" md="9")
       v-card

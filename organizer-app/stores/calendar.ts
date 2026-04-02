@@ -229,19 +229,13 @@ export const useCalendarStore = defineStore('calendar', {
           return false
         }
         
-        // Prepare update data
-        const updateData = {
-          ...updates,
-          updatedAt: serverTimestamp(),
+        // Build update payload, excluding immutable fields
+        const updateDataWithoutId: Record<string, unknown> = { updatedAt: serverTimestamp() }
+        for (const [key, value] of Object.entries(updates)) {
+          if (key === 'id' || key === 'userId' || key === 'createdAt') continue
+          updateDataWithoutId[key] = value
         }
-        
-        // Convert Date objects
-        if (updates.startTime) updateData.startTime = updates.startTime
-        if (updates.endTime) updateData.endTime = updates.endTime
-        
-        // Don't update these fields
-        const { id: _, userId, createdAt, ...updateDataWithoutId } = updateData as any
-        
+
         await updateDoc(eventRef, updateDataWithoutId)
         console.log(`[Calendar] Event updated in Firestore: ${id}`)
         
