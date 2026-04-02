@@ -6,6 +6,7 @@ import type {
 } from './TaskProvider'
 import { BaseTaskProvider } from './BaseTaskProvider'
 import { BaseProvider } from '../core/BaseProvider'
+import { markAccountForReauth } from '../mailProviders/googleAuthUtils'
 
 // Google Tasks API base URL
 const API_BASE_URL = 'https://tasks.googleapis.com/tasks/v1'
@@ -137,6 +138,12 @@ export class GoogleTasksProvider extends BaseTaskProvider {
   private defaultTaskListId: string = ''
   // Store the task lists
   private taskLists: any[] = []
+
+  protected override onTokenRefreshFailed(errorMessage: string): void {
+    if (errorMessage.includes('invalid_grant')) {
+      markAccountForReauth(this.account)
+    }
+  }
   
   /**
    * Get all task lists from Google Tasks API

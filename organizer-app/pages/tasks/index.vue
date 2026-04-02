@@ -46,30 +46,35 @@ v-container(fluid)
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="upcomingTasks.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('dashboard.noUpcomingTasks') }}
-        v-list(v-else)
-          v-list-item(
-            v-for="task in upcomingTasks"
-            :key="task.id"
-            :title="task.title"
-            :subtitle="formatDate(task.dueDate)"
-            @click="openTask(task)"
-            class="rounded mb-2"
-            :active="false"
-            :disabled="task.status === 'completed'"
-          )
-            template(v-slot:prepend)
-              div.position-relative.d-flex.align-center
-                div.account-indicator(v-if="task.providerAccountId" :style="{ backgroundColor: getProviderColor(task) }")
-                v-checkbox(
-                  v-model="task.completed"
-                  :value="task.status === 'completed'"
-                  color="success"
-                  @click.stop="toggleTaskStatus(task)"
-                  :disabled="task.status === 'completed'"
-                )
-            template(v-slot:append)
-              v-btn(icon size="small" @click.stop="openTask(task)")
-                v-icon mdi-pencil
+        v-virtual-scroll(
+          v-else
+          :items="upcomingTasks"
+          :height="Math.min(upcomingTasks.length * 64, 320)"
+          item-height="64"
+        )
+          template(v-slot:default="{ item: task }")
+            v-list-item(
+              :key="task.id"
+              :title="task.title"
+              :subtitle="formatDate(task.dueDate)"
+              @click="openTask(task)"
+              class="rounded mb-2"
+              :active="false"
+              :disabled="task.status === 'completed'"
+            )
+              template(v-slot:prepend)
+                div.position-relative.d-flex.align-center
+                  div.account-indicator(v-if="task.providerAccountId" :style="{ backgroundColor: getProviderColor(task) }")
+                  v-checkbox(
+                    v-model="task.completed"
+                    :value="task.status === 'completed'"
+                    color="success"
+                    @click.stop="toggleTaskStatus(task)"
+                    :disabled="task.status === 'completed'"
+                  )
+              template(v-slot:append)
+                v-btn(icon size="small" @click.stop="openTask(task)")
+                  v-icon mdi-pencil
       
       v-card
         v-card-title {{ $t('tasks.overdueTasks') }}
@@ -77,26 +82,31 @@ v-container(fluid)
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="overdueTasks.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('tasks.noTasks') }}
-        v-list(v-else)
-          v-list-item(
-            v-for="task in overdueTasks"
-            :key="task.id"
-            :title="task.title"
-            :subtitle="formatDate(task.dueDate)"
-            @click="openTask(task)"
-            class="rounded mb-2"
-            :active="false"
-            density="compact"
-            :disabled="task.status === 'completed'"
-          )
-            template(v-slot:prepend)
-              div.position-relative.d-flex.align-center
-                div.account-indicator(v-if="task.providerAccountId" :style="{ backgroundColor: getProviderColor(task) }")
-                v-checkbox(
-                  v-model="task.completed"
-                  :value="task.status === 'completed'"
-                  color="success"
-                  @click.stop="toggleTaskStatus(task)"
+        v-virtual-scroll(
+          v-else
+          :items="overdueTasks"
+          :height="Math.min(overdueTasks.length * 56, 280)"
+          item-height="56"
+        )
+          template(v-slot:default="{ item: task }")
+            v-list-item(
+              :key="task.id"
+              :title="task.title"
+              :subtitle="formatDate(task.dueDate)"
+              @click="openTask(task)"
+              class="rounded mb-2"
+              :active="false"
+              density="compact"
+              :disabled="task.status === 'completed'"
+            )
+              template(v-slot:prepend)
+                div.position-relative.d-flex.align-center
+                  div.account-indicator(v-if="task.providerAccountId" :style="{ backgroundColor: getProviderColor(task) }")
+                  v-checkbox(
+                    v-model="task.completed"
+                    :value="task.status === 'completed'"
+                    color="success"
+                    @click.stop="toggleTaskStatus(task)"
                   :disabled="task.status === 'completed'"
                 )
             template(v-slot:append)

@@ -43,6 +43,7 @@ export default defineNuxtConfig({
     '~/plugins/pinia-persistence',
     '~/plugins/oidc',
     '~/plugins/unsaved-navigation.client',
+    '~/plugins/allow-popups.client',
   ],
 
   runtimeConfig: {

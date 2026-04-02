@@ -12,11 +12,10 @@ service cloud.firestore {
       }
     }
     
-    // Feedback rules - Development mode (all permissions)
+    // Feedback rules - user-scoped
     match /feedbacks/{feedback} {
-      // For development, allow all operations
-      // IMPORTANT: Restrict these rules in production!
-      allow read, write: if true;
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
     // People collection rules
