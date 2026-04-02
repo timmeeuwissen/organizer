@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Nuxt Dev Server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "Nuxt Preview (production build)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "port": 3000
+    },
+    {
+      "name": "Firebase Emulators",
+      "runtimeExecutable": "firebase",
+      "runtimeArgs": ["emulators:start"],
+      "port": 4000
+    }
+  ]
+}
