@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { getFirestore, connectFirestoreEmulator, enableIndexedDbPersistence } from 'firebase/firestore'
+import { getStorage, type FirebaseStorage } from 'firebase/storage'
 import { defineNuxtPlugin } from '#app'
 
 export default defineNuxtPlugin(async (nuxtApp) => {
@@ -80,7 +81,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     nuxtApp.provide('firebase', mockApp)
     nuxtApp.provide('auth', mockAuth)
     nuxtApp.provide('firestore', mockDB)
-    
+    nuxtApp.provide('storage', null as FirebaseStorage | null)
+
     console.log('Mock Firebase initialized for development')
     return
   }
@@ -100,6 +102,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     const app = initializeApp(firebaseConfig)
     const auth = getAuth(app)
     const firestore = getFirestore(app)
+    const storage =
+      firebaseConfig.storageBucket ? getStorage(app) : null
     
     // Enable offline persistence for Firestore
     try {
@@ -119,6 +123,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     nuxtApp.provide('firebase', app)
     nuxtApp.provide('auth', auth)
     nuxtApp.provide('firestore', firestore)
+    nuxtApp.provide('storage', storage)
     
     console.log('Firebase initialized successfully')
   } catch (error) {

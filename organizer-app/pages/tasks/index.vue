@@ -6,13 +6,15 @@ v-container(fluid)
       
   v-row
     v-col(cols="12" md="3")
+      ModuleIntegrationAccountFilter(
+        module-segment="tasks"
+        v-model="selectedProviders"
+        class="mb-4"
+      )
       FilterContainer(
         :title="$t('tasks.filters')"
         :searchable="true"
         :searchLabel="$t('common.search')"
-        v-model="selectedProviders"
-        :accounts="connectedAccounts"
-        :accountsTitle="$t('mail.accounts')"
         :selectFilters="selectFilters"
         :checkboxFilters="checkboxFilters"
         :chipFilters="chipFilters"
@@ -279,7 +281,8 @@ import { useAuthStore } from '~/stores/auth'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import type { Task } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
-import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
+import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
+import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
 import {
   TASKS_PAGE_SIZE_OPTIONS,
   mergeTasksUiSettings,
@@ -344,20 +347,7 @@ const providerSyncEnabled = ref(false)
 const syncLoading = ref(false)
 const syncError = ref('')
 
-// Connected accounts for the provider card
-const connectedAccounts = computed(() => {
-  return integrationAccounts.value.filter(account => 
-    account.oauthData?.connected && account.syncTasks && account.showInTasks
-  )
-})
-
-// Initialize selectedProviders with all providers by default
-onMounted(() => {
-  // After the accounts are loaded, select all by default
-  nextTick(() => {
-    selectedProviders.value = connectedAccounts.value.map(account => account.id)
-  })
-})
+const { accounts: connectedAccounts } = useModuleIntegrationAccounts('tasks')
 
 // Watch for changes in selectedProviders
 watch(selectedProviders, (newProviders) => {

@@ -6,13 +6,16 @@ v-container(fluid)
       
   v-row
     v-col(cols="12" md="3")
+      ModuleIntegrationAccountFilter(
+        module-segment="people"
+        v-model="selectedProviders"
+        :title="$t('people.accounts')"
+        class="mb-4"
+      )
       FilterContainer(
         :title="$t('people.filters')"
         :searchable="true"
         :searchLabel="$t('common.search')"
-        v-model="selectedProviders"
-        :accounts="connectedAccounts"
-        :accountsTitle="$t('people.accounts')"
         :checkboxFilters="checkboxFilters"
         @search-change="search = $event"
         @filter-change="handleFilterChange"
@@ -136,14 +139,13 @@ v-container(fluid)
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePeopleStore } from '~/stores/people'
-import { useAuthStore } from '~/stores/auth'
-import type { Person, IntegrationAccount } from '~/types/models'
+import type { Person } from '~/types/models'
 import PersonForm from '~/components/people/PersonForm.vue'
-import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
+import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
 import FilterContainer from '~/components/common/FilterContainer.vue'
+import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
 
 const peopleStore = usePeopleStore()
-const authStore = useAuthStore()
 const route = useRoute()
 
 // UI state
@@ -203,15 +205,7 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false }
 ]
 
-// Connected accounts
-const connectedAccounts = computed(() => {
-  const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
-  
-  // Only return accounts that are connected and have syncContacts and showInContacts set to true
-  return integrationAccounts.filter(account => 
-    account.oauthData.connected && account.syncContacts && account.showInContacts
-  )
-})
+const { accounts: connectedAccounts } = useModuleIntegrationAccounts('people')
 
 const openPerson = (person: Person) => {
   selectedPerson.value = person

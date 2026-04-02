@@ -5,7 +5,8 @@ This document is the **single source of truth** for how Organizer App persists d
 ## Primary store
 
 - **Firebase Authentication** for sign-in.
-- **Cloud Firestore** for application data (behaviors, people, projects, tasks, meetings, integrations metadata, teams, coaching, etc.).
+- **Cloud Firestore** for application data (behaviors, people, projects, tasks, meetings, integrations metadata, teams, coaching, project links/files/mail-link metadata, etc.).
+- **Firebase Storage** (optional per deployment) for **project file** binaries; paths and rules are documented in-repo (`storage.rules`).
 - Client-side caching and offline behavior follow Firebase SDK and app design.
 
 ## Explicitly out of scope for this product

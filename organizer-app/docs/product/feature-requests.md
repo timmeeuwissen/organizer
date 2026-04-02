@@ -13,7 +13,7 @@ For **per-module product specs** (purpose, routes, data, integrations), see [`mo
 - Behavior tracking (do well, want to do better, need to improve)
 - People/contacts management with tags and relations
 - **Teams** attention board: team list with weighted attention, member columns, **inbox mail** + **assigned tasks** per column, optional project on cards; add task per member; Firestore `teams` + `teamMailMeta`
-- Project management with pages, tasks, team members
+- Project management with pages, tasks, team members; **project attachments**: external links (`projectLinks`), files (`projectFiles` + Storage), mail message links (`projectMailLinks`) with bidirectional UX (project detail + Mail reading pane); meeting form **related projects**
 - Task management with subtasks, comments, priority, recurrence
 - Calendar view for meetings and tasks
 - Meeting management with summaries, attendees, categories
@@ -56,7 +56,7 @@ For **per-module product specs** (purpose, routes, data, integrations), see [`mo
 
 ## Suggested Future Features
 
-- Teams: true **drag-and-drop** column reorder; non-email **plugins** on the same board; deep link open thread in Mail
+- Teams: true **drag-and-drop** column reorder; non-email **plugins** on the same board; Mail deep link when the target message is **not** in the current folder/page (search or fetch-by-id)
 - Microsoft OAuth implementation (currently placeholder)
 - Recurring meeting support
 - Shared projects/team workspaces

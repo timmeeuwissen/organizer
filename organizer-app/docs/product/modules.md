@@ -125,8 +125,8 @@ Full product spec and decisions: [`teams.md`](./teams.md).
 | Field | Description |
 |-------|-------------|
 | **Purpose** | Single project workspace: narrative, structure, and linked work. |
-| **Capabilities** | Project metadata, linked tasks/meetings/pages (per model), editing flows as implemented on the page. |
-| **Primary data** | `Project`, `ProjectPage`, related `Task` / `Meeting` IDs. |
+| **Capabilities** | Project metadata; tabs for tasks, notes (`ProjectPage`), meetings; **links** (external URLs in Firestore `projectLinks`); **files** (metadata in `projectFiles`, binaries in Firebase Storage under `users/{uid}/projects/{projectId}/…`); **connected mail** (`projectMailLinks`: `accountId` + provider message id + optional subject/from snapshots). Open a linked message in Mail via `/mail?accountId=&emailId=`. |
+| **Primary data** | `Project`, `ProjectPage`, related `Task` / `Meeting` IDs; `projectLinks`, `projectFiles`, `projectMailLinks` (see `types/models/projectAttachments.ts`). |
 
 ---
 
@@ -176,7 +176,7 @@ Full product spec and decisions: [`teams.md`](./teams.md).
 | Field | Description |
 |-------|-------------|
 | **Purpose** | Update meeting fields and relationships. |
-| **Capabilities** | Form-driven edit aligned with `MeetingForm` patterns. |
+| **Capabilities** | Form-driven edit aligned with `MeetingForm` patterns (including **related projects** multi-select, same as create flows). |
 
 ### 9.4 Meeting categories (`/meetings/categories`)
 
@@ -194,8 +194,8 @@ Full product spec and decisions: [`teams.md`](./teams.md).
 |-------|-------------|
 | **Purpose** | **Email hub**: browse folders and messages from connected mail accounts. |
 | **Audience** | Users with mail integration (e.g. Gmail). |
-| **Capabilities** | Empty state → profile to connect. With accounts: folder list with unread counts, provider account chips, message list, reading pane, compose entry points; Google re-authorization handling (`GoogleReauthManager`). |
-| **Primary data** | Messages via provider APIs; compose flows tied to `mail` store and providers. |
+| **Capabilities** | Empty state → profile to connect. With accounts: folder list with unread counts, provider account chips, message list, reading pane, compose entry points; Google re-authorization handling (`GoogleReauthManager`). **Link message to project** (reading pane): creates `projectMailLinks`; chips show linked projects with unlink. **Deep link** from a project’s connected mail: `/mail?accountId={id}&emailId={id}` opens the message when it is in the current loaded list (otherwise an info notice). |
+| **Primary data** | Messages via provider APIs; compose flows tied to `mail` store and providers; persisted **project–message** links in Firestore `projectMailLinks`. |
 | **Integrations** | Gmail, Exchange, Office 365 (`utils/api/mailProviders`). |
 
 ---

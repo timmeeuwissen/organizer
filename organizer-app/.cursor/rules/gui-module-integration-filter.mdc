@@ -1,0 +1,23 @@
+---
+description: Integration account filtering only on provider-backed GUI modules
+alwaysApply: false
+---
+
+# GUI — integration account filter
+
+## Where it applies
+
+Only **modules that consume provider integration data** use integration account filtering in the UI. The canonical list is the whitelist in `config/moduleIntegration.ts` (`mail`, `calendar`, `tasks`, `people`, `meetings`).
+
+Do **not** add integration account filter UI to Organizer-only modules (dashboard, behaviors, teams, projects, coaching, statistics, network, feedback, etc.) unless product docs and `moduleIntegration.ts` are updated first.
+
+## UI
+
+- Use `components/integrations/ModuleIntegrationAccountFilter.vue` (mail-style list via `components/integrations/ProviderAccountsCard.vue`).
+- Do **not** duplicate integration account selection inside `components/common/FilterContainer.vue` or ad hoc chip rows on those modules.
+- Labels use shared i18n keys (e.g. `common.integrationAccounts`), not hard-coded strings.
+
+## Data
+
+- Account lists and predicates come from `composables/useModuleIntegrationAccounts.ts` and `utils/filterIntegrationAccountsByKind.ts`.
+- When filtering rows by provider, use selected account ids together with `IntegrationAccount.id` / entity `providerAccountId` as today.

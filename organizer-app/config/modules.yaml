@@ -1,5 +1,6 @@
 # Module route roots and locale keys (organizer-app incremental GUI conventions).
 # Titles resolve via vue-i18n: locales/en.ts, locales/nl.ts
+# Integration account filtering in the GUI is only for segments listed in config/moduleIntegration.ts.
 modules:
   - segment: dashboard
     titleKey: dashboard.title

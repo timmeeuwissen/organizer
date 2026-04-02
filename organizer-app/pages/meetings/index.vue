@@ -6,13 +6,15 @@ v-container(fluid)
   
   v-row
     v-col(cols="12" md="3")
+      ModuleIntegrationAccountFilter(
+        module-segment="meetings"
+        v-model="selectedProviders"
+        class="mb-4"
+      )
       FilterContainer(
         :title="$t('meetings.filters')"
         :searchable="true"
         :searchLabel="$t('common.search')"
-        v-model="selectedProviders"
-        :accounts="connectedAccounts"
-        :accountsTitle="$t('mail.accounts')"
         :selectFilters="selectFilters"
         @search-change="search = $event"
         @filter-change="handleFilterChange"
@@ -204,12 +206,13 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
 import FilterContainer from '~/components/common/FilterContainer.vue'
+import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
+import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
 import { useMeetingsStore } from '~/stores/meetings'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { useCalendarStore } from '~/stores/calendar'
-import { useAuthStore } from '~/stores/auth'
 import type { Meeting } from '~/types/models'
 
 // Define stores
@@ -218,7 +221,6 @@ const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const categoriesStore = useMeetingCategoriesStore()
 const calendarStore = useCalendarStore()
-const authStore = useAuthStore()
 
 // UI state
 const loading = ref(true)
@@ -239,15 +241,7 @@ const calendarFormLoading = ref(false)
 const calendarFormError = ref('')
 const pendingMeetingId = ref<string | null>(null)
 
-// Connected accounts
-const connectedAccounts = computed(() => {
-  const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
-  
-  // Only return accounts that are connected and can sync calendar events
-  return integrationAccounts.filter(account => 
-    account.oauthData?.connected && account.syncCalendar
-  )
-})
+const { accounts: connectedAccounts } = useModuleIntegrationAccounts('meetings')
 
 // Initialize selectedProviders with all providers by default
 onMounted(() => {

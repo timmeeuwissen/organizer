@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Deploy with Firebase CLI: firebase deploy --only storage
+// Bucket must match FIREBASE_STORAGE_BUCKET / config.storageBucket
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{userId}/projects/{projectId}/{fileName} {
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 50 * 1024 * 1024;
+    }
+  }
+}

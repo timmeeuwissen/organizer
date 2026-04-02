@@ -113,6 +113,17 @@ v-form(
         rows="3"
         prepend-icon="mdi-checkbox-marked-outline"
       )
+
+      v-select(
+        v-model="relatedProjects"
+        :items="availableProjects"
+        :label="$t('meetings.relatedProjects')"
+        item-title="title"
+        item-value="id"
+        prepend-icon="mdi-folder"
+        multiple
+        chips
+      )
     
     v-card-actions
       v-spacer
@@ -143,6 +154,7 @@ v-form(
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { usePeopleStore } from '~/stores/people'
+import { useProjectsStore } from '~/stores/projects'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { useCalendarStore } from '~/stores/calendar'
 import type { Meeting } from '~/types/models'
@@ -165,6 +177,7 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'delete', 'plan'])
 
 const peopleStore = usePeopleStore()
+const projectsStore = useProjectsStore()
 const categoriesStore = useMeetingCategoriesStore()
 const calendarStore = useCalendarStore()
 
@@ -184,9 +197,16 @@ const participants = ref(props.meeting?.participants || [])
 const notes = ref(props.meeting?.notes || '')
 const actionItems = ref(props.meeting?.actionItems || '')
 const calendarEventId = ref(props.meeting?.calendarEventId || null)
+const relatedProjects = ref<string[]>(
+  props.meeting?.relatedProjects ? [...props.meeting.relatedProjects] : []
+)
 
 // Meeting categories from store
 const meetingCategories = computed(() => categoriesStore.categories)
+
+const availableProjects = computed(() =>
+  projectsStore.projects.map((p) => ({ id: p.id, title: p.title }))
+)
 
 // Validation rules
 const rules = {
@@ -233,7 +253,8 @@ const submit = () => {
     participants: participants.value,
     notes: notes.value,
     actionItems: actionItems.value,
-    calendarEventId: calendarEventId.value
+    calendarEventId: calendarEventId.value,
+    relatedProjects: relatedProjects.value,
   }
   
   emit('submit', meetingData)
@@ -253,7 +274,8 @@ const planMeeting = () => {
     location: location.value,
     participants: participants.value,
     notes: notes.value,
-    actionItems: actionItems.value
+    actionItems: actionItems.value,
+    relatedProjects: relatedProjects.value,
   }
   
   emit('plan', meetingData)
@@ -266,6 +288,10 @@ onMounted(async () => {
   
   if (peopleStore.people.length === 0) {
     loadPromises.push(peopleStore.fetchPeople())
+  }
+
+  if (projectsStore.projects.length === 0) {
+    loadPromises.push(projectsStore.fetchProjects())
   }
   
   if (categoriesStore.categories.length === 0) {
@@ -295,6 +321,7 @@ onMounted(async () => {
     notes.value = props.meeting.notes || ''
     actionItems.value = props.meeting.actionItems || ''
     calendarEventId.value = props.meeting.calendarEventId || null
+    relatedProjects.value = [...(props.meeting.relatedProjects || [])]
   }
 })
 </script>

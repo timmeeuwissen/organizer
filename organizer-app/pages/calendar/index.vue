@@ -28,19 +28,15 @@ v-container(fluid)
           width="100%"
         )
       
-      ProviderAccountsCard(
-        :accounts="connectedAccounts"
+      ModuleIntegrationAccountFilter(
+        module-segment="calendar"
         v-model="selectedProviders"
-        :title="$t('mail.accounts')"
         class="mb-4"
       )
         
       FilterContainer(
         :title="$t('common.filters')"
         :switchFilters="switchFilters"
-        v-model="selectedProviders"
-        :accounts="connectedAccounts"
-        :accountsTitle="$t('mail.accounts')"
         @filter-change="handleFilterChange"
         @clear-filters="clearFilters"
       )
@@ -104,7 +100,6 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
-import { useAuthStore } from '~/stores/auth'
 import { useCalendarStore } from '~/stores/calendar'
 import { useCalendarHelpers } from '~/composables/useCalendarHelpers'
 
@@ -114,12 +109,12 @@ import MonthView from '~/components/calendar/MonthView.vue'
 import WeekView from '~/components/calendar/WeekView.vue'
 import DayView from '~/components/calendar/DayView.vue'
 import ScheduleView from '~/components/calendar/ScheduleView.vue'
-import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
+import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
 import FilterContainer from '~/components/common/FilterContainer.vue'
+import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
 
 // Stores
 const tasksStore = useTasksStore()
-const authStore = useAuthStore()
 const calendarStore = useCalendarStore()
 
 // Helper composable
@@ -134,15 +129,7 @@ const {
   getFirstDayOfWeek
 } = useCalendarHelpers()
 
-// Connected accounts
-const connectedAccounts = computed(() => {
-  const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
-  
-  // Only return accounts that are connected and have syncCalendar and showInCalendar set to true
-  return integrationAccounts.filter(account => 
-    account.oauthData.connected && account.syncCalendar && account.showInCalendar
-  )
-})
+const { accounts: connectedAccounts } = useModuleIntegrationAccounts('calendar')
 
 // Provider filters
 const selectedProviders = ref<string[]>([])
@@ -160,13 +147,7 @@ watch(selectedProviders, (newProviders) => {
   console.log('Calendar provider filter changed:', newProviders)
 })
 
-// Check if user has connected calendar integrations
-const hasCalendarIntegrations = computed(() => {
-  const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
-  return integrationAccounts.some(account => 
-    account.oauthData.connected && account.syncCalendar && account.showInCalendar
-  )
-})
+const hasCalendarIntegrations = computed(() => connectedAccounts.value.length > 0)
 
 // State
 const selectedDate = ref(new Date().toISOString().slice(0, 10))

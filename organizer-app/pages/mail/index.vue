@@ -38,8 +38,8 @@ v-container(fluid)
             template(v-slot:append)
               v-chip(size="x-small" v-if="getUnreadCount(folder.id) > 0") {{ getUnreadCount(folder.id) }}
       
-      ProviderAccountsCard(
-        :accounts="connectedAccounts"
+      ModuleIntegrationAccountFilter(
+        module-segment="mail"
         v-model="selectedProviders"
         :title="$t('mail.accounts')"
         class="mb-4"
@@ -129,6 +129,8 @@ v-container(fluid)
               v-icon mdi-reply
             v-btn(icon @click="forwardEmail")
               v-icon mdi-forward
+            v-btn(icon :title="$t('mail.linkToProject')" @click="openLinkProjectDialog")
+              v-icon mdi-link-variant
             v-btn(icon @click="deleteEmail")
               v-icon mdi-delete
         
@@ -282,6 +284,17 @@ v-container(fluid)
                   ) Cc: {{ person.name }}
                 
                 div.email-body.mt-4.pa-2(v-html="selectedEmail.body")
+
+                div.mt-3(v-if="messageProjectLinks.length > 0")
+                  span.text-subtitle-2.mr-2 {{ $t('mail.linkedProjects') }}
+                  v-chip.mr-1.mb-1(
+                    v-for="lnk in messageProjectLinks"
+                    :key="lnk.id"
+                    size="small"
+                    closable
+                    @click:close.stop="unlinkMailProject(lnk)"
+                  )
+                    nuxt-link.text-decoration-none(:to="`/projects/${lnk.projectId}`") {{ projectTitle(lnk.projectId) }}
                 
                 v-divider(class="my-4")
                 
@@ -375,19 +388,48 @@ v-container(fluid)
               variant="text"
               @click="showComposeDialog = false"
             ) {{ $t('common.cancel') }}
+
+      v-dialog(v-model="showLinkProjectDialog" max-width="480px")
+        v-card
+          v-card-title {{ $t('mail.linkToProject') }}
+          v-card-text
+            v-select(
+              v-model="linkProjectId"
+              :items="availableProjectsForMail"
+              :label="$t('mail.selectProject')"
+              item-title="title"
+              item-value="id"
+              variant="outlined"
+              density="comfortable"
+              clearable
+            )
+          v-card-actions
+            v-spacer
+            v-btn(variant="text" @click="showLinkProjectDialog = false") {{ $t('common.cancel') }}
+            v-btn(
+              color="primary"
+              :disabled="!linkProjectId"
+              @click="saveMailProjectLink"
+            ) {{ $t('mail.linkMailSave') }}
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick, toRaw } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { usePeopleStore } from '~/stores/people'
 import { useMailStore } from '~/stores/mail'
 import { useAuthStore } from '~/stores/auth'
+import { useProjectsStore } from '~/stores/projects'
+import { useProjectAttachmentsStore } from '~/stores/projectAttachments'
+import { useNotificationStore } from '~/stores/notification'
+import type { ProjectMailLink } from '~/types/models/projectAttachments'
 import type { Person, IntegrationAccount, MailUiSettings } from '~/types/models'
 import type { Email, MailFolder, EmailPerson, EmailAttachment } from '~/stores/mail'
 import { getAccountStatusMessage, getAccountStatusColor } from '~/utils/api/emailUtils'
 import GoogleReauthManager from '~/components/mail/GoogleReauthManager.vue'
-import ProviderAccountsCard from '~/components/integrations/ProviderAccountsCard.vue'
+import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
+import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
 import {
   MAIL_COLUMNS_FOR_PICKER,
   MAIL_PAGE_SIZE_OPTIONS,
@@ -402,6 +444,11 @@ import { usePersonDialog } from '~/composables/usePersonDialog'
 const peopleStore = usePeopleStore()
 const mailStore = useMailStore()
 const authStore = useAuthStore()
+const projectsStore = useProjectsStore()
+const attachmentsStore = useProjectAttachmentsStore()
+const notify = useNotificationStore()
+const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const personDialogSvc = usePersonDialog()
 
@@ -409,7 +456,7 @@ const personDialogSvc = usePersonDialog()
 const selectedEmail = ref<Email | null>(null)
 const selectedFolder = ref('inbox')
 const mailFolders = computed(() => mailStore.folders)
-const connectedAccounts = computed(() => mailStore.getConnectedAccounts)
+const { accounts: connectedAccounts } = useModuleIntegrationAccounts('mail')
 const loading = computed(() => mailStore.loading)
 
 const mailPageSize = ref<ReturnType<typeof normalizeMailPageSize>>(20)
@@ -435,6 +482,9 @@ const emailHeaders = computed(() => {
 const emailSearch = ref('')
 const contactSearch = ref('')
 const selectedProviders = ref<string[]>([])
+
+const showLinkProjectDialog = ref(false)
+const linkProjectId = ref<string | null>(null)
 
 // Dialog state
 const showComposeDialog = ref(false)
@@ -622,6 +672,65 @@ function getAccountLabel(accountId: string | undefined) {
 
 const paginationInfo = computed(() => mailStore.paginationInfo)
 
+const messageProjectLinks = computed(() => {
+  const em = selectedEmail.value
+  if (!em?.accountId) {
+    return [] as ProjectMailLink[]
+  }
+  return attachmentsStore.mailLinksForMessage(em.accountId, em.id)
+})
+
+const availableProjectsForMail = computed(() =>
+  projectsStore.projects.map((p) => ({ id: p.id, title: p.title }))
+)
+
+function projectTitle(projectId: string) {
+  return projectsStore.getById(projectId)?.title ?? projectId
+}
+
+async function openLinkProjectDialog() {
+  if (projectsStore.projects.length === 0) {
+    await projectsStore.fetchProjects()
+  }
+  linkProjectId.value = null
+  showLinkProjectDialog.value = true
+}
+
+async function saveMailProjectLink() {
+  const em = selectedEmail.value
+  if (!em || !linkProjectId.value || !em.accountId) {
+    return
+  }
+  try {
+    await attachmentsStore.addMailLink(linkProjectId.value, em.accountId, em.id, {
+      subject: em.subject,
+      from: em.from?.name || em.from?.email || '',
+    })
+    notify.pushSuccess(t('projects.mailLinked'))
+    showLinkProjectDialog.value = false
+  } catch (e: unknown) {
+    notify.pushError(e instanceof Error ? e.message : t('errors.generic'))
+  }
+}
+
+async function unlinkMailProject(lnk: ProjectMailLink) {
+  try {
+    await attachmentsStore.deleteMailLink(lnk.projectId, lnk.id, lnk.accountId, lnk.emailId)
+    notify.pushSuccess(t('projects.mailUnlinked'))
+  } catch (e: unknown) {
+    notify.pushError(e instanceof Error ? e.message : t('errors.generic'))
+  }
+}
+
+watch(
+  () => selectedEmail.value,
+  async (em) => {
+    if (em?.accountId) {
+      await attachmentsStore.fetchMailLinksForMessage(em.accountId, em.id)
+    }
+  }
+)
+
 const filteredContacts = computed(() => {
   let result = peopleStore.people
   
@@ -699,9 +808,9 @@ onMounted(async () => {
     console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`)
 
     // Initialize selectedProviders with all providers by default
-    nextTick(() => {
-      selectedProviders.value = connectedAccounts.value.map((account) => account.id)
-    })
+    await nextTick()
+    selectedProviders.value = connectedAccounts.value.map((account) => account.id)
+    await tryApplyMailDeepLink()
   } finally {
     // Must stay true even when a step fails, or page-size changes never refetch
     mailUiReady.value = true
@@ -778,6 +887,28 @@ const markAsRead = (email: Email) => {
   if (selectedEmail.value?.id === email.id) {
     selectedEmail.value = { ...selectedEmail.value, read: !selectedEmail.value.read }
   }
+}
+
+async function tryApplyMailDeepLink() {
+  const accountId = typeof route.query.accountId === 'string' ? route.query.accountId : ''
+  const emailId = typeof route.query.emailId === 'string' ? route.query.emailId : ''
+  if (!accountId || !emailId) {
+    return
+  }
+  if (!selectedProviders.value.includes(accountId)) {
+    selectedProviders.value = [...selectedProviders.value, accountId]
+  }
+  const found = mailStore.emails.find((e) => e.id === emailId && e.accountId === accountId)
+  if (found) {
+    selectedEmail.value = found
+    if (!found.read) {
+      markAsRead(found)
+    }
+    await router.replace({ path: '/mail', query: {} })
+    return
+  }
+  notify.pushInfo(t('mail.messageNotInCurrentView'))
+  await router.replace({ path: '/mail', query: {} })
 }
 
 const deleteEmail = (email?: Email) => {

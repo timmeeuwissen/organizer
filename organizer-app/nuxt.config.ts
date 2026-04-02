@@ -67,7 +67,11 @@ export default defineNuxtConfig({
         tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
       },
       // Debug options
-      debugAuthRedirect: process.env.DEBUG_AUTH_REDIR || 'false'
+      debugAuthRedirect: process.env.DEBUG_AUTH_REDIR || 'false',
+      /** Max project file upload size (bytes). Client enforces before upload; align with storage.rules. */
+      projectFileMaxBytes: Number(
+        process.env.NUXT_PUBLIC_PROJECT_FILE_MAX_BYTES || 50 * 1024 * 1024
+      ),
     }
   },
 
