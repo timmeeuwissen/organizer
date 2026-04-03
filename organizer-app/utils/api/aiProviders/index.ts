@@ -3,6 +3,7 @@ import type { AIProvider } from './AIProvider'
 import { XAIProvider } from './XAIProvider'
 import { OpenAIProvider } from './OpenAIProvider'
 import { GeminiProvider } from './GeminiProvider'
+import { ClaudeProvider } from './ClaudeProvider'
 
 /**
  * Factory function to get the appropriate AI provider implementation
@@ -22,6 +23,8 @@ export function getProvider(integration: AIIntegrationData): AIProvider {
       return new OpenAIProvider(integration)
     case 'gemini':
       return new GeminiProvider(integration)
+    case 'claude':
+      return new ClaudeProvider(integration)
     default:
       throw new Error(`Unsupported AI provider type: ${integration.provider}`)
   }
@@ -46,3 +49,4 @@ export function isValidAIIntegration(integration: AIIntegrationData): boolean {
 export { XAIProvider } from './XAIProvider'
 export { OpenAIProvider } from './OpenAIProvider'
 export { GeminiProvider } from './GeminiProvider'
+export { ClaudeProvider } from './ClaudeProvider'

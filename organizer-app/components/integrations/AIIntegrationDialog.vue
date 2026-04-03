@@ -149,7 +149,8 @@ const i18n = useI18n()
 const availableProviders = [
   { title: 'OpenAI', value: 'openai' },
   { title: 'Google Gemini', value: 'gemini' },
-  { title: 'XAI (Grok)', value: 'xai' }
+  { title: 'XAI (Grok)', value: 'xai' },
+  { title: 'Claude (Anthropic)', value: 'claude' }
 ]
 
 // Integration data
@@ -212,6 +213,8 @@ function getProviderHint(provider) {
       return i18n.t('ai.geminiKeyHint')
     case 'xai':
       return i18n.t('ai.xaiKeyHint')
+    case 'claude':
+      return i18n.t('ai.claudeKeyHint')
     default:
       return ''
   }
@@ -340,6 +343,8 @@ function getProviderInstructions(provider) {
       return i18n.t('ai.geminiInstructions')
     case 'xai':
       return i18n.t('ai.xaiInstructions')
+    case 'claude':
+      return i18n.t('ai.claudeInstructions')
     default:
       return ''
   }
@@ -358,6 +363,9 @@ function openProviderSite() {
       break
     case 'xai':
       url = i18n.t('ai.xaiUrl')
+      break
+    case 'claude':
+      url = i18n.t('ai.claudeUrl')
       break
     default:
       return

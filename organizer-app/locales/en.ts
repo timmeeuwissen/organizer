@@ -116,6 +116,22 @@ export default {
     // OAuth related translations
     useOAuth: 'Use OAuth Authentication',
     office365OAuthRecommended: 'OAuth is recommended for Office 365',
+    imap: 'IMAP',
+    pop3: 'POP3',
+    mailServer: 'Mail Server',
+    smtpServer: 'SMTP Server (for sending)',
+    port: 'Port',
+    encryption: 'Encryption',
+    encryptionTls: 'TLS/SSL',
+    encryptionStarttls: 'STARTTLS',
+    encryptionNone: 'None (not recommended)',
+    smtpHost: 'SMTP Host',
+    smtpPort: 'SMTP Port',
+    smtpSettings: 'Outgoing Mail (SMTP)',
+    imapDefaultPort: 'Default: 993 (TLS)',
+    pop3DefaultPort: 'Default: 995 (TLS)',
+    smtpDefaultPort: 'Default: 587 (STARTTLS)',
+    pop3NoFolders: 'POP3 only supports the inbox folder',
     oauthInstructions: 'OAuth Authentication Setup',
     runMakeCommand: 'Run this command in your terminal to set up OAuth credentials',
     oauthStep1: 'Run the command in your terminal to start the OAuth setup process',
@@ -698,6 +714,10 @@ export default {
     // Provider URLs
     openaiUrl: 'https://platform.openai.com/account/api-keys',
     geminiUrl: 'https://aistudio.google.com/app/apikey',
-    xaiUrl: 'https://x.ai'
+    xaiUrl: 'https://x.ai',
+    claudeHint: 'Connect to Anthropic Claude API (requires API key from console.anthropic.com)',
+    claudeKeyHint: 'Enter your Anthropic API key from console.anthropic.com',
+    claudeInstructions: '1. Sign up or sign in at console.anthropic.com\n2. Navigate to API keys section\n3. Create a new API key\n4. Copy and paste the API key here',
+    claudeUrl: 'https://console.anthropic.com/settings/keys'
   }
 };

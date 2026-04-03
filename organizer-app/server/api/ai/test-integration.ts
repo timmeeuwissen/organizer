@@ -9,7 +9,7 @@ import { z } from 'zod'
 import { getProvider } from '~/utils/api/aiProviders'
 
 const BodySchema = z.object({
-  provider: z.enum(['openai', 'gemini', 'xai']),
+  provider: z.enum(['openai', 'gemini', 'xai', 'claude']),
   apiKey: z.string().min(1),
 })
 

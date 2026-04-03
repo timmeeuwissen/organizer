@@ -12,7 +12,7 @@ import type { AIProvider } from '~/utils/api/aiProviders/AIProvider'
 
 const IntegrationSchema = z
   .object({
-    provider: z.enum(['openai', 'gemini', 'xai']),
+    provider: z.enum(['openai', 'gemini', 'xai', 'claude']),
     name: z.string().optional(),
     apiKey: z.string().min(1),
     enabled: z.boolean().optional(),

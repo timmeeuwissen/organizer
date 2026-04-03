@@ -743,6 +743,8 @@ function getIntegrationColor(provider) {
       return '#4285F4' // Google blue
     case 'xai':
       return '#7b3dbd' // Purple for XAI
+    case 'claude':
+      return '#D97706' // Anthropic amber
     default:
       return '#607D8B' // Default gray
   }
@@ -756,6 +758,8 @@ function getIntegrationIcon(provider) {
       return 'mdi-google'
     case 'xai':
       return 'mdi-robot'
+    case 'claude':
+      return 'mdi-chat-processing'
     default:
       return 'mdi-api'
   }
@@ -769,6 +773,8 @@ function getProviderName(provider) {
       return 'Google Gemini'
     case 'xai':
       return 'XAI (Grok)'
+    case 'claude':
+      return 'Claude (Anthropic)'
     default:
       return provider
   }

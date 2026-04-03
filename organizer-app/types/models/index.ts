@@ -9,11 +9,21 @@ export interface IntegrationOAuthData {
   lastSync?: Date;
   email: string; // Email from the provider
   name: string; // Account name from the provider
+  // IMAP / POP3 credential fields (non-OAuth accounts)
+  host?: string;
+  port?: number;
+  encryption?: 'none' | 'tls' | 'starttls';
+  username?: string;
+  password?: string;
+  // SMTP fields for outgoing mail (used with IMAP/POP3 accounts)
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpEncryption?: 'none' | 'tls' | 'starttls';
 }
 
 export interface IntegrationAccount {
   id: string;
-  type: 'exchange' | 'google' | 'office365';
+  type: 'exchange' | 'google' | 'office365' | 'imap' | 'pop3';
   color: string; // Color for visual identification in UI
   
   // Application-specific preferences

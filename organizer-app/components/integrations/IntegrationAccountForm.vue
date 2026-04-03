@@ -37,7 +37,7 @@ v-form(ref="form" v-model="formValid")
         :disabled="isConnected || isLoading"
         placeholder="outlook.office365.com"
       )
-    
+
     // OAuth switch for Exchange
     v-col(cols="12" v-if="accountType === 'exchange' && server && !isConnected")
       v-switch(
@@ -48,7 +48,71 @@ v-form(ref="form" v-model="formValid")
         :hint="server && server.includes('office365') ? $t('settings.office365OAuthRecommended') : ''"
         persistent-hint
       )
-    
+
+    // IMAP / POP3 server configuration
+    template(v-if="(accountType === 'imap' || accountType === 'pop3') && !isConnected")
+      v-col(cols="12" md="8")
+        v-text-field(
+          v-model="imapHost"
+          :label="$t('settings.mailServer')"
+          prepend-icon="mdi-server"
+          :rules="[rules.required]"
+          :disabled="isConnected || isLoading"
+          :placeholder="accountType === 'imap' ? 'imap.example.com' : 'pop.example.com'"
+        )
+      v-col(cols="12" md="4")
+        v-text-field(
+          v-model.number="imapPort"
+          :label="$t('settings.port')"
+          prepend-icon="mdi-numeric"
+          type="number"
+          :rules="[rules.required]"
+          :disabled="isConnected || isLoading"
+          :placeholder="accountType === 'imap' ? '993' : '995'"
+          :hint="accountType === 'imap' ? $t('settings.imapDefaultPort') : $t('settings.pop3DefaultPort')"
+          persistent-hint
+        )
+      v-col(cols="12")
+        v-select(
+          v-model="imapEncryption"
+          :items="encryptionOptions"
+          :label="$t('settings.encryption')"
+          prepend-icon="mdi-lock"
+          :disabled="isConnected || isLoading"
+        )
+      v-col(cols="12")
+        v-expansion-panels(variant="accordion")
+          v-expansion-panel(:title="$t('settings.smtpSettings')")
+            v-expansion-panel-text
+              v-row
+                v-col(cols="12" md="8")
+                  v-text-field(
+                    v-model="smtpHost"
+                    :label="$t('settings.smtpHost')"
+                    prepend-icon="mdi-email-arrow-right"
+                    :disabled="isConnected || isLoading"
+                    placeholder="smtp.example.com"
+                    :hint="$t('settings.smtpDefaultPort')"
+                    persistent-hint
+                  )
+                v-col(cols="12" md="4")
+                  v-text-field(
+                    v-model.number="smtpPort"
+                    :label="$t('settings.smtpPort')"
+                    prepend-icon="mdi-numeric"
+                    type="number"
+                    :disabled="isConnected || isLoading"
+                    placeholder="587"
+                  )
+                v-col(cols="12")
+                  v-select(
+                    v-model="smtpEncryption"
+                    :items="encryptionOptions"
+                    :label="$t('settings.encryption')"
+                    prepend-icon="mdi-lock"
+                    :disabled="isConnected || isLoading"
+                  )
+
     // Basic Auth section - only visible when creating new non-OAuth accounts
     template(v-if="!useOAuth && !isConnected")
       v-col(cols="12")
@@ -324,6 +388,14 @@ const accessToken = ref('')
 const tokenExpiry = ref(null)
 const oauthScope = ref('')
 
+// IMAP / POP3 credential fields
+const imapHost = ref('')
+const imapPort = ref(993)
+const imapEncryption = ref('tls')
+const smtpHost = ref('')
+const smtpPort = ref(587)
+const smtpEncryption = ref('starttls')
+
 // Validation rules
 const rules = {
   required: (v) => !!v || 'This field is required',
@@ -338,7 +410,16 @@ const networkStatus = useNetworkStatus()
 const accountTypes = [
   { text: i18n.t('settings.google'), value: 'google' },
   { text: i18n.t('settings.exchange'), value: 'exchange' },
-  { text: i18n.t('settings.office365'), value: 'office365' }
+  { text: i18n.t('settings.office365'), value: 'office365' },
+  { text: i18n.t('settings.imap'), value: 'imap' },
+  { text: i18n.t('settings.pop3'), value: 'pop3' },
+]
+
+// Encryption options for IMAP/POP3/SMTP
+const encryptionOptions = [
+  { title: i18n.t('settings.encryptionTls'), value: 'tls' },
+  { title: i18n.t('settings.encryptionStarttls'), value: 'starttls' },
+  { title: i18n.t('settings.encryptionNone'), value: 'none' },
 ]
 
 // Color swatches for accounts
@@ -356,10 +437,18 @@ const usernameHint = computed(() => {
     case 'exchange':
     case 'office365':
       return 'domain\\username'
+    case 'imap':
+    case 'pop3':
+      return 'user@example.com'
     default:
       return 'username'
   }
 })
+
+// IMAP/POP3 accounts never use OAuth
+const isCredentialAccount = computed(() =>
+  accountType.value === 'imap' || accountType.value === 'pop3'
+)
 
 // Get the OAuth provider based on account type
 const getOAuthProvider = computed(() => {
@@ -468,12 +557,28 @@ watch(() => props.account, () => {
       oauthScope.value = props.account.scope || ''
     }
     
+    // Load IMAP/POP3 credential fields
+    if (accountType.value === 'imap' || accountType.value === 'pop3') {
+      imapHost.value = props.account.oauthData?.host || ''
+      imapPort.value = props.account.oauthData?.port || (accountType.value === 'imap' ? 993 : 995)
+      imapEncryption.value = props.account.oauthData?.encryption || 'tls'
+      username.value = props.account.oauthData?.username || ''
+      smtpHost.value = props.account.oauthData?.smtpHost || ''
+      smtpPort.value = props.account.oauthData?.smtpPort || 587
+      smtpEncryption.value = props.account.oauthData?.smtpEncryption || 'starttls'
+    }
+
     // Set OAuth switch based on account type and available tokens
-    useOAuth.value = 
-      accountType.value === 'google' || 
-      accountType.value === 'office365' || 
+    useOAuth.value =
+      accountType.value === 'google' ||
+      accountType.value === 'office365' ||
       (accountType.value === 'exchange' && server.value?.includes('office365')) ||
       (!!clientId.value && !!refreshToken.value)
+
+    // IMAP/POP3 never use OAuth
+    if (accountType.value === 'imap' || accountType.value === 'pop3') {
+      useOAuth.value = false
+    }
   }
 }, { immediate: true })
 
@@ -545,7 +650,29 @@ function getAccountData() {
   if (accountType.value === 'exchange' && server.value) {
     baseAccountData.server = server.value;
   }
-  
+
+  // Add IMAP/POP3 credential fields into oauthData
+  if (accountType.value === 'imap' || accountType.value === 'pop3') {
+    baseAccountData.oauthData = removeUndefined({
+      ...baseAccountData.oauthData,
+      host: imapHost.value,
+      port: imapPort.value,
+      encryption: imapEncryption.value,
+      username: username.value,
+      password: password.value,
+      smtpHost: smtpHost.value || undefined,
+      smtpPort: smtpPort.value || undefined,
+      smtpEncryption: smtpEncryption.value || undefined,
+    });
+    // Default IMAP/POP3 to mail-only
+    baseAccountData.syncCalendar = false;
+    baseAccountData.syncTasks = false;
+    baseAccountData.syncContacts = false;
+    baseAccountData.showInCalendar = false;
+    baseAccountData.showInTasks = false;
+    baseAccountData.showInContacts = false;
+  }
+
   return removeUndefined(baseAccountData);
 }
 
@@ -564,6 +691,30 @@ async function testConnection() {
     } else if (accountType.value === 'office365') {
       // Start OAuth flow for Office 365
       await initiateOffice365OAuth()
+    } else if (accountType.value === 'imap' || accountType.value === 'pop3') {
+      // IMAP / POP3 — test via server-side endpoint
+      const res = await fetch('/api/mail/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          protocol: accountType.value,
+          host: imapHost.value,
+          port: imapPort.value,
+          encryption: imapEncryption.value,
+          username: username.value,
+          password: password.value,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        isConnected.value = true
+        name.value = username.value
+        email.value = username.value
+        lastSync.value = new Date()
+        emit('test', getAccountData())
+      } else {
+        console.error('IMAP/POP3 connection test failed:', data.error)
+      }
     } else if (accountType.value === 'exchange') {
       // Exchange can use basic auth or OAuth, depending on the server
       if (server.value && server.value.includes('office365')) {

@@ -1,70 +1,66 @@
 import type { Task, IntegrationAccount } from '~/types/models'
-import type { 
-  TaskProvider, 
+import type {
+  TaskProvider,
   TaskQuery,
   FetchTasksResponse,
   CreateTaskResponse
 } from './TaskProvider'
 import { useNuxtApp } from '#app'
 
-// Add a provider-specific field to Track folder
+// Microsoft Graph API base URL
+const API_BASE_URL = 'https://graph.microsoft.com/v1.0'
+
+// Add a provider-specific field to track task list ID
 interface ExchangeTask extends Task {
-  folderPath?: string;
+  providerListId?: string;
 }
 
 /**
- * Maps an Exchange Task to our application's Task model
- * @param exchangeTask The task from Exchange Web Services
- * @param userId User ID to associate with this task
- * @param folderPath The folder path this task belongs to
+ * Maps a Microsoft To Do task to our application's Task model
  */
-function mapExchangeTaskToTask(exchangeTask: any, userId: string, folderPath: string): ExchangeTask {
-  // Convert Exchange date strings to Date objects
-  const dueDate = exchangeTask.DueDate ? new Date(exchangeTask.DueDate) : undefined
-  const completedAt = exchangeTask.CompleteDate ? new Date(exchangeTask.CompleteDate) : undefined
-  const updatedAt = exchangeTask.LastModifiedTime ? new Date(exchangeTask.LastModifiedTime) : new Date()
-  const createdAt = exchangeTask.DateTimeCreated ? new Date(exchangeTask.DateTimeCreated) : updatedAt
-  
-  // Determine status based on PercentComplete and CompleteDate
+function mapTodoTaskToTask(todoTask: any, userId: string, taskListId: string): ExchangeTask {
+  const dueDate = todoTask.dueDateTime ? new Date(todoTask.dueDateTime.dateTime) : undefined
+  const completedAt = todoTask.completedDateTime ? new Date(todoTask.completedDateTime.dateTime) : undefined
+  const updatedAt = todoTask.lastModifiedDateTime ? new Date(todoTask.lastModifiedDateTime) : new Date()
+  const createdAt = todoTask.createdDateTime ? new Date(todoTask.createdDateTime) : updatedAt
+
   let status: 'todo' | 'inProgress' | 'completed' | 'delegated' | 'cancelled' = 'todo'
-  if (exchangeTask.Status === 'Completed' || (exchangeTask.PercentComplete && exchangeTask.PercentComplete === 100)) {
+  if (completedAt) {
     status = 'completed'
-  } else if (exchangeTask.Status === 'InProgress' || 
-            (exchangeTask.PercentComplete && exchangeTask.PercentComplete > 0 && exchangeTask.PercentComplete < 100)) {
+  } else if (todoTask.status === 'inProgress' || todoTask.body?.content?.includes('#inprogress')) {
     status = 'inProgress'
-  } else if (exchangeTask.Status === 'Deferred') {
-    status = 'delegated'
-  } else if (exchangeTask.Status === 'NotStarted') {
+  } else if (todoTask.status === 'notStarted') {
     status = 'todo'
   }
 
-  // Extract tags from categories
   const tags: string[] = []
-  if (exchangeTask.Categories && exchangeTask.Categories.length > 0) {
-    exchangeTask.Categories.forEach((category: string) => {
+  if (todoTask.categories && todoTask.categories.length > 0) {
+    todoTask.categories.forEach((category: string) => {
       tags.push(category.toLowerCase())
     })
   }
-
-  // Determine priority - Exchange uses High, Normal, Low
-  let priority: 'low' | 'medium' | 'high' | 'urgent'
-  switch (exchangeTask.Importance) {
-    case 'High':
-      priority = 'high'
-      break
-    case 'Low':
-      priority = 'low'
-      break
-    default:
-      priority = 'medium'
+  if (todoTask.body && todoTask.body.content) {
+    const tagMatches = todoTask.body.content.match(/#[a-zA-Z0-9_-]+/g)
+    if (tagMatches) {
+      tagMatches.forEach((tag: string) => {
+        const tagValue = tag.substring(1).toLowerCase()
+        if (!tags.includes(tagValue)) tags.push(tagValue)
+      })
+    }
   }
 
-  // Create a Task object from Exchange Task data
+  let priority: 'low' | 'medium' | 'high' | 'urgent'
+  switch (todoTask.importance) {
+    case 'high': priority = 'high'; break
+    case 'low': priority = 'low'; break
+    default: priority = 'medium'
+  }
+
   return {
-    id: exchangeTask.ItemId.Id,
+    id: todoTask.id,
     userId,
-    title: exchangeTask.Subject || 'Untitled Task',
-    description: exchangeTask.Body?.Content || '',
+    title: todoTask.title || 'Untitled Task',
+    description: todoTask.body?.content || '',
     status,
     priority,
     type: 'task',
@@ -78,131 +74,101 @@ function mapExchangeTaskToTask(exchangeTask: any, userId: string, folderPath: st
     relatedProjects: [],
     relatedMeetings: [],
     relatedBehaviors: [],
-    providerId: exchangeTask.ItemId.Id,
+    providerId: todoTask.id,
     providerAccountId: userId,
-    folderPath,
+    providerListId: taskListId,
     providerUpdatedAt: updatedAt
   }
 }
 
 /**
- * Maps our Task model to an Exchange Task format
+ * Maps our Task model to a Microsoft To Do task format
  */
-function mapTaskToExchangeTask(task: Partial<ExchangeTask>): any {
-  const exchangeTask: any = {
-    Subject: task.title || 'Untitled Task',
+function mapTaskToTodoTask(task: Partial<ExchangeTask>): any {
+  const todoTask: any = {
+    title: task.title || 'Untitled Task',
   }
-  
-  // Add body/content if description exists
+
   if (task.description) {
-    exchangeTask.Body = {
-      BodyType: 'Text',
-      Content: task.description
+    todoTask.body = { contentType: 'text', content: task.description }
+  }
+
+  if (task.dueDate) {
+    todoTask.dueDateTime = {
+      dateTime: new Date(task.dueDate).toISOString(),
+      timeZone: 'UTC'
     }
   }
-  
-  // Add due date if available
-  if (task.dueDate) {
-    exchangeTask.DueDate = task.dueDate.toISOString()
-  }
-  
-  // Add importance based on priority
+
   if (task.priority) {
     switch (task.priority) {
       case 'high':
       case 'urgent':
-        exchangeTask.Importance = 'High'
-        break
+        todoTask.importance = 'high'; break
       case 'low':
-        exchangeTask.Importance = 'Low'
-        break
+        todoTask.importance = 'low'; break
       default:
-        exchangeTask.Importance = 'Normal'
+        todoTask.importance = 'normal'
     }
   }
-  
-  // Add status based on task status
+
   if (task.status === 'completed') {
-    exchangeTask.Status = 'Completed'
-    exchangeTask.PercentComplete = 100
-    
-    // Add completion date if available or use current date
-    if (task.completedAt) {
-      exchangeTask.CompleteDate = task.completedAt.toISOString()
-    } else {
-      exchangeTask.CompleteDate = new Date().toISOString()
+    todoTask.status = 'completed'
+    todoTask.completedDateTime = {
+      dateTime: (task.completedAt || new Date()).toISOString(),
+      timeZone: 'UTC'
     }
-  } else if (task.status === 'inProgress') {
-    exchangeTask.Status = 'InProgress'
-    exchangeTask.PercentComplete = 50 // Default to 50% for in-progress
   } else {
-    exchangeTask.Status = 'NotStarted'
-    exchangeTask.PercentComplete = 0
+    todoTask.status = task.status === 'inProgress' ? 'inProgress' : 'notStarted'
   }
-  
-  // Add categories from tags
+
   if (task.tags && task.tags.length > 0) {
-    exchangeTask.Categories = task.tags
+    todoTask.categories = task.tags.map(tag => tag)
   }
-  
-  return exchangeTask
+
+  return todoTask
 }
 
 /**
- * Exchange Tasks provider implementation
- * Uses EWS (Exchange Web Services) to interact with Exchange
+ * Exchange Tasks provider implementation using Microsoft Graph API (To Do)
  */
 export class ExchangeTasksProvider implements TaskProvider {
-  // Store the account for reference
   account: IntegrationAccount
-  // Store the default folder path
-  private defaultFolderPath: string = ''
-  
+  private defaultTaskListId: string = ''
+  private taskLists: any[] = []
+
   constructor(account: IntegrationAccount) {
     this.account = account
   }
 
-  /**
-   * Get the account information for this provider
-   */
   getAccount() {
     return this.account
   }
-  
-  /**
-   * Check if the provider is authenticated
-   */
+
   isAuthenticated() {
     return !!(
-      this.account?.oauthData?.accessToken && 
+      this.account?.oauthData?.accessToken &&
       this.account?.oauthData?.connected
     )
   }
-  
-  /**
-   * Authenticate with Exchange Web Services
-   */
+
   async authenticate(): Promise<boolean> {
     if (!this.account?.oauthData?.refreshToken) {
       console.error('No refresh token available for Exchange account')
       return false
     }
-    
-    // If access token is still valid, return true
+
     if (this.isAuthenticated()) {
       const tokenExpiry = new Date(this.account.oauthData.tokenExpiry || 0)
-      // Check if token is still valid for at least 5 more minutes
       if (tokenExpiry.getTime() > Date.now() + 5 * 60 * 1000) {
         return true
       }
     }
-    
+
     try {
-      // Use nuxt's $fetch to refresh the token
       const nuxtApp = useNuxtApp()
       const fetchFunc = nuxtApp.$fetch as any
-      
-      // Request new token using the refresh token
+
       const response = await fetchFunc('/api/auth/refresh', {
         method: 'POST',
         body: {
@@ -210,122 +176,103 @@ export class ExchangeTasksProvider implements TaskProvider {
           provider: 'exchange'
         }
       })
-      
+
       if (response.accessToken) {
-        // Update the account with the new token
         this.account.oauthData.accessToken = response.accessToken
         this.account.oauthData.tokenExpiry = new Date(Date.now() + response.expiresIn * 1000)
         return true
       }
-      
+
       return false
     } catch (error) {
       console.error('Error refreshing Exchange token:', error)
       return false
     }
   }
-  
-  /**
-   * Make an authenticated SOAP request to Exchange Web Services
-   */
-  private async makeEwsRequest(soapEnvelope: string): Promise<any> {
-    // Ensure we're authenticated
+
+  private async makeRequest(
+    endpoint: string,
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
+    body?: any
+  ): Promise<any> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
         throw new Error('Not authenticated with Exchange')
       }
     }
-    
-    // Default Exchange Online EWS endpoint
-    // Use API proxy to avoid CORS issues
-    const ewsUrl = `/api/proxy?url=${encodeURIComponent('https://outlook.office365.com/EWS/Exchange.asmx')}`
-    
+
+    const url = `/api/proxy?url=${encodeURIComponent(`${API_BASE_URL}${endpoint}`)}`
+
     try {
-      const response = await fetch(ewsUrl, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: {
           'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-          'Content-Type': 'text/xml; charset=utf-8',
-          'SOAPAction': 'http://schemas.microsoft.com/exchange/services/2006/messages'
+          'Content-Type': 'application/json'
         },
-        body: soapEnvelope
+        body: body ? JSON.stringify(body) : undefined
       })
-      
-      // Parse the XML response
-      // In a production environment, you would use a proper XML parser here
-      return response
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '')
+        throw new Error(
+          `Microsoft Graph request failed: ${response.status} ${response.statusText} ${errText}`
+        )
+      }
+
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        return await response.json()
+      }
+      return await response.text()
     } catch (error: any) {
       if (error.status === 401) {
-        // Token expired, refresh and try again
         const authenticated = await this.authenticate()
         if (authenticated) {
-          return this.makeEwsRequest(soapEnvelope)
+          return this.makeRequest(endpoint, method, body)
         }
       }
       throw error
     }
   }
-  
-  /**
-   * Get the default tasks folder path
-   */
-  private async getDefaultTasksFolder(): Promise<string> {
-    if (this.defaultFolderPath) {
-      return this.defaultFolderPath
+
+  private async getTaskLists(): Promise<any[]> {
+    if (this.taskLists.length > 0) {
+      return this.taskLists
     }
-    
-    // In a real implementation, you would use FindFolder operation to find the tasks folder
-    // For simplicity, we'll use the default tasks folder path
-    this.defaultFolderPath = '/tasks'
-    return this.defaultFolderPath
+    const response = await this.makeRequest('/me/todo/lists')
+    this.taskLists = response.value || []
+    return this.taskLists
   }
-  
-  /**
-   * Fetch tasks from Exchange
-   */
+
+  private async getDefaultTaskList(): Promise<string> {
+    if (this.defaultTaskListId) {
+      return this.defaultTaskListId
+    }
+
+    const taskLists = await this.getTaskLists()
+
+    if (taskLists.length > 0) {
+      this.defaultTaskListId = taskLists[0].id
+      return this.defaultTaskListId
+    }
+
+    const newList = await this.makeRequest('/me/todo/lists', 'POST', {
+      displayName: 'Organizer Tasks'
+    })
+    this.defaultTaskListId = newList.id
+    this.taskLists.push(newList)
+    return this.defaultTaskListId
+  }
+
   async fetchTasks(query?: TaskQuery): Promise<FetchTasksResponse> {
     try {
-      // For implementation purposes and due to complexity of EWS SOAP API,
-      // we'll simulate a successful response here
-      // In production code, you would make actual SOAP requests to EWS
-      
-      // Get folder path
-      const folderPath = await this.getDefaultTasksFolder()
-      
-      // Simulate API data
-      const mockTasks = [
-        {
-          ItemId: { Id: `exchange-task-${Date.now()}-1` },
-          Subject: 'Exchange Task 1',
-          Body: { Content: 'This is a sample task from Exchange' },
-          Status: 'NotStarted',
-          PercentComplete: 0,
-          Importance: 'Normal',
-          DueDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-          DateTimeCreated: new Date().toISOString(),
-          LastModifiedTime: new Date().toISOString(),
-          Categories: ['work', 'important']
-        },
-        {
-          ItemId: { Id: `exchange-task-${Date.now()}-2` },
-          Subject: 'Exchange Task 2',
-          Body: { Content: 'This is another sample task from Exchange' },
-          Status: 'InProgress',
-          PercentComplete: 50,
-          Importance: 'High',
-          DueDate: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
-          DateTimeCreated: new Date().toISOString(),
-          LastModifiedTime: new Date().toISOString(),
-          Categories: ['work', 'urgent']
-        }
-      ]
-      
-      // Map Exchange tasks to our app's Task format
-      const tasks = mockTasks.map(item => 
-        mapExchangeTaskToTask(item, this.account.id, folderPath)
+      const taskListId = await this.getDefaultTaskList()
+      const response = await this.makeRequest(`/me/todo/lists/${taskListId}/tasks`)
+      const tasks = (response.value || []).map((item: any) =>
+        mapTodoTaskToTask(item, this.account.id, taskListId)
       )
-      
       return {
         success: true,
         tasks,
@@ -345,80 +292,76 @@ export class ExchangeTasksProvider implements TaskProvider {
       }
     }
   }
-  
-  /**
-   * Create a task in Exchange
-   */
+
   async createTask(task: Partial<Task>): Promise<CreateTaskResponse> {
     try {
-      // For implementation purposes and due to complexity of EWS SOAP API,
-      // we'll simulate a successful response here
-      
-      const folderPath = await this.getDefaultTasksFolder()
-      const exchangeTask = mapTaskToExchangeTask(task as Partial<ExchangeTask>)
-      
-      // Simulate success response
-      const taskId = `exchange-task-${Date.now()}`
-      
-      return {
-        success: true,
-        taskId
-      }
+      const taskListId = await this.getDefaultTaskList()
+      const todoTask = mapTaskToTodoTask(task as Partial<ExchangeTask>)
+      const response = await this.makeRequest(
+        `/me/todo/lists/${taskListId}/tasks`,
+        'POST',
+        todoTask
+      )
+      return { success: true, taskId: response.id }
     } catch (error: any) {
       console.error('Error creating task in Exchange:', error)
-      return {
-        success: false,
-        error: error.message || 'Failed to create task in Exchange'
-      }
+      return { success: false, error: error.message || 'Failed to create task in Exchange' }
     }
   }
-  
-  /**
-   * Update a task in Exchange
-   */
+
   async updateTask(taskId: string, updates: Partial<Task>): Promise<boolean> {
     try {
-      // For implementation purposes and due to complexity of EWS SOAP API,
-      // we'll simulate a successful response here
-      
-      const exchangeTask = mapTaskToExchangeTask(updates as Partial<ExchangeTask>)
-      
-      // Simulate success response
-      console.log(`Updated Exchange task ${taskId}:`, exchangeTask)
+      const todoUpdates = updates as Partial<ExchangeTask>
+      const taskListId = todoUpdates.providerListId || await this.getDefaultTaskList()
+      const todoTask = mapTaskToTodoTask(todoUpdates)
+      await this.makeRequest(`/me/todo/lists/${taskListId}/tasks/${taskId}`, 'PATCH', todoTask)
       return true
     } catch (error) {
       console.error('Error updating task in Exchange:', error)
       return false
     }
   }
-  
-  /**
-   * Delete a task from Exchange
-   */
+
   async deleteTask(taskId: string): Promise<boolean> {
     try {
-      // For implementation purposes and due to complexity of EWS SOAP API,
-      // we'll simulate a successful response here
-      
-      // Simulate success response
-      console.log(`Deleted Exchange task ${taskId}`)
-      return true
+      const taskLists = await this.getTaskLists()
+      for (const list of taskLists) {
+        try {
+          await this.makeRequest(`/me/todo/lists/${list.id}/tasks/${taskId}`, 'DELETE')
+          return true
+        } catch (error: any) {
+          if (error.status !== 404) throw error
+        }
+      }
+      return false
     } catch (error) {
       console.error('Error deleting task from Exchange:', error)
       return false
     }
   }
-  
-  /**
-   * Mark a task as complete in Exchange
-   */
+
   async completeTask(taskId: string): Promise<boolean> {
     try {
-      // For implementation purposes, we'll call updateTask with completed status
-      return this.updateTask(taskId, { 
-        status: 'completed',
-        completedAt: new Date() 
-      })
+      const taskLists = await this.getTaskLists()
+      for (const list of taskLists) {
+        try {
+          await this.makeRequest(
+            `/me/todo/lists/${list.id}/tasks/${taskId}`,
+            'PATCH',
+            {
+              status: 'completed',
+              completedDateTime: {
+                dateTime: new Date().toISOString(),
+                timeZone: 'UTC'
+              }
+            }
+          )
+          return true
+        } catch (error: any) {
+          if (error.status !== 404) throw error
+        }
+      }
+      return false
     } catch (error) {
       console.error('Error completing task in Exchange:', error)
       return false

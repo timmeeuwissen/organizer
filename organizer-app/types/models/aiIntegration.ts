@@ -5,7 +5,7 @@
 /**
  * AI provider types supported by the application
  */
-export type AIProviderType = 'openai' | 'gemini' | 'xai';
+export type AIProviderType = 'openai' | 'gemini' | 'xai' | 'claude';
 
 /**
  * Data about an AI integration - stored in user settings
