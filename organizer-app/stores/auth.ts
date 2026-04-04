@@ -15,7 +15,10 @@ import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'
 import type { User, UserSettings } from '~/types/models'
 
 export const useAuthStore = defineStore('auth', {
-  persist: true,
+  persist: {
+    // Never persist transient UI state — only the user session
+    pick: ['user'],
+  },
   state: () => ({
     user: null as User | null,
     loading: true,
@@ -70,13 +73,13 @@ export const useAuthStore = defineStore('auth', {
         // Check if we're in development mode with auth bypass
         const isDev = import.meta.env.DEV
         const bypassAuth = isDev && import.meta.env.VITE_AUTH_BYPASS === 'true'
-        
+
         if (bypassAuth) {
           console.log('Development mode with auth bypass - creating demo user without Firebase')
           await this.createDemoUser()
           return this.user
         }
-        
+
         const auth = getAuth()
         this.loading = true
         this.error = null
@@ -93,7 +96,7 @@ export const useAuthStore = defineStore('auth', {
         }
 
         return new Promise<User | null>((resolve, reject) => {
-          const unsubscribe = onAuthStateChanged(auth, 
+          const unsubscribe = onAuthStateChanged(auth,
             async (firebaseUser) => {
               try {
                 if (firebaseUser) {

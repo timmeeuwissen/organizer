@@ -3,19 +3,19 @@
   "configurations": [
     {
       "name": "Nuxt Dev Server",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH && cd /Users/timmeeuwissen/organizer/organizer-app && npm run dev"],
       "port": 3000
     },
     {
       "name": "Nuxt Preview (production build)",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "/opt/homebrew/bin/npm",
       "runtimeArgs": ["run", "preview"],
       "port": 3000
     },
     {
       "name": "Firebase Emulators",
-      "runtimeExecutable": "firebase",
+      "runtimeExecutable": "/opt/homebrew/bin/firebase",
       "runtimeArgs": ["emulators:start"],
       "port": 4000
     }

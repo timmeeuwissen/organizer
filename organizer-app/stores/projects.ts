@@ -222,32 +222,12 @@ export const useProjectsStore = defineStore('projects', {
           throw new Error('Unauthorized access to project')
         }
         
-        // Filter out undefined values from the updates object
-        const filteredUpdates: Partial<Project> = {};
-        
-        // Copy only defined values
-        Object.entries(updates).forEach(([key, value]) => {
-          if (value !== undefined) {
-            // Using type assertion to bypass TypeScript's index signature restriction
-            (filteredUpdates as any)[key] = value;
-          }
-        });
-        
-        // Add server timestamp
-        const updateData = {
-          ...filteredUpdates,
-          updatedAt: serverTimestamp(),
-        };
-        
-        // Remove fields that shouldn't be directly updated
-        delete updateData.id;
-        delete updateData.userId;
-        delete updateData.createdAt;
-        
-        // Handle dueDate - convert undefined to undefined (so it's not included in the update)
-        // Let Firebase handle the case where dueDate is explicitly set to null
-        if (updates.dueDate === undefined) {
-          delete updateData.dueDate;
+        // Build update payload excluding undefined values and immutable fields
+        const updateData: Record<string, unknown> = { updatedAt: serverTimestamp() }
+        for (const [key, value] of Object.entries(updates)) {
+          if (value === undefined) continue
+          if (key === 'id' || key === 'userId' || key === 'createdAt') continue
+          updateData[key] = value
         }
         
         await updateDoc(projectRef, updateData)

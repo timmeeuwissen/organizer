@@ -6,6 +6,7 @@ import { useAuthStore } from '~/stores/auth'
 import { getMailProvider } from '~/utils/api/mailProviders'
 import { getCalendarProvider } from '~/utils/api/calendarProviders'
 import { createContactsProvider } from '~/utils/api/contactProviders'
+import type { IntegrationAccount } from '~/types/models'
 
 /**
  * Composable for refreshing data from all connected providers
@@ -14,167 +15,143 @@ export function useDataRefresh() {
   const isRefreshing = ref(false)
   const lastRefreshed = ref<Date | null>(null)
   const refreshError = ref<string | null>(null)
-  
-  // Get stores
+
   const mailStore = useMailStore()
   const calendarStore = useCalendarStore()
   const peopleStore = usePeopleStore()
   const authStore = useAuthStore()
-  
+
   /**
-   * Refresh data from all connected providers
+   * Refresh mail data for a single account. Returns true on success.
+   */
+  async function refreshMail(account: IntegrationAccount): Promise<boolean> {
+    const mailProvider = getMailProvider(account)
+    if (!mailProvider.isAuthenticated()) {
+      const ok = await mailProvider.authenticate()
+      if (!ok) return false
+    }
+    await mailStore.loadFolderCounts()
+    await mailStore.fetchEmails()
+    return true
+  }
+
+  /**
+   * Refresh calendar data for a single account. Returns true on success.
+   */
+  async function refreshCalendar(account: IntegrationAccount): Promise<boolean> {
+    const calendarProvider = getCalendarProvider(account)
+    if (!calendarProvider.isAuthenticated()) {
+      const ok = await calendarProvider.authenticate()
+      if (!ok) return false
+    }
+    const today = new Date()
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1)
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    await calendarStore.fetchEvents({ startDate, endDate })
+    return true
+  }
+
+  /**
+   * Refresh contacts data for a single account. Returns true on success.
+   */
+  async function refreshContacts(account: IntegrationAccount): Promise<boolean> {
+    const contactsProvider = createContactsProvider(account)
+    if (!contactsProvider.isAuthenticated()) {
+      const ok = await contactsProvider.authenticate()
+      if (!ok) return false
+    }
+    await peopleStore.fetchContactsFromProvider(account)
+    return true
+  }
+
+  /**
+   * Run all enabled sync operations for one account in parallel.
+   * Returns { succeeded, failed } counts.
+   */
+  async function refreshAccount(account: IntegrationAccount): Promise<{ succeeded: number; failed: number }> {
+    if (!account.oauthData.connected || !account.oauthData.accessToken) {
+      return { succeeded: 0, failed: 0 }
+    }
+
+    const ops: Promise<boolean>[] = []
+
+    if (account.syncMail && account.showInMail) {
+      ops.push(
+        refreshMail(account).catch((err) => {
+          console.error(`Error refreshing mail for ${account.oauthData.email}:`, err)
+          return false
+        })
+      )
+    }
+
+    if (account.syncCalendar && account.showInCalendar) {
+      ops.push(
+        refreshCalendar(account).catch((err) => {
+          console.error(`Error refreshing calendar for ${account.oauthData.email}:`, err)
+          return false
+        })
+      )
+    }
+
+    if (account.syncContacts && account.showInContacts) {
+      ops.push(
+        refreshContacts(account).catch((err) => {
+          console.error(`Error refreshing contacts for ${account.oauthData.email}:`, err)
+          return false
+        })
+      )
+    }
+
+    const results = await Promise.all(ops)
+    const succeeded = results.filter(Boolean).length
+    const failed = results.length - succeeded
+    return { succeeded, failed }
+  }
+
+  /**
+   * Refresh data from all connected providers in parallel.
    */
   async function refreshAllData() {
     if (isRefreshing.value) return
     isRefreshing.value = true
     refreshError.value = null
-    
+
     try {
-      console.log('Starting data refresh from all providers')
-      
-      // Get all connected accounts
       const accounts = authStore.currentUser?.settings?.integrationAccounts || []
-      
-      if (accounts.length === 0) {
-        console.log('No connected accounts found')
-        return
-      }
-      
-      // Initialize counters for completed operations
-      let succeededCount = 0
-      let failedCount = 0
-      
-      // Process each account
-      for (const account of accounts) {
-        console.log(`Processing account: ${account.oauthData.email}`)
-        
-        try {
-          // Attempt to refresh tokens if needed
-          if (!account.oauthData.connected || !account.oauthData.accessToken) {
-            console.log(`Account ${account.oauthData.email} is not connected, skipping`)
-            continue
-          }
-          
-          // Refresh email data if this account has email enabled
-          if (account.syncMail && account.showInMail) {
-            try {
-              console.log(`Refreshing mail data for ${account.oauthData.email}`)
-              const mailProvider = getMailProvider(account)
-              
-              // Authenticate if needed
-              if (!mailProvider.isAuthenticated()) {
-                const authenticated = await mailProvider.authenticate()
-                if (!authenticated) {
-                  console.warn(`Mail authentication failed for ${account.oauthData.email}`)
-                  failedCount++
-                  continue
-                }
-              }
-              
-              // Refresh mail data
-              await mailStore.loadFolderCounts()
-              await mailStore.fetchEmails()
-              succeededCount++
-            } catch (error) {
-              console.error(`Error refreshing mail for ${account.oauthData.email}:`, error)
-              failedCount++
-            }
-          }
-          
-          // Refresh calendar data if this account has calendar enabled
-          if (account.syncCalendar && account.showInCalendar) {
-            try {
-              console.log(`Refreshing calendar data for ${account.oauthData.email}`)
-              const calendarProvider = getCalendarProvider(account)
-              
-              // Authenticate if needed
-              if (!calendarProvider.isAuthenticated()) {
-                const authenticated = await calendarProvider.authenticate()
-                if (!authenticated) {
-                  console.warn(`Calendar authentication failed for ${account.oauthData.email}`)
-                  failedCount++
-                  continue
-                }
-              }
-              
-              // Set date range for calendar query
-              const today = new Date()
-              const startDate = new Date(today)
-              startDate.setDate(1) // First day of current month
-              
-              const endDate = new Date(today)
-              endDate.setMonth(endDate.getMonth() + 1)
-              endDate.setDate(0) // Last day of current month
 
+      if (accounts.length === 0) return
 
-              // Refresh calendar data
-              await calendarStore.fetchEvents({startDate, endDate})
-              succeededCount++
-            } catch (error) {
-              console.error(`Error refreshing calendar for ${account.oauthData.email}:`, error)
-              failedCount++
-            }
-          }
-          
-          // Refresh contacts data if this account has contacts enabled
-          if (account.syncContacts && account.showInContacts) {
-            try {
-              console.log(`Refreshing contacts data for ${account.oauthData.email}`)
-              const contactsProvider = createContactsProvider(account)
-              
-              // Authenticate if needed
-              if (!contactsProvider.isAuthenticated()) {
-                const authenticated = await contactsProvider.authenticate()
-                if (!authenticated) {
-                  console.warn(`Contacts authentication failed for ${account.oauthData.email}`)
-                  failedCount++
-                  continue
-                }
-              }
-              
-              // Refresh contacts data
-              try {
-                await peopleStore.fetchContactsFromProvider(account)
-                succeededCount++
-              } catch (contactError) {
-                console.error(`Error in contact provider for ${account.oauthData.email}:`, contactError)
-                // Continue with other operations even if contact sync fails
-                failedCount++
-              }
-            } catch (error) {
-              console.error(`Error refreshing contacts for ${account.oauthData.email}:`, error)
-              failedCount++
-            }
-          }
-          
-        } catch (error) {
-          console.error(`Error processing account ${account.oauthData.email}:`, error)
-          failedCount++
-        }
-      }
-      
-      // Update last refreshed timestamp
+      // Process all accounts in parallel
+      const accountResults = await Promise.all(
+        accounts.map((account) =>
+          refreshAccount(account).catch((err) => {
+            console.error(`Error processing account ${account.oauthData.email}:`, err)
+            return { succeeded: 0, failed: 1 }
+          })
+        )
+      )
+
+      const totalSucceeded = accountResults.reduce((sum, r) => sum + r.succeeded, 0)
+      const totalFailed = accountResults.reduce((sum, r) => sum + r.failed, 0)
+
       lastRefreshed.value = new Date()
-      
-      // Log refresh summary
-      console.log(`Data refresh complete: ${succeededCount} operations succeeded, ${failedCount} failed`)
-      
-      // Set error if all operations failed
-      if (failedCount > 0 && succeededCount === 0) {
+
+      if (totalFailed > 0 && totalSucceeded === 0) {
         refreshError.value = 'Failed to refresh data from all providers'
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error refreshing data'
       console.error('Error in refreshAllData:', error)
-      refreshError.value = error.message || 'Unknown error refreshing data'
+      refreshError.value = message
     } finally {
       isRefreshing.value = false
     }
   }
-  
+
   return {
     isRefreshing,
     lastRefreshed,
     refreshError,
-    refreshAllData
+    refreshAllData,
   }
 }
