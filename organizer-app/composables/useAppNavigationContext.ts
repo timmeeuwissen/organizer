@@ -27,6 +27,11 @@ export function useAppNavigationContext() {
   const router = useRouter()
   const { t } = useI18n()
 
+  // Build a static set of known route paths once (non-reactive).
+  // Using router.getRoutes() avoids calling router.resolve() inside a computed,
+  // which would access currentRoute reactively and cause an infinite update loop.
+  const knownRoutePaths = new Set(router.getRoutes().map(r => r.path))
+
   const segments = computed(() => {
     const parts = route.path.split('/').filter(Boolean)
     const items: { title: string; to?: string }[] = [
@@ -44,8 +49,7 @@ export function useAppNavigationContext() {
       // Only link prefixes that match a real route (e.g. avoid /auth when only /auth/profile exists).
       let to: string | undefined
       if (!isLast) {
-        const { matched } = router.resolve(acc)
-        to = matched.length > 0 ? acc : undefined
+        to = knownRoutePaths.has(acc) ? acc : undefined
       }
       items.push({
         title,

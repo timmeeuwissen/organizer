@@ -430,8 +430,7 @@ onMounted(async () => {
                 router.push('/auth/login')
               } else {
                 loadUserData()
-                await nextTick()
-                profileFormReady.value = true
+                setTimeout(() => { profileFormReady.value = true }, 0)
               }
             }
           }
@@ -443,8 +442,7 @@ onMounted(async () => {
     } else {
       // Already authenticated, load data
       loadUserData()
-      await nextTick()
-      profileFormReady.value = true
+      setTimeout(() => { profileFormReady.value = true }, 0)
     }
   } catch (err) {
     console.error('Error in profile mount:', err)
@@ -485,6 +483,10 @@ function getAccountIcon(type) {
       return 'mdi-microsoft-exchange'
     case 'office365':
       return 'mdi-microsoft-office'
+    case 'imap':
+      return 'mdi-email-sync'
+    case 'pop3':
+      return 'mdi-email-receive'
     default:
       return 'mdi-account'
   }
@@ -498,6 +500,10 @@ function getAccountTypeName(type) {
       return i18n.t('settings.exchange')
     case 'office365':
       return i18n.t('settings.office365')
+    case 'imap':
+      return i18n.t('settings.imap')
+    case 'pop3':
+      return i18n.t('settings.pop3')
     default:
       return type
   }

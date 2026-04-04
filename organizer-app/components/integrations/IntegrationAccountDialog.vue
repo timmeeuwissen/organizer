@@ -30,10 +30,25 @@ v-dialog(
     ) {{ successMsg }}
     
     v-card-text
-      v-row(align="center" justify="center")
+      // Credential form (IMAP/POP3)
+      v-row(v-if="showCredentialForm")
+        v-col(cols="12")
+          v-btn(
+            variant="text"
+            prepend-icon="mdi-arrow-left"
+            @click="showCredentialForm = false"
+            class="mb-2"
+          ) {{ $t('common.back') }}
+        v-col(cols="12")
+          integration-account-form(
+            @test="handleCredentialTestSuccess"
+          )
+
+      // OAuth provider selection
+      v-row(v-else align="center" justify="center")
         v-col(cols="12" class="text-center")
           h3.mb-4 {{ $t('settings.selectAuthMethod') }}
-          
+
           // Google auth using the GoogleAuthButton component
           v-col(cols="12" md="6" class="d-flex align-center justify-center my-3")
             google-auth-button(
@@ -45,7 +60,7 @@ v-dialog(
               @auth-error="handleGoogleAuthError"
               :loading="isGoogleLoading"
             )
-          
+
           // Microsoft — popup OAuth (same handshake pattern as Google)
           v-col(cols="12" class="d-flex align-center justify-center my-3")
             microsoft-auth-button(
@@ -68,7 +83,20 @@ v-dialog(
               @authorize="handleManualMicrosoftAuthClick"
               @tokens-updated="handleMicrosoftAuthSuccess"
             )
-    
+
+          v-col(cols="12" class="d-flex align-center justify-center my-3")
+            v-divider
+
+          // Credentials (IMAP/POP3)
+          v-col(cols="12" class="d-flex align-center justify-center my-3")
+            v-btn(
+              color="secondary"
+              variant="outlined"
+              block
+              prepend-icon="mdi-email-sync"
+              @click="showCredentialForm = true"
+            ) {{ $t('settings.connectCredentials') }}
+
     v-card-actions
       v-spacer
       v-btn(color="error" variant="text" @click="close") {{ $t('common.cancel') }}
@@ -113,6 +141,7 @@ const accountForm = ref(null)
 const errorMsg = ref('')
 const successMsg = ref('')
 const isSaving = ref(false)
+const showCredentialForm = ref(false)
 
 // Composables
 const i18n = useI18n()
@@ -316,6 +345,33 @@ async function handleMicrosoftAuthSuccess(tokens) {
   }
 }
 
+async function handleCredentialTestSuccess(account) {
+  try {
+    if (!authStore.isAuthenticated || !authStore.currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    const currentAccounts = [...(authStore.currentUser.settings?.integrationAccounts || [])];
+    const existingIndex = currentAccounts.findIndex(
+      acc => acc.oauthData?.username === account.oauthData?.username && acc.type === account.type
+    );
+
+    if (existingIndex >= 0) {
+      currentAccounts[existingIndex] = account;
+    } else {
+      currentAccounts.push(account);
+    }
+
+    await authStore.updateUserSettings({ integrationAccounts: currentAccounts });
+
+    notificationStore.success(i18n.t('settings.connectionSuccessful'));
+    emit('save', account);
+    dialogVisible.value = false;
+  } catch (error) {
+    notificationStore.error(error.message || 'Failed to save credential account');
+  }
+}
+
 // Computed
 const isEditMode = computed(() => !!props.account && !props.addOnly);
 
@@ -461,6 +517,7 @@ function close() {
   oauthData.value = null;
   errorMsg.value = '';
   successMsg.value = '';
+  showCredentialForm.value = false;
 }
 
 

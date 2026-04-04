@@ -149,6 +149,7 @@ export default {
     connectGoogle: 'Connect Google',
     connectMicrosoft: 'Connect Microsoft',
     connectMicrosoftManual: 'Microsoft — manual OAuth (CLI / tokens)',
+    connectCredentials: 'Connect via credentials (IMAP / POP3)',
     microsoftPopupAuth: 'Use Microsoft sign-in (browser)',
     authenticatingWithGoogle: 'Authenticating with Google…',
     authenticatingWithMicrosoft: 'Signing in with Microsoft…',

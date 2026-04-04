@@ -22,6 +22,7 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
     loading: true,
+    saving: false,
     error: null as string | null,
   }),
 
@@ -346,8 +347,8 @@ export const useAuthStore = defineStore('auth', {
         console.error('Cannot update settings: No user is logged in');
         return;
       }
-      
-      this.loading = true;
+
+      this.saving = true;
       this.error = null;
       
       try {
@@ -409,14 +410,14 @@ export const useAuthStore = defineStore('auth', {
         console.error('Settings update failed:', error);
         throw error;
       } finally {
-        this.loading = false;
+        this.saving = false;
       }
     },
-    
+
     async updateUserProfile(profileData: Partial<User>) {
       if (!this.user) return
-      
-      this.loading = true
+
+      this.saving = true
       this.error = null
       
       try {
@@ -431,7 +432,7 @@ export const useAuthStore = defineStore('auth', {
         this.error = error.message || 'Failed to update profile'
         throw error
       } finally {
-        this.loading = false
+        this.saving = false
       }
     }
   }

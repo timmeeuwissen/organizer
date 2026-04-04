@@ -125,6 +125,7 @@ export default {
     connectGoogle: 'Verbind Google',
     connectMicrosoft: 'Verbind Microsoft',
     connectMicrosoftManual: 'Microsoft — handmatige OAuth (CLI / tokens)',
+    connectCredentials: 'Verbinden via inloggegevens (IMAP / POP3)',
     microsoftPopupAuth: 'Aanmelden bij Microsoft (browser)',
     authenticatingWithGoogle: 'Bezig met authenticeren bij Google…',
     authenticatingWithMicrosoft: 'Bezig met aanmelden bij Microsoft…',
