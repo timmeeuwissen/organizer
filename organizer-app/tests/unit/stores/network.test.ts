@@ -137,3 +137,70 @@ describe('useNetworkStore — getters', () => {
     expect(result.map(n => n.id)).toEqual(['k1'])
   })
 })
+
+import { getDocs, addDoc } from 'firebase/firestore'
+
+describe('useNetworkStore — syncFromStores', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('creates person nodes from people store', async () => {
+    vi.mock('~/stores/people', () => ({
+      usePeopleStore: () => ({
+        people: [{ id: 'p1', name: 'Alice', relatedProjects: [], relatedTasks: [] }],
+      }),
+    }))
+    vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [] }) }))
+    vi.mock('~/stores/tasks', () => ({ useTasksStore: () => ({ tasks: [] }) }))
+    vi.mock('~/stores/behaviors', () => ({ useBehaviorsStore: () => ({ behaviors: [] }) }))
+    vi.mock('~/stores/meetings', () => ({ useMeetingsStore: () => ({ meetings: [] }) }))
+    vi.mock('~/stores/teams', () => ({ useTeamsStore: () => ({ teams: [] }) }))
+    vi.mock('~/stores/coaching', () => ({ useCoachingStore: () => ({ records: [] }) }))
+
+    vi.mocked(getDocs).mockResolvedValue({ docs: [] } as any)
+    vi.mocked(addDoc).mockResolvedValue({ id: 'node-abc' } as any)
+
+    const { useNetworkStore } = await import('~/stores/network')
+    const store = useNetworkStore()
+    await store.syncFromStores()
+
+    expect(addDoc).toHaveBeenCalled()
+    const calls = vi.mocked(addDoc).mock.calls
+    const nodeCall = calls.find(c => (c[1] as any)?.type === 'person')
+    expect(nodeCall).toBeDefined()
+    expect((nodeCall![1] as any).entityId).toBe('p1')
+    expect((nodeCall![1] as any).label).toBe('Alice')
+  })
+
+  it('is idempotent — does not duplicate existing nodes', async () => {
+    vi.mock('~/stores/people', () => ({
+      usePeopleStore: () => ({
+        people: [{ id: 'p1', name: 'Alice', relatedProjects: [], relatedTasks: [] }],
+      }),
+    }))
+    vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [] }) }))
+    vi.mock('~/stores/tasks', () => ({ useTasksStore: () => ({ tasks: [] }) }))
+    vi.mock('~/stores/behaviors', () => ({ useBehaviorsStore: () => ({ behaviors: [] }) }))
+    vi.mock('~/stores/meetings', () => ({ useMeetingsStore: () => ({ meetings: [] }) }))
+    vi.mock('~/stores/teams', () => ({ useTeamsStore: () => ({ teams: [] }) }))
+    vi.mock('~/stores/coaching', () => ({ useCoachingStore: () => ({ records: [] }) }))
+
+    vi.mocked(getDocs).mockResolvedValue({
+      docs: [{
+        id: 'existing-node',
+        data: () => ({ type: 'person', entityId: 'p1', label: 'Alice', userId: 'user-1' }),
+      }],
+    } as any)
+
+    const { useNetworkStore } = await import('~/stores/network')
+    const store = useNetworkStore()
+    await store.syncFromStores()
+
+    const personNodeAdds = vi.mocked(addDoc).mock.calls.filter(
+      c => (c[1] as any)?.type === 'person' && (c[1] as any)?.entityId === 'p1'
+    )
+    expect(personNodeAdds).toHaveLength(0)
+  })
+})
