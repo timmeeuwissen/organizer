@@ -107,13 +107,13 @@ v-container(fluid)
                     :value="task.status === 'completed'"
                     color="success"
                     @click.stop="toggleTaskStatus(task)"
-                  :disabled="task.status === 'completed'"
-                )
-            template(v-slot:append)
-              v-chip(
-                size="small"
-                color="error"
-              ) {{ getDaysOverdue(task.dueDate) }}d
+                    :disabled="task.status === 'completed'"
+                  )
+              template(v-slot:append)
+                v-chip(
+                  size="small"
+                  color="error"
+                ) {{ getDaysOverdue(task.dueDate) }}d
                 
     v-col(cols="12" md="9")
       v-tabs(v-model="activeTab" grow)
