@@ -18,7 +18,7 @@ v-navigation-drawer(permanent, width="280")
           :model-value="visibleTypes.includes(nodeType.value)"
           density="compact"
           hide-details
-          @update:model-value="$emit('toggle-type', nodeType.value)"
+          @update:model-value="(val) => $emit('toggle-type', nodeType.value, !!val)"
         )
 
     v-divider.my-2
@@ -117,9 +117,11 @@ interface Props {
 const props = defineProps<Props>()
 
 defineEmits<{
-  'toggle-type': [type: NodeType]
+  // visible: true = add to visibleTypes, false = remove from visibleTypes
+  'toggle-type': [type: NodeType, visible: boolean]
   'update:depth': [value: number]
   'unpin': [nodeId: string]
+  // pathTo carries a node id string (not a full GraphNode)
   'update:pathTo': [nodeId: string | null]
   'find-path': []
   'update:timeRange': [value: string]
@@ -149,7 +151,7 @@ const pathTargetOptions = computed(() =>
 )
 </script>
 
-<style lang="sass">
+<style lang="sass" scoped>
 .node-type-dot
   width: 12px
   height: 12px
