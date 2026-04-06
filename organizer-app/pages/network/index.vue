@@ -65,7 +65,7 @@ v-main
         :node="selectedNode"
         :knowledge="selectedNodeKnowledge"
         :is-pinned="pinnedNodeIds.includes(selectedNode?.id ?? '')"
-        @toggle-pin="(nodeId) => togglePin({ id: nodeId } as GraphNode)"
+        @toggle-pin="togglePin"
         @add-knowledge="openAddKnowledge"
       )
       .text-center.text-disabled.mt-8(v-else)
@@ -90,7 +90,7 @@ const networkStore = useNetworkStore()
 const notifyStore = useNotificationStore()
 
 // UI state
-const drawer = ref(true)
+const drawer = ref(true) // toggles sidebar visibility — wired to v-navigation-drawer in Plan 2 layout
 const selectedNode = ref<GraphNode | null>(null)
 const pinnedNodeIds = ref<string[]>([])
 const depth = ref(GRAPH_DEFAULTS.depth)
@@ -124,7 +124,7 @@ const filteredNodes = computed(() => {
   }
 
   if (timeRange.value !== 'all') {
-    const days = timeRange.value === '30d' ? 30 : 90
+    const days = timeRange.value === '30d' ? 30 : 90 // '90d' or any unknown value falls back to 90 days
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - days)
     nodes = nodes.filter(n => new Date(n.createdAt) >= cutoff)
@@ -152,12 +152,14 @@ function selectNode(node: GraphNode) {
   pathNodes.value = []
 }
 
-function togglePin(node: GraphNode) {
-  const idx = pinnedNodeIds.value.indexOf(node.id)
+// Accepts GraphNode (from graph ctrl-click) or string id (from detail panel toggle-pin emit)
+function togglePin(node: GraphNode | string) {
+  const id = typeof node === 'string' ? node : node.id
+  const idx = pinnedNodeIds.value.indexOf(id)
   if (idx >= 0) {
     pinnedNodeIds.value.splice(idx, 1)
   } else {
-    pinnedNodeIds.value.push(node.id)
+    pinnedNodeIds.value.push(id)
   }
 }
 
