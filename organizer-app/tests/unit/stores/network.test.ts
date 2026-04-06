@@ -14,13 +14,12 @@ vi.mock('firebase/firestore', () => ({
   deleteDoc: vi.fn(() => Promise.resolve()),
   doc: vi.fn(() => ({})),
   serverTimestamp: vi.fn(() => new Date('2026-01-01')),
+  getFirestore: vi.fn(() => ({})),
 }))
 
 vi.mock('~/stores/auth', () => ({
-  useAuthStore: () => ({ user: { uid: 'user-1' } }),
+  useAuthStore: () => ({ user: { id: 'user-1' } }),
 }))
-
-vi.mock('~/plugins/firebase', () => ({ db: {} }))
 
 // Helpers
 const now = new Date('2026-01-01')
@@ -149,7 +148,7 @@ describe('useNetworkStore — syncFromStores', () => {
   it('creates person nodes from people store', async () => {
     vi.mock('~/stores/people', () => ({
       usePeopleStore: () => ({
-        people: [{ id: 'p1', name: 'Alice', relatedProjects: [], relatedTasks: [] }],
+        people: [{ id: 'p1', firstName: 'Alice', lastName: 'Smith', relatedProjects: [], relatedTasks: [] }],
       }),
     }))
     vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [] }) }))
@@ -171,13 +170,13 @@ describe('useNetworkStore — syncFromStores', () => {
     const nodeCall = calls.find(c => (c[1] as any)?.type === 'person')
     expect(nodeCall).toBeDefined()
     expect((nodeCall![1] as any).entityId).toBe('p1')
-    expect((nodeCall![1] as any).label).toBe('Alice')
+    expect((nodeCall![1] as any).label).toBe('Alice Smith')
   })
 
   it('is idempotent — does not duplicate existing nodes', async () => {
     vi.mock('~/stores/people', () => ({
       usePeopleStore: () => ({
-        people: [{ id: 'p1', name: 'Alice', relatedProjects: [], relatedTasks: [] }],
+        people: [{ id: 'p1', firstName: 'Alice', lastName: 'Smith', relatedProjects: [], relatedTasks: [] }],
       }),
     }))
     vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [] }) }))

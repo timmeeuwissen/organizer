@@ -104,10 +104,10 @@ export const useNetworkStore = defineStore('network', {
 
   actions: {
     async load() {
-      const { collection, query, where, getDocs } = await import('firebase/firestore')
-      const { db } = await import('~/plugins/firebase')
+      const { collection, query, where, getDocs, getFirestore } = await import('firebase/firestore')
+      const db = getFirestore()
       const authStore = useAuthStore()
-      const userId = authStore.user?.uid
+      const userId = authStore.user?.id
       if (!userId) return
 
       this.loading = true
@@ -138,11 +138,11 @@ export const useNetworkStore = defineStore('network', {
     },
 
     async syncFromStores() {
-      const { collection, query, where, getDocs, addDoc, serverTimestamp } =
+      const { collection, query, where, getDocs, addDoc, serverTimestamp, getFirestore } =
         await import('firebase/firestore')
-      const { db } = await import('~/plugins/firebase')
+      const db = getFirestore()
       const authStore = useAuthStore()
-      const userId = authStore.user?.uid
+      const userId = authStore.user?.id
       if (!userId) return
 
       try {
@@ -184,7 +184,7 @@ export const useNetworkStore = defineStore('network', {
           return ref.id
         }
 
-        for (const p of peopleStore.people) await upsertNode('person', p.id, p.name)
+        for (const p of peopleStore.people) await upsertNode('person', p.id, `${p.firstName} ${p.lastName}`)
         for (const proj of projectsStore.projects) await upsertNode('project', proj.id, proj.title)
         for (const t of tasksStore.tasks) await upsertNode('task', t.id, t.title)
         for (const b of behaviorsStore.behaviors) await upsertNode('behavior', b.id, b.title)
@@ -257,10 +257,10 @@ export const useNetworkStore = defineStore('network', {
     },
 
     async createEdge(partial: Omit<GraphEdge, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore')
-      const { db } = await import('~/plugins/firebase')
+      const { collection, addDoc, serverTimestamp, getFirestore } = await import('firebase/firestore')
+      const db = getFirestore()
       const authStore = useAuthStore()
-      const userId = authStore.user?.uid
+      const userId = authStore.user?.id
       if (!userId) return
       const ref = await addDoc(collection(db, 'graphEdges'), {
         userId, ...partial,
@@ -272,8 +272,8 @@ export const useNetworkStore = defineStore('network', {
     },
 
     async deleteEdge(id: string) {
-      const { doc, deleteDoc } = await import('firebase/firestore')
-      const { db } = await import('~/plugins/firebase')
+      const { doc, deleteDoc, getFirestore } = await import('firebase/firestore')
+      const db = getFirestore()
       await deleteDoc(doc(db, 'graphEdges', id))
       this.edges = this.edges.filter(e => e.id !== id)
     },
