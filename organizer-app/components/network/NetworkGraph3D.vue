@@ -31,6 +31,7 @@ const containerEl = ref<HTMLElement | null>(null)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let graph: any = null
 let lastClickTime = 0
+let singleClickTimer: ReturnType<typeof setTimeout> | null = null
 const DBL_CLICK_MS = 300
 
 const graphData = computed(() => ({
@@ -62,11 +63,17 @@ onMounted(async () => {
     .onNodeClick((n: any, event: MouseEvent) => {
       const now = Date.now()
       if (now - lastClickTime < DBL_CLICK_MS) {
+        // Second click within window — cancel pending single-click and emit double-click
+        if (singleClickTimer) { clearTimeout(singleClickTimer); singleClickTimer = null }
         emit('node-dblclick', n)
       } else if (event.ctrlKey || event.metaKey) {
         emit('node-ctrl-click', n)
       } else {
-        emit('node-click', n)
+        // Defer single-click so a fast second click can cancel it
+        singleClickTimer = setTimeout(() => {
+          emit('node-click', n)
+          singleClickTimer = null
+        }, DBL_CLICK_MS)
       }
       lastClickTime = now
     })
@@ -79,9 +86,9 @@ onMounted(async () => {
 
 watch(graphData, (data) => {
   graph?.graphData(data)
-}, { deep: true })
+})
 
-watch(() => [props.selectedNodeId, ...props.pinnedNodeIds], () => {
+watch([() => props.selectedNodeId, () => props.pinnedNodeIds], () => {
   if (!graph) return
   graph
     .nodeColor((n: any) => {
@@ -92,9 +99,11 @@ watch(() => [props.selectedNodeId, ...props.pinnedNodeIds], () => {
       const base = NODE_BASE_SIZES[n.type as GraphNode['type']] ?? 4
       return base + (props.pinnedNodeIds.includes(n.id) ? 3 : 0)
     })
-})
+}, { deep: true })
 
 onUnmounted(() => {
-  try { graph?._destructor?.() } catch { /* ignore */ }
+  if (singleClickTimer) clearTimeout(singleClickTimer)
+  try { graph?._destructor?.() } catch { /* _destructor is an undocumented but widely-used teardown hook */ }
+  graph = null
 })
 </script>
