@@ -113,6 +113,10 @@ v-form(ref="form" v-model="formValid")
                     :disabled="isConnected || isLoading"
                   )
 
+    // Connection test error
+    v-col(cols="12" v-if="testError")
+      v-alert(type="error" variant="tonal" closable @click:close="testError = ''") {{ testError }}
+
     // Basic Auth section - only visible when creating new non-OAuth accounts
     template(v-if="!useOAuth && !isConnected")
       v-col(cols="12")
@@ -217,15 +221,15 @@ v-form(ref="form" v-model="formValid")
     v-col(cols="12")
       span {{ $t('settings.syncSettings') }}
     
-    v-col(cols="6")
+    v-col(cols="6" v-if="!isCredentialAccount")
       v-switch(
         v-model="syncCalendar"
         :label="$t('settings.syncCalendar')"
         color="primary"
         :disabled="isLoading"
       )
-    
-    v-col(cols="6")
+
+    v-col(cols="6" v-if="!isCredentialAccount")
       v-switch(
         v-model="showInCalendar"
         :label="$t('settings.showInCalendar')"
@@ -249,31 +253,31 @@ v-form(ref="form" v-model="formValid")
         :disabled="isLoading || !syncMail"
       )
     
-    v-col(cols="6")
+    v-col(cols="6" v-if="!isCredentialAccount")
       v-switch(
         v-model="syncTasks"
         :label="$t('settings.syncTasks')"
         color="primary"
         :disabled="isLoading"
       )
-    
-    v-col(cols="6")
+
+    v-col(cols="6" v-if="!isCredentialAccount")
       v-switch(
         v-model="showInTasks"
         :label="$t('settings.showInTasks')"
         color="primary"
         :disabled="isLoading || !syncTasks"
       )
-    
-    v-col(cols="6")
+
+    v-col(cols="6" v-if="!isCredentialAccount")
       v-switch(
         v-model="syncContacts"
         :label="$t('settings.syncContacts')"
         color="primary"
         :disabled="isLoading"
       )
-    
-    v-col(cols="6")
+
+    v-col(cols="6" v-if="!isCredentialAccount")
       v-switch(
         v-model="showInContacts"
         :label="$t('settings.showInContacts')"
@@ -345,6 +349,10 @@ const props = defineProps({
   isEditMode: {
     type: Boolean,
     default: false
+  },
+  initialType: {
+    type: String,
+    default: 'google'
   }
 })
 
@@ -357,6 +365,7 @@ const formValid = ref(false)
 const showPassword = ref(false)
 const isSyncing = ref(false)
 const isLoading = ref(false)
+const testError = ref('')
 
 // Properties for display 
 const name = ref('')
@@ -365,11 +374,11 @@ const isConnected = ref(false)
 const lastSync = ref(null)
 
 // Form fields
-const accountType = ref('google')
+const accountType = ref(props.initialType)
 const server = ref('')
 const username = ref('')
 const password = ref('')
-const useOAuth = ref(true) // Default to OAuth for Google and Office 365
+const useOAuth = ref(!['imap', 'pop3'].includes(props.initialType))
 const syncCalendar = ref(true)
 const syncMail = ref(true)
 const syncTasks = ref(true)
@@ -582,6 +591,16 @@ watch(() => props.account, () => {
   }
 }, { immediate: true })
 
+// Keep useOAuth in sync when the user changes account type
+watch(accountType, (type) => {
+  if (type === 'imap' || type === 'pop3') {
+    useOAuth.value = false
+    imapPort.value = type === 'pop3' ? 995 : 993
+  } else if (type === 'google' || type === 'office365') {
+    useOAuth.value = true
+  }
+})
+
 // Handle tokens updated from OAuth button
 function handleTokensUpdated(tokens) {
   console.log('OAuth tokens updated:', tokens)
@@ -707,13 +726,14 @@ async function testConnection() {
       })
       const data = await res.json()
       if (data.success) {
+        testError.value = ''
         isConnected.value = true
         name.value = username.value
         email.value = username.value
         lastSync.value = new Date()
         emit('test', getAccountData())
       } else {
-        console.error('IMAP/POP3 connection test failed:', data.error)
+        testError.value = data.error || i18n.t('settings.connectionFailed')
       }
     } else if (accountType.value === 'exchange') {
       // Exchange can use basic auth or OAuth, depending on the server

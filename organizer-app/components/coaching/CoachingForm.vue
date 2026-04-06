@@ -12,7 +12,7 @@
             <v-autocomplete
               v-model="formData.personId"
               :items="peopleOptions"
-              item-text="text"
+              item-title="text"
               item-value="value"
               :rules="rules.required"
               label="Person"

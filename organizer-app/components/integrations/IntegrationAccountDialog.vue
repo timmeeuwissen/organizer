@@ -41,6 +41,7 @@ v-dialog(
           ) {{ $t('common.back') }}
         v-col(cols="12")
           integration-account-form(
+            initial-type="imap"
             @test="handleCredentialTestSuccess"
           )
 

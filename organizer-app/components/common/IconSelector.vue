@@ -133,9 +133,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useFetch } from '#app'
 
 // Get current locale from i18n
 const { locale, t } = useI18n()
@@ -314,51 +313,35 @@ const clearIcon = () => {
 const fetchIcons = async () => {
   loading.value = true
   loadError.value = null
-  
+
   try {
-    const { data, error } = await useFetch('/api/icons')
-    
-    if (error.value) {
-      loadError.value = 'Error loading icons'
-      console.error('Error fetching icons:', error.value)
-    } else if (data.value) {
-      // Check if the response has the expected format
-      const response = data.value as { 
-        success: boolean; 
-        data?: IconData[]; 
-        categories?: CategoryData;
-        error?: string 
+    const response = await $fetch<{
+      success: boolean
+      data?: IconData[]
+      categories?: CategoryData
+      error?: string
+    }>('/api/icons')
+
+    if (response.success) {
+      if (response.data) {
+        iconData.value = response.data
       }
-      
-      if (response.success) {
-        if (response.data) {
-          iconData.value = response.data
+      if (response.categories) {
+        categories.value = response.categories
+        if (!selectedCategory.value && Object.keys(response.categories).length > 0) {
+          selectedCategory.value = Object.keys(response.categories)[0]
         }
-        
-        if (response.categories) {
-          categories.value = response.categories
-          
-          // Set default selected category if not already set
-          if (!selectedCategory.value && Object.keys(response.categories).length > 0) {
-            selectedCategory.value = Object.keys(response.categories)[0]
-          }
-        }
-      } else {
-        loadError.value = response.error || 'Invalid response format'
       }
+    } else {
+      loadError.value = response.error || 'Invalid response format'
     }
-  } catch (error) {
-    console.error('Error fetching icons:', error)
+  } catch (err) {
+    console.error('Error fetching icons:', err)
     loadError.value = 'Failed to load icons'
   } finally {
     loading.value = false
   }
 }
-
-// Load icons on component mount
-onMounted(() => {
-  fetchIcons()
-})
 
 // Watch for search query changes
 watch(searchQuery, () => {
