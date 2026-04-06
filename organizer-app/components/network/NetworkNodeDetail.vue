@@ -57,7 +57,7 @@ v-card(
       variant="text"
       size="small"
       prepend-icon="mdi-plus"
-      @click="emit('add-knowledge', node)"
+      @click="node && emit('add-knowledge', node)"
     ) {{ $t('network.addKnowledge') }}
 
   v-card-text(v-else)
@@ -66,14 +66,17 @@ v-card(
       variant="text"
       size="small"
       prepend-icon="mdi-plus"
-      @click="emit('add-knowledge', node)"
+      @click="node && emit('add-knowledge', node)"
     ) {{ $t('network.addKnowledge') }}
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { GraphNode, KnowledgeNode } from '~/types/models/network'
 import { NODE_COLORS } from '~/config/network'
+
+const { locale } = useI18n()
 
 const props = defineProps<{
   node: GraphNode | null
@@ -128,11 +131,11 @@ function certaintyColor(certainty: number): string {
 }
 
 function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(date))
+  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }).format(new Date(date))
 }
 </script>
 
-<style lang="sass">
+<style lang="sass" scoped>
 .node-type-dot
   display: inline-block
   width: 12px
