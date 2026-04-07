@@ -69,9 +69,11 @@
       NetworkNodeDetail(
         :node="selectedNode"
         :knowledge="selectedNodeKnowledge"
+        :connections="selectedNodeConnections"
         :is-pinned="pinnedNodeIds.includes(selectedNode?.id ?? '')"
         @toggle-pin="togglePin"
         @add-knowledge="openAddKnowledge"
+        @select-node="selectNode"
       )
 
   //- Right reopen hint when nothing selected
@@ -165,6 +167,11 @@ const filteredNodes = computed(() => {
 const selectedNodeKnowledge = computed((): KnowledgeNode[] => {
   if (!selectedNode.value) return []
   return networkStore.knowledgeFor(selectedNode.value.id, GRAPH_DEFAULTS.minCertainty)
+})
+
+const selectedNodeConnections = computed((): GraphNode[] => {
+  if (!selectedNode.value) return []
+  return networkStore.getNeighbours(selectedNode.value.id, 1)
 })
 
 // Handlers

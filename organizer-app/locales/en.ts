@@ -479,6 +479,7 @@ export default {
     pinned: 'Pinned',
     addKnowledge: 'Add knowledge',
     knowledge: 'Knowledge',
+    connections: 'Direct connections',
     sync: 'Sync from stores',
     syncComplete: 'Network synced',
     syncNoChanges: 'Network already up to date',

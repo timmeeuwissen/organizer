@@ -35,6 +35,25 @@ v-card(
 
   v-divider
 
+  //- Direct connections
+  v-card-text(v-if="connections.length > 0")
+    .text-overline.mb-1 {{ $t('network.connections') }} ({{ connections.length }})
+    v-list(density="compact" nav)
+      v-list-item(
+        v-for="c in connections"
+        :key="c.id"
+        :prepend-icon="nodeIcons[c.type] ?? 'mdi-circle'"
+        :title="c.label"
+        :subtitle="$t(`network.nodeType.${c.type}`)"
+        rounded="lg"
+        class="px-2"
+        @click="emit('select-node', c)"
+      )
+        template(#prepend)
+          .node-type-dot.mr-2(:style="{ backgroundColor: NODE_COLORS[c.type] ?? '#888' }")
+
+  v-divider(v-if="connections.length > 0")
+
   v-card-text(v-if="knowledge.length > 0")
     .text-overline.mb-2 {{ $t('network.knowledge') }} ({{ knowledge.length }})
     v-list(density="compact")
@@ -81,12 +100,14 @@ const { locale } = useI18n()
 const props = defineProps<{
   node: GraphNode | null
   knowledge: KnowledgeNode[]
+  connections: GraphNode[]
   isPinned: boolean
 }>()
 
 const emit = defineEmits<{
   'toggle-pin': [nodeId: string]
   'add-knowledge': [node: GraphNode]
+  'select-node': [node: GraphNode]
 }>()
 
 const entityRoutes: Record<string, string> = {

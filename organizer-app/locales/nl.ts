@@ -413,6 +413,7 @@ export default {
     pinned: 'Vastgezet',
     addKnowledge: 'Kennis toevoegen',
     knowledge: 'Kennis',
+    connections: 'Directe verbindingen',
     sync: 'Synchroniseren',
     syncComplete: 'Netwerk gesynchroniseerd',
     syncNoChanges: 'Netwerk is al actueel',
