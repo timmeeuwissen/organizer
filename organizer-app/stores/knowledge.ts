@@ -119,19 +119,27 @@ export const useKnowledgeStore = defineStore('knowledge', {
           ...(partial.content ? { label: partial.content.slice(0, 60) } : {}),
           updatedAt: new Date(),
         })
+      } else if (import.meta.env.DEV) {
+        console.warn(`[knowledge] update: node ${id} not found in local state`)
       }
     },
 
     async delete(id: string) {
       const { doc, deleteDoc, collection, query, where, getDocs, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
-      const edgeSnap = await getDocs(
-        query(collection(db, 'knowledgeEdges'), where('knowledgeNodeId', '==', id))
-      )
-      await Promise.all(edgeSnap.docs.map(d => deleteDoc(doc(db, 'knowledgeEdges', d.id))))
-      await deleteDoc(doc(db, 'knowledgeNodes', id))
-      this.edges = this.edges.filter(e => e.knowledgeNodeId !== id)
-      this.nodes = this.nodes.filter(n => n.id !== id)
+      try {
+        const edgeSnap = await getDocs(
+          query(collection(db, 'knowledgeEdges'), where('knowledgeNodeId', '==', id))
+        )
+        await Promise.all(edgeSnap.docs.map(d => deleteDoc(doc(db, 'knowledgeEdges', d.id))))
+        await deleteDoc(doc(db, 'knowledgeNodes', id))
+        // Only update local state after Firestore succeeds
+        this.edges = this.edges.filter(e => e.knowledgeNodeId !== id)
+        this.nodes = this.nodes.filter(n => n.id !== id)
+      } catch (err) {
+        useNotificationStore().error('knowledge.deleteError')
+        throw err
+      }
     },
 
     async connect(
@@ -183,6 +191,8 @@ export const useKnowledgeStore = defineStore('knowledge', {
           ...(label !== undefined ? { label } : {}),
           updatedAt: new Date(),
         })
+      } else if (import.meta.env.DEV) {
+        console.warn(`[knowledge] updateConnection: edge ${edgeId} not found in local state`)
       }
     },
   },
