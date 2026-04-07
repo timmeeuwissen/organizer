@@ -111,6 +111,20 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
+    // Graph network nodes (knowledge graph)
+    match /graphNodes/{nodeId} {
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Graph network edges (knowledge graph)
+    match /graphEdges/{edgeId} {
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

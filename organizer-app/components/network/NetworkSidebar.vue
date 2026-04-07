@@ -2,6 +2,19 @@
 v-navigation-drawer(permanent, width="280")
   v-list(density="compact")
 
+    //- Sync action
+    v-list-item
+      v-btn(
+        block
+        variant="tonal"
+        prepend-icon="mdi-refresh"
+        :loading="loading"
+        @click="$emit('sync')"
+      ) {{ $t('network.sync') }}
+
+    v-divider.my-2
+
+
     //- Node Types
     v-list-subheader {{ $t('network.sidebar.nodeTypes') }}
     v-list-item(
@@ -112,6 +125,7 @@ interface Props {
   pathTo: string | null
   allNodes: GraphNode[]
   timeRange: string
+  loading?: boolean
 }
 
 const props = defineProps<Props>()
@@ -125,6 +139,7 @@ defineEmits<{
   'update:pathTo': [nodeId: string | null]
   'find-path': []
   'update:timeRange': [value: string]
+  'sync': []
 }>()
 
 const nodeTypes: { value: NodeType; icon: string }[] = [

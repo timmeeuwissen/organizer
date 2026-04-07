@@ -1,81 +1,61 @@
 <template lang="pug">
-v-app-bar(flat)
-  v-app-bar-nav-icon(@click="drawer = !drawer")
-  v-toolbar-title
-    span.text-disabled {{ $t('app.name') }} /&nbsp;
-    v-icon(size="small" class="mr-1") mdi-graph
-    | {{ $t('network.title') }}
-  v-spacer
-  v-btn(
-    icon="mdi-lightbulb-plus-outline"
-    variant="text"
-    :title="$t('network.addKnowledge')"
-  )
-  v-btn(
-    icon="mdi-refresh"
-    variant="text"
+.d-flex(style="height:100%;overflow:hidden")
+  NetworkSidebar(
+    :visible-types="visibleTypes"
+    :depth="depth"
+    :pinned-nodes="pinnedGraphNodes"
+    :path-from="selectedNode"
+    :path-to="pathToId"
+    :all-nodes="networkStore.nodes"
+    :time-range="timeRange"
     :loading="networkStore.loading"
-    :title="$t('network.sync')"
-    @click="handleSync"
+    @toggle-type="toggleType"
+    @update:depth="depth = $event"
+    @unpin="unpinNode"
+    @update:path-to="pathToId = $event"
+    @find-path="findPath"
+    @update:time-range="timeRange = $event"
+    @sync="handleSync"
   )
 
-v-main
-  .d-flex(style="height:calc(100vh - 64px)")
-    NetworkSidebar(
-      :visible-types="visibleTypes"
-      :depth="depth"
-      :pinned-nodes="pinnedGraphNodes"
-      :path-from="selectedNode"
-      :path-to="pathToId"
-      :all-nodes="networkStore.nodes"
-      :time-range="timeRange"
-      @toggle-type="toggleType"
-      @update:depth="depth = $event"
-      @unpin="unpinNode"
-      @update:path-to="pathToId = $event"
-      @find-path="findPath"
-      @update:time-range="timeRange = $event"
+  .flex-grow-1(style="position:relative")
+    NetworkGraph3D(
+      :nodes="filteredNodes"
+      :edges="filteredEdges"
+      :selected-node-id="selectedNode?.id ?? null"
+      :pinned-node-ids="pinnedNodeIds"
+      :loading="networkStore.loading"
+      @node-click="selectNode"
+      @node-ctrl-click="togglePin"
+      @node-dblclick="navigateToRecord"
+      @node-rightclick="openContextMenu"
     )
 
-    .flex-grow-1(style="position:relative")
-      NetworkGraph3D(
-        :nodes="filteredNodes"
-        :edges="filteredEdges"
-        :selected-node-id="selectedNode?.id ?? null"
-        :pinned-node-ids="pinnedNodeIds"
-        :loading="networkStore.loading"
-        @node-click="selectNode"
-        @node-ctrl-click="togglePin"
-        @node-dblclick="navigateToRecord"
-        @node-rightclick="openContextMenu"
-      )
+    v-chip(
+      v-if="pathNodes.length"
+      style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%)"
+      color="success"
+      prepend-icon="mdi-vector-line"
+      closable
+      @click:close="clearPath"
+    ) {{ $t('network.pathLength', { n: pathNodes.length - 1 }) }}
 
-      v-chip(
-        v-if="pathNodes.length"
-        style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%)"
-        color="success"
-        prepend-icon="mdi-vector-line"
-        closable
-        @click:close="clearPath"
-      ) {{ $t('network.pathLength', { n: pathNodes.length - 1 }) }}
-
-    .pa-3(style="width:260px;overflow-y:auto;background:rgb(var(--v-theme-surface))")
-      NetworkNodeDetail(
-        v-if="selectedNode"
-        :node="selectedNode"
-        :knowledge="selectedNodeKnowledge"
-        :is-pinned="pinnedNodeIds.includes(selectedNode?.id ?? '')"
-        @toggle-pin="togglePin"
-        @add-knowledge="openAddKnowledge"
-      )
-      .text-center.text-disabled.mt-8(v-else)
-        v-icon(size="48") mdi-cursor-default-click-outline
-        .mt-2 {{ $t('network.selectNode') }}
+  .pa-3(style="width:260px;overflow-y:auto;background:rgb(var(--v-theme-surface))")
+    NetworkNodeDetail(
+      v-if="selectedNode"
+      :node="selectedNode"
+      :knowledge="selectedNodeKnowledge"
+      :is-pinned="pinnedNodeIds.includes(selectedNode?.id ?? '')"
+      @toggle-pin="togglePin"
+      @add-knowledge="openAddKnowledge"
+    )
+    .text-center.text-disabled.mt-8(v-else)
+      v-icon(size="48") mdi-cursor-default-click-outline
+      .mt-2 {{ $t('network.selectNode') }}
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useNetworkStore } from '~/stores/network'
 import { useNotificationStore } from '~/stores/notification'
@@ -84,13 +64,10 @@ import { GRAPH_DEFAULTS } from '~/config/network'
 
 definePageMeta({ middleware: 'auth' })
 
-const { t } = useI18n()
 const router = useRouter()
 const networkStore = useNetworkStore()
-const notifyStore = useNotificationStore()
 
 // UI state
-const drawer = ref(true) // toggles sidebar visibility — wired to v-navigation-drawer in Plan 2 layout
 const selectedNode = ref<GraphNode | null>(null)
 const pinnedNodeIds = ref<string[]>([])
 const depth = ref(GRAPH_DEFAULTS.depth)
@@ -197,7 +174,7 @@ function findPath() {
   if (!selectedNode.value || !pathToId.value) return
   pathNodes.value = networkStore.shortestPath(selectedNode.value.id, pathToId.value)
   if (pathNodes.value.length === 0) {
-    notifyStore.info(t('network.noPath'))
+    useNotificationStore().info('network.noPath')
   }
 }
 
