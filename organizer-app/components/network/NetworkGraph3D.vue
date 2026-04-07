@@ -67,8 +67,8 @@ function createLabelSprite(text: string, THREE: any): any {
     opacity: 0,
   })
   const sprite = new THREE.Sprite(material)
-  sprite.scale.set(40, 8, 1)
-  sprite.position.set(0, -12, 0)  // below the node sphere
+  sprite.scale.set(80, 16, 1)
+  sprite.position.set(0, -20, 0)  // below the node sphere
   return sprite
 }
 
