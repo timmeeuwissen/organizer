@@ -2,11 +2,8 @@ import { defineStore } from 'pinia'
 import type { GraphNode, GraphEdge, KnowledgeNode, NodeType } from '~/types/models/network'
 import { isKnowledgeNode } from '~/types/models/network'
 import type { EdgeType } from '~/types/models/network'
-
-// Auth and notification stores are imported lazily inside actions to avoid
-// circular dependency issues (network.ts ← auth.ts ← pinia persist init → network.ts)
-const getAuthStore = () => import('~/stores/auth').then(m => m.useAuthStore())
-const getNotifyStore = () => import('~/stores/notification').then(m => m.useNotificationStore())
+import { useAuthStore } from '~/stores/auth'
+import { useNotificationStore } from '~/stores/notification'
 
 export const useNetworkStore = defineStore('network', {
   persist: true,
@@ -109,7 +106,7 @@ export const useNetworkStore = defineStore('network', {
     async load() {
       const { collection, query, where, getDocs, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
-      const authStore = await getAuthStore()
+      const authStore = useAuthStore()
       const userId = authStore.user?.id
       if (!userId) return
 
@@ -132,8 +129,7 @@ export const useNetworkStore = defineStore('network', {
           updatedAt: d.data().updatedAt?.toDate?.() ?? new Date(),
         }))
       } catch (err) {
-        const notify = await getNotifyStore()
-        notify.error('network.loadError')
+        useNotificationStore().error('network.loadError')
         throw err
       } finally {
         this.loading = false
@@ -144,7 +140,7 @@ export const useNetworkStore = defineStore('network', {
       const { collection, query, where, getDocs, addDoc, serverTimestamp, getFirestore } =
         await import('firebase/firestore')
       const db = getFirestore()
-      const authStore = await getAuthStore()
+      const authStore = useAuthStore()
       const userId = authStore.user?.id
       if (!userId) return
 
@@ -252,9 +248,9 @@ export const useNetworkStore = defineStore('network', {
         }
 
         this.bootstrapped = true
-        ;(await getNotifyStore()).success('network.syncComplete')
+        useNotificationStore().success('network.syncComplete')
       } catch (err) {
-        ;(await getNotifyStore()).error('network.syncError')
+        useNotificationStore().error('network.syncError')
         throw err
       }
     },
@@ -262,7 +258,7 @@ export const useNetworkStore = defineStore('network', {
     async createEdge(partial: Omit<GraphEdge, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
       const { collection, addDoc, serverTimestamp, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
-      const authStore = await getAuthStore()
+      const authStore = useAuthStore()
       const userId = authStore.user?.id
       if (!userId) return
       const ref = await addDoc(collection(db, 'graphEdges'), {
