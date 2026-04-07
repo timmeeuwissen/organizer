@@ -88,7 +88,6 @@ onMounted(async () => {
   // Increase repulsion and link distance for more breathing room
   graph.d3Force('charge')?.strength(-180)
   graph.d3Force('link')?.distance(80)
-  graph.d3ReheatSimulation()
 })
 
 watch(graphData, (data) => {
