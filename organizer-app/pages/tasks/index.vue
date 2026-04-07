@@ -212,7 +212,9 @@ v-container(fluid)
                       size="small"
                       :color="getTypeColor(task.type)"
                     ) {{ getTypeText(task.type) }}
-                  td(style="width: 100px")
+                  td(style="width: 120px")
+                    v-btn(icon size="small" :to="`/tasks/${task.id}`" color="info")
+                      v-icon mdi-open-in-new
                     v-btn(icon size="small" @click.stop="openTask(task)" color="primary")
                       v-icon mdi-pencil
                     v-btn(

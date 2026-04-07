@@ -101,6 +101,14 @@ v-container(fluid)
                 icon
                 variant="text"
                 size="small"
+                :to="`/people/${item.id}`"
+                color="info"
+              )
+                v-icon mdi-open-in-new
+              v-btn(
+                icon
+                variant="text"
+                size="small"
                 @click.stop="openPerson(item)"
                 color="primary"
               )

@@ -15,7 +15,7 @@ v-container(fluid)
         v-card-text(v-else)
           v-list(data-test="behaviors-list")
             v-list-item(
-              v-for="behavior in doWellBehaviors" 
+              v-for="behavior in doWellBehaviors"
               :key="behavior.id"
               :title="behavior.title"
               :subtitle="behavior.rationale"
@@ -25,6 +25,9 @@ v-container(fluid)
               template(v-slot:prepend)
                 v-avatar(color="primary" size="36")
                   v-icon(color="white") mdi-check
+              template(v-slot:append)
+                v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
+                  v-icon mdi-open-in-new
         v-card-actions
           v-spacer
           v-btn(
@@ -45,7 +48,7 @@ v-container(fluid)
         v-card-text(v-else)
           v-list
             v-list-item(
-              v-for="behavior in wantToDoBetterBehaviors" 
+              v-for="behavior in wantToDoBetterBehaviors"
               :key="behavior.id"
               :title="behavior.title"
               :subtitle="behavior.rationale"
@@ -55,6 +58,9 @@ v-container(fluid)
               template(v-slot:prepend)
                 v-avatar(color="info" size="36")
                   v-icon(color="white") mdi-trending-up
+              template(v-slot:append)
+                v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
+                  v-icon mdi-open-in-new
         v-card-actions
           v-spacer
           v-btn(
@@ -75,7 +81,7 @@ v-container(fluid)
         v-card-text(v-else)
           v-list
             v-list-item(
-              v-for="behavior in needToImproveBehaviors" 
+              v-for="behavior in needToImproveBehaviors"
               :key="behavior.id"
               :title="behavior.title"
               :subtitle="behavior.rationale"
@@ -85,6 +91,9 @@ v-container(fluid)
               template(v-slot:prepend)
                 v-avatar(color="warning" size="36")
                   v-icon(color="white") mdi-alert
+              template(v-slot:append)
+                v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
+                  v-icon mdi-open-in-new
         v-card-actions
           v-spacer
           v-btn(
