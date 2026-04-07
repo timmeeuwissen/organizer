@@ -12,6 +12,18 @@ v-navigation-drawer(permanent, width="280")
         @click="$emit('sync')"
       ) {{ $t('network.sync') }}
 
+    //- Sync progress
+    v-list-item(v-if="syncProgress")
+      .text-caption.text-medium-emphasis.mb-1 {{ $t(syncProgress.phase) }}
+      v-progress-linear(
+        :model-value="syncProgress.percent"
+        color="primary"
+        height="6"
+        rounded
+        striped
+      )
+      .text-caption.text-right.mt-1.text-medium-emphasis {{ syncProgress.percent }}%
+
     v-divider.my-2
 
 
@@ -126,6 +138,7 @@ interface Props {
   allNodes: GraphNode[]
   timeRange: string
   loading?: boolean
+  syncProgress?: { percent: number; phase: string } | null
 }
 
 const props = defineProps<Props>()

@@ -59,7 +59,8 @@ onMounted(async () => {
       return base + (props.pinnedNodeIds.includes(n.id) ? 3 : 0)
     })
     .nodeLabel((n: any) => n.label)
-    .linkColor(() => 'rgba(255,255,255,0.12)')
+    .linkColor(() => 'rgba(255,255,255,0.35)')
+    .linkWidth(1.5)
     .linkLabel((l: any) => l.label ?? l.type)
     .onNodeClick((n: any, event: MouseEvent) => {
       const now = Date.now()
@@ -86,6 +87,7 @@ onMounted(async () => {
 })
 
 watch(graphData, (data) => {
+  console.log('[graph] updating — nodes:', data.nodes.length, 'links:', data.links.length, 'sample link:', data.links[0])
   graph?.graphData(data)
 })
 

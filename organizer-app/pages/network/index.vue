@@ -9,6 +9,7 @@
     :all-nodes="networkStore.nodes"
     :time-range="timeRange"
     :loading="networkStore.loading"
+    :sync-progress="networkStore.syncProgress"
     @toggle-type="toggleType"
     @update:depth="depth = $event"
     @unpin="unpinNode"
@@ -57,6 +58,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useNetworkStore } from '~/stores/network'
 import { useNotificationStore } from '~/stores/notification'
 import type { GraphNode, KnowledgeNode, NodeType } from '~/types/models/network'
@@ -66,6 +68,7 @@ definePageMeta({ middleware: 'auth' })
 
 const router = useRouter()
 const networkStore = useNetworkStore()
+const { t } = useI18n()
 
 // UI state
 const selectedNode = ref<GraphNode | null>(null)
@@ -93,10 +96,6 @@ const filteredNodes = computed(() => {
     for (const id of pinnedNodeIds.value) {
       networkStore.getNeighbours(id, depth.value).forEach(n => reachable.add(n.id))
     }
-    nodes = nodes.filter(n => reachable.has(n.id))
-  } else if (selectedNode.value) {
-    const reachable = new Set<string>([selectedNode.value.id])
-    networkStore.getNeighbours(selectedNode.value.id, depth.value).forEach(n => reachable.add(n.id))
     nodes = nodes.filter(n => reachable.has(n.id))
   }
 
@@ -184,7 +183,32 @@ function clearPath() {
 }
 
 async function handleSync() {
-  await networkStore.syncFromStores()
+  try {
+    const stats = await networkStore.syncFromStores()
+    if (!stats) return
+
+    const totalNodes = Object.values(stats.nodesAdded).reduce((s, n) => s + n, 0)
+
+    if (totalNodes === 0 && stats.edgesAdded === 0) {
+      useNotificationStore().info(t('network.syncNoChanges'))
+      return
+    }
+
+    const parts: string[] = []
+    if (totalNodes > 0) {
+      const typeList = (Object.entries(stats.nodesAdded) as Array<[NodeType, number]>)
+        .filter(([, n]) => n > 0)
+        .map(([type, n]) => `${n} ${t(`network.nodeType.${type}`).toLowerCase()}`)
+        .join(', ')
+      parts.push(t('network.syncAddedNodes', { count: totalNodes, types: typeList }))
+    }
+    if (stats.edgesAdded > 0) {
+      parts.push(t('network.syncAddedEdges', { count: stats.edgesAdded }))
+    }
+    useNotificationStore().success(parts.join(' · '), { timeout: 8000 })
+  } catch {
+    // error notification already shown by store
+  }
 }
 
 onMounted(async () => {
