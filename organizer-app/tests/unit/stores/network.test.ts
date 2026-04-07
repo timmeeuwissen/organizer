@@ -106,34 +106,15 @@ describe('useNetworkStore — getters', () => {
     expect(path).toEqual([])
   })
 
-  it('knowledgeFor returns linked knowledge nodes above certainty threshold', async () => {
+  it('updateEdge merges partial into local state', async () => {
+    const { updateDoc } = await import('firebase/firestore')
     const { useNetworkStore } = await import('~/stores/network')
     const store = useNetworkStore()
-    const kHigh: GraphNode = {
-      ...node('k1', 'knowledge', null),
-      content: 'test fact',
-      subtype: 'observation',
-      source: 'manual',
-      certainty: 0.9,
-      certaintyDate: now,
-      tags: [],
-    } as any
-    const kLow: GraphNode = {
-      ...node('k2', 'knowledge', null),
-      content: 'weak guess',
-      subtype: 'insight',
-      source: 'ai',
-      certainty: 0.3,
-      certaintyDate: now,
-      tags: [],
-    } as any
-    store.nodes = [node('p1', 'person'), kHigh, kLow]
-    store.edges = [
-      edge('e1', 'k1', 'p1', 'references'),
-      edge('e2', 'k2', 'p1', 'references'),
-    ]
-    const result = store.knowledgeFor('p1', 0.6)
-    expect(result.map(n => n.id)).toEqual(['k1'])
+    store.edges = [edge('e1', 'a', 'b', 'related')]
+    await store.updateEdge('e1', { type: 'member', label: 'test' })
+    expect(store.edges[0].type).toBe('member')
+    expect(store.edges[0].label).toBe('test')
+    expect(updateDoc).toHaveBeenCalledTimes(1)
   })
 })
 

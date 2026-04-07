@@ -92,6 +92,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useNetworkStore } from '~/stores/network'
 import { useNotificationStore } from '~/stores/notification'
+import { useKnowledgeStore } from '~/stores/knowledge'
 import type { GraphNode, KnowledgeNode, NodeType } from '~/types/models/network'
 import { GRAPH_DEFAULTS } from '~/config/network'
 
@@ -99,6 +100,7 @@ definePageMeta({ middleware: 'auth' })
 
 const router = useRouter()
 const networkStore = useNetworkStore()
+const knowledgeStore = useKnowledgeStore()
 const { t } = useI18n()
 
 // UI state
@@ -165,8 +167,10 @@ const filteredNodes = computed(() => {
 })
 
 const selectedNodeKnowledge = computed((): KnowledgeNode[] => {
-  if (!selectedNode.value) return []
-  return networkStore.knowledgeFor(selectedNode.value.id, GRAPH_DEFAULTS.minCertainty)
+  if (!selectedNode.value || !selectedNode.value.entityId) return []
+  return knowledgeStore
+    .connectionsForEntity(selectedNode.value.type as NodeType, selectedNode.value.entityId)
+    .map(c => c.knowledge)
 })
 
 const selectedNodeConnections = computed(() => {
@@ -273,6 +277,7 @@ async function handleSync() {
 
 onMounted(async () => {
   try { await networkStore.load() } catch { /* error notified in store */ }
+  try { await knowledgeStore.load() } catch { /* error notified in store */ }
   if (!networkStore.bootstrapped) {
     try { await networkStore.syncFromStores() } catch { /* error notified in store */ }
   }

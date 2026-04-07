@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import type { GraphNode, GraphEdge, KnowledgeNode, NodeType } from '~/types/models/network'
-import { isKnowledgeNode } from '~/types/models/network'
+import type { GraphNode, GraphEdge, NodeType } from '~/types/models/network'
 import type { EdgeType } from '~/types/models/network'
 import { useAuthStore } from '~/stores/auth'
 import { useNotificationStore } from '~/stores/notification'
@@ -82,21 +81,6 @@ export const useNetworkStore = defineStore('network', {
         }
       }
       return []
-    },
-
-    knowledgeFor: (state) => (nodeId: string, minCertainty = 0.6): KnowledgeNode[] => {
-      const linkedEdges = state.edges.filter(
-        e => (e.sourceId === nodeId || e.targetId === nodeId) && e.type === 'references'
-      )
-      return linkedEdges
-        .map(e => {
-          const otherId = e.sourceId === nodeId ? e.targetId : e.sourceId
-          return state.nodes.find(n => n.id === otherId)
-        })
-        .filter((n): n is KnowledgeNode => {
-          if (!n || !isKnowledgeNode(n)) return false
-          return n.certainty >= minCertainty
-        })
     },
 
     nodeDegree: (state) => (nodeId: string): number =>
@@ -363,6 +347,14 @@ export const useNetworkStore = defineStore('network', {
       const db = getFirestore()
       await deleteDoc(doc(db, 'graphEdges', id))
       this.edges = this.edges.filter(e => e.id !== id)
+    },
+
+    async updateEdge(id: string, partial: Partial<Pick<GraphEdge, 'type' | 'label'>>) {
+      const { doc, updateDoc, serverTimestamp, getFirestore } = await import('firebase/firestore')
+      const db = getFirestore()
+      await updateDoc(doc(db, 'graphEdges', id), { ...partial, updatedAt: serverTimestamp() })
+      const idx = this.edges.findIndex(e => e.id === id)
+      if (idx !== -1) Object.assign(this.edges[idx], { ...partial, updatedAt: new Date() })
     },
   },
 })
