@@ -1,0 +1,178 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e6]:
+    - navigation [ref=e7]:
+      - list [ref=e9]:
+        - link "Organizer" [ref=e10] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e15]: Organizer
+        - separator [ref=e16]
+        - link "Behaviors" [ref=e17] [cursor=pointer]:
+          - /url: /behaviors
+          - generic [ref=e19]: 󱍰
+          - generic [ref=e21]: Behaviors
+          - button [ref=e23]:
+            - generic [ref=e25]: 󰐕
+        - link "People" [ref=e26] [cursor=pointer]:
+          - /url: /people
+          - generic [ref=e28]: 󰡉
+          - generic [ref=e30]: People
+          - button [ref=e32]:
+            - generic [ref=e34]: 󰐕
+        - link "Teams" [ref=e35] [cursor=pointer]:
+          - /url: /teams
+          - generic [ref=e37]: 󰀏
+          - generic [ref=e39]: Teams
+          - button [ref=e41]:
+            - generic [ref=e43]: 󰐕
+        - link "Projects" [ref=e44] [cursor=pointer]:
+          - /url: /projects
+          - generic [ref=e46]: 󰉓
+          - generic [ref=e48]: Projects
+          - button [ref=e50]:
+            - generic [ref=e52]: 󰐕
+        - link "Tasks" [ref=e53] [cursor=pointer]:
+          - /url: /tasks
+          - generic [ref=e55]: 󰄵
+          - generic [ref=e57]: Tasks
+          - button [ref=e59]:
+            - generic [ref=e61]: 󰐕
+        - link "Calendar" [ref=e62] [cursor=pointer]:
+          - /url: /calendar
+          - generic [ref=e64]: 󰃭
+          - generic [ref=e66]: Calendar
+          - button [ref=e68]:
+            - generic [ref=e70]: 󰐕
+        - link "Meetings" [ref=e71] [cursor=pointer]:
+          - /url: /meetings
+          - generic [ref=e73]: 󰭘
+          - generic [ref=e75]: Meetings
+          - button [ref=e77]:
+            - generic [ref=e79]: 󰐕
+        - link "Mail" [ref=e80] [cursor=pointer]:
+          - /url: /mail
+          - generic [ref=e82]: 󰇮
+          - generic [ref=e84]: Mail
+          - button [ref=e86]:
+            - generic [ref=e88]: 󰐕
+        - link "Coaching" [ref=e89] [cursor=pointer]:
+          - /url: /coaching
+          - generic [ref=e91]: 󰢙
+          - generic [ref=e93]: Coaching
+          - button [ref=e95]:
+            - generic [ref=e97]: 󰐕
+        - link "Statistics" [ref=e98] [cursor=pointer]:
+          - /url: /statistics
+          - generic [ref=e100]: 󰄨
+          - generic [ref=e102]: Statistics
+        - link "Network" [ref=e103] [cursor=pointer]:
+          - /url: /network
+          - generic [ref=e105]: 󱁉
+          - generic [ref=e107]: Network
+        - link "Feedback Management" [ref=e108] [cursor=pointer]:
+          - /url: /feedback
+          - generic [ref=e110]: 󰍪
+          - generic [ref=e112]: Feedback Management
+    - banner [ref=e113]:
+      - generic [ref=e114]:
+        - button [ref=e115] [cursor=pointer]:
+          - generic [ref=e117]: 󰍜
+        - generic [ref=e119]: OrganizerDashboard
+        - button [ref=e120] [cursor=pointer]:
+          - generic [ref=e122]: 󰐕
+        - button "Analyze Text with AI" [ref=e124] [cursor=pointer]:
+          - generic [ref=e126]: 󰧑
+        - button [ref=e127] [cursor=pointer]:
+          - generic [ref=e129]: 󰖔
+        - button [ref=e130] [cursor=pointer]:
+          - generic [ref=e132]: 󰗊
+        - button "Refresh Data" [ref=e133] [cursor=pointer]:
+          - generic [ref=e135]: 󰑐
+        - link [ref=e136] [cursor=pointer]:
+          - /url: /auth/profile
+          - generic [ref=e138]: 󰀉
+        - button "Logout" [ref=e139] [cursor=pointer]:
+          - generic [ref=e141]: 󰍃
+    - main [ref=e142]:
+      - generic [ref=e143]:
+        - list [ref=e144]:
+          - listitem [ref=e145]:
+            - link "Welcome" [ref=e146] [cursor=pointer]:
+              - /url: /dashboard
+          - listitem [ref=e147]: /
+          - listitem: Dashboard
+        - generic [ref=e148]:
+          - heading "Dashboard" [level=1] [ref=e151]
+          - generic [ref=e152]:
+            - generic [ref=e154]:
+              - generic [ref=e155]:
+                - generic [ref=e156]: 󰄵
+                - text: Upcoming Tasks
+              - alert [ref=e158]:
+                - generic [ref=e160]: 󰋼
+                - generic [ref=e161]: No upcoming tasks
+              - link "View More" [ref=e163] [cursor=pointer]:
+                - /url: /tasks
+                - generic [ref=e164]: View More
+            - generic [ref=e166]:
+              - generic [ref=e167]:
+                - generic [ref=e168]: 󰃭
+                - text: Today's Meetings
+              - alert [ref=e170]:
+                - generic [ref=e172]: 󰋼
+                - generic [ref=e173]: No meetings today
+              - link "View More" [ref=e175] [cursor=pointer]:
+                - /url: /meetings
+                - generic [ref=e176]: View More
+            - generic [ref=e178]:
+              - generic [ref=e179]:
+                - generic [ref=e180]: 󰡉
+                - text: Recently Contacted
+              - alert [ref=e182]:
+                - generic [ref=e184]: 󰋼
+                - generic [ref=e185]: No people yet
+              - link "View More" [ref=e187] [cursor=pointer]:
+                - /url: /people
+                - generic [ref=e188]: View More
+            - generic [ref=e190]:
+              - generic [ref=e191]:
+                - generic [ref=e192]: 󰉓
+                - text: Project Status
+              - alert [ref=e194]:
+                - generic [ref=e196]: 󰋼
+                - generic [ref=e197]: No projects yet
+              - link "View More" [ref=e199] [cursor=pointer]:
+                - /url: /projects
+                - generic [ref=e200]: View More
+          - generic [ref=e201]:
+            - generic [ref=e203]:
+              - generic [ref=e204]: Behaviors
+              - alert [ref=e206]:
+                - generic [ref=e208]: 󰋼
+                - generic [ref=e209]: No behaviors yet
+              - link "View More" [ref=e211] [cursor=pointer]:
+                - /url: /behaviors
+                - generic [ref=e212]: View More
+            - generic [ref=e214]:
+              - generic [ref=e215]: Recent Activity
+              - alert [ref=e217]:
+                - generic [ref=e219]: 󰋼
+                - generic [ref=e220]: No recent activity yet
+              - generic [ref=e221]:
+                - button "View More" [disabled]:
+                  - generic: View More
+      - button "Send Feedback" [ref=e222] [cursor=pointer]:
+        - generic [ref=e224]: 󰍪
+    - contentinfo [ref=e225]:
+      - generic [ref=e228]: © 2026 — Organizer
+  - generic:
+    - img
+  - generic [ref=e229]:
+    - button "Toggle Nuxt DevTools" [ref=e230] [cursor=pointer]:
+      - img [ref=e231]
+    - generic "Page load time" [ref=e234]:
+      - generic [ref=e235]: "194"
+      - generic [ref=e236]: ms
+    - button "Toggle Component Inspector" [ref=e238] [cursor=pointer]:
+      - img [ref=e239]
+  - generic:
+    - tooltip

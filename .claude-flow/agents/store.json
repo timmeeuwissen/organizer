@@ -1,0 +1,44 @@
+{
+  "agents": {
+    "types-reviewer": {
+      "agentId": "types-reviewer",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-04-05T16:22:05.094Z",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "config-reviewer": {
+      "agentId": "config-reviewer",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-04-05T16:22:05.128Z",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "architecture-reviewer": {
+      "agentId": "architecture-reviewer",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-04-05T16:22:05.144Z",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    }
+  },
+  "version": "3.0.0"
+}

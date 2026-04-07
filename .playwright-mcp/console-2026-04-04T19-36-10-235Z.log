@@ -1,0 +1,12 @@
+[     672ms] [LOG] Firebase config: {authDomain: organizer-85045.firebaseapp.com, projectId: organizer-85045, storageBucket: organizer-85045.firebasestorage.app, messagingSenderId: 798140005744, measurementId: G-8N4JMBVHNY} @ http://localhost:3000/_nuxt/plugins/firebase.ts:22
+[     673ms] [WARNING] [2026-04-04T19:36:10.907Z]  @firebase/firestore: Firestore (9.23.0): enableIndexedDbPersistence() will be deprecated in the future, you can use `FirestoreSettings.cache` instead. @ http://localhost:3000/_nuxt/node_modules/.cache/vite/client/deps/chunk-VSCDMDJU.js?v=0103adaa:1053
+[     682ms] [LOG] ✨ %cNuxt DevTools %c Press Shift + Option + D to open DevTools color: black; border-radius: 3px 0 0 3px; padding: 2px 2px 1px 10px; background: #00DC82 border-radius: 0 3px 3px 0; padding: 2px 10px 1px 2px; background: #00DC8220  @ http://localhost:3000/_nuxt/node_modules/@nuxt/devtools/dist/runtime/plugins/devtools.client.js?v=0103adaa:51
+[     901ms] [LOG] Firestore offline persistence enabled @ http://localhost:3000/_nuxt/plugins/firebase.ts:84
+[     902ms] [LOG] Firebase initialized successfully @ http://localhost:3000/_nuxt/plugins/firebase.ts:98
+[     902ms] [LOG] Pinia persistence plugin initialized with date reviving @ http://localhost:3000/_nuxt/plugins/pinia-persistence.ts:5
+[     902ms] [LOG] OIDC logging enabled in development mode @ http://localhost:3000/_nuxt/plugins/oidc.ts:7
+[     902ms] [LOG] Silent renew helper would be available at: /oidc-silent-renew.html @ http://localhost:3000/_nuxt/plugins/oidc.ts:30
+[     902ms] [LOG] OIDC plugin initialized @ http://localhost:3000/_nuxt/plugins/oidc.ts:33
+[     903ms] [INFO] <Suspense> is an experimental feature and its API will likely change. @ http://localhost:3000/_nuxt/node_modules/@vue/runtime-core/dist/runtime-core.esm-bundler.js?v=0103adaa:7208
+[    1038ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/utils/api/aiProviders/index.ts?t=1775330263464:22
+[    1269ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue?t=1775330263464:70

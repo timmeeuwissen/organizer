@@ -1,0 +1,175 @@
+<h2>Network Module — Page Layout</h2>
+<p class="subtitle">Proposed layout for the 3D graph view. Does this structure feel right?</p>
+
+<div class="mockup" style="max-width:900px;margin:0 auto">
+  <div class="mockup-header">Network — /network</div>
+  <div class="mockup-body" style="padding:0">
+
+    <!-- Top bar -->
+    <div style="background:#1e1e2e;padding:8px 16px;display:flex;align-items:center;gap:16px;border-bottom:1px solid #333">
+      <span style="color:#cdd6f4;font-size:13px;font-weight:600">≡ Organizer</span>
+      <span style="color:#89b4fa;font-size:13px">mdi-graph &nbsp; Network</span>
+      <div style="flex:1"></div>
+      <span style="color:#6c7086;font-size:12px;background:#313244;padding:3px 10px;border-radius:4px">🔍 Search graph...</span>
+      <span style="color:#a6e3a1;font-size:12px;background:#1e3a2f;padding:3px 10px;border-radius:4px">+ Knowledge</span>
+    </div>
+
+    <div style="display:flex;height:580px">
+
+      <!-- Left sidebar: filters -->
+      <div style="width:200px;background:#181825;border-right:1px solid #313244;padding:12px;flex-shrink:0;overflow-y:auto">
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">SHOW NODES</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+          <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#89b4fa;display:inline-block"></span> People</label>
+          <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#a6e3a1;display:inline-block"></span> Projects</label>
+          <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#f38ba8;display:inline-block"></span> Tasks</label>
+          <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#fab387;display:inline-block"></span> Behaviors</label>
+          <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#cba6f7;display:inline-block"></span> Meetings</label>
+          <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#f9e2af;display:inline-block"></span> Teams</label>
+          <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#94e2d5;display:inline-block"></span> Coaching</label>
+          <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:4px;background:#eba0ac;display:inline-block"></span> Knowledge ✦</label>
+        </div>
+
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">KNOWLEDGE FILTER</div>
+        <div style="margin-bottom:16px">
+          <div style="color:#cdd6f4;font-size:11px;margin-bottom:4px">Min certainty</div>
+          <div style="background:#313244;border-radius:4px;height:6px;position:relative">
+            <div style="background:#89b4fa;height:6px;width:60%;border-radius:4px"></div>
+            <div style="width:12px;height:12px;background:#89b4fa;border-radius:50%;position:absolute;top:-3px;left:57%;border:2px solid #1e1e2e"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:#6c7086;font-size:10px;margin-top:2px"><span>0%</span><span>60%</span><span>100%</span></div>
+        </div>
+
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">TIME RANGE</div>
+        <div style="color:#6c7086;font-size:11px;margin-bottom:4px">All time ▾</div>
+
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px;margin-top:12px">FOCUS ON</div>
+        <div style="color:#6c7086;font-size:11px">Select a node or search...</div>
+      </div>
+
+      <!-- Main 3D canvas area -->
+      <div style="flex:1;background:#11111b;position:relative;overflow:hidden">
+        <!-- Simulated 3D graph -->
+        <svg width="100%" height="100%" style="position:absolute">
+          <!-- Edges -->
+          <line x1="300" y1="200" x2="450" y2="150" stroke="#89b4fa" stroke-opacity="0.3" stroke-width="1.5"/>
+          <line x1="300" y1="200" x2="200" y2="320" stroke="#89b4fa" stroke-opacity="0.3" stroke-width="1.5"/>
+          <line x1="300" y1="200" x2="420" y2="300" stroke="#a6e3a1" stroke-opacity="0.3" stroke-width="1.5"/>
+          <line x1="450" y1="150" x2="420" y2="300" stroke="#a6e3a1" stroke-opacity="0.3" stroke-width="1.5"/>
+          <line x1="420" y1="300" x2="520" y2="380" stroke="#f38ba8" stroke-opacity="0.3" stroke-width="1"/>
+          <line x1="200" y1="320" x2="420" y2="300" stroke="#cba6f7" stroke-opacity="0.3" stroke-width="1"/>
+          <line x1="450" y1="150" x2="550" y2="180" stroke="#fab387" stroke-opacity="0.3" stroke-width="1"/>
+          <line x1="300" y1="200" x2="160" y2="150" stroke="#eba0ac" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="420" y1="300" x2="380" y2="420" stroke="#eba0ac" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="3,3"/>
+          <!-- Person nodes (circles) -->
+          <circle cx="300" cy="200" r="18" fill="#89b4fa" fill-opacity="0.9"/>
+          <text x="300" y="204" text-anchor="middle" fill="#11111b" font-size="9" font-weight="bold">Alice</text>
+          <circle cx="450" cy="150" r="14" fill="#89b4fa" fill-opacity="0.7"/>
+          <text x="450" y="154" text-anchor="middle" fill="#11111b" font-size="8">Bob</text>
+          <circle cx="200" cy="320" r="12" fill="#89b4fa" fill-opacity="0.7"/>
+          <text x="200" y="324" text-anchor="middle" fill="#11111b" font-size="8">Carol</text>
+          <!-- Project nodes -->
+          <circle cx="420" cy="300" r="20" fill="#a6e3a1" fill-opacity="0.85"/>
+          <text x="420" y="304" text-anchor="middle" fill="#11111b" font-size="9" font-weight="bold">Alpha</text>
+          <!-- Task nodes -->
+          <circle cx="520" cy="380" r="10" fill="#f38ba8" fill-opacity="0.8"/>
+          <text x="520" y="384" text-anchor="middle" fill="#11111b" font-size="7">T1</text>
+          <!-- Meeting node -->
+          <circle cx="160" cy="380" r="11" fill="#cba6f7" fill-opacity="0.8"/>
+          <text x="160" y="384" text-anchor="middle" fill="#11111b" font-size="7">Mtg</text>
+          <!-- Team node -->
+          <circle cx="550" cy="180" r="13" fill="#f9e2af" fill-opacity="0.8"/>
+          <text x="550" y="184" text-anchor="middle" fill="#11111b" font-size="7">Team</text>
+          <!-- Knowledge nodes (diamond shape) -->
+          <polygon points="160,140 172,152 160,164 148,152" fill="#eba0ac" fill-opacity="0.9"/>
+          <text x="160" y="180" text-anchor="middle" fill="#eba0ac" font-size="8">0.9✦</text>
+          <polygon points="380,410 392,422 380,434 368,422" fill="#eba0ac" fill-opacity="0.7"/>
+          <text x="380" y="448" text-anchor="middle" fill="#eba0ac" font-size="8">0.7✦</text>
+        </svg>
+
+        <!-- Zoom controls -->
+        <div style="position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px">
+          <button style="width:28px;height:28px;background:#313244;border:none;color:#cdd6f4;border-radius:4px;cursor:pointer;font-size:14px">+</button>
+          <button style="width:28px;height:28px;background:#313244;border:none;color:#cdd6f4;border-radius:4px;cursor:pointer;font-size:14px">−</button>
+          <button style="width:28px;height:28px;background:#313244;border:none;color:#cdd6f4;border-radius:4px;cursor:pointer;font-size:10px">⟲</button>
+        </div>
+
+        <!-- Legend -->
+        <div style="position:absolute;top:12px;left:12px;background:#1e1e2e;padding:6px 10px;border-radius:6px;opacity:0.85">
+          <div style="color:#6c7086;font-size:10px;margin-bottom:4px">LEGEND</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <span style="color:#cdd6f4;font-size:10px">● nodes by type</span>
+            <span style="color:#eba0ac;font-size:10px">◆ knowledge</span>
+            <span style="color:#6c7086;font-size:10px">--- knowledge edge</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right panel: selected node detail -->
+      <div style="width:220px;background:#181825;border-left:1px solid #313244;padding:12px;flex-shrink:0;overflow-y:auto">
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">SELECTED</div>
+
+        <div style="background:#1e1e2e;border-radius:8px;padding:10px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="width:10px;height:10px;border-radius:50%;background:#89b4fa;display:inline-block"></span>
+            <span style="color:#cdd6f4;font-size:13px;font-weight:600">Alice</span>
+          </div>
+          <div style="color:#6c7086;font-size:11px">Person · Product Manager</div>
+          <div style="color:#6c7086;font-size:11px;margin-top:2px">3 projects · 5 tasks · 12 meetings</div>
+          <button style="margin-top:8px;background:#313244;border:none;color:#89b4fa;font-size:11px;padding:4px 8px;border-radius:4px;cursor:pointer;width:100%">Open record →</button>
+        </div>
+
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">KNOWLEDGE (2)</div>
+        <div style="background:#1e1e2e;border-radius:6px;padding:8px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="color:#eba0ac;font-size:10px">observation</span>
+            <span style="color:#a6e3a1;font-size:10px">✓ 90%</span>
+          </div>
+          <div style="color:#cdd6f4;font-size:11px">"Prefers async communication over meetings"</div>
+          <div style="color:#6c7086;font-size:10px;margin-top:2px">manual · 2026-03-01</div>
+        </div>
+        <div style="background:#1e1e2e;border-radius:6px;padding:8px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="color:#eba0ac;font-size:10px">insight</span>
+            <span style="color:#f9e2af;font-size:10px">~ 70%</span>
+          </div>
+          <div style="color:#cdd6f4;font-size:11px">"Central connector in Project Alpha network"</div>
+          <div style="color:#6c7086;font-size:10px;margin-top:2px">ai · 2026-04-01</div>
+        </div>
+
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">ASK THE GRAPH</div>
+        <div style="background:#1e1e2e;border-radius:6px;padding:8px">
+          <input style="width:100%;background:#313244;border:none;color:#cdd6f4;font-size:11px;padding:6px;border-radius:4px;box-sizing:border-box" placeholder="Ask about Alice..."/>
+          <button style="margin-top:6px;background:#89b4fa;border:none;color:#11111b;font-size:11px;padding:4px 8px;border-radius:4px;cursor:pointer;width:100%">Ask AI →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:16px">Does this layout work? Key question: should "Ask the graph" live in the right panel (contextual to selected node) or as a separate full panel at the bottom?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Right panel (as shown)</h3>
+      <p>Context-aware: query is about the selected node. Compact, always visible.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Bottom panel (expandable)</h3>
+      <p>Full-width query interface, not tied to a node. Better for broad graph questions.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Both: right panel for node queries, bottom for global</h3>
+      <p>Most powerful but more complex UI.</p>
+    </div>
+  </div>
+</div>

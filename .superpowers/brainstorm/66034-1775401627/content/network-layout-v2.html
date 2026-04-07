@@ -1,0 +1,206 @@
+<h2>Network Module — Layout v2</h2>
+<p class="subtitle">Added depth control, multi-pin mode, and relation-path highlighting to the left sidebar</p>
+
+<div class="mockup" style="max-width:960px;margin:0 auto">
+  <div class="mockup-header">Network — /network</div>
+  <div class="mockup-body" style="padding:0">
+
+    <!-- Top bar -->
+    <div style="background:#1e1e2e;padding:8px 16px;display:flex;align-items:center;gap:16px;border-bottom:1px solid #333">
+      <span style="color:#cdd6f4;font-size:13px;font-weight:600">≡ Organizer</span>
+      <span style="color:#89b4fa;font-size:13px">⬡ Network</span>
+      <div style="flex:1"></div>
+      <span style="color:#6c7086;font-size:12px;background:#313244;padding:3px 10px;border-radius:4px">🔍 Search graph...</span>
+      <span style="color:#a6e3a1;font-size:12px;background:#1e3a2f;padding:3px 10px;border-radius:4px">+ Knowledge</span>
+    </div>
+
+    <div style="display:flex;height:600px">
+
+      <!-- Left sidebar -->
+      <div style="width:210px;background:#181825;border-right:1px solid #313244;padding:12px;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+
+        <!-- Node types -->
+        <div>
+          <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">SHOW NODE TYPES</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#89b4fa;display:inline-block"></span> People</label>
+            <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#a6e3a1;display:inline-block"></span> Projects</label>
+            <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#f38ba8;display:inline-block"></span> Tasks</label>
+            <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#fab387;display:inline-block"></span> Behaviors</label>
+            <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#cba6f7;display:inline-block"></span> Meetings</label>
+            <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#f9e2af;display:inline-block"></span> Teams</label>
+            <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#94e2d5;display:inline-block"></span> Coaching</label>
+            <label style="color:#cdd6f4;font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:4px;background:#eba0ac;display:inline-block"></span> Knowledge ✦</label>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #313244;padding-top:14px">
+          <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">GRAPH DEPTH</div>
+          <div style="color:#cdd6f4;font-size:11px;margin-bottom:6px">Show <strong style="color:#89b4fa">2 hops</strong> from focus</div>
+          <div style="background:#313244;border-radius:4px;height:6px;position:relative;margin-bottom:4px">
+            <div style="background:#89b4fa;height:6px;width:40%;border-radius:4px"></div>
+            <div style="width:12px;height:12px;background:#89b4fa;border-radius:50%;position:absolute;top:-3px;left:37%;border:2px solid #1e1e2e"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:#6c7086;font-size:10px"><span>1</span><span>2</span><span>3</span><span>4</span><span>∞</span></div>
+          <div style="color:#6c7086;font-size:10px;margin-top:6px;font-style:italic">∞ = full graph (slow)</div>
+        </div>
+
+        <!-- Multi-pin mode -->
+        <div style="border-top:1px solid #313244;padding-top:14px">
+          <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">PINNED NODES</div>
+          <div style="background:#1e1e2e;border-radius:6px;padding:8px;margin-bottom:8px">
+            <div style="color:#cdd6f4;font-size:11px;margin-bottom:4px">📌 Multi-pin mode</div>
+            <div style="color:#6c7086;font-size:10px;margin-bottom:8px">Ctrl+click to pin nodes. Graph shows only pinned nodes + their shared connections.</div>
+            <!-- Pinned nodes list -->
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+              <span style="background:#313244;color:#89b4fa;font-size:10px;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:3px">● Alice <span style="color:#6c7086;cursor:pointer">×</span></span>
+              <span style="background:#313244;color:#a6e3a1;font-size:10px;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:3px">● Alpha <span style="color:#6c7086;cursor:pointer">×</span></span>
+            </div>
+            <div style="color:#6c7086;font-size:10px;font-style:italic">Showing: 2 pinned + shared neighbourhood</div>
+          </div>
+          <button style="width:100%;background:#313244;border:none;color:#f38ba8;font-size:11px;padding:5px;border-radius:4px;cursor:pointer">Clear pins</button>
+        </div>
+
+        <!-- Shortest path -->
+        <div style="border-top:1px solid #313244;padding-top:14px">
+          <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">SHORTEST PATH</div>
+          <div style="color:#6c7086;font-size:10px;margin-bottom:6px">Highlight path between two nodes</div>
+          <div style="background:#313244;border-radius:4px;padding:5px 8px;color:#cdd6f4;font-size:11px;margin-bottom:4px">From: Alice</div>
+          <div style="background:#313244;border-radius:4px;padding:5px 8px;color:#6c7086;font-size:11px;margin-bottom:6px">To: pick a node...</div>
+          <button style="width:100%;background:#313244;border:none;color:#89b4fa;font-size:11px;padding:5px;border-radius:4px;cursor:pointer">Show path</button>
+        </div>
+
+        <!-- Knowledge filter -->
+        <div style="border-top:1px solid #313244;padding-top:14px">
+          <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">KNOWLEDGE FILTER</div>
+          <div style="color:#cdd6f4;font-size:11px;margin-bottom:4px">Min certainty: <strong style="color:#eba0ac">60%</strong></div>
+          <div style="background:#313244;border-radius:4px;height:6px;position:relative">
+            <div style="background:#eba0ac;height:6px;width:60%;border-radius:4px"></div>
+            <div style="width:12px;height:12px;background:#eba0ac;border-radius:50%;position:absolute;top:-3px;left:57%;border:2px solid #1e1e2e"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:#6c7086;font-size:10px;margin-top:2px;margin-bottom:8px"><span>0%</span><span>100%</span></div>
+          <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:6px">SUBTYPES</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            <span style="background:#313244;color:#eba0ac;font-size:10px;padding:2px 6px;border-radius:10px">observation</span>
+            <span style="background:#313244;color:#eba0ac;font-size:10px;padding:2px 6px;border-radius:10px">concept</span>
+            <span style="background:#313244;color:#eba0ac;font-size:10px;padding:2px 6px;border-radius:10px">reason</span>
+            <span style="background:#313244;color:#6c7086;font-size:10px;padding:2px 6px;border-radius:10px;opacity:0.5">fact</span>
+            <span style="background:#313244;color:#eba0ac;font-size:10px;padding:2px 6px;border-radius:10px">insight</span>
+            <span style="background:#313244;color:#6c7086;font-size:10px;padding:2px 6px;border-radius:10px;opacity:0.5">pattern</span>
+          </div>
+        </div>
+
+        <!-- Time range -->
+        <div style="border-top:1px solid #313244;padding-top:14px">
+          <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:6px">TIME RANGE</div>
+          <select style="width:100%;background:#313244;border:none;color:#cdd6f4;font-size:11px;padding:5px;border-radius:4px">
+            <option>All time</option>
+            <option>Last 30 days</option>
+            <option>Last 90 days</option>
+            <option>Custom range</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Main 3D canvas -->
+      <div style="flex:1;background:#11111b;position:relative;overflow:hidden">
+        <svg width="100%" height="100%" style="position:absolute">
+          <!-- Normal edges -->
+          <line x1="320" y1="220" x2="460" y2="160" stroke="#89b4fa" stroke-opacity="0.25" stroke-width="1.5"/>
+          <line x1="320" y1="220" x2="220" y2="340" stroke="#89b4fa" stroke-opacity="0.25" stroke-width="1.5"/>
+          <line x1="320" y1="220" x2="440" y2="320" stroke="#a6e3a1" stroke-opacity="0.25" stroke-width="1.5"/>
+          <line x1="460" y1="160" x2="440" y2="320" stroke="#a6e3a1" stroke-opacity="0.25" stroke-width="1.5"/>
+          <line x1="440" y1="320" x2="530" y2="400" stroke="#f38ba8" stroke-opacity="0.25" stroke-width="1"/>
+          <line x1="220" y1="340" x2="440" y2="320" stroke="#cba6f7" stroke-opacity="0.25" stroke-width="1"/>
+          <!-- Highlighted path: Alice → Alpha -->
+          <line x1="320" y1="220" x2="440" y2="320" stroke="#a6e3a1" stroke-opacity="0.9" stroke-width="3"/>
+          <!-- Knowledge edges (dashed) -->
+          <line x1="320" y1="220" x2="175" y2="160" stroke="#eba0ac" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="440" y1="320" x2="395" y2="440" stroke="#eba0ac" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="3,3"/>
+          <!-- Pinned node halos -->
+          <circle cx="320" cy="220" r="26" fill="none" stroke="#89b4fa" stroke-width="2" stroke-opacity="0.4" stroke-dasharray="4,3"/>
+          <circle cx="440" cy="320" r="28" fill="none" stroke="#a6e3a1" stroke-width="2" stroke-opacity="0.4" stroke-dasharray="4,3"/>
+          <!-- Nodes -->
+          <circle cx="320" cy="220" r="18" fill="#89b4fa"/>
+          <text x="320" y="224" text-anchor="middle" fill="#11111b" font-size="9" font-weight="bold">Alice</text>
+          <text x="320" y="242" text-anchor="middle" fill="#89b4fa" font-size="8">📌</text>
+          <circle cx="460" cy="160" r="13" fill="#89b4fa" fill-opacity="0.6"/>
+          <text x="460" y="164" text-anchor="middle" fill="#11111b" font-size="8">Bob</text>
+          <circle cx="220" cy="340" r="12" fill="#89b4fa" fill-opacity="0.6"/>
+          <text x="220" y="344" text-anchor="middle" fill="#11111b" font-size="8">Carol</text>
+          <circle cx="440" cy="320" r="20" fill="#a6e3a1"/>
+          <text x="440" y="324" text-anchor="middle" fill="#11111b" font-size="9" font-weight="bold">Alpha</text>
+          <text x="440" y="344" text-anchor="middle" fill="#a6e3a1" font-size="8">📌</text>
+          <circle cx="530" cy="400" r="10" fill="#f38ba8" fill-opacity="0.7"/>
+          <text x="530" y="404" text-anchor="middle" fill="#11111b" font-size="7">T1</text>
+          <circle cx="220" cy="340" r="12" fill="#89b4fa" fill-opacity="0.6"/>
+          <!-- Knowledge diamonds -->
+          <polygon points="175,148 187,160 175,172 163,160" fill="#eba0ac" fill-opacity="0.9"/>
+          <text x="175" y="185" text-anchor="middle" fill="#eba0ac" font-size="8">✦ 0.9</text>
+          <polygon points="395,430 407,442 395,454 383,442" fill="#eba0ac" fill-opacity="0.7"/>
+          <text x="395" y="469" text-anchor="middle" fill="#eba0ac" font-size="8">✦ 0.7</text>
+          <!-- Path label -->
+          <text x="385" y="278" text-anchor="middle" fill="#a6e3a1" font-size="9" font-style="italic">member</text>
+        </svg>
+
+        <!-- Zoom controls -->
+        <div style="position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px">
+          <button style="width:28px;height:28px;background:#313244;border:none;color:#cdd6f4;border-radius:4px;cursor:pointer;font-size:14px">+</button>
+          <button style="width:28px;height:28px;background:#313244;border:none;color:#cdd6f4;border-radius:4px;cursor:pointer;font-size:14px">−</button>
+          <button style="width:28px;height:28px;background:#313244;border:none;color:#cdd6f4;border-radius:4px;cursor:pointer;font-size:10px">⟲</button>
+        </div>
+
+        <!-- Mode indicator -->
+        <div style="position:absolute;top:12px;left:12px;background:#1e1e2e;padding:6px 10px;border-radius:6px;opacity:0.9">
+          <span style="color:#f9e2af;font-size:11px">📌 Multi-pin mode · 2 pinned · showing shared neighbourhood</span>
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div style="width:220px;background:#181825;border-left:1px solid #313244;padding:12px;flex-shrink:0;overflow-y:auto">
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">SELECTED</div>
+        <div style="background:#1e1e2e;border-radius:8px;padding:10px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="width:10px;height:10px;border-radius:50%;background:#89b4fa;display:inline-block"></span>
+            <span style="color:#cdd6f4;font-size:13px;font-weight:600">Alice</span>
+            <span style="color:#f9e2af;font-size:10px">📌</span>
+          </div>
+          <div style="color:#6c7086;font-size:11px">Person · Product Manager</div>
+          <button style="margin-top:8px;background:#313244;border:none;color:#89b4fa;font-size:11px;padding:4px 8px;border-radius:4px;cursor:pointer;width:100%">Open record →</button>
+        </div>
+
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">KNOWLEDGE (2)</div>
+        <div style="background:#1e1e2e;border-radius:6px;padding:8px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="color:#eba0ac;font-size:10px">observation</span>
+            <span style="color:#a6e3a1;font-size:10px">✓ 90%</span>
+          </div>
+          <div style="color:#cdd6f4;font-size:11px">"Prefers async communication"</div>
+          <div style="color:#6c7086;font-size:10px;margin-top:2px">manual · 2026-03-01</div>
+        </div>
+        <div style="background:#1e1e2e;border-radius:6px;padding:8px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="color:#eba0ac;font-size:10px">insight</span>
+            <span style="color:#f9e2af;font-size:10px">~ 70%</span>
+          </div>
+          <div style="color:#cdd6f4;font-size:11px">"Central connector in Alpha network"</div>
+          <div style="color:#6c7086;font-size:10px;margin-top:2px">ai · 2026-04-01</div>
+        </div>
+
+        <div class="label" style="color:#6c7086;font-size:10px;margin-bottom:8px">ASK THE GRAPH</div>
+        <div style="background:#1e1e2e;border-radius:6px;padding:8px">
+          <div style="color:#6c7086;font-size:10px;margin-bottom:4px">Context: Alice (selected)</div>
+          <input style="width:100%;background:#313244;border:none;color:#cdd6f4;font-size:11px;padding:6px;border-radius:4px;box-sizing:border-box" placeholder="Ask about Alice..."/>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <button style="flex:1;background:#89b4fa;border:none;color:#11111b;font-size:11px;padding:4px;border-radius:4px;cursor:pointer">Ask AI</button>
+            <button style="flex:1;background:#313244;border:none;color:#6c7086;font-size:11px;padding:4px;border-radius:4px;cursor:pointer">Global ↓</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:16px">Does this capture all the navigation controls you had in mind?</p>

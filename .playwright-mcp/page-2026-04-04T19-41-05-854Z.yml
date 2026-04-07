@@ -1,0 +1,212 @@
+- generic [ref=e1]:
+  - generic [ref=e6]:
+    - navigation [ref=e7]:
+      - list [ref=e9]:
+        - link "Organizer" [ref=e10] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e15]: Organizer
+        - separator [ref=e16]
+        - link "Behaviors" [ref=e17] [cursor=pointer]:
+          - /url: /behaviors
+          - generic [ref=e19]: 󱍰
+          - generic [ref=e21]: Behaviors
+          - button [ref=e23]:
+            - generic [ref=e25]: 󰐕
+        - link "People" [ref=e26] [cursor=pointer]:
+          - /url: /people
+          - generic [ref=e28]: 󰡉
+          - generic [ref=e30]: People
+          - button [ref=e32]:
+            - generic [ref=e34]: 󰐕
+        - link "Teams" [ref=e35] [cursor=pointer]:
+          - /url: /teams
+          - generic [ref=e37]: 󰀏
+          - generic [ref=e39]: Teams
+          - button [ref=e41]:
+            - generic [ref=e43]: 󰐕
+        - link "Projects" [ref=e44] [cursor=pointer]:
+          - /url: /projects
+          - generic [ref=e46]: 󰉓
+          - generic [ref=e48]: Projects
+          - button [ref=e50]:
+            - generic [ref=e52]: 󰐕
+        - link "Tasks" [ref=e53] [cursor=pointer]:
+          - /url: /tasks
+          - generic [ref=e55]: 󰄵
+          - generic [ref=e57]: Tasks
+          - button [ref=e59]:
+            - generic [ref=e61]: 󰐕
+        - link "Calendar" [ref=e62] [cursor=pointer]:
+          - /url: /calendar
+          - generic [ref=e64]: 󰃭
+          - generic [ref=e66]: Calendar
+          - button [ref=e68]:
+            - generic [ref=e70]: 󰐕
+        - link "Meetings" [ref=e71] [cursor=pointer]:
+          - /url: /meetings
+          - generic [ref=e73]: 󰭘
+          - generic [ref=e75]: Meetings
+          - button [ref=e77]:
+            - generic [ref=e79]: 󰐕
+        - link "Mail" [ref=e80] [cursor=pointer]:
+          - /url: /mail
+          - generic [ref=e82]: 󰇮
+          - generic [ref=e84]: Mail
+          - button [ref=e86]:
+            - generic [ref=e88]: 󰐕
+        - link "Coaching" [ref=e89] [cursor=pointer]:
+          - /url: /coaching
+          - generic [ref=e91]: 󰢙
+          - generic [ref=e93]: Coaching
+          - button [ref=e95]:
+            - generic [ref=e97]: 󰐕
+        - link "Statistics" [ref=e98] [cursor=pointer]:
+          - /url: /statistics
+          - generic [ref=e100]: 󰄨
+          - generic [ref=e102]: Statistics
+        - link "Network" [ref=e103] [cursor=pointer]:
+          - /url: /network
+          - generic [ref=e105]: 󱁉
+          - generic [ref=e107]: Network
+        - link "Feedback Management" [ref=e108] [cursor=pointer]:
+          - /url: /feedback
+          - generic [ref=e110]: 󰍪
+          - generic [ref=e112]: Feedback Management
+    - banner [ref=e113]:
+      - generic [ref=e114]:
+        - button [ref=e115] [cursor=pointer]:
+          - generic [ref=e117]: 󰍜
+        - generic [ref=e119]: OrganizerLogin
+        - button [ref=e120] [cursor=pointer]:
+          - generic [ref=e122]: 󰐕
+        - button "Analyze Text with AI" [ref=e124] [cursor=pointer]:
+          - generic [ref=e126]: 󰧑
+        - button [ref=e127] [cursor=pointer]:
+          - generic [ref=e129]: 󰖔
+        - button [ref=e130] [cursor=pointer]:
+          - generic [ref=e132]: 󰗊
+        - button "Refresh Data" [ref=e133] [cursor=pointer]:
+          - generic [ref=e135]: 󰑐
+        - link [active] [ref=e136] [cursor=pointer]:
+          - /url: /auth/profile
+          - generic [ref=e138]: 󰀉
+        - button "Logout" [ref=e139] [cursor=pointer]:
+          - generic [ref=e141]: 󰍃
+    - main [ref=e142]:
+      - generic [ref=e143]:
+        - list [ref=e144]:
+          - listitem [ref=e145]:
+            - link "Welcome" [ref=e146] [cursor=pointer]:
+              - /url: /dashboard
+          - listitem [ref=e147]: /
+          - listitem [ref=e243]: Login
+          - listitem [ref=e244]: /
+          - listitem: profile
+        - generic [ref=e247]:
+          - generic [ref=e248]:
+            - generic [ref=e249]: User Profile
+            - generic [ref=e250]: timmeeuwissen@gmail.com
+            - generic [ref=e252]:
+              - generic [ref=e253]:
+                - img "Tim Meeuwissen" [ref=e255]
+                - button "Edit" [ref=e256] [cursor=pointer]:
+                  - generic [ref=e257]: Edit
+              - generic [ref=e258]:
+                - generic [ref=e259]:
+                  - generic [ref=e261]: 󰀄
+                  - generic [ref=e264]:
+                    - generic: Name
+                    - textbox "Name" [ref=e265]: Tim Meeuwissen
+                  - alert [ref=e266]
+                - generic:
+                  - generic:
+                    - generic: 󰇮
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: Email
+                        - textbox "Email" [disabled]: timmeeuwissen@gmail.com
+                  - alert
+                - separator [ref=e268]
+                - generic [ref=e269]: Settings
+                - generic [ref=e270]:
+                  - generic [ref=e272]:
+                    - checkbox "Dark Mode" [checked] [ref=e276] [cursor=pointer]
+                    - generic [ref=e277] [cursor=pointer]: Dark Mode
+                  - alert [ref=e278]
+                - generic [ref=e280]:
+                  - combobox [ref=e282] [cursor=pointer]:
+                    - generic [ref=e283]:
+                      - generic: Language
+                      - generic [ref=e284]:
+                        - generic [ref=e286]: English
+                        - combobox "Language": English
+                    - generic [ref=e288]: 󰍝
+                  - alert [ref=e289]
+                - generic [ref=e291]:
+                  - combobox [ref=e293] [cursor=pointer]:
+                    - generic [ref=e294]:
+                      - generic: Week Starts On
+                      - generic [ref=e295]:
+                        - generic [ref=e297]: Monday
+                        - combobox "Week Starts On": Monday
+                    - generic [ref=e299]: 󰍝
+                  - alert [ref=e300]
+                - generic [ref=e302]:
+                  - generic [ref=e304]:
+                    - checkbox "Email Notifications" [checked] [ref=e308] [cursor=pointer]
+                    - generic [ref=e309] [cursor=pointer]: Email Notifications
+                  - alert [ref=e310]
+                - generic [ref=e312]:
+                  - generic [ref=e314]:
+                    - checkbox "Calendar Synchronization" [checked] [ref=e318] [cursor=pointer]
+                    - generic [ref=e319] [cursor=pointer]: Calendar Synchronization
+                  - alert [ref=e320]
+          - generic [ref=e322]:
+            - generic [ref=e323]:
+              - text: Manage AI Integrations
+              - button [ref=e324] [cursor=pointer]:
+                - generic [ref=e326]: 󰐕
+            - list [ref=e328]:
+              - listitem [ref=e329]:
+                - generic [ref=e332]: 󰚩
+                - generic [ref=e333]:
+                  - generic [ref=e334]: XAi
+                  - generic [ref=e335]:
+                    - text: XAI (Grok)
+                    - generic [ref=e337]: Enabled
+                - generic [ref=e338]:
+                  - button "Edit" [ref=e339] [cursor=pointer]:
+                    - generic [ref=e341]: 󰏫
+                  - button "Delete" [ref=e342] [cursor=pointer]:
+                    - generic [ref=e344]: 󰆴
+          - generic [ref=e345]:
+            - generic [ref=e346]:
+              - text: Integrations
+              - button [ref=e347] [cursor=pointer]:
+                - generic [ref=e349]: 󰐕
+            - alert [ref=e351]:
+              - generic [ref=e353]: 󰋼
+              - generic [ref=e354]:
+                - text: No integrations added yet
+                - button "Add your first integration account" [ref=e356] [cursor=pointer]:
+                  - generic [ref=e357]: Add your first integration account
+            - generic [ref=e358]:
+              - button "Save" [disabled]:
+                - generic: Save
+      - button "Send Feedback" [ref=e222] [cursor=pointer]:
+        - generic [ref=e224]: 󰍪
+    - contentinfo [ref=e225]:
+      - generic [ref=e228]: © 2026 — Organizer
+  - generic:
+    - img
+  - generic [ref=e229]:
+    - button "Toggle Nuxt DevTools" [ref=e230] [cursor=pointer]:
+      - img [ref=e231]
+    - generic "Page load time" [ref=e234]:
+      - generic [ref=e235]: "398"
+      - generic [ref=e236]: ms
+    - button "Toggle Component Inspector" [ref=e238] [cursor=pointer]:
+      - img [ref=e239]
+  - generic:
+    - tooltip

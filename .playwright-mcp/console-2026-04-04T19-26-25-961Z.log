@@ -1,0 +1,19 @@
+[    1235ms] [LOG] Firebase config: {authDomain: organizer-85045.firebaseapp.com, projectId: organizer-85045, storageBucket: organizer-85045.firebasestorage.app, messagingSenderId: 798140005744, measurementId: G-8N4JMBVHNY} @ http://localhost:3000/_nuxt/plugins/firebase.ts:22
+[    1239ms] [WARNING] [2026-04-04T19:26:27.200Z]  @firebase/firestore: Firestore (9.23.0): enableIndexedDbPersistence() will be deprecated in the future, you can use `FirestoreSettings.cache` instead. @ http://localhost:3000/_nuxt/node_modules/.cache/vite/client/deps/chunk-VSCDMDJU.js?v=0103adaa:1053
+[    1366ms] [LOG] Firestore offline persistence enabled @ http://localhost:3000/_nuxt/plugins/firebase.ts:84
+[    1366ms] [LOG] Firebase initialized successfully @ http://localhost:3000/_nuxt/plugins/firebase.ts:98
+[    1366ms] [LOG] Pinia persistence plugin initialized with date reviving @ http://localhost:3000/_nuxt/plugins/pinia-persistence.ts:5
+[    1367ms] [LOG] OIDC logging enabled in development mode @ http://localhost:3000/_nuxt/plugins/oidc.ts:7
+[    1367ms] [LOG] Silent renew helper would be available at: /oidc-silent-renew.html @ http://localhost:3000/_nuxt/plugins/oidc.ts:30
+[    1367ms] [LOG] OIDC plugin initialized @ http://localhost:3000/_nuxt/plugins/oidc.ts:33
+[    1371ms] [INFO] <Suspense> is an experimental feature and its API will likely change. @ http://localhost:3000/_nuxt/node_modules/@vue/runtime-core/dist/runtime-core.esm-bundler.js?v=0103adaa:7208
+[    1515ms] [LOG] 🍍 "mail" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1516ms] [LOG] 🍍 "calendar" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1516ms] [LOG] 🍍 "people" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1517ms] [LOG] 🍍 "tasks" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1518ms] [LOG] 🍍 "behaviors" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1518ms] [LOG] 🍍 "projects" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1518ms] [LOG] 🍍 "coaching" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1543ms] [LOG] 🍍 "meetings" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1544ms] [LOG] 🍍 "notification" store installed 🆕 @ http://localhost:3000/_nuxt/node_modules/pinia/dist/pinia.mjs?v=0103adaa:185
+[    1622ms] [LOG] ✨ %cNuxt DevTools %c Press Shift + Option + D to open DevTools color: black; border-radius: 3px 0 0 3px; padding: 2px 2px 1px 10px; background: #00DC82 border-radius: 0 3px 3px 0; padding: 2px 10px 1px 2px; background: #00DC8220  @ http://localhost:3000/_nuxt/node_modules/@nuxt/devtools/dist/runtime/plugins/devtools.client.js?v=0103adaa:51
