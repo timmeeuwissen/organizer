@@ -480,6 +480,8 @@ export default {
     knowledge: 'Knowledge',
     sync: 'Sync from stores',
     syncComplete: 'Network synced',
+    syncError: 'Failed to sync network data',
+    loadError: 'Failed to load network data',
     noPath: 'No path found between these nodes',
     pathLength: '{n} hops',
     nodeType: {

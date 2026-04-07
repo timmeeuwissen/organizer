@@ -208,13 +208,12 @@ function clearPath() {
 
 async function handleSync() {
   await networkStore.syncFromStores()
-  notifyStore.success(t('network.syncComplete'))
 }
 
 onMounted(async () => {
-  await networkStore.load()
+  try { await networkStore.load() } catch { /* error notified in store */ }
   if (!networkStore.bootstrapped) {
-    await networkStore.syncFromStores()
+    try { await networkStore.syncFromStores() } catch { /* error notified in store */ }
   }
 })
 </script>

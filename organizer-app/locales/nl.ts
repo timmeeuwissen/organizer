@@ -414,6 +414,8 @@ export default {
     knowledge: 'Kennis',
     sync: 'Synchroniseren',
     syncComplete: 'Netwerk gesynchroniseerd',
+    syncError: 'Fout bij synchroniseren van netwerkdata',
+    loadError: 'Fout bij laden van netwerkdata',
     noPath: 'Geen pad gevonden tussen deze knooppunten',
     pathLength: '{n} stappen',
     nodeType: {
