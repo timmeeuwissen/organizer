@@ -46,10 +46,11 @@ export function useKnowledgeConnections(
     nodeData: Omit<KnowledgeNode, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'type' | 'entityId'>,
     relationType: EdgeType,
     label?: string
-  ) {
+  ): Promise<KnowledgeNode | undefined> {
     const node = await knowledgeStore.create(nodeData)
-    if (!node) return
+    if (!node) return undefined
     await knowledgeStore.connect(node.id, nodeType, id.value, relationType, label)
+    return node
   }
 
   async function editKnowledge(

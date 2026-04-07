@@ -160,6 +160,7 @@ const attachEntityType = ref<NodeType | null>(null)
 const attachEntityId = ref<string | null>(null)
 
 watch(() => props.modelValue, (open) => {
+  saving.value = false
   if (!open) return
   if (props.knowledge) {
     form.value = {
@@ -197,12 +198,12 @@ const entityTypeItems = computed(() =>
   }))
 )
 
-const relationTypeItems = [
-  { title: 'References', value: 'references' },
-  { title: 'Related', value: 'related' },
-  { title: 'Contains', value: 'contains' },
-  { title: 'Stakeholder', value: 'stakeholder' },
-]
+const relationTypeItems = computed(() => [
+  { title: t('knowledge.relationTypes.references'), value: 'references' },
+  { title: t('knowledge.relationTypes.related'), value: 'related' },
+  { title: t('knowledge.relationTypes.contains'), value: 'contains' },
+  { title: t('knowledge.relationTypes.stakeholder'), value: 'stakeholder' },
+])
 
 const entityItems = computed(() => {
   switch (attachEntityType.value) {
@@ -221,21 +222,17 @@ async function submit() {
   const { valid: v } = await formRef.value.validate()
   if (!v) return
   saving.value = true
-  try {
-    emit('submit', {
-      content: form.value.content,
-      subtype: form.value.subtype,
-      certainty: form.value.certainty,
-      certaintyDate: form.value.certaintyDate,
-      tags: form.value.tags,
-      relationType: form.value.relationType as EdgeType,
-      ...(form.value.relationLabel ? { relationLabel: form.value.relationLabel } : {}),
-      ...(attachEntityType.value && attachEntityId.value
-        ? { entityType: attachEntityType.value, entityId: attachEntityId.value }
-        : {}),
-    })
-  } finally {
-    saving.value = false
-  }
+  emit('submit', {
+    content: form.value.content,
+    subtype: form.value.subtype,
+    certainty: form.value.certainty,
+    certaintyDate: form.value.certaintyDate,
+    tags: form.value.tags,
+    relationType: form.value.relationType as EdgeType,
+    ...(form.value.relationLabel ? { relationLabel: form.value.relationLabel } : {}),
+    ...(attachEntityType.value && attachEntityId.value
+      ? { entityType: attachEntityType.value, entityId: attachEntityId.value }
+      : {}),
+  })
 }
 </script>

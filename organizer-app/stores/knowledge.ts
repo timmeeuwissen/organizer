@@ -174,8 +174,13 @@ export const useKnowledgeStore = defineStore('knowledge', {
     async disconnect(edgeId: string) {
       const { doc, deleteDoc, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
-      await deleteDoc(doc(db, 'knowledgeEdges', edgeId))
-      this.edges = this.edges.filter(e => e.id !== edgeId)
+      try {
+        await deleteDoc(doc(db, 'knowledgeEdges', edgeId))
+        this.edges = this.edges.filter(e => e.id !== edgeId)
+      } catch (err) {
+        useNotificationStore().error('knowledge.deleteError')
+        throw err
+      }
     },
 
     async updateConnection(edgeId: string, relationType: EdgeType, label?: string) {

@@ -499,6 +499,12 @@ export default {
       insight: 'Inzicht',
       pattern: 'Patroon',
     },
+    relationTypes: {
+      references: 'Referentie',
+      related: 'Gerelateerd',
+      contains: 'Bevat',
+      stakeholder: 'Belanghebbende',
+    },
     sources: {
       manual: 'Handmatig',
       ai: 'AI',

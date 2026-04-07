@@ -150,19 +150,16 @@ async function handleFormSubmit(data: {
       })
       await editRelation(editingRow.value.edge.id, data.relationType, data.relationLabel)
     } else {
-      await addKnowledge(
+      const createdNode = await addKnowledge(
         { content: data.content, subtype: data.subtype, source: 'manual', certainty: data.certainty, certaintyDate: data.certaintyDate, tags: data.tags, label: data.content.slice(0, 60) },
         data.relationType,
         data.relationLabel
       )
       // Also connect to optional extra entity
-      if (data.entityType && data.entityId) {
+      if (createdNode && data.entityType && data.entityId) {
         const { useKnowledgeStore } = await import('~/stores/knowledge')
         const kStore = useKnowledgeStore()
-        const lastNode = kStore.nodes[kStore.nodes.length - 1]
-        if (lastNode) {
-          await kStore.connect(lastNode.id, data.entityType, data.entityId, data.relationType, data.relationLabel)
-        }
+        await kStore.connect(createdNode.id, data.entityType, data.entityId, data.relationType, data.relationLabel)
       }
     }
     formOpen.value = false

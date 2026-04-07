@@ -565,6 +565,12 @@ export default {
       insight: 'Insight',
       pattern: 'Pattern',
     },
+    relationTypes: {
+      references: 'References',
+      related: 'Related',
+      contains: 'Contains',
+      stakeholder: 'Stakeholder',
+    },
     sources: {
       manual: 'Manual',
       ai: 'AI',
