@@ -84,6 +84,16 @@
     v-tooltip(:text="$t('network.selectNode')" location="left")
       template(#activator="{ props: tp }")
         v-icon(v-bind="tp" size="20" color="disabled") mdi-cursor-default-click-outline
+
+  KnowledgeNodeForm(
+    v-if="knowledgeFormOpen"
+    v-model="knowledgeFormOpen"
+    :knowledge="null"
+    :edge="null"
+    :locked-entity="knowledgeFormNode && knowledgeFormNode.entityId ? { nodeType: knowledgeFormNode.type, entityId: knowledgeFormNode.entityId } : null"
+    @submit="handleKnowledgeSubmit"
+    @cancel="knowledgeFormOpen = false"
+  )
 </template>
 
 <script setup lang="ts">
@@ -93,6 +103,7 @@ import { useI18n } from 'vue-i18n'
 import { useNetworkStore } from '~/stores/network'
 import { useNotificationStore } from '~/stores/notification'
 import { useKnowledgeStore } from '~/stores/knowledge'
+import KnowledgeNodeForm from '~/components/knowledge/KnowledgeNodeForm.vue'
 import type { GraphNode, KnowledgeNode, NodeType } from '~/types/models/network'
 import { GRAPH_DEFAULTS } from '~/config/network'
 
@@ -113,6 +124,8 @@ const pathNodes = ref<GraphNode[]>([])
 const timeRange = ref('all')
 const hideOrphans = ref(true)
 const labelDepth = ref(30)
+const knowledgeFormOpen = ref(false)
+const knowledgeFormNode = ref<GraphNode | null>(null)
 const visibleTypes = ref<NodeType[]>([
   'person', 'project', 'task', 'behavior', 'meeting', 'team', 'coaching', 'knowledge',
 ])
@@ -229,8 +242,31 @@ function openContextMenu(_node: GraphNode, _event: MouseEvent) {
   // Placeholder — context menu added in Plan 2
 }
 
-function openAddKnowledge(_node: GraphNode) {
-  // Placeholder — KnowledgeNodeForm added in Plan 2
+function openAddKnowledge(node: GraphNode) {
+  knowledgeFormNode.value = node
+  knowledgeFormOpen.value = true
+}
+
+async function handleKnowledgeSubmit(data: {
+  content: string; subtype: any; certainty: number; certaintyDate: Date
+  tags: string[]; relationType: any; relationLabel?: string
+}) {
+  const node = knowledgeFormNode.value
+  if (!node || !node.entityId) return
+  try {
+    const kNode = await knowledgeStore.create({
+      content: data.content, subtype: data.subtype, source: 'manual' as const,
+      certainty: data.certainty, certaintyDate: data.certaintyDate,
+      tags: data.tags, label: data.content.slice(0, 60),
+    })
+    if (kNode) {
+      await knowledgeStore.connect(kNode.id, node.type as any, node.entityId, data.relationType, data.relationLabel)
+    }
+    knowledgeFormOpen.value = false
+    useNotificationStore().success(t('knowledge.addKnowledge'))
+  } catch {
+    useNotificationStore().error('knowledge.saveError')
+  }
 }
 
 function findPath() {
