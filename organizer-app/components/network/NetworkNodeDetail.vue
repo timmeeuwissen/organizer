@@ -2,7 +2,7 @@
 v-card(
   v-if="node"
   flat
-  color="surface-variant"
+  color="transparent"
 )
   v-card-title
     .d-flex.align-center.ga-2
