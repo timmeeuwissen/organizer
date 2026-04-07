@@ -59,8 +59,8 @@ onMounted(async () => {
       return base + (props.pinnedNodeIds.includes(n.id) ? 3 : 0)
     })
     .nodeLabel((n: any) => n.label)
-    .linkColor(() => 'rgba(255,255,255,0.35)')
-    .linkWidth(1.5)
+    .linkColor(() => 'rgba(255,255,255,0.55)')
+    .linkWidth(2)
     .linkLabel((l: any) => l.label ?? l.type)
     .onNodeClick((n: any, event: MouseEvent) => {
       const now = Date.now()
@@ -84,6 +84,11 @@ onMounted(async () => {
       emit('node-rightclick', n, event)
     })
     .graphData(graphData.value)
+
+  // Increase repulsion and link distance for more breathing room
+  graph.d3Force('charge')?.strength(-180)
+  graph.d3Force('link')?.distance(80)
+  graph.d3ReheatSimulation()
 })
 
 watch(graphData, (data) => {
