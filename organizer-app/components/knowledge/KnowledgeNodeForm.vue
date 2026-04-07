@@ -49,7 +49,7 @@ v-dialog(v-model="internalModel" max-width="640px" scrollable)
 
         v-divider(v-if="!isRelationOnly" class="mb-3")
 
-        template(v-if="!props.lockedEntity && !isRelationOnly")
+        template(v-if="!props.lockedEntity && !isRelationOnly && !props.knowledge")
           v-select(
             v-model="attachEntityType"
             :items="entityTypeItems"
@@ -150,6 +150,7 @@ const form = ref({
   content: '',
   subtype: 'observation' as KnowledgeSubtype,
   certainty: 0.7,
+  certaintyDate: new Date() as Date,
   tags: [] as string[],
   relationType: 'references' as EdgeType,
   relationLabel: '',
@@ -165,10 +166,13 @@ watch(() => props.modelValue, (open) => {
       content: props.knowledge.content,
       subtype: props.knowledge.subtype,
       certainty: props.knowledge.certainty,
+      certaintyDate: props.knowledge.certaintyDate instanceof Date ? props.knowledge.certaintyDate : new Date(props.knowledge.certaintyDate),
       tags: [...props.knowledge.tags],
       relationType: (props.edge?.relationType ?? 'references') as EdgeType,
       relationLabel: props.edge?.label ?? '',
     }
+    attachEntityType.value = null
+    attachEntityId.value = null
   } else {
     form.value = {
       content: '', subtype: 'observation', certainty: 0.7,
@@ -198,7 +202,6 @@ const relationTypeItems = [
   { title: 'Related', value: 'related' },
   { title: 'Contains', value: 'contains' },
   { title: 'Stakeholder', value: 'stakeholder' },
-  { title: 'Other', value: 'related' },
 ]
 
 const entityItems = computed(() => {
@@ -223,7 +226,7 @@ async function submit() {
       content: form.value.content,
       subtype: form.value.subtype,
       certainty: form.value.certainty,
-      certaintyDate: new Date(),
+      certaintyDate: form.value.certaintyDate,
       tags: form.value.tags,
       relationType: form.value.relationType as EdgeType,
       ...(form.value.relationLabel ? { relationLabel: form.value.relationLabel } : {}),

@@ -58,7 +58,7 @@ div
               variant="text"
               color="primary"
               :to="entityRoute(other.entityType, other.entityId)"
-            ) {{ $t(`network.nodeType.${other.entityType}`) }}
+            ) {{ $t(`network.nodeType.${other.entityType}`) }} #{{ other.entityId.slice(0, 6) }}
 
       template(#append)
         v-menu
