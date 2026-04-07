@@ -48,3 +48,5 @@ export interface GraphEdge {
 export function isKnowledgeNode(node: GraphNode): node is KnowledgeNode {
   return node.type === 'knowledge'
 }
+
+export type { KnowledgeEdge } from '~/types/models/knowledge'
