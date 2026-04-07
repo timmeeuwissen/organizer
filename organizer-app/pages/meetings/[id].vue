@@ -22,127 +22,138 @@ v-container(fluid)
           v-alert(type="warning") {{ $t('errors.notFound') }}
         
         v-card-text(v-else)
-          v-row
-            v-col(cols="12" md="8")
-              // Meeting details
-              v-list
-                v-list-item(v-if="meeting.startTime && meeting.plannedStatus !== 'to_be_planned'")
-                  v-list-item-title {{ $t('meetings.date') }} & {{ $t('meetings.time') }}
-                  v-list-item-subtitle {{ formatDateTime(meeting.startTime) }}
-                
-                v-list-item(v-else)
-                  v-list-item-title {{ $t('meetings.plannedStatus') }}
-                  v-list-item-subtitle {{ $t('meetings.plannedStatus.to_be_planned') }}
-                
-                v-list-item(v-if="meeting.location")
-                  v-list-item-title {{ $t('meetings.location') }}
-                  v-list-item-subtitle {{ meeting.location }}
-                
-                v-list-item(v-if="meeting.category")
-                  v-list-item-title {{ $t('meetings.category') }}
-                  v-list-item-subtitle
-                    v-chip(
-                      v-if="getCategoryById(meeting.category)"
-                      :color="getCategoryById(meeting.category)?.color"
-                      text-color="white"
-                      size="small"
-                    ) {{ getCategoryById(meeting.category)?.name }}
-              
-              // Description and notes
-              h3.text-h6.mt-6 {{ $t('common.description') }}
-              p.text-body-1.mt-2 {{ meeting.description || $t('common.noDescription') }}
-              
-              h3.text-h6.mt-6 {{ $t('meetings.notes') }}
-              p.text-body-1.mt-2.white-space-pre-wrap {{ meeting.notes || $t('common.noNotes') }}
-              
-              h3.text-h6.mt-6 {{ $t('meetings.summary') }}
-              p.text-body-1.mt-2.white-space-pre-wrap {{ meeting.summary || $t('common.noSummary') }}
-              
-              // Action items
-              h3.text-h6.mt-6 {{ $t('meetings.action') }}
-              p.text-body-1.mt-2.white-space-pre-wrap {{ meeting.actionItems || $t('common.noActionItems') }}
-            
-            v-col(cols="12" md="4")
-              // Participants
-              v-card(variant="outlined" class="mb-4")
-                v-card-title {{ $t('meetings.participants') }}
-                v-card-text
-                  div(v-if="participantsList.length > 0")
-                    v-list
-                      v-list-item(
-                        v-for="person in participantsList"
-                        :key="person.id"
-                        :to="`/people/${person.id}`"
-                      )
-                        template(v-slot:prepend)
-                          v-avatar(:color="getRandomColor(person.id)")
-                            span {{ getPersonInitials(person) }}
-                        v-list-item-title {{ person.firstName }} {{ person.lastName }}
-                  div(v-else)
-                    p {{ $t('common.noParticipants') }}
-                  
-                  v-btn(
-                    color="primary" 
-                    variant="text" 
-                    class="mt-2"
-                    @click="showAddParticipantsDialog = true"
-                  )
-                    v-icon(start) mdi-account-plus
-                    span {{ $t('common.addPerson') }}
-              
-              // Related tasks
-              v-card(variant="outlined" class="mb-4")
-                v-card-title {{ $t('tasks.title') }}
-                v-card-text
-                  div(v-if="tasksList.length > 0")
-                    v-list
-                      v-list-item(
-                        v-for="task in tasksList"
-                        :key="task.id"
-                        :to="`/tasks/${task.id}`"
-                      )
-                        template(v-slot:prepend)
-                          v-checkbox(
-                            v-model="task.completed"
-                            @change="toggleTaskComplete(task)"
-                            :color="getTaskPriorityColor(task.priority)"
+          v-tabs(v-model="activeTab" class="mb-4")
+            v-tab(value="details") {{ $t('common.details') }}
+            v-tab(value="knowledge") {{ $t('knowledge.title') }}
+          v-window(v-model="activeTab")
+            v-window-item(value="details")
+              v-row
+                v-col(cols="12" md="8")
+                  // Meeting details
+                  v-list
+                    v-list-item(v-if="meeting.startTime && meeting.plannedStatus !== 'to_be_planned'")
+                      v-list-item-title {{ $t('meetings.date') }} & {{ $t('meetings.time') }}
+                      v-list-item-subtitle {{ formatDateTime(meeting.startTime) }}
+
+                    v-list-item(v-else)
+                      v-list-item-title {{ $t('meetings.plannedStatus') }}
+                      v-list-item-subtitle {{ $t('meetings.plannedStatus.to_be_planned') }}
+
+                    v-list-item(v-if="meeting.location")
+                      v-list-item-title {{ $t('meetings.location') }}
+                      v-list-item-subtitle {{ meeting.location }}
+
+                    v-list-item(v-if="meeting.category")
+                      v-list-item-title {{ $t('meetings.category') }}
+                      v-list-item-subtitle
+                        v-chip(
+                          v-if="getCategoryById(meeting.category)"
+                          :color="getCategoryById(meeting.category)?.color"
+                          text-color="white"
+                          size="small"
+                        ) {{ getCategoryById(meeting.category)?.name }}
+
+                  // Description and notes
+                  h3.text-h6.mt-6 {{ $t('common.description') }}
+                  p.text-body-1.mt-2 {{ meeting.description || $t('common.noDescription') }}
+
+                  h3.text-h6.mt-6 {{ $t('meetings.notes') }}
+                  p.text-body-1.mt-2.white-space-pre-wrap {{ meeting.notes || $t('common.noNotes') }}
+
+                  h3.text-h6.mt-6 {{ $t('meetings.summary') }}
+                  p.text-body-1.mt-2.white-space-pre-wrap {{ meeting.summary || $t('common.noSummary') }}
+
+                  // Action items
+                  h3.text-h6.mt-6 {{ $t('meetings.action') }}
+                  p.text-body-1.mt-2.white-space-pre-wrap {{ meeting.actionItems || $t('common.noActionItems') }}
+
+                v-col(cols="12" md="4")
+                  // Participants
+                  v-card(variant="outlined" class="mb-4")
+                    v-card-title {{ $t('meetings.participants') }}
+                    v-card-text
+                      div(v-if="participantsList.length > 0")
+                        v-list
+                          v-list-item(
+                            v-for="person in participantsList"
+                            :key="person.id"
+                            :to="`/people/${person.id}`"
                           )
-                        v-list-item-title {{ task.title }}
-                  div(v-else)
-                    p {{ $t('common.noTasks') }}
-                  
-                  v-btn(
-                    color="primary" 
-                    variant="text" 
-                    class="mt-2"
-                    @click="showAddTaskDialog = true"
-                  )
-                    v-icon(start) mdi-plus
-                    span {{ $t('common.addTask') }}
-              
-              // Related projects
-              v-card(variant="outlined")
-                v-card-title {{ $t('projects.title') }}
-                v-card-text
-                  div(v-if="projectsList.length > 0")
-                    v-list
-                      v-list-item(
-                        v-for="project in projectsList"
-                        :key="project.id"
-                        :to="`/projects/${project.id}`"
+                            template(v-slot:prepend)
+                              v-avatar(:color="getRandomColor(person.id)")
+                                span {{ getPersonInitials(person) }}
+                            v-list-item-title {{ person.firstName }} {{ person.lastName }}
+                      div(v-else)
+                        p {{ $t('common.noParticipants') }}
+
+                      v-btn(
+                        color="primary"
+                        variant="text"
+                        class="mt-2"
+                        @click="showAddParticipantsDialog = true"
                       )
-                        v-list-item-title {{ project.title }}
-                  div(v-else)
-                    p {{ $t('common.noProjects') }}
-                  
-                  v-btn(
-                    color="primary" 
-                    variant="text" 
-                    class="mt-2"
-                    @click="showLinkProjectDialog = true"
-                  )
-                    v-icon(start) mdi-link
-                    span {{ $t('common.linkProject') }}
+                        v-icon(start) mdi-account-plus
+                        span {{ $t('common.addPerson') }}
+
+                  // Related tasks
+                  v-card(variant="outlined" class="mb-4")
+                    v-card-title {{ $t('tasks.title') }}
+                    v-card-text
+                      div(v-if="tasksList.length > 0")
+                        v-list
+                          v-list-item(
+                            v-for="task in tasksList"
+                            :key="task.id"
+                            :to="`/tasks/${task.id}`"
+                          )
+                            template(v-slot:prepend)
+                              v-checkbox(
+                                v-model="task.completed"
+                                @change="toggleTaskComplete(task)"
+                                :color="getTaskPriorityColor(task.priority)"
+                              )
+                            v-list-item-title {{ task.title }}
+                      div(v-else)
+                        p {{ $t('common.noTasks') }}
+
+                      v-btn(
+                        color="primary"
+                        variant="text"
+                        class="mt-2"
+                        @click="showAddTaskDialog = true"
+                      )
+                        v-icon(start) mdi-plus
+                        span {{ $t('common.addTask') }}
+
+                  // Related projects
+                  v-card(variant="outlined")
+                    v-card-title {{ $t('projects.title') }}
+                    v-card-text
+                      div(v-if="projectsList.length > 0")
+                        v-list
+                          v-list-item(
+                            v-for="project in projectsList"
+                            :key="project.id"
+                            :to="`/projects/${project.id}`"
+                          )
+                            v-list-item-title {{ project.title }}
+                      div(v-else)
+                        p {{ $t('common.noProjects') }}
+
+                      v-btn(
+                        color="primary"
+                        variant="text"
+                        class="mt-2"
+                        @click="showLinkProjectDialog = true"
+                      )
+                        v-icon(start) mdi-link
+                        span {{ $t('common.linkProject') }}
+            v-window-item(value="knowledge")
+              KnowledgeConnections(
+                v-if="meeting"
+                node-type="meeting"
+                :entity-id="meeting.id"
+              )
   
   // Dialogs for adding participants, tasks and linking to projects
   // (simplified, would normally be implemented)
@@ -152,6 +163,7 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import KnowledgeConnections from '~/components/knowledge/KnowledgeConnections.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { usePeopleStore } from '~/stores/people'
@@ -169,6 +181,7 @@ const projectsStore = useProjectsStore()
 // UI state
 const loading = ref(true)
 const error = ref('')
+const activeTab = ref('details')
 const showAddParticipantsDialog = ref(false)
 const showAddTaskDialog = ref(false)
 const showLinkProjectDialog = ref(false)
