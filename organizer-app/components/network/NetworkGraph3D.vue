@@ -41,8 +41,6 @@ const DBL_CLICK_MS = 300
 // Map<nodeId, SpriteMaterial> for per-frame opacity updates
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const labelSpriteMap = new Map<string, { sprite: any; material: any }>()
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const tmpVec = { x: 0, y: 0, z: 0 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createLabelSprite(text: string, THREE: any): any {
@@ -72,7 +70,9 @@ function createLabelSprite(text: string, THREE: any): any {
   return sprite
 }
 
-function startLabelLoop() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function startLabelLoop(THREE: any) {
+  const tmpVec = new THREE.Vector3()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function tick() {
     animFrameId = requestAnimationFrame(tick)
@@ -94,10 +94,7 @@ function startLabelLoop() {
     const entries: Array<{ material: any; dist: number }> = []
     labelSpriteMap.forEach(({ sprite, material }) => {
       sprite.getWorldPosition(tmpVec)
-      const dx = camera.position.x - (tmpVec as any).x
-      const dy = camera.position.y - (tmpVec as any).y
-      const dz = camera.position.z - (tmpVec as any).z
-      entries.push({ material, dist: Math.sqrt(dx * dx + dy * dy + dz * dz) })
+      entries.push({ material, dist: camera.position.distanceTo(tmpVec) })
     })
 
     if (entries.length === 0) return
@@ -187,7 +184,7 @@ onMounted(async () => {
   })
   resizeObserver.observe(containerEl.value)
 
-  startLabelLoop()
+  startLabelLoop(THREE)
 })
 
 watch(graphData, (data) => {
