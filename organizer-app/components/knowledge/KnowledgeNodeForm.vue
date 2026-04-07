@@ -1,0 +1,238 @@
+<template lang="pug">
+v-dialog(v-model="internalModel" max-width="640px" scrollable)
+  v-card
+    v-card-title
+      span {{ isRelationOnly ? $t('knowledge.editRelation') : (props.knowledge ? $t('knowledge.editKnowledge') : $t('knowledge.addKnowledge')) }}
+    v-divider
+    v-card-text
+      v-form(ref="formRef" v-model="valid")
+        template(v-if="!isRelationOnly")
+          v-textarea(
+            v-model="form.content"
+            :label="$t('knowledge.content')"
+            :rules="[v => !!v || $t('common.required')]"
+            rows="3"
+            auto-grow
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          )
+          v-select(
+            v-model="form.subtype"
+            :items="subtypeItems"
+            :label="$t('knowledge.subtype')"
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          )
+          v-row(dense class="mb-1 align-center")
+            v-col(cols="12")
+              .text-caption.text-medium-emphasis.mb-1 {{ $t('knowledge.certainty') }}: {{ Math.round(form.certainty * 100) }}%
+              v-slider(
+                v-model="form.certainty"
+                min="0"
+                max="1"
+                step="0.05"
+                color="primary"
+                hide-details
+              )
+          v-combobox(
+            v-model="form.tags"
+            :label="$t('knowledge.tags')"
+            multiple
+            chips
+            closable-chips
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          )
+
+        v-divider(v-if="!isRelationOnly" class="mb-3")
+
+        template(v-if="!props.lockedEntity && !isRelationOnly")
+          v-select(
+            v-model="attachEntityType"
+            :items="entityTypeItems"
+            :label="$t('knowledge.attachModule')"
+            clearable
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          )
+          v-autocomplete(
+            v-if="attachEntityType"
+            v-model="attachEntityId"
+            :items="entityItems"
+            item-title="label"
+            item-value="id"
+            :label="$t('knowledge.attachItem')"
+            clearable
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          )
+
+        v-select(
+          v-model="form.relationType"
+          :items="relationTypeItems"
+          :label="$t('knowledge.relationType')"
+          variant="outlined"
+          density="compact"
+          class="mb-3"
+        )
+        v-text-field(
+          v-model="form.relationLabel"
+          :label="$t('knowledge.relationLabel')"
+          variant="outlined"
+          density="compact"
+          class="mb-3"
+        )
+
+    v-divider
+    v-card-actions
+      v-spacer
+      v-btn(variant="text" @click="emit('cancel')") {{ $t('common.cancel') }}
+      v-btn(color="primary" :disabled="!valid || saving" :loading="saving" @click="submit") {{ $t('common.save') }}
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { usePeopleStore } from '~/stores/people'
+import { useProjectsStore } from '~/stores/projects'
+import { useTasksStore } from '~/stores/tasks'
+import { useBehaviorsStore } from '~/stores/behaviors'
+import { useMeetingsStore } from '~/stores/meetings'
+import { useTeamsStore } from '~/stores/teams'
+import { useCoachingStore } from '~/stores/coaching'
+import type { KnowledgeNode, NodeType, EdgeType, KnowledgeSubtype } from '~/types/models/network'
+import type { KnowledgeEdge } from '~/types/models/knowledge'
+
+const { t } = useI18n()
+
+const props = defineProps<{
+  modelValue: boolean
+  knowledge: KnowledgeNode | null
+  edge: KnowledgeEdge | null
+  lockedEntity: { nodeType: NodeType; entityId: string } | null
+}>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  submit: [data: {
+    content: string
+    subtype: KnowledgeSubtype
+    certainty: number
+    certaintyDate: Date
+    tags: string[]
+    relationType: EdgeType
+    relationLabel?: string
+    entityType?: NodeType
+    entityId?: string
+  }]
+  cancel: []
+}>()
+
+const internalModel = computed({
+  get: () => props.modelValue,
+  set: (v) => emit('update:modelValue', v),
+})
+
+const isRelationOnly = computed(() => props.edge !== null && props.knowledge !== null && false)
+// Show all fields when editing; show only relation fields when edge-only mode.
+// For now always show full form — simpler and consistent.
+
+const valid = ref(false)
+const saving = ref(false)
+const formRef = ref()
+
+const form = ref({
+  content: '',
+  subtype: 'observation' as KnowledgeSubtype,
+  certainty: 0.7,
+  tags: [] as string[],
+  relationType: 'references' as EdgeType,
+  relationLabel: '',
+})
+
+const attachEntityType = ref<NodeType | null>(null)
+const attachEntityId = ref<string | null>(null)
+
+watch(() => props.modelValue, (open) => {
+  if (!open) return
+  if (props.knowledge) {
+    form.value = {
+      content: props.knowledge.content,
+      subtype: props.knowledge.subtype,
+      certainty: props.knowledge.certainty,
+      tags: [...props.knowledge.tags],
+      relationType: (props.edge?.relationType ?? 'references') as EdgeType,
+      relationLabel: props.edge?.label ?? '',
+    }
+  } else {
+    form.value = {
+      content: '', subtype: 'observation', certainty: 0.7,
+      tags: [], relationType: 'references', relationLabel: '',
+    }
+    attachEntityType.value = props.lockedEntity?.nodeType ?? null
+    attachEntityId.value = props.lockedEntity?.entityId ?? null
+  }
+})
+
+const subtypeItems = computed(() =>
+  (['observation', 'concept', 'reason', 'fact', 'insight', 'pattern'] as KnowledgeSubtype[]).map(v => ({
+    title: t(`knowledge.subtypes.${v}`),
+    value: v,
+  }))
+)
+
+const entityTypeItems = computed(() =>
+  (['person', 'project', 'task', 'behavior', 'meeting', 'team', 'coaching'] as NodeType[]).map(v => ({
+    title: t(`network.nodeType.${v}`),
+    value: v,
+  }))
+)
+
+const relationTypeItems = [
+  { title: 'References', value: 'references' },
+  { title: 'Related', value: 'related' },
+  { title: 'Contains', value: 'contains' },
+  { title: 'Stakeholder', value: 'stakeholder' },
+  { title: 'Other', value: 'related' },
+]
+
+const entityItems = computed(() => {
+  switch (attachEntityType.value) {
+    case 'person': return usePeopleStore().people.map(p => ({ id: p.id, label: `${p.firstName} ${p.lastName}` }))
+    case 'project': return useProjectsStore().projects.map(p => ({ id: p.id, label: p.title }))
+    case 'task': return useTasksStore().tasks.map(t => ({ id: t.id, label: t.title }))
+    case 'behavior': return useBehaviorsStore().behaviors.map(b => ({ id: b.id, label: b.title }))
+    case 'meeting': return useMeetingsStore().meetings.map(m => ({ id: m.id, label: m.title }))
+    case 'team': return useTeamsStore().teams.map(t => ({ id: t.id, label: t.name }))
+    case 'coaching': return useCoachingStore().records.map(c => ({ id: c.id, label: c.title ?? c.id }))
+    default: return []
+  }
+})
+
+async function submit() {
+  const { valid: v } = await formRef.value.validate()
+  if (!v) return
+  saving.value = true
+  try {
+    emit('submit', {
+      content: form.value.content,
+      subtype: form.value.subtype,
+      certainty: form.value.certainty,
+      certaintyDate: new Date(),
+      tags: form.value.tags,
+      relationType: form.value.relationType as EdgeType,
+      ...(form.value.relationLabel ? { relationLabel: form.value.relationLabel } : {}),
+      ...(attachEntityType.value && attachEntityId.value
+        ? { entityType: attachEntityType.value, entityId: attachEntityId.value }
+        : {}),
+    })
+  } finally {
+    saving.value = false
+  }
+}
+</script>
