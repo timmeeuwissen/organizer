@@ -82,20 +82,20 @@ export const useKnowledgeStore = defineStore('knowledge', {
 
       const ref = await addDoc(collection(db, 'knowledgeNodes'), {
         userId,
+        ...partial,
         type: 'knowledge' as const,
         entityId: null,
-        ...partial,
         label: partial.content.slice(0, 60),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       })
       const node: KnowledgeNode = {
+        ...partial,
         id: ref.id,
         userId,
         type: 'knowledge',
         entityId: null,
         label: partial.content.slice(0, 60),
-        ...partial,
         createdAt: new Date(),
         updatedAt: new Date(),
       }
