@@ -158,6 +158,17 @@ v-app
       @submit="onCoachingSubmit"
     )
     
+  dialog-form(v-model="knowledgeDialog" max-width="640px" scrollable)
+    KnowledgeNodeForm(
+      v-if="knowledgeDialog"
+      v-model="knowledgeDialog"
+      :knowledge="null"
+      :edge="null"
+      :locked-entity="null"
+      @submit="onKnowledgeSubmit"
+      @cancel="knowledgeDialog = false"
+    )
+
   dialog-form(v-model="knowledgeDocumentDialog" max-width="900px" scrollable)
     knowledge-document-form(
       v-if="knowledgeDocumentDialog"
@@ -173,7 +184,7 @@ v-app
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import type { Person, IntegrationAccount } from '~/types/models'
 import { providePersonDialog } from '~/composables/usePersonDialog'
 import { useI18n } from 'vue-i18n'
@@ -191,6 +202,8 @@ import { usePeopleStore } from '~/stores/people'
 import { useBehaviorsStore } from '~/stores/behaviors'
 import { useProjectsStore } from '~/stores/projects'
 import { useCoachingStore } from '~/stores/coaching'
+import { useKnowledgeStore } from '~/stores/knowledge'
+import { useNotificationStore } from '~/stores/notification'
 import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
 import MailComposeForm from '~/components/mail/MailComposeForm.vue'
 import BehaviorForm from '~/components/behaviors/BehaviorForm.vue'
@@ -198,6 +211,7 @@ import ProjectForm from '~/components/projects/ProjectForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import CoachingForm from '~/components/coaching/CoachingForm.vue'
 import KnowledgeDocumentForm from '~/components/coaching/KnowledgeDocumentForm.vue'
+import KnowledgeNodeForm from '~/components/knowledge/KnowledgeNodeForm.vue'
 import AIAnalysisDialog from '~/components/ai/AIAnalysisDialog.vue'
 import AIButton from '~/components/ai/AIButton.vue'
 import NotificationSnackbar from '~/components/common/NotificationSnackbar.vue'
@@ -244,6 +258,7 @@ const projectDialog = ref(false)
 const meetingDialog = ref(false)
 const coachingDialog = ref(false)
 const knowledgeDocumentDialog = ref(false)
+const knowledgeDialog = ref(false)
 const showAiDialog = ref(false)
 
 // Add Button Menu Items
@@ -296,9 +311,15 @@ const addMenuItems = [
     color: 'pink',
     action: () => coachingDialog.value = true
   },
-  { 
-    title: 'Knowledge Document', 
-    icon: 'mdi-file-document-edit', 
+  {
+    title: i18n.t('knowledge.add'),
+    icon: 'mdi-lightbulb-outline',
+    color: 'amber',
+    action: () => knowledgeDialog.value = true,
+  },
+  {
+    title: 'Knowledge Document',
+    icon: 'mdi-file-document-edit',
     color: 'cyan',
     action: () => knowledgeDocumentDialog.value = true
   },
@@ -568,6 +589,29 @@ const onKnowledgeDocumentSaved = () => {
   knowledgeDocumentDialog.value = false
 }
 
+// Knowledge node quick-add handler
+async function onKnowledgeSubmit(data: {
+  content: string; subtype: any; certainty: number; certaintyDate: Date
+  tags: string[]; relationType: any; relationLabel?: string
+  entityType?: any; entityId?: string
+}) {
+  const kStore = useKnowledgeStore()
+  try {
+    const node = await kStore.create({
+      content: data.content, subtype: data.subtype, source: 'manual' as const,
+      certainty: data.certainty, certaintyDate: data.certaintyDate,
+      tags: data.tags, label: data.content.slice(0, 60),
+    })
+    if (node && data.entityType && data.entityId) {
+      await kStore.connect(node.id, data.entityType, data.entityId, data.relationType, data.relationLabel)
+    }
+    knowledgeDialog.value = false
+    useNotificationStore().success(i18n.t('knowledge.addKnowledge'))
+  } catch {
+    useNotificationStore().error('knowledge.saveError')
+  }
+}
+
 function getIntegrationById(id: string | undefined): IntegrationAccount | undefined {
   if (!id || id === 'organizer') {
     return undefined
@@ -575,6 +619,13 @@ function getIntegrationById(id: string | undefined): IntegrationAccount | undefi
   const accounts = authStore.currentUser?.settings?.integrationAccounts ?? []
   return accounts.find((a) => a.id === id)
 }
+
+onMounted(async () => {
+  const kStore = useKnowledgeStore()
+  if (!kStore.bootstrapped) {
+    kStore.load().catch(() => {}) // silent — error notification is handled inside the store
+  }
+})
 </script>
 
 <style>
