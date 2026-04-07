@@ -472,6 +472,7 @@ export default {
   network: {
     title: 'Network',
     selectNode: 'Click a node to see details',
+    details: 'Details',
     openRecord: 'Open record',
     pin: 'Pin',
     unpin: 'Unpin',
@@ -522,6 +523,8 @@ export default {
       pickNode: 'Pick a node...',
       showPath: 'Show path',
       timeRange: 'Time range',
+      displayOptions: 'Display options',
+      hideOrphans: 'Hide unconnected nodes',
     },
     timeRange: {
       all: 'All time',

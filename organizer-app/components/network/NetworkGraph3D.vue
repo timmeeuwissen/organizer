@@ -31,6 +31,7 @@ const emit = defineEmits<{
 const containerEl = ref<HTMLElement | null>(null)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let graph: any = null
+let resizeObserver: ResizeObserver | null = null
 let lastClickTime = 0
 let singleClickTimer: ReturnType<typeof setTimeout> | null = null
 const DBL_CLICK_MS = 300
@@ -88,6 +89,13 @@ onMounted(async () => {
   // Increase repulsion and link distance for more breathing room
   graph.d3Force('charge')?.strength(-180)
   graph.d3Force('link')?.distance(80)
+
+  // Keep graph filling its container when layout changes (sidebars collapse/expand)
+  resizeObserver = new ResizeObserver(() => {
+    if (!containerEl.value || !graph) return
+    graph.width(containerEl.value.offsetWidth).height(containerEl.value.offsetHeight)
+  })
+  resizeObserver.observe(containerEl.value)
 })
 
 watch(graphData, (data) => {
@@ -109,6 +117,8 @@ watch([() => props.selectedNodeId, () => props.pinnedNodeIds], () => {
 }, { deep: true })
 
 onUnmounted(() => {
+  resizeObserver?.disconnect()
+  resizeObserver = null
   if (singleClickTimer) clearTimeout(singleClickTimer)
   try { graph?._destructor?.() } catch { /* _destructor is an undocumented but widely-used teardown hook */ }
   graph = null

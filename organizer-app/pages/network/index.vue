@@ -1,6 +1,9 @@
 <template lang="pug">
 .d-flex(style="height:100%;overflow:hidden")
+
+  //- Left sidebar
   NetworkSidebar(
+    v-if="leftOpen"
     :visible-types="visibleTypes"
     :depth="depth"
     :pinned-nodes="pinnedGraphNodes"
@@ -8,6 +11,7 @@
     :path-to="pathToId"
     :all-nodes="networkStore.nodes"
     :time-range="timeRange"
+    :hide-orphans="hideOrphans"
     :loading="networkStore.loading"
     :sync-progress="networkStore.syncProgress"
     @toggle-type="toggleType"
@@ -16,10 +20,21 @@
     @update:path-to="pathToId = $event"
     @find-path="findPath"
     @update:time-range="timeRange = $event"
+    @update:hide-orphans="hideOrphans = $event"
     @sync="handleSync"
+    @close="leftOpen = false"
   )
 
-  .flex-grow-1(style="position:relative")
+  //- Left reopen strip
+  .d-flex.flex-column.align-center.pt-2(
+    v-else
+    style="width:32px;flex-shrink:0;background:rgb(var(--v-theme-surface));border-right:1px solid rgba(var(--v-border-color),var(--v-border-opacity))"
+  )
+    v-btn(icon size="x-small" variant="text" @click="leftOpen = true")
+      v-icon mdi-chevron-right
+
+  //- Graph area
+  .flex-grow-1(style="position:relative;min-width:0")
     NetworkGraph3D(
       :nodes="filteredNodes"
       :edges="filteredEdges"
@@ -41,18 +56,29 @@
       @click:close="clearPath"
     ) {{ $t('network.pathLength', { n: pathNodes.length - 1 }) }}
 
-  .pa-3(style="width:260px;overflow-y:auto;background:rgb(var(--v-theme-surface))")
-    NetworkNodeDetail(
-      v-if="selectedNode"
-      :node="selectedNode"
-      :knowledge="selectedNodeKnowledge"
-      :is-pinned="pinnedNodeIds.includes(selectedNode?.id ?? '')"
-      @toggle-pin="togglePin"
-      @add-knowledge="openAddKnowledge"
-    )
-    .text-center.text-disabled.mt-8(v-else)
-      v-icon(size="48") mdi-cursor-default-click-outline
-      .mt-2 {{ $t('network.selectNode') }}
+  //- Right detail panel
+  transition(name="slide-detail")
+    .network-detail-panel(v-if="selectedNode")
+      .d-flex.align-center.justify-space-between.pa-2.pb-0
+        span.text-subtitle-2 {{ $t('network.details') }}
+        v-btn(icon size="x-small" variant="text" @click="selectedNode = null")
+          v-icon mdi-close
+      NetworkNodeDetail(
+        :node="selectedNode"
+        :knowledge="selectedNodeKnowledge"
+        :is-pinned="pinnedNodeIds.includes(selectedNode?.id ?? '')"
+        @toggle-pin="togglePin"
+        @add-knowledge="openAddKnowledge"
+      )
+
+  //- Right reopen hint when nothing selected
+  .d-flex.flex-column.align-center.pt-2(
+    v-if="!selectedNode"
+    style="width:32px;flex-shrink:0;background:rgb(var(--v-theme-surface));border-left:1px solid rgba(var(--v-border-color),var(--v-border-opacity))"
+  )
+    v-tooltip(:text="$t('network.selectNode')" location="left")
+      template(#activator="{ props: tp }")
+        v-icon(v-bind="tp" size="20" color="disabled") mdi-cursor-default-click-outline
 </template>
 
 <script setup lang="ts">
@@ -71,12 +97,14 @@ const networkStore = useNetworkStore()
 const { t } = useI18n()
 
 // UI state
+const leftOpen = ref(true)
 const selectedNode = ref<GraphNode | null>(null)
 const pinnedNodeIds = ref<string[]>([])
 const depth = ref(GRAPH_DEFAULTS.depth)
 const pathToId = ref<string | null>(null)
 const pathNodes = ref<GraphNode[]>([])
 const timeRange = ref('all')
+const hideOrphans = ref(true)
 const visibleTypes = ref<NodeType[]>([
   'person', 'project', 'task', 'behavior', 'meeting', 'team', 'coaching', 'knowledge',
 ])
@@ -88,7 +116,8 @@ const pinnedGraphNodes = computed(() =>
     .filter((n): n is GraphNode => !!n)
 )
 
-const filteredNodes = computed(() => {
+// Step 1: filter by type, pins, time range
+const visibleNodes = computed(() => {
   let nodes = networkStore.nodes.filter(n => visibleTypes.value.includes(n.type))
 
   if (pinnedNodeIds.value.length > 0) {
@@ -100,7 +129,7 @@ const filteredNodes = computed(() => {
   }
 
   if (timeRange.value !== 'all') {
-    const days = timeRange.value === '30d' ? 30 : 90 // '90d' or any unknown value falls back to 90 days
+    const days = timeRange.value === '30d' ? 30 : 90
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - days)
     nodes = nodes.filter(n => new Date(n.createdAt) >= cutoff)
@@ -109,13 +138,25 @@ const filteredNodes = computed(() => {
   return nodes
 })
 
-const filteredNodeIds = computed(() => new Set(filteredNodes.value.map(n => n.id)))
+// Step 2: edges between visible nodes
+const visibleNodeIds = computed(() => new Set(visibleNodes.value.map(n => n.id)))
 
 const filteredEdges = computed(() =>
   networkStore.edges.filter(
-    e => filteredNodeIds.value.has(e.sourceId) && filteredNodeIds.value.has(e.targetId)
+    e => visibleNodeIds.value.has(e.sourceId) && visibleNodeIds.value.has(e.targetId)
   )
 )
+
+// Step 3: optionally hide orphans (nodes with no edges in the current view)
+const filteredNodes = computed(() => {
+  if (!hideOrphans.value) return visibleNodes.value
+  const connectedIds = new Set<string>()
+  for (const e of filteredEdges.value) {
+    connectedIds.add(e.sourceId)
+    connectedIds.add(e.targetId)
+  }
+  return visibleNodes.value.filter(n => connectedIds.has(n.id))
+})
 
 const selectedNodeKnowledge = computed((): KnowledgeNode[] => {
   if (!selectedNode.value) return []
@@ -128,7 +169,6 @@ function selectNode(node: GraphNode) {
   pathNodes.value = []
 }
 
-// Accepts GraphNode (from graph ctrl-click) or string id (from detail panel toggle-pin emit)
 function togglePin(node: GraphNode | string) {
   const id = typeof node === 'string' ? node : node.id
   const idx = pinnedNodeIds.value.indexOf(id)
@@ -218,3 +258,26 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style lang="sass" scoped>
+.network-detail-panel
+  width: 260px
+  flex-shrink: 0
+  overflow-y: auto
+  background: rgb(var(--v-theme-surface))
+  border-left: 1px solid rgba(var(--v-border-color), var(--v-border-opacity))
+
+.slide-detail-enter-active,
+.slide-detail-leave-active
+  transition: width 0.2s ease, opacity 0.2s ease
+
+.slide-detail-enter-from,
+.slide-detail-leave-to
+  width: 0
+  opacity: 0
+
+.slide-detail-enter-to,
+.slide-detail-leave-from
+  width: 260px
+  opacity: 1
+</style>

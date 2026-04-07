@@ -406,6 +406,7 @@ export default {
   network: {
     title: 'Netwerk',
     selectNode: 'Klik een knooppunt om details te zien',
+    details: 'Details',
     openRecord: 'Open record',
     pin: 'Vastzetten',
     unpin: 'Losmaken',
@@ -456,6 +457,8 @@ export default {
       pickNode: 'Kies een knooppunt...',
       showPath: 'Toon pad',
       timeRange: 'Tijdsbereik',
+      displayOptions: 'Weergaveopties',
+      hideOrphans: 'Verberg losse knooppunten',
     },
     timeRange: {
       all: 'Altijd',

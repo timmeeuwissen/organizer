@@ -1,6 +1,14 @@
 <template lang="pug">
-v-navigation-drawer(permanent, width="280")
+div.network-sidebar
   v-list(density="compact")
+
+    //- Header + collapse
+    v-list-item
+      template(#title)
+        span.text-subtitle-2 {{ $t('network.title') }}
+      template(#append)
+        v-btn(icon size="x-small" variant="text" @click="$emit('close')")
+          v-icon mdi-chevron-left
 
     //- Sync action
     v-list-item
@@ -26,6 +34,20 @@ v-navigation-drawer(permanent, width="280")
 
     v-divider.my-2
 
+    //- Display options
+    v-list-subheader {{ $t('network.sidebar.displayOptions') }}
+    v-list-item(density="compact")
+      template(#title)
+        span {{ $t('network.sidebar.hideOrphans') }}
+      template(#append)
+        v-switch(
+          :model-value="hideOrphans"
+          density="compact"
+          hide-details
+          @update:model-value="$emit('update:hideOrphans', !!$event)"
+        )
+
+    v-divider.my-2
 
     //- Node Types
     v-list-subheader {{ $t('network.sidebar.nodeTypes') }}
@@ -137,6 +159,7 @@ interface Props {
   pathTo: string | null
   allNodes: GraphNode[]
   timeRange: string
+  hideOrphans: boolean
   loading?: boolean
   syncProgress?: { percent: number; phase: string } | null
 }
@@ -144,15 +167,15 @@ interface Props {
 const props = defineProps<Props>()
 
 defineEmits<{
-  // visible: true = add to visibleTypes, false = remove from visibleTypes
   'toggle-type': [type: NodeType, visible: boolean]
   'update:depth': [value: number]
   'unpin': [nodeId: string]
-  // pathTo carries a node id string (not a full GraphNode)
   'update:pathTo': [nodeId: string | null]
   'find-path': []
   'update:timeRange': [value: string]
+  'update:hideOrphans': [value: boolean]
   'sync': []
+  'close': []
 }>()
 
 const nodeTypes: { value: NodeType; icon: string }[] = [
@@ -180,6 +203,14 @@ const pathTargetOptions = computed(() =>
 </script>
 
 <style lang="sass" scoped>
+.network-sidebar
+  width: 280px
+  height: 100%
+  overflow-y: auto
+  flex-shrink: 0
+  background: rgb(var(--v-theme-surface))
+  border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity))
+
 .node-type-dot
   width: 12px
   height: 12px
