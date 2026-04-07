@@ -6,14 +6,14 @@ import { useAuthStore } from '~/stores/auth'
 import { useNotificationStore } from '~/stores/notification'
 
 export const useNetworkStore = defineStore('network', {
-  persist: true,
-
   state: () => ({
     nodes: [] as GraphNode[],
     edges: [] as GraphEdge[],
     loading: false,
     bootstrapped: false,
   }),
+
+  persist: true,
 
   getters: {
     getNode: (state) => (id: string) =>
