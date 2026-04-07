@@ -6,6 +6,7 @@
     v-if="leftOpen"
     :visible-types="visibleTypes"
     :depth="depth"
+    :label-depth="labelDepth"
     :pinned-nodes="pinnedGraphNodes"
     :path-from="selectedNode"
     :path-to="pathToId"
@@ -16,6 +17,7 @@
     :sync-progress="networkStore.syncProgress"
     @toggle-type="toggleType"
     @update:depth="depth = $event"
+    @update:label-depth="labelDepth = $event"
     @unpin="unpinNode"
     @update:path-to="pathToId = $event"
     @find-path="findPath"
@@ -40,6 +42,7 @@
       :edges="filteredEdges"
       :selected-node-id="selectedNode?.id ?? null"
       :pinned-node-ids="pinnedNodeIds"
+      :label-depth="labelDepth"
       :loading="networkStore.loading"
       @node-click="selectNode"
       @node-ctrl-click="togglePin"
@@ -105,6 +108,7 @@ const pathToId = ref<string | null>(null)
 const pathNodes = ref<GraphNode[]>([])
 const timeRange = ref('all')
 const hideOrphans = ref(true)
+const labelDepth = ref(30)
 const visibleTypes = ref<NodeType[]>([
   'person', 'project', 'task', 'behavior', 'meeting', 'team', 'coaching', 'knowledge',
 ])

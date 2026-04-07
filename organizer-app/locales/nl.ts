@@ -447,6 +447,7 @@ export default {
     },
     sidebar: {
       nodeTypes: 'Knooppunttypen',
+      labelDepth: 'Labelzichtbaarheid',
       depth: 'Grafiekdiepte',
       depthValue: '{n} stappen van focus',
       pinnedNodes: 'Vastgezette knooppunten',

@@ -513,6 +513,7 @@ export default {
     },
     sidebar: {
       nodeTypes: 'Show node types',
+      labelDepth: 'Label visibility',
       depth: 'Graph depth',
       depthValue: '{n} hops from focus',
       pinnedNodes: 'Pinned nodes',

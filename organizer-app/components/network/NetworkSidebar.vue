@@ -70,7 +70,24 @@ div.network-sidebar
 
     v-divider.my-2
 
-    //- Depth Slider
+    //- Label depth slider
+    v-list-subheader {{ $t('network.sidebar.labelDepth') }}
+    v-list-item
+      v-slider(
+        :model-value="labelDepth"
+        min="0"
+        max="100"
+        step="5"
+        thumb-label
+        hide-details
+        @update:model-value="$emit('update:labelDepth', $event)"
+      )
+        template(#thumb-label="{ modelValue }")
+          span {{ modelValue === 0 ? 'off' : modelValue === 100 ? '∞' : modelValue }}
+
+    v-divider.my-2
+
+    //- Graph depth slider
     v-list-subheader {{ $t('network.sidebar.depth') }}
     v-list-item
       v-slider(
@@ -154,6 +171,7 @@ import { NODE_COLORS } from '~/config/network'
 interface Props {
   visibleTypes: NodeType[]
   depth: number
+  labelDepth: number
   pinnedNodes: GraphNode[]
   pathFrom: GraphNode | null
   pathTo: string | null
@@ -169,6 +187,7 @@ const props = defineProps<Props>()
 defineEmits<{
   'toggle-type': [type: NodeType, visible: boolean]
   'update:depth': [value: number]
+  'update:labelDepth': [value: number]
   'unpin': [nodeId: string]
   'update:pathTo': [nodeId: string | null]
   'find-path': []
