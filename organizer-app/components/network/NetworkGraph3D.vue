@@ -47,29 +47,28 @@ const tmpVec = { x: 0, y: 0, z: 0 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createLabelSprite(text: string, THREE: any): any {
   const canvas = document.createElement('canvas')
-  canvas.width = 256
-  canvas.height = 36
+  canvas.width = 512
+  canvas.height = 64
   const ctx = canvas.getContext('2d')!
-  ctx.font = 'bold 14px sans-serif'
+  ctx.font = 'bold 22px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  // Subtle shadow for readability against any background
-  ctx.shadowColor = 'rgba(0,0,0,0.8)'
-  ctx.shadowBlur = 4
+  ctx.shadowColor = 'rgba(0,0,0,0.9)'
+  ctx.shadowBlur = 6
   ctx.fillStyle = '#ffffff'
   const label = text.length > 22 ? text.slice(0, 20) + '…' : text
-  ctx.fillText(label, 128, 18)
+  ctx.fillText(label, 256, 32)
 
   const texture = new THREE.CanvasTexture(canvas)
   const material = new THREE.SpriteMaterial({
     map: texture,
     transparent: true,
-    depthTest: false,   // always on top of spheres
+    depthTest: false,
     opacity: 0,
   })
   const sprite = new THREE.Sprite(material)
-  sprite.scale.set(24, 4, 1)
-  sprite.position.set(0, 8, 0)  // float above the node sphere
+  sprite.scale.set(40, 8, 1)
+  sprite.position.set(0, -12, 0)  // below the node sphere
   return sprite
 }
 
