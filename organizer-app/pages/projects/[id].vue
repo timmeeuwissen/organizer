@@ -113,7 +113,8 @@ v-container
         v-tab(value="links") {{ $t('projects.links') }}
         v-tab(value="files") {{ $t('projects.files') }}
         v-tab(value="mail") {{ $t('projects.connectedMail') }}
-      
+        v-tab(value="knowledge") {{ $t('knowledge.title') }}
+
       v-window(v-model="activeTab")
         v-window-item(value="tasks")
           v-card(elevation="1" class="mt-4")
@@ -256,6 +257,15 @@ v-container
                       v-icon mdi-link-off
               p(v-else) {{ $t('projects.noConnectedMail') }}
 
+        v-window-item(value="knowledge")
+          v-card(elevation="1" class="mt-4")
+            v-card-text
+              KnowledgeConnections(
+                v-if="project"
+                node-type="project"
+                :entity-id="project.id"
+              )
+
   // Project edit dialog
   v-dialog(v-model="editDialog" max-width="800px")
     v-card(v-if="editDialog && project")
@@ -346,6 +356,7 @@ import ProjectForm from '~/components/projects/ProjectForm.vue'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import AddButton from '~/components/common/AddButton.vue'
+import KnowledgeConnections from '~/components/knowledge/KnowledgeConnections.vue'
 
 const route = useRoute()
 const router = useRouter()
