@@ -277,7 +277,8 @@ export const useNetworkStore = defineStore('network', {
           existingEdgeKeys.add(key)
           try {
             const ref = await addDoc(collection(db, 'graphEdges'), {
-              userId, sourceId, targetId, type, label,
+              userId, sourceId, targetId, type,
+              ...(label !== undefined ? { label } : {}),
               createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
             })
             newEdges.push({ id: ref.id, userId, sourceId, targetId, type, label, createdAt: new Date(), updatedAt: new Date() })
