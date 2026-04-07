@@ -83,11 +83,18 @@ describe('useKnowledgeConnections', () => {
   it('connections reacts to a ref entityId', async () => {
     mockNodes.push(makeNode('k1'))
     mockEdges.push(makeEdge('e1', 'k1', 'person', 'p1'))
+    mockNodes.push(makeNode('k2'))
+    mockEdges.push(makeEdge('e2', 'k2', 'person', 'p2'))
 
     const { useKnowledgeConnections } = await import('~/composables/useKnowledgeConnections')
     const entityId = ref('p1')
     const { connections } = useKnowledgeConnections('person', entityId)
     expect(connections.value).toHaveLength(1)
+    expect(connections.value[0].knowledge.id).toBe('k1')
+
+    entityId.value = 'p2'
+    expect(connections.value).toHaveLength(1)
+    expect(connections.value[0].knowledge.id).toBe('k2')
   })
 
   it('addKnowledge calls create then connect', async () => {
