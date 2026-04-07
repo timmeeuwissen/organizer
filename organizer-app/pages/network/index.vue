@@ -169,9 +169,18 @@ const selectedNodeKnowledge = computed((): KnowledgeNode[] => {
   return networkStore.knowledgeFor(selectedNode.value.id, GRAPH_DEFAULTS.minCertainty)
 })
 
-const selectedNodeConnections = computed((): GraphNode[] => {
+const selectedNodeConnections = computed(() => {
   if (!selectedNode.value) return []
-  return networkStore.getNeighbours(selectedNode.value.id, 1)
+  const id = selectedNode.value.id
+  return networkStore.edges
+    .filter(e => e.sourceId === id || e.targetId === id)
+    .map(e => {
+      const neighbourId = e.sourceId === id ? e.targetId : e.sourceId
+      const node = networkStore.getNode(neighbourId)
+      if (!node) return null
+      return { node, edgeType: e.type, edgeLabel: e.label }
+    })
+    .filter((c): c is { node: GraphNode; edgeType: string; edgeLabel?: string } => !!c)
 })
 
 // Handlers

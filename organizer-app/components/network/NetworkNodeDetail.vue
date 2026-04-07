@@ -41,16 +41,20 @@ v-card(
     v-list(density="compact" nav)
       v-list-item(
         v-for="c in connections"
-        :key="c.id"
-        :prepend-icon="nodeIcons[c.type] ?? 'mdi-circle'"
-        :title="c.label"
-        :subtitle="$t(`network.nodeType.${c.type}`)"
+        :key="c.node.id"
         rounded="lg"
         class="px-2"
-        @click="emit('select-node', c)"
+        @click="emit('select-node', c.node)"
       )
         template(#prepend)
-          .node-type-dot.mr-2(:style="{ backgroundColor: NODE_COLORS[c.type] ?? '#888' }")
+          .node-type-dot.mr-2(:style="{ backgroundColor: NODE_COLORS[c.node.type] ?? '#888' }")
+        template(#title)
+          span {{ c.node.label }}
+        template(#subtitle)
+          span.text-caption
+            span.text-medium-emphasis {{ $t(`network.nodeType.${c.node.type}`) }}
+            span.mx-1 ·
+            span.text-primary {{ c.edgeLabel ?? c.edgeType }}
 
   v-divider(v-if="connections.length > 0")
 
@@ -100,7 +104,7 @@ const { locale } = useI18n()
 const props = defineProps<{
   node: GraphNode | null
   knowledge: KnowledgeNode[]
-  connections: GraphNode[]
+  connections: Array<{ node: GraphNode; edgeType: string; edgeLabel?: string }>
   isPinned: boolean
 }>()
 
