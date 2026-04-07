@@ -104,7 +104,13 @@
           </v-btn>
         </v-card-actions>
       </v-card>
-      
+
+      <v-tabs v-model="activeTabCoaching" class="mb-4 mx-4">
+        <v-tab value="details">{{ $t('common.details') }}</v-tab>
+        <v-tab value="knowledge">{{ $t('knowledge.title') }}</v-tab>
+      </v-tabs>
+      <v-window v-model="activeTabCoaching">
+        <v-window-item value="details">
       <!-- Main content -->
       <v-row>
         <!-- Left side - Strengths, Weaknesses, Goals -->
@@ -976,6 +982,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+        </v-window-item>
+        <v-window-item value="knowledge">
+          <div class="mx-4 mt-4">
+            <KnowledgeConnections
+              v-if="coaching"
+              node-type="coaching"
+              :entity-id="coaching.id"
+            />
+          </div>
+        </v-window-item>
+      </v-window>
   </div>
 </template>
 
@@ -991,7 +1008,8 @@ export default {
   name: 'CoachingDetailPage',
   
   components: {
-    CoachingForm
+    CoachingForm,
+    KnowledgeConnections: () => import('~/components/knowledge/KnowledgeConnections.vue'),
   },
   
   data() {
@@ -999,6 +1017,7 @@ export default {
       loading: true,
       error: null,
       coaching: null,
+      activeTabCoaching: 'details',
       
       // Dialogs
       coachingDialogOpen: false,
