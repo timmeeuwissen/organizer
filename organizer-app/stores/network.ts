@@ -255,6 +255,7 @@ export const useNetworkStore = defineStore('network', {
 
         let edgeAttempts = 0
         let edgeSkips = 0
+        let edgeErrors = 0
 
         const upsertEdge = async (
           sourceType: NodeType, sourceEntityId: string,
@@ -274,12 +275,17 @@ export const useNetworkStore = defineStore('network', {
           const key = `${sourceId}:${targetId}:${type}`
           if (existingEdgeKeys.has(key)) return
           existingEdgeKeys.add(key)
-          const ref = await addDoc(collection(db, 'graphEdges'), {
-            userId, sourceId, targetId, type, label,
-            createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-          })
-          newEdges.push({ id: ref.id, userId, sourceId, targetId, type, label, createdAt: new Date(), updatedAt: new Date() })
-          edgesAdded++
+          try {
+            const ref = await addDoc(collection(db, 'graphEdges'), {
+              userId, sourceId, targetId, type, label,
+              createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+            })
+            newEdges.push({ id: ref.id, userId, sourceId, targetId, type, label, createdAt: new Date(), updatedAt: new Date() })
+            edgesAdded++
+          } catch (err) {
+            edgeErrors++
+            console.error(`[network] failed to create edge ${sourceType}→${targetType} (${type}):`, err)
+          }
         }
 
         console.log('[network sync] starting edge phase — existingByKey size:', existingByKey.size)
@@ -316,7 +322,7 @@ export const useNetworkStore = defineStore('network', {
           for (const mid of team.memberPersonIds ?? []) await upsertEdge('person', mid, 'team', team.id, 'member')
         }
 
-        console.log('[network sync] edge phase done — attempts:', edgeAttempts, 'skips:', edgeSkips, 'created:', edgesAdded)
+        console.log('[network sync] edge phase done — attempts:', edgeAttempts, 'skips:', edgeSkips, 'errors:', edgeErrors, 'created:', edgesAdded)
 
         this.syncProgress = { percent: 100, phase: 'network.syncPhase.done' }
 
