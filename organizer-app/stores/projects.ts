@@ -344,7 +344,11 @@ export const useProjectsStore = defineStore('projects', {
       try {
         const db = getFirestore()
         const pagesRef = collection(db, 'projectPages')
-        const q = query(pagesRef, where('projectId', '==', projectId))
+        const q = query(
+          pagesRef,
+          where('projectId', '==', projectId),
+          where('userId', '==', authStore.user.id)
+        )
         const querySnapshot = await getDocs(q)
         
         const pages = querySnapshot.docs.map(doc => {
@@ -397,6 +401,7 @@ export const useProjectsStore = defineStore('projects', {
         const pageData = {
           ...newPage,
           projectId,
+          userId: authStore.user.id,
           tags: newPage.tags || [],
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),

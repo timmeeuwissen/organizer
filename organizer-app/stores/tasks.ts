@@ -26,6 +26,12 @@ import {
 } from './tasks/providerSync'
 import type { Task, Comment, IntegrationAccount } from '~/types/models'
 
+const stripUndefinedFields = <T extends Record<string, unknown>>(obj: T): Partial<T> => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined)
+  ) as Partial<T>
+}
+
 export const useTasksStore = defineStore('tasks', {
   state: () => ({
     tasks: [] as Task[],
@@ -161,7 +167,7 @@ export const useTasksStore = defineStore('tasks', {
       this.loading = true
       this.error = null
       try {
-        const taskData = {
+        const taskData = stripUndefinedFields({
           ...newTask,
           userId: authStore.user.id,
           tags: newTask.tags || [],
@@ -175,7 +181,7 @@ export const useTasksStore = defineStore('tasks', {
           priority: newTask.priority || 3,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-        }
+        })
         const docRef = await addDoc(collection(getFirestore(), 'tasks'), taskData)
         const added = { ...taskData, id: docRef.id, createdAt: new Date(), updatedAt: new Date(), comments: [] } as Task
         this.tasks.push(added)
@@ -214,6 +220,7 @@ export const useTasksStore = defineStore('tasks', {
         const updateData: Record<string, unknown> = { updatedAt: serverTimestamp() }
         for (const [key, value] of Object.entries(updates)) {
           if (key === 'id' || key === 'userId' || key === 'createdAt') continue
+          if (value === undefined) continue
           updateData[key] = key === 'completedAt' && value instanceof Date ? Timestamp.fromDate(value) : value
         }
 

@@ -195,10 +195,12 @@ v-form(
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import IconSelector from '~/components/common/IconSelector.vue'
 import type { Project } from '~/types/models'
+import { requiredTrimmed } from '~/utils/validation'
 
 const props = defineProps({
   project: {
@@ -219,8 +221,9 @@ const emit = defineEmits(['submit', 'delete'])
 
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
+const { t } = useI18n()
 
-const form = ref(null)
+const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const valid = ref(false)
 const dueDateMenu = ref(false)
 
@@ -239,43 +242,43 @@ const members = ref(props.project?.members || [])
 const stakeholders = ref(props.project?.stakeholders || [])
 
 // Status, priority and color options
-const statusOptions = [
-  { text: 'Planning', value: 'planning' },
-  { text: 'Active', value: 'active' },
-  { text: 'On Hold', value: 'onHold' },
-  { text: 'Completed', value: 'completed' },
-  { text: 'Cancelled', value: 'cancelled' }
-]
+const statusOptions = computed(() => [
+  { text: t('projects.statusPlanning'), value: 'planning' },
+  { text: t('projects.statusActive'), value: 'active' },
+  { text: t('projects.statusOnHold'), value: 'onHold' },
+  { text: t('projects.statusCompleted'), value: 'completed' },
+  { text: t('projects.statusCancelled'), value: 'cancelled' }
+])
 
-const priorityOptions = [
-  { text: 'Low', value: 'low' },
-  { text: 'Medium', value: 'medium' },
-  { text: 'High', value: 'high' },
-  { text: 'Urgent', value: 'urgent' }
-]
+const priorityOptions = computed(() => [
+  { text: t('projects.priorityLow'), value: 'low' },
+  { text: t('projects.priorityMedium'), value: 'medium' },
+  { text: t('projects.priorityHigh'), value: 'high' },
+  { text: t('projects.priorityUrgent'), value: 'urgent' }
+])
 
-const colorOptions = [
-  { text: 'Primary', value: 'primary' },
-  { text: 'Secondary', value: 'secondary' },
-  { text: 'Success', value: 'success' },
-  { text: 'Info', value: 'info' },
-  { text: 'Warning', value: 'warning' },
-  { text: 'Error', value: 'error' },
-  { text: 'Purple', value: 'purple' },
-  { text: 'Indigo', value: 'indigo' },
-  { text: 'Teal', value: 'teal' },
-  { text: 'Orange', value: 'orange' },
-  { text: 'Pink', value: 'pink' },
-  { text: 'Deep Purple', value: 'deep-purple' },
-  { text: 'Light Blue', value: 'light-blue' },
-  { text: 'Green', value: 'green' },
-  { text: 'Amber', value: 'amber' },
-  { text: 'Deep Orange', value: 'deep-orange' },
-]
+const colorOptions = computed(() => [
+  { text: t('common.colorPrimary'), value: 'primary' },
+  { text: t('common.colorSecondary'), value: 'secondary' },
+  { text: t('common.colorSuccess'), value: 'success' },
+  { text: t('common.colorInfo'), value: 'info' },
+  { text: t('common.colorWarning'), value: 'warning' },
+  { text: t('common.colorError'), value: 'error' },
+  { text: t('common.colorPurple'), value: 'purple' },
+  { text: t('common.colorIndigo'), value: 'indigo' },
+  { text: t('common.colorTeal'), value: 'teal' },
+  { text: t('common.colorOrange'), value: 'orange' },
+  { text: t('common.colorPink'), value: 'pink' },
+  { text: t('common.colorDeepPurple'), value: 'deep-purple' },
+  { text: t('common.colorLightBlue'), value: 'light-blue' },
+  { text: t('common.colorGreen'), value: 'green' },
+  { text: t('common.colorAmber'), value: 'amber' },
+  { text: t('common.colorDeepOrange'), value: 'deep-orange' },
+])
 
 // Validation rules
 const rules = {
-  required: (v: string) => !!v || 'This field is required'
+  required: (v: string) => requiredTrimmed(v, t('validation.required'))
 }
 
 // Computed values
@@ -331,7 +334,7 @@ const getStatusIcon = (statusValue: string) => {
 }
 
 // Computed values to prevent recursive updates
-const previewTitle = computed(() => title.value || 'New Project')
+const previewTitle = computed(() => title.value || t('projects.newProject'))
 
 const shouldUseWhiteText = computed(() => {
   // These colors are known to be light
@@ -350,12 +353,13 @@ const shouldUseWhiteText = computed(() => {
 })
 
 // Submit function
-const submit = () => {
-  if (!valid.value) return
+const submit = async () => {
+  const result = await form.value?.validate()
+  if (!result?.valid) return
   
   // Create project data with null instead of undefined for dueDate
   const projectData: Partial<Project> = {
-    title: title.value,
+    title: title.value.trim(),
     description: description.value,
     status: status.value as 'planning' | 'active' | 'onHold' | 'completed' | 'cancelled',
     priority: priority.value as 'low' | 'medium' | 'high' | 'urgent',

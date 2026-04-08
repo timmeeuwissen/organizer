@@ -158,7 +158,7 @@ export interface Task {
   title: string;
   description?: string;
   status: 'todo' | 'inProgress' | 'completed' | 'delegated' | 'cancelled';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: 'low' | 'medium' | 'high' | 'urgent' | number;
   type?: 'personal' | 'work' | 'delegated' | 'recurring' | 'routine' | 'delegation' | 'followUp' | 'task';
   dueDate?: Date;
   completedDate?: Date;
@@ -204,10 +204,14 @@ export interface Meeting {
   location?: string;
   participants: string[]; // Person IDs
   summary?: string;
+  subject?: string; // Legacy/form alias for title
   tasks: string[]; // Task IDs
   relatedProjects?: string[]; // Project IDs
   category?: string;
   notes?: string;
+  actionItems?: string;
+  date?: Date | string; // Legacy/form field
+  time?: string; // Legacy/form field
   tags?: string[];
   plannedStatus?: 'held' | 'to_be_planned'; // Whether the meeting has been held or is to be planned
   calendarEventId?: string; // ID of the linked calendar event

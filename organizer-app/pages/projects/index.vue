@@ -132,6 +132,7 @@ v-container(fluid)
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useProjectsStore } from '~/stores/projects'
 import { usePeopleStore } from '~/stores/people'
 import type { Project } from '~/types/models'
@@ -140,6 +141,7 @@ import ProjectCard from '~/components/projects/ProjectCard.vue'
 
 const projectsStore = useProjectsStore()
 const peopleStore = usePeopleStore()
+const { t } = useI18n()
 
 // UI state
 const loading = ref(true)
@@ -158,7 +160,7 @@ onMounted(async () => {
     await projectsStore.fetchProjects()
     await peopleStore.fetchPeople()
   } catch (error: any) {
-    formError.value = error.message || 'Failed to load projects'
+    formError.value = error.message || t('errors.generic')
   } finally {
     loading.value = false
   }
@@ -193,8 +195,8 @@ const filteredProjects = computed(() => {
     })
   }
   
-  // Sort by priority
-  result.sort((a, b) => a.priority - b.priority)
+  const rank: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 }
+  result.sort((a, b) => (rank[a.priority] || 99) - (rank[b.priority] || 99))
   
   return result
 })
@@ -259,11 +261,11 @@ const getStatusColorLight = (status: string) => {
 
 const getStatusText = (status: string) => {
   switch (status) {
-    case 'planning': return 'Planning'
-    case 'active': return 'Active'
-    case 'onHold': return 'On Hold'
-    case 'completed': return 'Completed'
-    case 'cancelled': return 'Cancelled'
+    case 'planning': return t('projects.statusPlanning')
+    case 'active': return t('projects.statusActive')
+    case 'onHold': return t('projects.statusOnHold')
+    case 'completed': return t('projects.statusCompleted')
+    case 'cancelled': return t('projects.statusCancelled')
     default: return status
   }
 }
@@ -281,13 +283,13 @@ const getStatusIcon = (status: string) => {
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case 'all': return 'All Projects'
-    case 'planning': return 'Planning Projects'
-    case 'active': return 'Active Projects'
-    case 'onHold': return 'On Hold Projects'
-    case 'completed': return 'Completed Projects'
-    case 'cancelled': return 'Cancelled Projects'
-    default: return 'Projects'
+    case 'all': return t('projects.allProjects')
+    case 'planning': return t('projects.planningProjects')
+    case 'active': return t('projects.activeProjects')
+    case 'onHold': return t('projects.onHoldProjects')
+    case 'completed': return t('projects.completedProjects')
+    case 'cancelled': return t('projects.cancelledProjects')
+    default: return t('projects.title')
   }
 }
 
@@ -326,7 +328,7 @@ const createProject = async (projectData: Partial<Project>) => {
     await projectsStore.createProject(projectData)
     addDialog.value = false
   } catch (error: any) {
-    formError.value = error.message || 'Failed to create project'
+    formError.value = error.message || t('errors.generic')
   } finally {
     formLoading.value = false
   }
@@ -342,7 +344,7 @@ const updateProject = async (projectData: Partial<Project>) => {
     await projectsStore.updateProject(selectedProject.value.id, projectData)
     editDialog.value = false
   } catch (error: any) {
-    formError.value = error.message || 'Failed to update project'
+    formError.value = error.message || t('errors.generic')
   } finally {
     formLoading.value = false
   }
@@ -359,7 +361,7 @@ const deleteProject = async () => {
     editDialog.value = false
     selectedProject.value = null
   } catch (error: any) {
-    formError.value = error.message || 'Failed to delete project'
+    formError.value = error.message || t('errors.generic')
   } finally {
     formLoading.value = false
   }

@@ -30,11 +30,14 @@ import { useRoute, useRouter } from 'vue-router'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
+import { meetingFormToMeetingPayload, meetingToMeetingFormInput } from '~/utils/meetingsForm'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const router = useRouter()
 const meetingsStore = useMeetingsStore()
 const categoriesStore = useMeetingCategoriesStore()
+const { t } = useI18n()
 
 // UI state
 const loading = ref(true)
@@ -52,23 +55,7 @@ const meeting = computed(() => meetingsStore.currentMeeting)
 const meetingFormData = computed(() => {
   if (!meeting.value) return null
   
-  return {
-    subject: meeting.value.title, // Form expects subject field
-    summary: meeting.value.summary || '',
-    category: meeting.value.category || '',
-    plannedStatus: meeting.value.plannedStatus || 'held',
-    date: meeting.value.startTime 
-      ? new Date(meeting.value.startTime).toISOString().substr(0, 10) 
-      : new Date().toISOString().substr(0, 10),
-    time: meeting.value.startTime 
-      ? new Date(meeting.value.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-      : '09:00',
-    location: meeting.value.location || '',
-    participants: [...(meeting.value.participants || [])],
-    notes: meeting.value.notes || '',
-    actionItems: meeting.value.actionItems || '',
-    calendarEventId: meeting.value.calendarEventId || null,
-  }
+  return meetingToMeetingFormInput(meeting.value)
 })
 
 // Fetch data
@@ -80,7 +67,7 @@ const fetchData = async () => {
     await meetingsStore.fetchMeeting(meetingId.value)
     await categoriesStore.fetchCategories()
   } catch (e: any) {
-    error.value = e.message || 'Failed to load meeting'
+    error.value = e.message || t('errors.generic')
     console.error('Error loading meeting:', e)
   } finally {
     loading.value = false
@@ -95,25 +82,14 @@ const handleSubmit = async (formData: any) => {
   formError.value = ''
   
   try {
-    // Prepare meeting data
-    const updateData: any = { 
-      ...formData,
-      title: formData.subject // Map subject to title field
-    }
-    
-    // Set startTime and endTime if this is not a "to be planned" meeting
-    if (formData.date && formData.time && formData.plannedStatus !== 'to_be_planned') {
-      updateData.startTime = new Date(`${formData.date}T${formData.time}`)
-      // Default meeting duration is 1 hour
-      updateData.endTime = new Date(updateData.startTime.getTime() + 60 * 60 * 1000)
-    }
+    const updateData = meetingFormToMeetingPayload(formData)
     
     await meetingsStore.updateMeeting(meetingId.value, updateData)
     
     // Redirect back to meeting view
     router.push(`/meetings/${meetingId.value}`)
   } catch (error: any) {
-    formError.value = error.message || 'Error updating meeting'
+    formError.value = error.message || t('errors.generic')
     console.error('Error updating meeting:', error)
   } finally {
     formLoading.value = false

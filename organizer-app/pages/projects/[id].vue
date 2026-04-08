@@ -287,7 +287,6 @@ v-container
       task-form(
         :loading="taskLoading"
         :error="taskError"
-        :task="taskDefaults"
         @submit="createTask"
       )
   
@@ -315,7 +314,7 @@ v-container
         v-btn(
           color="primary"
           :loading="noteLoading"
-          :disabled="!noteTitle || !noteContent || noteLoading"
+          :disabled="!canCreateNote || noteLoading"
           @click="createNote"
         ) {{ $t('common.save') }}
   
@@ -325,7 +324,6 @@ v-container
       meeting-form(
         :loading="meetingLoading"
         :error="meetingError"
-        :meeting="meetingDefaults"
         @submit="createMeeting"
       )
 
@@ -352,6 +350,8 @@ import { useNotificationStore } from '~/stores/notification'
 import type { Project, Task, Meeting, ProjectPage } from '~/types/models'
 import type { ProjectLink, ProjectFile, ProjectMailLink } from '~/types/models/projectAttachments'
 import { isValidHttpUrlForProject } from '~/utils/normalizeProjectUrl'
+import { meetingFormToMeetingPayload, type MeetingFormInput } from '~/utils/meetingsForm'
+import { hasTrimmedText } from '~/utils/validation'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
@@ -380,13 +380,6 @@ const taskDialog = ref(false)
 const taskLoading = ref(false)
 const taskError = ref('')
 const tasksStore = useTasksStore()
-const taskDefaults = ref({
-  title: '',
-  description: '',
-  status: 'todo',
-  priority: 3,
-  dueDate: null
-})
 
 // Note dialog
 const noteDialog = ref(false)
@@ -400,16 +393,6 @@ const meetingDialog = ref(false)
 const meetingLoading = ref(false)
 const meetingError = ref('')
 const meetingsStore = useMeetingsStore()
-const meetingDefaults = ref({
-  subject: '',
-  summary: '',
-  category: '',
-  plannedStatus: 'to_be_planned',
-  date: new Date().toISOString().substr(0, 10),
-  time: '09:00',
-  location: '',
-  participants: []
-})
 
 const notePages = ref<ProjectPage[]>([])
 const newLinkUrl = ref('')
@@ -449,7 +432,7 @@ const fetchProject = async () => {
   try {
     await projectsStore.fetchProject(projectId.value)
   } catch (err: any) {
-    error.value = err.message || 'Failed to load project'
+    error.value = err.message || t('errors.generic')
   } finally {
     loading.value = false
   }
@@ -503,7 +486,7 @@ function taskPriorityLabel(t: Task) {
 
 function meetingDisplayTitle(m: Meeting) {
   const any = m as Meeting & { subject?: string }
-  return any.subject || m.title || '—'
+  return any.subject || m.title || t('common.none')
 }
 
 async function submitNewLink() {
@@ -597,7 +580,7 @@ function confirmRemoveMailLink(row: ProjectMailLink) {
 // AddButton menu items
 const taskItems = computed(() => [
   {
-    title: 'Add Task',
+    title: t('projects.addTask'),
     icon: 'mdi-checkbox-marked-circle-outline',
     color: 'primary',
     action: openTaskDialog
@@ -606,7 +589,7 @@ const taskItems = computed(() => [
 
 const noteItems = computed(() => [
   {
-    title: 'Add Note',
+    title: t('projects.addNote'),
     icon: 'mdi-note-outline',
     color: 'info',
     action: openNoteDialog
@@ -615,7 +598,7 @@ const noteItems = computed(() => [
 
 const meetingItems = computed(() => [
   {
-    title: 'Add Meeting',
+    title: t('projects.addMeeting'),
     icon: 'mdi-account-group',
     color: 'success',
     action: openMeetingDialog
@@ -629,14 +612,7 @@ const goToProjects = () => {
 
 // Task methods
 const openTaskDialog = () => {
-  // Reset task form data and set defaults
-  taskDefaults.value = {
-    title: '',
-    description: '',
-    status: 'todo',
-    priority: 3,
-    dueDate: null
-  }
+  taskError.value = ''
   taskDialog.value = true
 }
 
@@ -654,13 +630,13 @@ const createTask = async (taskData: Partial<Task>) => {
     }
     
     // Create the task
-    const taskId = await tasksStore.createTask(updatedTaskData)
+    await tasksStore.createTask(updatedTaskData)
     taskDialog.value = false
     
     // Reset form data
     taskError.value = ''
   } catch (error: any) {
-    taskError.value = error.message || 'Failed to create task'
+    taskError.value = error.message || t('errors.generic')
   } finally {
     taskLoading.value = false
   }
@@ -670,11 +646,14 @@ const createTask = async (taskData: Partial<Task>) => {
 const openNoteDialog = () => {
   noteTitle.value = ''
   noteContent.value = ''
+  noteError.value = ''
   noteDialog.value = true
 }
 
+const canCreateNote = computed(() => hasTrimmedText(noteTitle.value) && hasTrimmedText(noteContent.value))
+
 const createNote = async () => {
-  if (!project.value || !noteTitle.value || !noteContent.value) return
+  if (!project.value || !canCreateNote.value) return
   
   noteLoading.value = true
   noteError.value = ''
@@ -682,8 +661,8 @@ const createNote = async () => {
   try {
     // Currently there's no dedicated notes store, so we'll create a project page instead
     await projectsStore.createProjectPage(project.value.id, {
-      title: noteTitle.value,
-      content: noteContent.value,
+      title: noteTitle.value.trim(),
+      content: noteContent.value.trim(),
       order: 0, // Set a default order for the page
       tags: []
     })
@@ -695,7 +674,7 @@ const createNote = async () => {
     noteTitle.value = ''
     noteContent.value = ''
   } catch (error: any) {
-    noteError.value = error.message || 'Failed to create note'
+    noteError.value = error.message || t('errors.generic')
   } finally {
     noteLoading.value = false
   }
@@ -703,21 +682,11 @@ const createNote = async () => {
 
 // Meeting methods
 const openMeetingDialog = () => {
-  // Reset meeting form data and set defaults
-  meetingDefaults.value = {
-    subject: '',
-    summary: '',
-    category: '',
-    plannedStatus: 'to_be_planned',
-    date: new Date().toISOString().substr(0, 10),
-    time: '09:00',
-    location: '',
-    participants: []
-  }
+  meetingError.value = ''
   meetingDialog.value = true
 }
 
-const createMeeting = async (meetingData: Partial<Meeting>) => {
+const createMeeting = async (meetingData: MeetingFormInput) => {
   if (!project.value) return
   
   meetingLoading.value = true
@@ -726,18 +695,18 @@ const createMeeting = async (meetingData: Partial<Meeting>) => {
   try {
     // Add the project ID to the related projects array
     const updatedMeetingData = {
-      ...meetingData,
+      ...meetingFormToMeetingPayload(meetingData),
       relatedProjects: [project.value.id]
     }
     
     // Create the meeting
-    const meetingId = await meetingsStore.createMeeting(updatedMeetingData)
+    await meetingsStore.createMeeting(updatedMeetingData)
     meetingDialog.value = false
     
     // Reset form data
     meetingError.value = ''
   } catch (error: any) {
-    meetingError.value = error.message || 'Failed to create meeting'
+    meetingError.value = error.message || t('errors.generic')
   } finally {
     meetingLoading.value = false
   }
@@ -757,7 +726,7 @@ const getPersonInitials = (id: string) => {
 
 const getPersonName = (id: string) => {
   const person = peopleStore.getById(id)
-  if (!person) return 'Unknown'
+  if (!person) return t('common.unknown')
   return `${person.firstName} ${person.lastName}`
 }
 
@@ -808,11 +777,11 @@ const getStatusColorLight = (status: string) => {
 
 const getStatusText = (status: string) => {
   switch (status) {
-    case 'planning': return 'Planning'
-    case 'active': return 'Active'
-    case 'onHold': return 'On Hold'
-    case 'completed': return 'Completed'
-    case 'cancelled': return 'Cancelled'
+    case 'planning': return t('projects.statusPlanning')
+    case 'active': return t('projects.statusActive')
+    case 'onHold': return t('projects.statusOnHold')
+    case 'completed': return t('projects.statusCompleted')
+    case 'cancelled': return t('projects.statusCancelled')
     default: return status
   }
 }
@@ -840,10 +809,10 @@ const getPriorityColor = (priority: string) => {
 
 const getPriorityText = (priority: string) => {
   switch (priority) {
-    case 'low': return 'Low'
-    case 'medium': return 'Medium'
-    case 'high': return 'High'
-    case 'urgent': return 'Urgent'
+    case 'low': return t('projects.priorityLow')
+    case 'medium': return t('projects.priorityMedium')
+    case 'high': return t('projects.priorityHigh')
+    case 'urgent': return t('projects.priorityUrgent')
     default: return priority
   }
 }
@@ -863,7 +832,7 @@ const updateProject = async (projectData: Partial<Project>) => {
     await projectsStore.updateProject(project.value.id, projectData)
     editDialog.value = false
   } catch (error: any) {
-    formError.value = error.message || 'Failed to update project'
+    formError.value = error.message || t('errors.generic')
   } finally {
     formLoading.value = false
   }
@@ -880,7 +849,7 @@ const deleteProject = async () => {
     editDialog.value = false
     router.push('/projects')
   } catch (error: any) {
-    formError.value = error.message || 'Failed to delete project'
+    formError.value = error.message || t('errors.generic')
   } finally {
     formLoading.value = false
   }

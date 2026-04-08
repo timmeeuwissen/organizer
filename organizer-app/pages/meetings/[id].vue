@@ -163,6 +163,7 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import KnowledgeConnections from '~/components/knowledge/KnowledgeConnections.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
@@ -177,6 +178,7 @@ const categoriesStore = useMeetingCategoriesStore()
 const peopleStore = usePeopleStore()
 const tasksStore = useTasksStore()
 const projectsStore = useProjectsStore()
+const { t } = useI18n()
 
 // UI state
 const loading = ref(true)
@@ -233,7 +235,7 @@ const fetchData = async () => {
       projectsStore.fetchProjects()
     ])
   } catch (e: any) {
-    error.value = e.message || 'Failed to load meeting'
+    error.value = e.message || t('errors.generic')
     console.error('Error loading meeting:', e)
   } finally {
     loading.value = false

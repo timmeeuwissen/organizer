@@ -214,6 +214,8 @@ import { useProjectsStore } from '~/stores/projects'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { useCalendarStore } from '~/stores/calendar'
 import type { Meeting } from '~/types/models'
+import { meetingFormToMeetingPayload } from '~/utils/meetingsForm'
+import { useI18n } from 'vue-i18n'
 
 // Define stores
 const meetingsStore = useMeetingsStore()
@@ -221,6 +223,7 @@ const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const categoriesStore = useMeetingCategoriesStore()
 const calendarStore = useCalendarStore()
+const { t } = useI18n()
 
 // UI state
 const loading = ref(true)
@@ -261,13 +264,13 @@ watch(selectedProviders, (newProviders) => {
 const meetingCategories = computed(() => categoriesStore.categories)
 
 // Table headers
-const headers = [
-  { title: 'Date & Time', key: 'startTime', sortable: true },
-  { title: 'Title', key: 'title', sortable: true },
-  { title: 'Category', key: 'category', sortable: true },
-  { title: 'Participants', key: 'participants', sortable: false },
-  { title: 'Actions', key: 'actions', sortable: false },
-]
+const headers = computed(() => [
+  { title: t('meetings.tableDateTime'), key: 'startTime', sortable: true },
+  { title: t('meetings.tableTitle'), key: 'title', sortable: true },
+  { title: t('meetings.tableCategory'), key: 'category', sortable: true },
+  { title: t('meetings.tableParticipants'), key: 'participants', sortable: false },
+  { title: t('meetings.tableActions'), key: 'actions', sortable: false },
+])
 
 // Filter options
 const categoryOptions = computed(() => {
@@ -291,34 +294,34 @@ const personOptions = computed(() => {
   }))
 })
 
-const periodOptions = [
-  { title: 'All time', value: 'all' },
-  { title: 'Last week', value: 'week' },
-  { title: 'Last month', value: 'month' },
-  { title: 'Last 3 months', value: 'quarter' },
-  { title: 'This year', value: 'year' },
-]
+const periodOptions = computed(() => [
+  { title: t('meetings.periodAllTime'), value: 'all' },
+  { title: t('meetings.periodLastWeek'), value: 'week' },
+  { title: t('meetings.periodLastMonth'), value: 'month' },
+  { title: t('meetings.periodLastQuarter'), value: 'quarter' },
+  { title: t('meetings.periodThisYear'), value: 'year' },
+])
 
 // Filter configuration for FilterContainer
 const selectFilters = computed(() => [
   {
-    title: 'Category',
+    title: t('meetings.filterCategory'),
     items: categoryOptions.value,
     selected: categoryFilter.value
   },
   {
-    title: 'Project',
+    title: t('meetings.filterProject'),
     items: projectOptions.value,
     selected: projectFilter.value
   },
   {
-    title: 'Person',
+    title: t('meetings.filterPerson'),
     items: personOptions.value,
     selected: personFilter.value
   },
   {
-    title: 'Period',
-    items: periodOptions,
+    title: t('meetings.filterPeriod'),
+    items: periodOptions.value,
     selected: periodFilter.value
   }
 ])
@@ -476,24 +479,14 @@ const handleMeetingSubmit = async (meetingData: any) => {
   
   try {
     // Prepare meeting data
-    const createData: any = { 
-      ...meetingData,
-      title: meetingData.subject // Map subject to title field
-    }
-    
-    // Set startTime and endTime if this is not a "to be planned" meeting
-    if (meetingData.date && meetingData.time && meetingData.plannedStatus !== 'to_be_planned') {
-      createData.startTime = new Date(`${meetingData.date}T${meetingData.time}`)
-      // Default meeting duration is 1 hour
-      createData.endTime = new Date(createData.startTime.getTime() + 60 * 60 * 1000)
-    }
+    const createData = meetingFormToMeetingPayload(meetingData)
     
     await meetingsStore.createMeeting(createData)
     
     // Close dialog on success
     showNewMeetingDialog.value = false
   } catch (error: any) {
-    formError.value = error.message || 'Error creating meeting'
+    formError.value = error.message || t('errors.generic')
   } finally {
     formLoading.value = false
   }
@@ -507,9 +500,8 @@ const handleMeetingPlan = async (meetingData: any) => {
   try {
     // First create the meeting
     const createData = {
-      ...meetingData,
-      title: meetingData.subject, // Map subject to title field
-      plannedStatus: 'to_be_planned', // Ensure planned status is set
+      ...meetingFormToMeetingPayload(meetingData),
+      plannedStatus: 'to_be_planned' as const,
     }
     
     const meetingId = await meetingsStore.createMeeting(createData)
@@ -517,14 +509,14 @@ const handleMeetingPlan = async (meetingData: any) => {
     if (meetingId) {
       pendingMeetingId.value = meetingId
     } else {
-      throw new Error('Failed to create meeting - no ID returned')
+      throw new Error(t('errors.generic'))
     }
     
     // Close meeting dialog and open calendar dialog
     showNewMeetingDialog.value = false
     showCalendarDialog.value = true
   } catch (error: any) {
-    formError.value = error.message || 'Error creating meeting'
+    formError.value = error.message || t('errors.generic')
   } finally {
     formLoading.value = false
   }
@@ -561,7 +553,7 @@ const handleCalendarEventSubmit = async (eventData: any) => {
     pendingMeetingId.value = null
     showCalendarDialog.value = false
   } catch (error: any) {
-    calendarFormError.value = error.message || 'Error creating calendar event'
+    calendarFormError.value = error.message || t('errors.generic')
   } finally {
     calendarFormLoading.value = false
   }

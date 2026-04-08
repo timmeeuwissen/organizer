@@ -75,6 +75,7 @@ v-card(
 
 <script setup lang="ts">
 import { usePeopleStore } from '~/stores/people'
+import { useI18n } from 'vue-i18n'
 import type { Project } from '~/types/models'
 
 // Props
@@ -90,6 +91,7 @@ const emit = defineEmits(['navigate', 'edit'])
 
 // Stores
 const peopleStore = usePeopleStore()
+const { t } = useI18n()
 
 // Helper functions
 const formatDate = (date: Date | null) => {
@@ -132,11 +134,11 @@ const getStatusColorLight = (status: string) => {
 
 const getStatusText = (status: string) => {
   switch (status) {
-    case 'planning': return 'Planning'
-    case 'active': return 'Active'
-    case 'onHold': return 'On Hold'
-    case 'completed': return 'Completed'
-    case 'cancelled': return 'Cancelled'
+    case 'planning': return t('projects.statusPlanning')
+    case 'active': return t('projects.statusActive')
+    case 'onHold': return t('projects.statusOnHold')
+    case 'completed': return t('projects.statusCompleted')
+    case 'cancelled': return t('projects.statusCancelled')
     default: return status
   }
 }

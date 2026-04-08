@@ -46,11 +46,11 @@ v-form(
         @change="handlePlannedStatusChange"
       )
         v-radio(
-          :label="'Already held'"
+          :label="$t('meetings.plannedStatus.held')"
           value="held"
         )
         v-radio(
-          :label="'To be planned'"
+          :label="$t('meetings.plannedStatus.to_be_planned')"
           value="to_be_planned"
         )
       
@@ -142,7 +142,7 @@ v-form(
         @click="planMeeting"
       ) 
         v-icon(start) mdi-calendar-plus
-        span Plan this meeting
+        span {{ $t('meetings.planThisMeeting') }}
       v-btn(
         color="primary"
         :loading="loading"
@@ -153,15 +153,18 @@ v-form(
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { useCalendarStore } from '~/stores/calendar'
 import type { Meeting } from '~/types/models'
+import { meetingToMeetingFormInput, type MeetingFormInput } from '~/utils/meetingsForm'
+import { requiredTrimmed } from '~/utils/validation'
 
 const props = defineProps({
   meeting: {
-    type: Object as () => Meeting | null,
+    type: Object as () => Meeting | MeetingFormInput | null,
     default: null
   },
   loading: {
@@ -180,25 +183,29 @@ const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const categoriesStore = useMeetingCategoriesStore()
 const calendarStore = useCalendarStore()
+const { t } = useI18n()
 
-const form = ref(null)
+const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const valid = ref(false)
 const dateMenu = ref(false)
 
 // Form fields
-const subject = ref(props.meeting?.subject || '')
-const summary = ref(props.meeting?.summary || '')
-const category = ref(props.meeting?.category || '')
-const plannedStatus = ref(props.meeting?.plannedStatus || 'held')
-const date = ref(props.meeting?.date ? new Date(props.meeting.date).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10))
-const time = ref(props.meeting?.time || '09:00')
-const location = ref(props.meeting?.location || '')
-const participants = ref(props.meeting?.participants || [])
-const notes = ref(props.meeting?.notes || '')
-const actionItems = ref(props.meeting?.actionItems || '')
-const calendarEventId = ref(props.meeting?.calendarEventId || null)
+const initialForm = props.meeting
+  ? ('title' in props.meeting ? meetingToMeetingFormInput(props.meeting as Meeting) : props.meeting)
+  : null
+const subject = ref(initialForm?.subject || '')
+const summary = ref(initialForm?.summary || '')
+const category = ref(initialForm?.category || '')
+const plannedStatus = ref(initialForm?.plannedStatus || 'held')
+const date = ref((initialForm?.date as string) || new Date().toISOString().slice(0, 10))
+const time = ref(initialForm?.time || '09:00')
+const location = ref(initialForm?.location || '')
+const participants = ref(initialForm?.participants || [])
+const notes = ref(initialForm?.notes || '')
+const actionItems = ref(initialForm?.actionItems || '')
+const calendarEventId = ref(initialForm?.calendarEventId || null)
 const relatedProjects = ref<string[]>(
-  props.meeting?.relatedProjects ? [...props.meeting.relatedProjects] : []
+  initialForm?.relatedProjects ? [...initialForm.relatedProjects] : []
 )
 
 // Meeting categories from store
@@ -210,7 +217,7 @@ const availableProjects = computed(() =>
 
 // Validation rules
 const rules = {
-  required: (v: string) => !!v || 'This field is required'
+  required: (v: string) => requiredTrimmed(v, t('validation.required'))
 }
 
 // Handle planned status change
@@ -239,11 +246,12 @@ const availablePeople = computed(() => {
 })
 
 // Submit function
-const submit = () => {
-  if (!valid.value) return
+const submit = async () => {
+  const result = await form.value?.validate()
+  if (!result?.valid) return
   
   const meetingData = {
-    subject: subject.value,
+    subject: subject.value.trim(),
     summary: summary.value,
     category: category.value,
     plannedStatus: plannedStatus.value,
@@ -261,11 +269,12 @@ const submit = () => {
 }
 
 // Plan meeting - create meeting and open calendar event dialog
-const planMeeting = () => {
-  if (!valid.value) return
+const planMeeting = async () => {
+  const result = await form.value?.validate()
+  if (!result?.valid) return
   
   const meetingData = {
-    subject: subject.value,
+    subject: subject.value.trim(),
     summary: summary.value,
     category: category.value,
     plannedStatus: plannedStatus.value,
@@ -308,20 +317,21 @@ onMounted(async () => {
   }
   
   if (props.meeting) {
-    subject.value = props.meeting.subject
-    summary.value = props.meeting.summary || ''
-    category.value = props.meeting.category
-    plannedStatus.value = props.meeting.plannedStatus || 'held'
-    date.value = props.meeting.date 
-      ? new Date(props.meeting.date).toISOString().substr(0, 10) 
-      : new Date().toISOString().substr(0, 10)
-    time.value = props.meeting.time
-    location.value = props.meeting.location || ''
-    participants.value = [...props.meeting.participants]
-    notes.value = props.meeting.notes || ''
-    actionItems.value = props.meeting.actionItems || ''
-    calendarEventId.value = props.meeting.calendarEventId || null
-    relatedProjects.value = [...(props.meeting.relatedProjects || [])]
+    const mapped = 'title' in props.meeting
+      ? meetingToMeetingFormInput(props.meeting as Meeting)
+      : props.meeting
+    subject.value = mapped.subject
+    summary.value = mapped.summary || ''
+    category.value = mapped.category || ''
+    plannedStatus.value = mapped.plannedStatus || 'held'
+    date.value = (mapped.date as string) || new Date().toISOString().slice(0, 10)
+    time.value = mapped.time || '09:00'
+    location.value = mapped.location || ''
+    participants.value = [...(mapped.participants || [])]
+    notes.value = mapped.notes || ''
+    actionItems.value = mapped.actionItems || ''
+    calendarEventId.value = mapped.calendarEventId || null
+    relatedProjects.value = [...(mapped.relatedProjects || [])]
   }
 })
 </script>

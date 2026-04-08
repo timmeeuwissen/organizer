@@ -244,12 +244,14 @@ v-form(
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useAuthStore } from '~/stores/auth'
 import { useIntegrationProviders } from '~/composables/useIntegrationProviders'
 import type { Task, Comment } from '~/types/models'
+import { requiredTrimmed } from '~/utils/validation'
 
 const props = defineProps({
   task: {
@@ -282,8 +284,9 @@ const tasksStore = useTasksStore()
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
-const form = ref(null)
+const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 const valid = ref(false)
 const dueDateMenu = ref(false)
 
@@ -314,34 +317,34 @@ const subtasks = ref<Task[]>([])
 const newSubtaskTitle = ref('')
 
 // Status options
-const statusOptions = [
-  { text: 'To Do', value: 'todo' },
-  { text: 'In Progress', value: 'inProgress' },
-  { text: 'Completed', value: 'completed' },
-  { text: 'Delegated', value: 'delegated' },
-  { text: 'Cancelled', value: 'cancelled' }
-]
+const statusOptions = computed(() => [
+  { text: t('tasks.todoTasks'), value: 'todo' },
+  { text: t('tasks.inProgressTasks'), value: 'inProgress' },
+  { text: t('tasks.completedTasks'), value: 'completed' },
+  { text: t('tasks.delegatedTasks'), value: 'delegated' },
+  { text: t('tasks.cancelledTasks'), value: 'cancelled' }
+])
 
 // Type options
-const typeOptions = [
-  { text: 'Task', value: 'task' },
-  { text: 'Routine', value: 'routine' },
-  { text: 'Delegation', value: 'delegation' },
-  { text: 'Follow-up', value: 'followUp' }
-]
+const typeOptions = computed(() => [
+  { text: t('tasks.typeTask'), value: 'task' },
+  { text: t('tasks.typeRoutine'), value: 'routine' },
+  { text: t('tasks.typeDelegation'), value: 'delegation' },
+  { text: t('tasks.typeFollowUp'), value: 'followUp' }
+])
 
 // Priority options
-const priorityOptions = [
-  { text: 'Highest', value: 1 },
-  { text: 'High', value: 2 },
-  { text: 'Medium', value: 3 },
-  { text: 'Low', value: 4 },
-  { text: 'Lowest', value: 5 }
-]
+const priorityOptions = computed(() => [
+  { text: t('tasks.priorityHighest'), value: 1 },
+  { text: t('tasks.priorityHigh'), value: 2 },
+  { text: t('tasks.priorityMedium'), value: 3 },
+  { text: t('tasks.priorityLow'), value: 4 },
+  { text: t('tasks.priorityLowest'), value: 5 }
+])
 
 // Validation rules
 const rules = {
-  required: (v: string) => !!v || 'This field is required'
+  required: (v: string) => requiredTrimmed(v, t('validation.required'))
 }
 
 // Computed values
@@ -416,7 +419,7 @@ const getPriorityColor = (priorityValue: number) => {
 
 const getCommentAuthor = (comment: Comment) => {
   if (comment.userId === authStore.user?.id) {
-    return 'You'
+    return t('common.you')
   }
   
   const person = peopleStore.getById(comment.userId)
@@ -424,7 +427,7 @@ const getCommentAuthor = (comment: Comment) => {
     return `${person.firstName} ${person.lastName}`
   }
   
-  return 'Unknown user'
+  return t('common.unknownUser')
 }
 
 // Comment functions
@@ -543,21 +546,27 @@ const deleteSubtask = async (subtaskId: string) => {
 }
 
 // Submit function
-const submit = () => {
-  if (!valid.value) return
+const submit = async () => {
+  const result = await form.value?.validate()
+  if (!result?.valid) return
   
   const taskData: Partial<Task> = {
-    title: title.value,
+    title: title.value.trim(),
     description: description.value,
     status: status.value as 'todo' | 'inProgress' | 'completed' | 'delegated' | 'cancelled',
     type: type.value as 'task' | 'routine' | 'delegation' | 'followUp',
     priority: priority.value,
-    dueDate: dueDate.value ? new Date(dueDate.value) : undefined,
-    assignedTo: assignedTo.value || undefined,
     tags: tags.value,
     relatedProjects: relatedProjects.value,
     // Add provider information for non-organizer storage
     storageProvider: storageProvider.value
+  }
+
+  if (dueDate.value) {
+    taskData.dueDate = new Date(dueDate.value)
+  }
+  if (assignedTo.value) {
+    taskData.assignedTo = assignedTo.value
   }
   
   emit('submit', taskData)
