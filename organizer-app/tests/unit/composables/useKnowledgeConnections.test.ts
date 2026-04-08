@@ -115,4 +115,20 @@ describe('useKnowledgeConnections', () => {
     await disconnect('e1')
     expect(mockDisconnect).toHaveBeenCalledWith('e1')
   })
+
+  it('rolls back created node when connect fails', async () => {
+    mockConnect = vi.fn(async () => {
+      throw new Error('connect failed')
+    })
+    const { useKnowledgeConnections } = await import('~/composables/useKnowledgeConnections')
+    const { addKnowledge } = useKnowledgeConnections('person', 'p1')
+
+    await expect(addKnowledge(
+      { content: 'new insight', subtype: 'insight', source: 'manual', certainty: 0.8, certaintyDate: now, tags: [], label: 'new insight' },
+      'references'
+    )).rejects.toThrow('connect failed')
+
+    expect(mockCreate).toHaveBeenCalledTimes(1)
+    expect(mockDelete).toHaveBeenCalledWith('k-new')
+  })
 })

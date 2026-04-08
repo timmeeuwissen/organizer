@@ -275,6 +275,11 @@ const props = defineProps({
   initialAssignedToId: {
     type: String,
     default: ''
+  },
+  /** When creating a task, pre-select related projects (e.g. from project detail page). */
+  initialRelatedProjectIds: {
+    type: Array as PropType<string[]>,
+    default: () => []
   }
 })
 
@@ -300,7 +305,9 @@ const priority = ref(props.task?.priority !== undefined ? props.task.priority : 
 const dueDate = ref(props.task?.dueDate ? new Date(props.task.dueDate).toISOString().substr(0, 10) : null)
 const assignedTo = ref(props.task?.assignedTo || '')
 const tags = ref(props.task?.tags || [])
-const relatedProjects = ref(props.task?.relatedProjects || [])
+const relatedProjects = ref(
+  props.task?.relatedProjects || (props.initialRelatedProjectIds?.length ? [...props.initialRelatedProjectIds] : [])
+)
 
 // Get available storage providers
 const { taskProviders } = useIntegrationProviders()
@@ -611,6 +618,16 @@ watch(
     }
   },
   { immediate: true },
+)
+
+watch(
+  () => props.initialRelatedProjectIds,
+  (ids) => {
+    if (!props.task && Array.isArray(ids) && ids.length) {
+      relatedProjects.value = [...ids]
+    }
+  },
+  { immediate: true, deep: true },
 )
 
 // Watch for changes to the task and update form

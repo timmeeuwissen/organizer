@@ -143,7 +143,24 @@ export const useAuthStore = defineStore('auth', {
           
           if (userSnap.exists()) {
             // User exists in Firestore, use that data
-            this.user = userSnap.data() as User
+            const data = userSnap.data() as Partial<User>
+            this.user = {
+              id: data.id || firebaseUser.uid,
+              email: data.email || firebaseUser.email || '',
+              displayName: data.displayName ?? firebaseUser.displayName ?? '',
+              photoURL: data.photoURL ?? firebaseUser.photoURL ?? '',
+              createdAt: data.createdAt || new Date(),
+              updatedAt: data.updatedAt || new Date(),
+              lastLogin: data.lastLogin || new Date(),
+              settings: data.settings || {
+                defaultLanguage: 'en',
+                darkMode: false,
+                emailNotifications: true,
+                calendarSync: false,
+                weekStartsOn: 1,
+                integrationAccounts: [],
+              },
+            }
           } else {
             // New user, create in Firestore
             const newUser: User = {

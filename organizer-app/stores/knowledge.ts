@@ -12,6 +12,8 @@ export const useKnowledgeStore = defineStore('knowledge', {
   state: () => ({
     nodes: [] as KnowledgeNode[],
     edges: [] as KnowledgeEdge[],
+    nodeCollectionsById: {} as Record<string, 'knowledgeNodes' | 'graphNodes'>,
+    edgeCollectionsById: {} as Record<string, 'knowledgeEdges' | 'graphEdges'>,
     loading: false,
     bootstrapped: false,
   }),
@@ -46,23 +48,43 @@ export const useKnowledgeStore = defineStore('knowledge', {
 
       this.loading = true
       try {
-        const [nodeSnap, edgeSnap] = await Promise.all([
-          getDocs(query(collection(db, 'knowledgeNodes'), where('userId', '==', userId))),
-          getDocs(query(collection(db, 'knowledgeEdges'), where('userId', '==', userId))),
+        const readFirstAvailable = async (
+          primary: 'knowledgeNodes' | 'knowledgeEdges',
+          fallback: 'graphNodes' | 'graphEdges'
+        ) => {
+          try {
+            const snap = await getDocs(query(collection(db, primary), where('userId', '==', userId)))
+            return { snap, used: primary }
+          } catch {
+            const snap = await getDocs(query(collection(db, fallback), where('userId', '==', userId)))
+            return { snap, used: fallback }
+          }
+        }
+
+        const [nodesResult, edgesResult] = await Promise.all([
+          readFirstAvailable('knowledgeNodes', 'graphNodes'),
+          readFirstAvailable('knowledgeEdges', 'graphEdges'),
         ])
-        this.nodes = nodeSnap.docs.map(d => ({
+        this.nodes = nodesResult.snap.docs.map(d => ({
           ...(d.data() as Omit<KnowledgeNode, 'id'>),
           id: d.id,
           createdAt: d.data().createdAt?.toDate?.() ?? new Date(),
           updatedAt: d.data().updatedAt?.toDate?.() ?? new Date(),
           certaintyDate: d.data().certaintyDate?.toDate?.() ?? new Date(),
         }))
-        this.edges = edgeSnap.docs.map(d => ({
+        this.nodeCollectionsById = Object.fromEntries(
+          this.nodes.map((n) => [n.id, nodesResult.used as 'knowledgeNodes' | 'graphNodes'])
+        )
+
+        this.edges = edgesResult.snap.docs.map(d => ({
           ...(d.data() as Omit<KnowledgeEdge, 'id'>),
           id: d.id,
           createdAt: d.data().createdAt?.toDate?.() ?? new Date(),
           updatedAt: d.data().updatedAt?.toDate?.() ?? new Date(),
         }))
+        this.edgeCollectionsById = Object.fromEntries(
+          this.edges.map((e) => [e.id, edgesResult.used as 'knowledgeEdges' | 'graphEdges'])
+        )
         this.bootstrapped = true
       } catch (err) {
         useNotificationStore().error(storeT('knowledge.loadError'))
@@ -81,7 +103,7 @@ export const useKnowledgeStore = defineStore('knowledge', {
       const userId = authStore.user?.id
       if (!userId) return undefined
 
-      const ref = await addDoc(collection(db, 'knowledgeNodes'), {
+      const payload = {
         userId,
         ...partial,
         type: 'knowledge' as const,
@@ -89,7 +111,15 @@ export const useKnowledgeStore = defineStore('knowledge', {
         label: partial.content.slice(0, 60),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      })
+      }
+      let ref: { id: string }
+      let usedCollection: 'knowledgeNodes' | 'graphNodes' = 'knowledgeNodes'
+      try {
+        ref = await addDoc(collection(db, 'knowledgeNodes'), payload)
+      } catch {
+        ref = await addDoc(collection(db, 'graphNodes'), payload)
+        usedCollection = 'graphNodes'
+      }
       const node: KnowledgeNode = {
         ...partial,
         id: ref.id,
@@ -101,6 +131,7 @@ export const useKnowledgeStore = defineStore('knowledge', {
         updatedAt: new Date(),
       }
       this.nodes.push(node)
+      this.nodeCollectionsById[node.id] = usedCollection
       return node
     },
 
@@ -112,14 +143,18 @@ export const useKnowledgeStore = defineStore('knowledge', {
       const db = getFirestore()
       const updateData: Record<string, unknown> = { ...partial, updatedAt: serverTimestamp() }
       if (partial.content) updateData.label = partial.content.slice(0, 60)
-      await updateDoc(doc(db, 'knowledgeNodes', id), updateData)
+      const collectionName = this.nodeCollectionsById[id] || 'knowledgeNodes'
+      await updateDoc(doc(db, collectionName, id), updateData)
       const idx = this.nodes.findIndex(n => n.id === id)
       if (idx !== -1) {
-        Object.assign(this.nodes[idx], {
-          ...partial,
-          ...(partial.content ? { label: partial.content.slice(0, 60) } : {}),
-          updatedAt: new Date(),
-        })
+        const existing = this.nodes[idx]
+        if (existing) {
+          Object.assign(existing, {
+            ...partial,
+            ...(partial.content ? { label: partial.content.slice(0, 60) } : {}),
+            updatedAt: new Date(),
+          })
+        }
       } else if (import.meta.env.DEV) {
         console.warn(`[knowledge] update: node ${id} not found in local state`)
       }
@@ -129,11 +164,13 @@ export const useKnowledgeStore = defineStore('knowledge', {
       const { doc, deleteDoc, collection, query, where, getDocs, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
       try {
+        const edgeCollection = this.nodeCollectionsById[id] === 'graphNodes' ? 'graphEdges' : 'knowledgeEdges'
+        const nodeCollection = this.nodeCollectionsById[id] || 'knowledgeNodes'
         const edgeSnap = await getDocs(
-          query(collection(db, 'knowledgeEdges'), where('knowledgeNodeId', '==', id))
+          query(collection(db, edgeCollection), where('knowledgeNodeId', '==', id))
         )
-        await Promise.all(edgeSnap.docs.map(d => deleteDoc(doc(db, 'knowledgeEdges', d.id))))
-        await deleteDoc(doc(db, 'knowledgeNodes', id))
+        await Promise.all(edgeSnap.docs.map(d => deleteDoc(doc(db, edgeCollection, d.id))))
+        await deleteDoc(doc(db, nodeCollection, id))
         // Only update local state after Firestore succeeds
         this.edges = this.edges.filter(e => e.knowledgeNodeId !== id)
         this.nodes = this.nodes.filter(n => n.id !== id)
@@ -162,13 +199,23 @@ export const useKnowledgeStore = defineStore('knowledge', {
       }
       if (label !== undefined) data.label = label
 
-      const ref = await addDoc(collection(db, 'knowledgeEdges'), data)
+      const preferred = this.nodeCollectionsById[knowledgeNodeId] === 'graphNodes' ? 'graphEdges' : 'knowledgeEdges'
+      let ref: { id: string }
+      let usedCollection: 'knowledgeEdges' | 'graphEdges' = preferred
+      try {
+        ref = await addDoc(collection(db, preferred), data)
+      } catch {
+        const fallback = preferred === 'knowledgeEdges' ? 'graphEdges' : 'knowledgeEdges'
+        ref = await addDoc(collection(db, fallback), data)
+        usedCollection = fallback
+      }
       const edge: KnowledgeEdge = {
         id: ref.id, userId, knowledgeNodeId, entityType, entityId, relationType,
         ...(label !== undefined ? { label } : {}),
         createdAt: new Date(), updatedAt: new Date(),
       }
       this.edges.push(edge)
+      this.edgeCollectionsById[edge.id] = usedCollection
       return edge
     },
 
@@ -176,7 +223,8 @@ export const useKnowledgeStore = defineStore('knowledge', {
       const { doc, deleteDoc, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
       try {
-        await deleteDoc(doc(db, 'knowledgeEdges', edgeId))
+        const collectionName = this.edgeCollectionsById[edgeId] || 'knowledgeEdges'
+        await deleteDoc(doc(db, collectionName, edgeId))
         this.edges = this.edges.filter(e => e.id !== edgeId)
       } catch (err) {
         useNotificationStore().error(storeT('knowledge.deleteError'))
@@ -189,14 +237,18 @@ export const useKnowledgeStore = defineStore('knowledge', {
       const db = getFirestore()
       const data: Record<string, unknown> = { relationType, updatedAt: serverTimestamp() }
       if (label !== undefined) data.label = label
-      await updateDoc(doc(db, 'knowledgeEdges', edgeId), data)
+      const collectionName = this.edgeCollectionsById[edgeId] || 'knowledgeEdges'
+      await updateDoc(doc(db, collectionName, edgeId), data)
       const idx = this.edges.findIndex(e => e.id === edgeId)
       if (idx !== -1) {
-        Object.assign(this.edges[idx], {
-          relationType,
-          ...(label !== undefined ? { label } : {}),
-          updatedAt: new Date(),
-        })
+        const existing = this.edges[idx]
+        if (existing) {
+          Object.assign(existing, {
+            relationType,
+            ...(label !== undefined ? { label } : {}),
+            updatedAt: new Date(),
+          })
+        }
       } else if (import.meta.env.DEV) {
         console.warn(`[knowledge] updateConnection: edge ${edgeId} not found in local state`)
       }

@@ -10,7 +10,6 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  orderBy,
   Timestamp,
 } from 'firebase/firestore'
 import { getFirestore } from 'firebase/firestore'
@@ -30,6 +29,22 @@ const stripUndefinedFields = <T extends Record<string, unknown>>(obj: T): Partia
   return Object.fromEntries(
     Object.entries(obj).filter(([, value]) => value !== undefined)
   ) as Partial<T>
+}
+
+const normalizeIdLike = (value: unknown): string | null => {
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (value && typeof value === 'object' && 'id' in value) {
+    const id = (value as { id?: unknown }).id
+    return typeof id === 'string' || typeof id === 'number' ? String(id) : null
+  }
+  return null
+}
+
+const normalizeIdArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return []
+  return value
+    .map(normalizeIdLike)
+    .filter((id): id is string => typeof id === 'string' && id.length > 0)
 }
 
 export const useTasksStore = defineStore('tasks', {
@@ -54,7 +69,12 @@ export const useTasksStore = defineStore('tasks', {
 
     getByTag: (taskState) => (tag: string) => taskState.tasks.filter((t) => t.tags.includes(tag)),
     getByAssignee: (taskState) => (id: string) => taskState.tasks.filter((t) => t.assignedTo === id),
-    getByProject: (taskState) => (id: string) => taskState.tasks.filter((t) => t.relatedProjects?.includes(id)),
+    getByProject: (taskState) => (id: string) =>
+      taskState.tasks.filter((t) => {
+        const related = normalizeIdArray(t.relatedProjects)
+        const direct = normalizeIdLike(t.projectId) || ''
+        return related.includes(id) || direct === id
+      }),
     getByMeeting: (taskState) => (id: string) => taskState.tasks.filter((t) => t.relatedMeetings?.includes(id)),
     getByBehavior: (taskState) => (id: string) => taskState.tasks.filter((t) => t.relatedBehaviors?.includes(id)),
     getByParent: (taskState) => (id: string) => taskState.tasks.filter((t) => t.parentTask === id),
@@ -93,34 +113,60 @@ export const useTasksStore = defineStore('tasks', {
 
     async fetchTasks() {
       const authStore = useAuthStore()
-      if (!authStore.user) return
+      const userId = authStore.user?.id
+      if (!userId) {
+        throw new Error('Not signed in')
+      }
 
       this.loading = true
       this.error = null
       try {
         const db = getFirestore()
+        // Do not order in Firestore by dueDate: docs missing dueDate are excluded.
         const snap = await getDocs(
-          query(collection(db, 'tasks'), where('userId', '==', authStore.user.id), orderBy('dueDate', 'asc'))
+          query(collection(db, 'tasks'), where('userId', '==', userId))
         )
         this.tasks = snap.docs.map((d) => {
           const data = d.data()
+          const normalizedProjectId = normalizeIdLike(data.projectId)
+          const relatedProjects = normalizeIdArray(data.relatedProjects)
+          if (!relatedProjects.length && normalizedProjectId) {
+            relatedProjects.push(normalizedProjectId)
+          }
+          const relatedMeetings = normalizeIdArray(data.relatedMeetings)
+          const relatedBehaviors = normalizeIdArray(data.relatedBehaviors)
+          const tags = normalizeIdArray(data.tags)
+          const subtasks = normalizeIdArray(data.subtasks)
+          const comments = Array.isArray(data.comments) ? data.comments : []
           return {
             ...data,
             id: d.id,
+            projectId: normalizedProjectId || undefined,
             dueDate: data.dueDate?.toDate() || null,
             createdAt: data.createdAt?.toDate() || new Date(),
             updatedAt: data.updatedAt?.toDate() || new Date(),
             completedAt: data.completedAt?.toDate() || null,
-            comments: (data.comments || []).map((c: Record<string, unknown>) => ({
+            tags,
+            subtasks,
+            relatedProjects,
+            relatedMeetings,
+            relatedBehaviors,
+            comments: comments.map((c: Record<string, unknown>) => ({
               ...c,
               createdAt: (c.createdAt as { toDate?: () => Date })?.toDate?.() || new Date(),
               updatedAt: (c.updatedAt as { toDate?: () => Date })?.toDate?.() || new Date(),
             })),
           } as Task
         })
+        this.tasks.sort((a, b) => {
+          const aDue = a.dueDate?.getTime() ?? Number.POSITIVE_INFINITY
+          const bDue = b.dueDate?.getTime() ?? Number.POSITIVE_INFINITY
+          return aDue - bDue
+        })
       } catch (err: unknown) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch tasks'
         console.error('Error fetching tasks:', err)
+        throw err
       } finally {
         this.loading = false
       }
@@ -128,7 +174,10 @@ export const useTasksStore = defineStore('tasks', {
 
     async fetchTask(id: string) {
       const authStore = useAuthStore()
-      if (!authStore.user) return
+      const userId = authStore.user?.id
+      if (!userId) {
+        throw new Error('Not signed in')
+      }
 
       this.loading = true
       this.error = null
@@ -137,7 +186,7 @@ export const useTasksStore = defineStore('tasks', {
         if (!snap.exists()) { this.error = 'Task not found'; return }
 
         const data = snap.data()
-        if (data.userId !== authStore.user.id) throw new Error('Unauthorized access to task')
+        if (data.userId !== userId) throw new Error('Unauthorized access to task')
 
         this.currentTask = {
           ...data,
@@ -162,18 +211,31 @@ export const useTasksStore = defineStore('tasks', {
 
     async createTask(newTask: Partial<Task>) {
       const authStore = useAuthStore()
-      if (!authStore.user) return
+      const userId = authStore.user?.id
+      if (!userId) {
+        throw new Error('Not signed in')
+      }
 
       this.loading = true
       this.error = null
       try {
+        const normalizedRelatedProjects = Array.isArray(newTask.relatedProjects)
+          ? newTask.relatedProjects.map((value) => String(value))
+          : newTask.projectId != null
+            ? [String(newTask.projectId)]
+            : []
+        const normalizedProjectId =
+          newTask.projectId != null
+            ? String(newTask.projectId)
+            : normalizedRelatedProjects[0]
         const taskData = stripUndefinedFields({
           ...newTask,
-          userId: authStore.user.id,
+          userId,
           tags: newTask.tags || [],
           subtasks: newTask.subtasks || [],
           comments: newTask.comments || [],
-          relatedProjects: newTask.relatedProjects || [],
+          relatedProjects: normalizedRelatedProjects,
+          projectId: normalizedProjectId,
           relatedMeetings: newTask.relatedMeetings || [],
           relatedBehaviors: newTask.relatedBehaviors || [],
           status: newTask.status || 'todo',
@@ -183,7 +245,7 @@ export const useTasksStore = defineStore('tasks', {
           updatedAt: serverTimestamp(),
         })
         const docRef = await addDoc(collection(getFirestore(), 'tasks'), taskData)
-        const added = { ...taskData, id: docRef.id, createdAt: new Date(), updatedAt: new Date(), comments: [] } as Task
+        const added = { ...taskData, id: docRef.id, userId, createdAt: new Date(), updatedAt: new Date(), comments: [] } as Task
         this.tasks.push(added)
         this.currentTask = added
         return docRef.id
@@ -198,7 +260,10 @@ export const useTasksStore = defineStore('tasks', {
 
     async updateTask(id: string, updates: Partial<Task>) {
       const authStore = useAuthStore()
-      if (!authStore.user) return
+      const userId = authStore.user?.id
+      if (!userId) {
+        throw new Error('Not signed in')
+      }
 
       this.loading = true
       this.error = null
@@ -209,7 +274,7 @@ export const useTasksStore = defineStore('tasks', {
 
         if (!snap.exists()) throw new Error('Task not found')
         const taskData = snap.data()
-        if (taskData.userId !== authStore.user.id) throw new Error('Unauthorized access to task')
+        if (taskData.userId !== userId) throw new Error('Unauthorized access to task')
 
         if (updates.status === 'completed' && taskData.status !== 'completed') {
           updates.completedAt = new Date()
@@ -218,8 +283,24 @@ export const useTasksStore = defineStore('tasks', {
         }
 
         const updateData: Record<string, unknown> = { updatedAt: serverTimestamp() }
+        if ('relatedProjects' in updates || 'projectId' in updates) {
+          const normalizedRelatedProjects = Array.isArray(updates.relatedProjects)
+            ? updates.relatedProjects.map((value) => String(value))
+            : updates.projectId != null
+              ? [String(updates.projectId)]
+              : Array.isArray(taskData.relatedProjects)
+                ? taskData.relatedProjects.map((value: unknown) => String(value))
+                : []
+          const normalizedProjectId =
+            updates.projectId != null
+              ? String(updates.projectId)
+              : normalizedRelatedProjects[0]
+          updateData.relatedProjects = normalizedRelatedProjects
+          if (normalizedProjectId) updateData.projectId = normalizedProjectId
+        }
         for (const [key, value] of Object.entries(updates)) {
           if (key === 'id' || key === 'userId' || key === 'createdAt') continue
+          if (key === 'relatedProjects' || key === 'projectId') continue
           if (value === undefined) continue
           updateData[key] = key === 'completedAt' && value instanceof Date ? Timestamp.fromDate(value) : value
         }
@@ -240,7 +321,10 @@ export const useTasksStore = defineStore('tasks', {
 
     async deleteTask(id: string) {
       const authStore = useAuthStore()
-      if (!authStore.user) return
+      const userId = authStore.user?.id
+      if (!userId) {
+        throw new Error('Not signed in')
+      }
 
       this.loading = true
       this.error = null
@@ -248,7 +332,7 @@ export const useTasksStore = defineStore('tasks', {
         const taskRef = doc(getFirestore(), 'tasks', id)
         const snap = await getDoc(taskRef)
         if (!snap.exists()) throw new Error('Task not found')
-        if (snap.data().userId !== authStore.user.id) throw new Error('Unauthorized access to task')
+        if (snap.data().userId !== userId) throw new Error('Unauthorized access to task')
         await deleteDoc(taskRef)
         this.tasks = this.tasks.filter((t) => t.id !== id)
         if (this.currentTask?.id === id) this.currentTask = null

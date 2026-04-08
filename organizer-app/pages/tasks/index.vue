@@ -134,132 +134,16 @@ v-container(fluid)
           ) {{ $t('tasks.addTask') }}
         
         v-card-text
-          v-table(v-if="!loading && filteredTasks.length > 0")
-            thead
-              tr
-                th
-                th {{ $t('tasks.title') }}
-                th(style="width: 120px") {{ $t('tasks.dueDate') }}
-                th(style="width: 120px") {{ $t('tasks.priority') }}
-                th(style="width: 120px") {{ $t('tasks.status') }}
-                th(style="width: 120px") {{ $t('tasks.type') }}
-                th
-            tbody
-              template(v-for="(task, index) in pagedProcessedTasks" :key="task.id")
-                tr(
-                  :class="getTaskRowClasses(task)"
-                  :style="getTaskRowStyle(task)" 
-                  @click="openTask(task)"
-                )
-                  td(style="width: 50px")
-                    div.position-relative.d-flex.align-center
-                      div.account-indicator(v-if="task.providerAccountId" :style="{ backgroundColor: getProviderColor(task) }")
-                      v-checkbox(
-                        v-model="task.completed"
-                        :value="task.status === 'completed'"
-                        color="success"
-                        @click.stop="toggleTaskStatus(task)"
-                        :disabled="task.status === 'completed'"
-                      )
-                  td.tasks-overview__title-cell
-                    .d-flex.align-center.min-w-0
-                      div.flex-shrink-0(
-                        v-if="task.level > 0"
-                        :style="{ width: `${task.level * 20}px` }"
-                      )
-                      .tasks-disclosure-gutter.d-flex.justify-center.align-center.flex-shrink-0
-                        v-btn(
-                          v-if="activeTab === 'all' && task.hasSubtasks"
-                          icon
-                          size="x-small"
-                          variant="text"
-                          :aria-expanded="isExpanded(task.id)"
-                          :aria-label="isExpanded(task.id) ? $t('tasks.collapseSubtasks') : $t('tasks.expandSubtasks')"
-                          :title="isExpanded(task.id) ? $t('tasks.collapseSubtasks') : $t('tasks.expandSubtasks')"
-                          @click.stop="toggleExpand(task.id)"
-                        )
-                          v-icon(
-                            size="small"
-                            :icon="isExpanded(task.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
-                          )
-                      v-icon(
-                        v-if="activeTab === 'all' && task.level > 0 && !task.hasSubtasks"
-                        size="x-small"
-                        class="me-1 flex-shrink-0"
-                        icon="mdi-subdirectory-arrow-right"
-                      )
-                      span.tasks-overview__title-text.pl-1.min-w-0.text-truncate {{ task.title }}
-                  td 
-                    v-chip(
-                      v-if="task.dueDate"
-                      size="small"
-                      :color="getDueDateColor(task.dueDate)"
-                    ) {{ formatDate(task.dueDate) }}
-                  td
-                    v-chip(
-                      size="small"
-                      :color="getPriorityColor(task.priority)"
-                    ) {{ getPriorityText(task.priority) }}
-                  td
-                    v-chip(
-                      size="small"
-                      :color="getStatusColor(task.status)"
-                    ) 
-                      v-icon(size="x-small" start) {{ getStatusIcon(task.status) }}
-                      | {{ getStatusText(task.status) }}
-                  td
-                    v-chip(
-                      size="small"
-                      :color="getTypeColor(task.type)"
-                    ) {{ getTypeText(task.type) }}
-                  td(style="width: 120px")
-                    v-btn(icon size="small" :to="`/tasks/${task.id}`" color="info")
-                      v-icon mdi-open-in-new
-                    v-btn(icon size="small" @click.stop="openTask(task)" color="primary")
-                      v-icon mdi-pencil
-                    v-btn(
-                      v-if="task.status !== 'completed'"
-                      icon
-                      size="small"
-                      @click.stop="toggleTaskStatus(task)"
-                      color="success"
-                    )
-                      v-icon mdi-check
-                    v-btn(
-                      v-if="!task.hasSubtasks"
-                      icon
-                      size="small"
-                      @click.stop="addSubtask(task)"
-                      color="info"
-                    )
-                      v-icon mdi-plus-circle-outline
-          
-          div.d-flex.align-center.justify-space-between.px-2.py-3(
-            v-if="!loading && filteredTasks.length > 0 && totalTaskRows > 0"
+          TasksOverviewTable(
+            :tasks="filteredTasks"
+            :loading="loading"
+            :show-hierarchy="activeTab === 'all'"
+            :page-size="tasksPageSizeNorm"
+            @open="openTask"
+            @edit="openTask"
+            @toggle-status="toggleTaskStatus"
+            @add-subtask="addSubtask"
           )
-            div.text-caption
-              span {{ $t('tasks.pagination.showing', { shown: pagedProcessedTasks.length, total: totalTaskRows }) }}
-            div.d-flex.align-center
-              v-btn(
-                variant="text"
-                size="small"
-                :disabled="!hasPrevTaskPage || loading"
-                @click="loadPreviousTaskPage"
-                prepend-icon="mdi-chevron-left"
-              ) {{ $t('tasks.pagination.previous') }}
-              span.mx-2 {{ $t('tasks.pagination.pageOf', { page: clampedTaskPage + 1, pages: totalTaskPages }) }}
-              v-btn(
-                variant="text"
-                size="small"
-                :disabled="!hasNextTaskPage || loading"
-                @click="loadNextTaskPage"
-                append-icon="mdi-chevron-right"
-              ) {{ $t('tasks.pagination.next') }}
-          
-          template(v-else-if="loading")
-            v-skeleton-loader(type="table")
-          
-          v-alert(v-else type="info" variant="tonal") {{ $t('tasks.noTasks') }}
 
   // View/Edit Dialog
   v-dialog(v-model="taskDialog" max-width="800px")
@@ -293,6 +177,7 @@ import { useAuthStore } from '~/stores/auth'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import type { Task } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
+import TasksOverviewTable from '~/components/tasks/TasksOverviewTable.vue'
 import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
 import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
 import {
@@ -302,11 +187,6 @@ import {
   pruneExpandedTaskIds,
   type TasksUiSettings,
 } from '~/config/tasksUi'
-import {
-  clampTaskListPageIndex,
-  sliceTaskListPage,
-  taskListTotalPages,
-} from '~/utils/tasksOverviewPagination'
 
 const route = useRoute()
 const router = useRouter()

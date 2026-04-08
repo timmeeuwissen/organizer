@@ -49,7 +49,17 @@ export function useKnowledgeConnections(
   ): Promise<KnowledgeNode | undefined> {
     const node = await knowledgeStore.create(nodeData)
     if (!node) return undefined
-    await knowledgeStore.connect(node.id, nodeType, id.value, relationType, label)
+    try {
+      await knowledgeStore.connect(node.id, nodeType, id.value, relationType, label)
+    } catch (error) {
+      // Avoid leaving orphan nodes when relation creation fails.
+      try {
+        await knowledgeStore.delete(node.id)
+      } catch {
+        // Keep original error as source of truth for caller notifications.
+      }
+      throw error
+    }
     return node
   }
 

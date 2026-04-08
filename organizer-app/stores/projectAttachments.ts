@@ -73,6 +73,16 @@ function formatError(e: unknown): string {
   return base
 }
 
+function isMissingIndexError(e: unknown): boolean {
+  const code =
+    e && typeof e === 'object' && 'code' in e ? String((e as { code: string }).code) : ''
+  return code === 'failed-precondition'
+}
+
+function sortByCreatedDesc<T extends { createdAt: Date }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+}
+
 export const useProjectAttachmentsStore = defineStore('projectAttachments', {
   state: () => ({
     linksByProjectId: {} as Record<string, ProjectLink[]>,
@@ -107,7 +117,7 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
   actions: {
     async fetchForProject(projectId: string) {
       const authStore = useAuthStore()
-      if (!authStore.user) return
+      if (!authStore.user) throw new Error('Not signed in')
 
       this.loading = true
       this.error = null
@@ -115,45 +125,48 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
       const db = getFirestore()
 
       try {
+        const fetchScoped = async (name: 'projectLinks' | 'projectFiles' | 'projectMailLinks') => {
+          try {
+            return await getDocs(
+              query(
+                collection(db, name),
+                where('userId', '==', uid),
+                where('projectId', '==', projectId),
+                orderBy('createdAt', 'desc')
+              )
+            )
+          } catch (e) {
+            if (!isMissingIndexError(e)) throw e
+            // Fallback path avoids composite index requirement.
+            return getDocs(
+              query(
+                collection(db, name),
+                where('userId', '==', uid),
+                where('projectId', '==', projectId)
+              )
+            )
+          }
+        }
+
         const [linksSnap, filesSnap, mailSnap] = await Promise.all([
-          getDocs(
-            query(
-              collection(db, 'projectLinks'),
-              where('userId', '==', uid),
-              where('projectId', '==', projectId),
-              orderBy('createdAt', 'desc')
-            )
-          ),
-          getDocs(
-            query(
-              collection(db, 'projectFiles'),
-              where('userId', '==', uid),
-              where('projectId', '==', projectId),
-              orderBy('createdAt', 'desc')
-            )
-          ),
-          getDocs(
-            query(
-              collection(db, 'projectMailLinks'),
-              where('userId', '==', uid),
-              where('projectId', '==', projectId),
-              orderBy('createdAt', 'desc')
-            )
-          ),
+          fetchScoped('projectLinks'),
+          fetchScoped('projectFiles'),
+          fetchScoped('projectMailLinks'),
         ])
 
-        this.linksByProjectId[projectId] = linksSnap.docs.map((d) =>
+        this.linksByProjectId[projectId] = sortByCreatedDesc(linksSnap.docs.map((d) =>
           mapLinkDoc(d.id, d.data() as Record<string, unknown>)
-        )
-        this.filesByProjectId[projectId] = filesSnap.docs.map((d) =>
+        ))
+        this.filesByProjectId[projectId] = sortByCreatedDesc(filesSnap.docs.map((d) =>
           mapFileDoc(d.id, d.data() as Record<string, unknown>)
-        )
-        this.mailLinksByProjectId[projectId] = mailSnap.docs.map((d) =>
+        ))
+        this.mailLinksByProjectId[projectId] = sortByCreatedDesc(mailSnap.docs.map((d) =>
           mapMailLinkDoc(d.id, d.data() as Record<string, unknown>)
-        )
+        ))
       } catch (e: unknown) {
         this.error = formatError(e)
         console.error(e)
+        throw new Error(this.error)
       } finally {
         this.loading = false
       }
@@ -204,6 +217,18 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       })
+      // Optimistic local insert for immediate visibility.
+      const current = this.linksByProjectId[projectId] ?? []
+      const optimistic: ProjectLink = {
+        id: ref.id,
+        userId: authStore.user.id,
+        projectId,
+        url,
+        title: title?.trim() || undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+      this.linksByProjectId[projectId] = [optimistic, ...current]
       await this.fetchForProject(projectId)
       return ref.id
     },
@@ -211,6 +236,27 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
     async deleteLink(projectId: string, linkId: string) {
       const db = getFirestore()
       await deleteDoc(doc(db, 'projectLinks', linkId))
+      await this.fetchForProject(projectId)
+    },
+
+    async updateLink(projectId: string, linkId: string, rawUrl: string, title?: string) {
+      const authStore = useAuthStore()
+      if (!authStore.user) throw new Error('Not signed in')
+      if (!isValidHttpUrlForProject(rawUrl)) throw new Error('Invalid URL')
+
+      const url = normalizeProjectUrl(rawUrl)
+      const db = getFirestore()
+      await setDoc(
+        doc(db, 'projectLinks', linkId),
+        {
+          userId: authStore.user.id,
+          projectId,
+          url,
+          title: title?.trim() || null,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      )
       await this.fetchForProject(projectId)
     },
 

@@ -121,25 +121,24 @@ v-container
             v-card-title.d-flex
               span {{ $t('projects.tasks') }}
               v-spacer
-              add-button(:items="taskItems")
+              v-btn(color="primary" prepend-icon="mdi-plus" @click="openTaskDialog") {{ $t('projects.addTask') }}
             v-card-text
-              v-list(v-if="projectTasks.length > 0" density="compact")
-                v-list-item(
-                  v-for="t in projectTasks"
-                  :key="t.id"
-                  :title="t.title"
-                  :subtitle="t.status"
-                )
-                  template(v-slot:append)
-                    v-chip(size="x-small" variant="tonal") {{ taskPriorityLabel(t) }}
-              p(v-else) {{ $t('projects.noTasks') }}
+              TasksOverviewTable(
+                :tasks="projectTasks"
+                :loading="taskLoading || loading"
+                :show-hierarchy="true"
+                @open="openProjectTask"
+                @edit="openProjectTask"
+                @toggle-status="toggleProjectTaskStatus"
+                @add-subtask="addProjectSubtask"
+              )
         
         v-window-item(value="notes")
           v-card(elevation="1" class="mt-4")
             v-card-title.d-flex
               span {{ $t('projects.notes') }}
               v-spacer
-              add-button(:items="noteItems")
+              v-btn(color="primary" prepend-icon="mdi-plus" @click="openNoteDialog") {{ $t('projects.addNote') }}
             v-card-text
               v-list(v-if="notePages.length > 0" density="compact")
                 v-list-item(
@@ -148,6 +147,11 @@ v-container
                   :title="pg.title"
                   :subtitle="pg.content?.slice(0, 120) || ''"
                 )
+                  template(v-slot:append)
+                    v-btn(icon size="small" color="primary" @click="openEditNoteDialog(pg)")
+                      v-icon mdi-pencil
+                    v-btn(icon size="small" color="error" @click="confirmRemoveNote(pg)")
+                      v-icon mdi-delete
               p(v-else) {{ $t('projects.noNotes') }}
         
         v-window-item(value="meetings")
@@ -155,7 +159,7 @@ v-container
             v-card-title.d-flex
               span {{ $t('projects.meetings') }}
               v-spacer
-              add-button(:items="meetingItems")
+              v-btn(color="primary" prepend-icon="mdi-plus" @click="openMeetingDialog") {{ $t('projects.addMeeting') }}
             v-card-text
               v-list(v-if="projectMeetings.length > 0" density="compact")
                 v-list-item(
@@ -165,6 +169,11 @@ v-container
                   :title="meetingDisplayTitle(m)"
                   :subtitle="formatDate(m.startTime)"
                 )
+                  template(v-slot:append)
+                    v-btn(icon size="small" color="primary" @click.prevent.stop="openEditMeetingDialog(m)")
+                      v-icon mdi-pencil
+                    v-btn(icon size="small" color="error" @click.prevent.stop="confirmRemoveMeeting(m)")
+                      v-icon mdi-delete
               p(v-else) {{ $t('projects.noMeetings') }}
 
         v-window-item(value="links")
@@ -207,6 +216,8 @@ v-container
                   template(v-slot:append)
                     v-btn(icon variant="text" :href="row.url" target="_blank" rel="noopener noreferrer")
                       v-icon mdi-open-in-new
+                    v-btn(icon variant="text" color="primary" @click="openEditLink(row)")
+                      v-icon mdi-pencil
                     v-btn(icon variant="text" color="error" @click="confirmRemoveLink(row)")
                       v-icon mdi-delete
               p(v-else) {{ $t('projects.noLinks') }}
@@ -287,13 +298,17 @@ v-container
       task-form(
         :loading="taskLoading"
         :error="taskError"
-        @submit="createTask"
+        :task="editingTask"
+        :initial-related-project-ids="project ? [project.id] : []"
+        @submit="submitTask"
+        @delete="deleteTask"
+        @complete="completeTask"
       )
   
   // Note dialog
   v-dialog(v-model="noteDialog" max-width="800px")
     v-card(v-if="noteDialog")
-      v-card-title {{ $t('projects.addNote') }}
+      v-card-title {{ editingNoteId ? $t('common.edit') : $t('projects.addNote') }}
       v-card-text
         v-form(@submit.prevent="createNote")
           v-text-field(
@@ -315,8 +330,8 @@ v-container
           color="primary"
           :loading="noteLoading"
           :disabled="!canCreateNote || noteLoading"
-          @click="createNote"
-        ) {{ $t('common.save') }}
+          @click="submitNote"
+        ) {{ editingNoteId ? $t('common.update') : $t('common.save') }}
   
   // Meeting dialog
   v-dialog(v-model="meetingDialog" max-width="800px")
@@ -324,7 +339,8 @@ v-container
       meeting-form(
         :loading="meetingLoading"
         :error="meetingError"
-        @submit="createMeeting"
+        :meeting="editingMeetingData"
+        @submit="submitMeeting"
       )
 
   v-dialog(v-model="confirmDialog.open" max-width="420px")
@@ -347,16 +363,19 @@ import { useTasksStore } from '~/stores/tasks'
 import { useMeetingsStore } from '~/stores/meetings'
 import { useProjectAttachmentsStore } from '~/stores/projectAttachments'
 import { useNotificationStore } from '~/stores/notification'
+import { useAuthStore } from '~/stores/auth'
 import type { Project, Task, Meeting, ProjectPage } from '~/types/models'
 import type { ProjectLink, ProjectFile, ProjectMailLink } from '~/types/models/projectAttachments'
 import { isValidHttpUrlForProject } from '~/utils/normalizeProjectUrl'
-import { meetingFormToMeetingPayload, type MeetingFormInput } from '~/utils/meetingsForm'
+import { meetingFormToMeetingPayload, meetingToMeetingFormInput, type MeetingFormInput } from '~/utils/meetingsForm'
 import { hasTrimmedText } from '~/utils/validation'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
 import TaskForm from '~/components/tasks/TaskForm.vue'
+import TasksOverviewTable from '~/components/tasks/TasksOverviewTable.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
-import AddButton from '~/components/common/AddButton.vue'
 import KnowledgeConnections from '~/components/knowledge/KnowledgeConnections.vue'
+
+definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
 const router = useRouter()
@@ -366,6 +385,7 @@ const projectsStore = useProjectsStore()
 const peopleStore = usePeopleStore()
 const attachmentsStore = useProjectAttachmentsStore()
 const notify = useNotificationStore()
+const authStore = useAuthStore()
 
 // State
 const loading = ref(false)
@@ -380,6 +400,7 @@ const taskDialog = ref(false)
 const taskLoading = ref(false)
 const taskError = ref('')
 const tasksStore = useTasksStore()
+const editingTask = ref<Task | null>(null)
 
 // Note dialog
 const noteDialog = ref(false)
@@ -387,12 +408,16 @@ const noteTitle = ref('')
 const noteContent = ref('')
 const noteLoading = ref(false)
 const noteError = ref('')
+const editingNoteId = ref<string | null>(null)
 
 // Meeting dialog
 const meetingDialog = ref(false)
 const meetingLoading = ref(false)
 const meetingError = ref('')
 const meetingsStore = useMeetingsStore()
+const editingMeetingId = ref<string | null>(null)
+const editingMeetingData = ref<MeetingFormInput | null>(null)
+const editingLinkId = ref<string | null>(null)
 
 const notePages = ref<ProjectPage[]>([])
 const newLinkUrl = ref('')
@@ -441,6 +466,7 @@ const fetchProject = async () => {
 const loadWorkspace = async () => {
   const pid = projectId.value
   if (!pid) return
+  await authStore.checkAuth()
   await fetchProject()
   if (!projectsStore.currentProject) {
     return
@@ -451,15 +477,26 @@ const loadWorkspace = async () => {
   } catch {
     notePages.value = []
   }
-  await Promise.all([
+  const results = await Promise.allSettled([
     tasksStore.fetchTasks(),
     meetingsStore.fetchMeetings(),
     attachmentsStore.fetchForProject(pid),
   ])
+  const rejected = results.find((result) => result.status === 'rejected')
+  if (rejected && rejected.status === 'rejected') {
+    console.error('[projects.loadWorkspace] partial load failure', rejected.reason)
+  }
 }
 
-// Watch for changes to project ID
-watch(projectId, loadWorkspace, { immediate: true })
+// Wait for auth readiness before loading project-linked data.
+watch(
+  () => [projectId.value, authStore.user?.id, authStore.loading] as const,
+  ([pid, uid, authLoading]) => {
+    if (!pid || !uid || authLoading) return
+    void loadWorkspace()
+  },
+  { immediate: true }
+)
 
 // Get current project
 const project = computed(() => projectsStore.currentProject)
@@ -469,20 +506,6 @@ const projectMeetings = computed(() => meetingsStore.getByProject(projectId.valu
 const attachmentLinks = computed(() => attachmentsStore.linksForProject(projectId.value))
 const attachmentFiles = computed(() => attachmentsStore.filesForProject(projectId.value))
 const attachmentMailLinks = computed(() => attachmentsStore.mailLinksForProject(projectId.value))
-
-function taskPriorityLabel(t: Task) {
-  const p = t.priority as string | number | undefined
-  if (typeof p === 'string') {
-    return getPriorityText(p)
-  }
-  if (typeof p === 'number') {
-    if (p <= 3) return getPriorityText('low')
-    if (p <= 6) return getPriorityText('medium')
-    if (p <= 8) return getPriorityText('high')
-    return getPriorityText('urgent')
-  }
-  return getPriorityText('medium')
-}
 
 function meetingDisplayTitle(m: Meeting) {
   const any = m as Meeting & { subject?: string }
@@ -498,15 +521,27 @@ async function submitNewLink() {
   }
   linkSaving.value = true
   try {
-    await attachmentsStore.addLink(pid, newLinkUrl.value, newLinkTitle.value || undefined)
+    const isUpdate = !!editingLinkId.value
+    if (editingLinkId.value) {
+      await attachmentsStore.updateLink(pid, editingLinkId.value, newLinkUrl.value, newLinkTitle.value || undefined)
+    } else {
+      await attachmentsStore.addLink(pid, newLinkUrl.value, newLinkTitle.value || undefined)
+    }
     newLinkUrl.value = ''
     newLinkTitle.value = ''
-    notify.pushSuccess(t('projects.linkAdded'))
+    editingLinkId.value = null
+    notify.pushSuccess(isUpdate ? t('common.update') : t('projects.linkAdded'))
   } catch (e: unknown) {
     notify.pushError(e instanceof Error ? e.message : t('errors.generic'))
   } finally {
     linkSaving.value = false
   }
+}
+
+function openEditLink(row: ProjectLink) {
+  editingLinkId.value = row.id
+  newLinkUrl.value = row.url
+  newLinkTitle.value = row.title || ''
 }
 
 function confirmRemoveLink(row: ProjectLink) {
@@ -577,34 +612,6 @@ function confirmRemoveMailLink(row: ProjectMailLink) {
   confirmDialog.open = true
 }
 
-// AddButton menu items
-const taskItems = computed(() => [
-  {
-    title: t('projects.addTask'),
-    icon: 'mdi-checkbox-marked-circle-outline',
-    color: 'primary',
-    action: openTaskDialog
-  }
-])
-
-const noteItems = computed(() => [
-  {
-    title: t('projects.addNote'),
-    icon: 'mdi-note-outline',
-    color: 'info',
-    action: openNoteDialog
-  }
-])
-
-const meetingItems = computed(() => [
-  {
-    title: t('projects.addMeeting'),
-    icon: 'mdi-account-group',
-    color: 'success',
-    action: openMeetingDialog
-  }
-])
-
 // Navigation
 const goToProjects = () => {
   router.push('/projects')
@@ -613,28 +620,103 @@ const goToProjects = () => {
 // Task methods
 const openTaskDialog = () => {
   taskError.value = ''
+  editingTask.value = null
   taskDialog.value = true
 }
 
-const createTask = async (taskData: Partial<Task>) => {
+const submitTask = async (taskData: Partial<Task>) => {
   if (!project.value) return
   
   taskLoading.value = true
   taskError.value = ''
   
   try {
-    // Add the project ID to the related projects array
-    const updatedTaskData = {
+    const payload = {
       ...taskData,
-      relatedProjects: [project.value.id]
+      relatedProjects: [project.value.id],
+      projectId: project.value.id,
     }
-    
-    // Create the task
-    await tasksStore.createTask(updatedTaskData)
+    if (editingTask.value) {
+      await tasksStore.updateTask(editingTask.value.id, payload)
+      notify.pushSuccess(t('common.update'))
+    } else {
+      const createdId = await tasksStore.createTask(payload)
+      if (!createdId) {
+        throw new Error(t('errors.generic'))
+      }
+      const created = tasksStore.getById(createdId)
+      const isLinked =
+        !!created &&
+        (Array.isArray(created.relatedProjects) && created.relatedProjects.includes(project.value.id) ||
+          created.projectId === project.value.id)
+      if (!isLinked) {
+        await tasksStore.updateTask(createdId, {
+          relatedProjects: [project.value.id],
+          projectId: project.value.id,
+        })
+      }
+      // Ensure freshly persisted state is loaded from Firestore (throws on failure).
+      await tasksStore.fetchTasks()
+      let visibleAfterReload = tasksStore.getByProject(project.value.id).some((task) => task.id === createdId)
+      if (!visibleAfterReload) {
+        // Self-heal persisted linkage and retry once.
+        await tasksStore.updateTask(createdId, {
+          relatedProjects: [project.value.id],
+          projectId: project.value.id,
+        })
+        await tasksStore.fetchTasks()
+        visibleAfterReload = tasksStore.getByProject(project.value.id).some((task) => task.id === createdId)
+      }
+      if (!visibleAfterReload) {
+        // Final fallback: load the created task directly and upsert it locally.
+        await tasksStore.fetchTask(createdId)
+        const persisted = tasksStore.currentTask
+        if (persisted) {
+          const idx = tasksStore.tasks.findIndex((task) => task.id === createdId)
+          if (idx === -1) {
+            tasksStore.tasks.push(persisted)
+          } else {
+            tasksStore.tasks[idx] = persisted
+          }
+          visibleAfterReload = tasksStore.getByProject(project.value.id).some((task) => task.id === createdId)
+        }
+      }
+      if (!visibleAfterReload) {
+        // Keep warning in console without blocking successful create flow.
+        console.warn('[project-task] created task not immediately visible in project filter', {
+          createdId,
+          projectId: project.value.id,
+          createdTask: tasksStore.getById(createdId),
+        })
+      }
+      notify.pushSuccess(t('common.save'))
+    }
     taskDialog.value = false
-    
-    // Reset form data
+    editingTask.value = null
     taskError.value = ''
+  } catch (error: unknown) {
+    taskError.value = error instanceof Error ? error.message : t('errors.generic')
+    notify.pushError(taskError.value)
+  } finally {
+    taskLoading.value = false
+  }
+}
+
+const openProjectTask = (task: Task) => {
+  editingTask.value = task
+  taskError.value = ''
+  taskDialog.value = true
+}
+
+const deleteTask = async () => {
+  if (!editingTask.value) return
+  taskLoading.value = true
+  taskError.value = ''
+  try {
+    await tasksStore.deleteTask(editingTask.value.id)
+    notify.pushSuccess(t('common.delete'))
+    taskDialog.value = false
+    editingTask.value = null
   } catch (error: any) {
     taskError.value = error.message || t('errors.generic')
   } finally {
@@ -642,30 +724,71 @@ const createTask = async (taskData: Partial<Task>) => {
   }
 }
 
+const completeTask = async () => {
+  if (!editingTask.value) return
+  taskLoading.value = true
+  taskError.value = ''
+  try {
+    await tasksStore.markComplete(editingTask.value.id)
+    notify.pushSuccess(t('tasks.markComplete'))
+    taskDialog.value = false
+    editingTask.value = null
+  } catch (error: any) {
+    taskError.value = error.message || t('errors.generic')
+  } finally {
+    taskLoading.value = false
+  }
+}
+
+const toggleProjectTaskStatus = async (task: Task) => {
+  if (task.status === 'completed') {
+    await tasksStore.markInProgress(task.id)
+    notify.pushSuccess(t('common.update'))
+    return
+  }
+  await tasksStore.markComplete(task.id)
+  notify.pushSuccess(t('tasks.markComplete'))
+}
+
+const addProjectSubtask = (parentTask: Task) => {
+  tasksStore.setSubtaskParent(parentTask)
+  editingTask.value = null
+  taskDialog.value = true
+}
+
 // Note methods
 const openNoteDialog = () => {
   noteTitle.value = ''
   noteContent.value = ''
   noteError.value = ''
+  editingNoteId.value = null
   noteDialog.value = true
 }
 
 const canCreateNote = computed(() => hasTrimmedText(noteTitle.value) && hasTrimmedText(noteContent.value))
 
-const createNote = async () => {
+const submitNote = async () => {
   if (!project.value || !canCreateNote.value) return
   
   noteLoading.value = true
   noteError.value = ''
   
   try {
-    // Currently there's no dedicated notes store, so we'll create a project page instead
-    await projectsStore.createProjectPage(project.value.id, {
-      title: noteTitle.value.trim(),
-      content: noteContent.value.trim(),
-      order: 0, // Set a default order for the page
-      tags: []
-    })
+    if (editingNoteId.value) {
+      await projectsStore.updateProjectPage(editingNoteId.value, {
+        title: noteTitle.value.trim(),
+        content: noteContent.value.trim(),
+      })
+      notify.pushSuccess(t('common.update'))
+    } else {
+      await projectsStore.createProjectPage(project.value.id, {
+        title: noteTitle.value.trim(),
+        content: noteContent.value.trim(),
+        order: 0,
+        tags: []
+      })
+      notify.pushSuccess(t('common.save'))
+    }
 
     const pages = await projectsStore.fetchProjectPages(project.value.id)
     notePages.value = Array.isArray(pages) ? pages : []
@@ -673,6 +796,7 @@ const createNote = async () => {
     noteDialog.value = false
     noteTitle.value = ''
     noteContent.value = ''
+    editingNoteId.value = null
   } catch (error: any) {
     noteError.value = error.message || t('errors.generic')
   } finally {
@@ -680,13 +804,34 @@ const createNote = async () => {
   }
 }
 
+const openEditNoteDialog = (page: ProjectPage) => {
+  editingNoteId.value = page.id
+  noteTitle.value = page.title
+  noteContent.value = page.content
+  noteDialog.value = true
+}
+
+const confirmRemoveNote = (page: ProjectPage) => {
+  confirmDialog.title = t('common.delete')
+  confirmDialog.text = page.title
+  pendingConfirm = async () => {
+    await projectsStore.deleteProjectPage(page.id)
+    const pages = await projectsStore.fetchProjectPages(projectId.value)
+    notePages.value = Array.isArray(pages) ? pages : []
+    notify.pushSuccess(t('common.delete'))
+  }
+  confirmDialog.open = true
+}
+
 // Meeting methods
 const openMeetingDialog = () => {
   meetingError.value = ''
+  editingMeetingId.value = null
+  editingMeetingData.value = null
   meetingDialog.value = true
 }
 
-const createMeeting = async (meetingData: MeetingFormInput) => {
+const submitMeeting = async (meetingData: MeetingFormInput) => {
   if (!project.value) return
   
   meetingLoading.value = true
@@ -698,18 +843,38 @@ const createMeeting = async (meetingData: MeetingFormInput) => {
       ...meetingFormToMeetingPayload(meetingData),
       relatedProjects: [project.value.id]
     }
-    
-    // Create the meeting
-    await meetingsStore.createMeeting(updatedMeetingData)
+    if (editingMeetingId.value) {
+      await meetingsStore.updateMeeting(editingMeetingId.value, updatedMeetingData)
+      notify.pushSuccess(t('common.update'))
+    } else {
+      await meetingsStore.createMeeting(updatedMeetingData)
+      notify.pushSuccess(t('common.save'))
+    }
     meetingDialog.value = false
-    
-    // Reset form data
+    editingMeetingId.value = null
+    editingMeetingData.value = null
     meetingError.value = ''
   } catch (error: any) {
     meetingError.value = error.message || t('errors.generic')
   } finally {
     meetingLoading.value = false
   }
+}
+
+const openEditMeetingDialog = (meeting: Meeting) => {
+  editingMeetingId.value = meeting.id
+  editingMeetingData.value = meetingToMeetingFormInput(meeting)
+  meetingDialog.value = true
+}
+
+const confirmRemoveMeeting = (meeting: Meeting) => {
+  confirmDialog.title = t('common.delete')
+  confirmDialog.text = meetingDisplayTitle(meeting)
+  pendingConfirm = async () => {
+    await meetingsStore.deleteMeeting(meeting.id)
+    notify.pushSuccess(t('common.delete'))
+  }
+  confirmDialog.open = true
 }
 
 // Helper functions
