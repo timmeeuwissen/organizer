@@ -83,8 +83,8 @@ export const useTeamsStore = defineStore('teams', {
   }),
 
   getters: {
-    getById: (state) => (id: string) => state.teams.find((t) => t.id === id) ?? null,
-    mailMetaForTeam: (state) => (teamId: string) => state.teamMailMetaByTeamId[teamId] ?? [],
+    getById: (storeState) => (id: string) => storeState.teams.find((t) => t.id === id) ?? null,
+    mailMetaForTeam: (storeState) => (teamId: string) => storeState.teamMailMetaByTeamId[teamId] ?? [],
   },
 
   actions: {

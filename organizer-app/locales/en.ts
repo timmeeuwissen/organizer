@@ -20,6 +20,7 @@ export default {
     create: 'Create',
     update: 'Update',
     filters: 'Filters',
+    details: 'Details',
     clear: 'Clear',
     apply: 'Apply',
     close: 'Close',

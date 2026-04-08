@@ -26,31 +26,31 @@ export const useProjectsStore = defineStore('projects', {
   }),
 
   getters: {
-    getById: (state) => (id: string) => {
-      return state.projects.find(project => project.id === id) || null
+    getById: (storeState) => (id: string) => {
+      return storeState.projects.find(project => project.id === id) || null
     },
-    activeProjects: (state) => {
-      return state.projects.filter(p => p.status === 'active')
+    activeProjects: (storeState) => {
+      return storeState.projects.filter(p => p.status === 'active')
     },
-    planningProjects: (state) => {
-      return state.projects.filter(p => p.status === 'planning')
+    planningProjects: (storeState) => {
+      return storeState.projects.filter(p => p.status === 'planning')
     },
-    completedProjects: (state) => {
-      return state.projects.filter(p => p.status === 'completed')
+    completedProjects: (storeState) => {
+      return storeState.projects.filter(p => p.status === 'completed')
     },
-    onHoldProjects: (state) => {
-      return state.projects.filter(p => p.status === 'onHold')
+    onHoldProjects: (storeState) => {
+      return storeState.projects.filter(p => p.status === 'onHold')
     },
-    cancelledProjects: (state) => {
-      return state.projects.filter(p => p.status === 'cancelled')
+    cancelledProjects: (storeState) => {
+      return storeState.projects.filter(p => p.status === 'cancelled')
     },
-    getByTag: (state) => (tag: string) => {
-      return state.projects.filter(project => project.tags.includes(tag))
+    getByTag: (storeState) => (tag: string) => {
+      return storeState.projects.filter(project => project.tags.includes(tag))
     },
-    getByMember: (state) => (memberId: string) => {
-      return state.projects.filter(project => project.members.includes(memberId))
+    getByMember: (storeState) => (memberId: string) => {
+      return storeState.projects.filter(project => project.members.includes(memberId))
     },
-    getSortedByPriority: (state) => {
+    getSortedByPriority: (storeState) => {
       // Convert string priorities to numeric values for sorting
       const priorityValue = (p: 'low' | 'medium' | 'high' | 'urgent' | number): number => {
         if (typeof p === 'number') return p;
@@ -62,11 +62,11 @@ export const useProjectsStore = defineStore('projects', {
           default: return 0;
         }
       };
-      return [...state.projects].sort((a, b) => priorityValue(a.priority) - priorityValue(b.priority));
+      return [...storeState.projects].sort((a, b) => priorityValue(a.priority) - priorityValue(b.priority));
     },
-    getTags: (state) => {
+    getTags: (storeState) => {
       const tags = new Set<string>()
-      state.projects.forEach(project => {
+      storeState.projects.forEach(project => {
         project.tags.forEach(tag => tags.add(tag))
       })
       return Array.from(tags)

@@ -39,11 +39,11 @@ export const usePeopleStore = defineStore('people', {
   }),
 
   getters: {
-    getById: (state) => (id: string) => {
-      return state.people.find(person => person.id === id) || null
+    getById: (storeState) => (id: string) => {
+      return storeState.people.find(person => person.id === id) || null
     },
-    getRecentlyContacted: (state) => (limit: number = 5) => {
-      return [...state.people]
+    getRecentlyContacted: (storeState) => (limit: number = 5) => {
+      return [...storeState.people]
         .filter(person => person.lastContacted)
         .sort((a, b) => {
           const dateA = a.lastContacted ? a.lastContacted.getTime() : 0
@@ -52,14 +52,14 @@ export const usePeopleStore = defineStore('people', {
         })
         .slice(0, limit)
     },
-    getByOrganization: (state) => (organization: string) => {
-      return state.people.filter(person => person.organization === organization)
+    getByOrganization: (storeState) => (organization: string) => {
+      return storeState.people.filter(person => person.organization === organization)
     },
-    getByTeam: (state) => (team: string) => {
-      return state.people.filter(person => person.team === team)
+    getByTeam: (storeState) => (team: string) => {
+      return storeState.people.filter(person => person.team === team)
     },
-    getByRole: (state) => (role: string) => {
-      return state.people.filter(person => person.role === role)
+    getByRole: (storeState) => (role: string) => {
+      return storeState.people.filter(person => person.role === role)
     }
   },
 

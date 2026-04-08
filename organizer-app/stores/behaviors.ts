@@ -24,11 +24,11 @@ export const useBehaviorsStore = defineStore('behaviors', {
   }),
 
   getters: {
-    getBehaviorsByType: (state) => (type: 'doWell' | 'wantToDoBetter' | 'needToImprove') => {
-      return state.behaviors.filter(behavior => behavior.type === type)
+    getBehaviorsByType: (storeState) => (type: 'doWell' | 'wantToDoBetter' | 'needToImprove') => {
+      return storeState.behaviors.filter(behavior => behavior.type === type)
     },
-    getById: (state) => (id: string) => {
-      return state.behaviors.find(behavior => behavior.id === id) || null
+    getById: (storeState) => (id: string) => {
+      return storeState.behaviors.find(behavior => behavior.id === id) || null
     }
   },
 

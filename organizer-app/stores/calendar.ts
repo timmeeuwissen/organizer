@@ -70,14 +70,14 @@ export const useCalendarStore = defineStore('calendar', {
   }),
 
   getters: {
-    getEventsForDay: (state) => (date: Date) => {
+    getEventsForDay: (storeState) => (date: Date) => {
       const dayStart = new Date(date)
       dayStart.setHours(0, 0, 0, 0)
       
       const dayEnd = new Date(date)
       dayEnd.setHours(23, 59, 59, 999)
       
-      return state.events.filter(event => {
+      return storeState.events.filter(event => {
         const eventStart = new Date(event.startTime)
         // For all day events, just check the date
         if (event.allDay) {
@@ -91,14 +91,14 @@ export const useCalendarStore = defineStore('calendar', {
       })
     },
     
-    getEventsForRange: (state) => (startDate: Date, endDate: Date) => {
+    getEventsForRange: (storeState) => (startDate: Date, endDate: Date) => {
       const start = new Date(startDate)
       start.setHours(0, 0, 0, 0)
       
       const end = new Date(endDate)
       end.setHours(23, 59, 59, 999)
       
-      return state.events.filter(event => {
+      return storeState.events.filter(event => {
         const eventStart = new Date(event.startTime)
         const eventEnd = new Date(event.endTime)
         

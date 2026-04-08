@@ -58,7 +58,7 @@ div
               variant="text"
               color="primary"
               :to="entityRoute(other.entityType, other.entityId)"
-            ) {{ $t(`network.nodeType.${other.entityType}`) }} #{{ other.entityId.slice(0, 6) }}
+            ) {{ $t(`network.nodeType.${other.entityType}`) + ' #' + other.entityId.slice(0, 6) }}
 
       template(#append)
         v-menu
@@ -164,7 +164,7 @@ async function handleFormSubmit(data: {
     }
     formOpen.value = false
   } catch {
-    notify.error('knowledge.saveError')
+    notify.error(t('knowledge.saveError'))
   }
 }
 
@@ -173,7 +173,7 @@ async function handleDisconnect(edgeId: string) {
   try {
     await disconnect(edgeId)
   } catch {
-    notify.error('knowledge.deleteError')
+    notify.error(t('knowledge.deleteError'))
   }
 }
 
@@ -187,7 +187,7 @@ async function handleDelete(row: KnowledgeConnectionRow) {
   try {
     await removeKnowledge(row.knowledge.id)
   } catch {
-    notify.error('knowledge.deleteError')
+    notify.error(t('knowledge.deleteError'))
   }
 }
 </script>

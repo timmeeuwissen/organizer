@@ -265,7 +265,7 @@ async function handleKnowledgeSubmit(data: {
     knowledgeFormOpen.value = false
     useNotificationStore().success(t('knowledge.addKnowledge'))
   } catch {
-    useNotificationStore().error('knowledge.saveError')
+    useNotificationStore().error(t('knowledge.saveError'))
   }
 }
 

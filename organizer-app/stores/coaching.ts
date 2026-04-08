@@ -29,16 +29,16 @@ export const useCoachingStore = defineStore('coaching', {
   }),
 
   getters: {
-    getById: (state) => (id: string) => {
-      return state.records.find(record => record.id === id) || null
+    getById: (storeState) => (id: string) => {
+      return storeState.records.find(record => record.id === id) || null
     },
     
-    getByPerson: (state) => (personId: string) => {
-      return state.records.filter(record => record.personId === personId)
+    getByPerson: (storeState) => (personId: string) => {
+      return storeState.records.filter(record => record.personId === personId)
     },
     
-    getSortedByDate: (state) => {
-      return [...state.records].sort((a, b) => {
+    getSortedByDate: (storeState) => {
+      return [...storeState.records].sort((a, b) => {
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       })
     }

@@ -26,12 +26,12 @@ export const useMeetingsStore = defineStore('meetings', {
   }),
 
   getters: {
-    getById: (state) => (id: string) => {
-      return state.meetings.find(meeting => meeting.id === id) || null
+    getById: (storeState) => (id: string) => {
+      return storeState.meetings.find(meeting => meeting.id === id) || null
     },
-    upcomingMeetings: (state) => {
+    upcomingMeetings: (storeState) => {
       const now = new Date()
-      return state.meetings
+      return storeState.meetings
         .filter(meeting => 
           // Include meetings that are in the future OR specifically marked as "to be planned"
           (meeting.startTime > now) || (meeting.plannedStatus === 'to_be_planned')
@@ -48,39 +48,39 @@ export const useMeetingsStore = defineStore('meetings', {
           return a.createdAt.getTime() - b.createdAt.getTime()
         })
     },
-    pastMeetings: (state) => {
+    pastMeetings: (storeState) => {
       const now = new Date()
-      return state.meetings
+      return storeState.meetings
         .filter(meeting => meeting.startTime < now)
         .sort((a, b) => b.startTime.getTime() - a.startTime.getTime())
     },
-    getTodayMeetings: (state) => {
+    getTodayMeetings: (storeState) => {
       const now = new Date()
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
       
-      return state.meetings
+      return storeState.meetings
         .filter(meeting => {
           const meetingDate = new Date(meeting.startTime)
           return meetingDate >= today && meetingDate < tomorrow
         })
         .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
     },
-    getByCategory: (state) => (category: string) => {
-      return state.meetings.filter(meeting => meeting.category === category)
+    getByCategory: (storeState) => (category: string) => {
+      return storeState.meetings.filter(meeting => meeting.category === category)
     },
-    getByParticipant: (state) => (participantId: string) => {
-      return state.meetings.filter(meeting => meeting.participants.includes(participantId))
+    getByParticipant: (storeState) => (participantId: string) => {
+      return storeState.meetings.filter(meeting => meeting.participants.includes(participantId))
     },
-    getByProject: (state) => (projectId: string) => {
-      return state.meetings.filter(meeting => 
+    getByProject: (storeState) => (projectId: string) => {
+      return storeState.meetings.filter(meeting => 
         meeting.relatedProjects && meeting.relatedProjects.includes(projectId)
       )
     },
-    getCategories: (state) => {
+    getCategories: (storeState) => {
       const categories = new Set<string>()
-      state.meetings.forEach(meeting => {
+      storeState.meetings.forEach(meeting => {
         if (meeting.category) categories.add(meeting.category)
       })
       return Array.from(categories)

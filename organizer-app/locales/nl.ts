@@ -20,6 +20,7 @@ export default {
     create: 'Aanmaken',
     update: 'Bijwerken',
     filters: 'Filters',
+    details: 'Details',
     clear: 'Wissen',
     apply: 'Toepassen',
     close: 'Sluiten',

@@ -85,22 +85,22 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
 
   getters: {
     linksForProject:
-      (state) =>
+      (storeState) =>
       (projectId: string): ProjectLink[] =>
-        state.linksByProjectId[projectId] ?? [],
+        storeState.linksByProjectId[projectId] ?? [],
     filesForProject:
-      (state) =>
+      (storeState) =>
       (projectId: string): ProjectFile[] =>
-        state.filesByProjectId[projectId] ?? [],
+        storeState.filesByProjectId[projectId] ?? [],
     mailLinksForProject:
-      (state) =>
+      (storeState) =>
       (projectId: string): ProjectMailLink[] =>
-        state.mailLinksByProjectId[projectId] ?? [],
+        storeState.mailLinksByProjectId[projectId] ?? [],
     mailLinksForMessage:
-      (state) =>
+      (storeState) =>
       (accountId: string, emailId: string): ProjectMailLink[] => {
         const key = messageKey(accountId, emailId)
-        return state.mailLinksByMessageKey[key] ?? []
+        return storeState.mailLinksByMessageKey[key] ?? []
       },
   },
 

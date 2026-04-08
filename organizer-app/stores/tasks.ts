@@ -38,48 +38,48 @@ export const useTasksStore = defineStore('tasks', {
   }),
 
   getters: {
-    getById: (state) => (id: string) => state.tasks.find((t) => t.id === id) || null,
+    getById: (taskState) => (id: string) => taskState.tasks.find((t) => t.id === id) || null,
 
-    todoTasks: (state) => state.tasks.filter((t) => t.status === 'todo'),
-    inProgressTasks: (state) => state.tasks.filter((t) => t.status === 'inProgress'),
-    completedTasks: (state) => state.tasks.filter((t) => t.status === 'completed'),
-    delegatedTasks: (state) => state.tasks.filter((t) => t.status === 'delegated'),
-    cancelledTasks: (state) => state.tasks.filter((t) => t.status === 'cancelled'),
+    todoTasks: (taskState) => taskState.tasks.filter((t) => t.status === 'todo'),
+    inProgressTasks: (taskState) => taskState.tasks.filter((t) => t.status === 'inProgress'),
+    completedTasks: (taskState) => taskState.tasks.filter((t) => t.status === 'completed'),
+    delegatedTasks: (taskState) => taskState.tasks.filter((t) => t.status === 'delegated'),
+    cancelledTasks: (taskState) => taskState.tasks.filter((t) => t.status === 'cancelled'),
 
-    getByTag: (state) => (tag: string) => state.tasks.filter((t) => t.tags.includes(tag)),
-    getByAssignee: (state) => (id: string) => state.tasks.filter((t) => t.assignedTo === id),
-    getByProject: (state) => (id: string) => state.tasks.filter((t) => t.relatedProjects?.includes(id)),
-    getByMeeting: (state) => (id: string) => state.tasks.filter((t) => t.relatedMeetings?.includes(id)),
-    getByBehavior: (state) => (id: string) => state.tasks.filter((t) => t.relatedBehaviors?.includes(id)),
-    getByParent: (state) => (id: string) => state.tasks.filter((t) => t.parentTask === id),
+    getByTag: (taskState) => (tag: string) => taskState.tasks.filter((t) => t.tags.includes(tag)),
+    getByAssignee: (taskState) => (id: string) => taskState.tasks.filter((t) => t.assignedTo === id),
+    getByProject: (taskState) => (id: string) => taskState.tasks.filter((t) => t.relatedProjects?.includes(id)),
+    getByMeeting: (taskState) => (id: string) => taskState.tasks.filter((t) => t.relatedMeetings?.includes(id)),
+    getByBehavior: (taskState) => (id: string) => taskState.tasks.filter((t) => t.relatedBehaviors?.includes(id)),
+    getByParent: (taskState) => (id: string) => taskState.tasks.filter((t) => t.parentTask === id),
 
-    upcomingTasks: (state) => {
+    upcomingTasks: (taskState) => {
       const nowMs = Date.now()
-      const active = state.tasks.filter(
+      const active = taskState.tasks.filter(
         (t) => (t.status === 'todo' || t.status === 'inProgress') && t.dueDate && t.dueDate.getTime() > nowMs
       )
       active.sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime())
       return active
     },
 
-    overdueTasks: (state) => {
+    overdueTasks: (taskState) => {
       const nowMs = Date.now()
-      const overdue = state.tasks.filter(
+      const overdue = taskState.tasks.filter(
         (t) => (t.status === 'todo' || t.status === 'inProgress') && t.dueDate && t.dueDate.getTime() < nowMs
       )
       overdue.sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime())
       return overdue
     },
 
-    getTags: (state) => {
+    getTags: (taskState) => {
       const seen = new Set<string>()
-      for (const task of state.tasks) for (const tag of task.tags) seen.add(tag)
+      for (const task of taskState.tasks) for (const tag of task.tags) seen.add(tag)
       return Array.from(seen)
     },
 
-    getRoutineTasks: (state) => state.tasks.filter((t) => t.type === 'routine'),
-    getDelegationTasks: (state) => state.tasks.filter((t) => t.type === 'delegation'),
-    getFollowUpTasks: (state) => state.tasks.filter((t) => t.type === 'followUp'),
+    getRoutineTasks: (taskState) => taskState.tasks.filter((t) => t.type === 'routine'),
+    getDelegationTasks: (taskState) => taskState.tasks.filter((t) => t.type === 'delegation'),
+    getFollowUpTasks: (taskState) => taskState.tasks.filter((t) => t.type === 'followUp'),
   },
 
   actions: {

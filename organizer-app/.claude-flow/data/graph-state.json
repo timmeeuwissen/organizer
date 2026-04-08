@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "updatedAt": 1775603540131,
+  "nodeCount": 5,
+  "nodes": {
+    "mem-MEMORY-memory-index": {
+      "id": "mem-MEMORY-memory-index",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775570056568
+    },
+    "mem-feedback_workflow----": {
+      "id": "mem-feedback_workflow----",
+      "category": "feedback_workflow",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775570056571
+    },
+    "mem-project_state----": {
+      "id": "mem-project_state----",
+      "category": "project_state",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775570056574
+    },
+    "mem-user_profile----": {
+      "id": "mem-user_profile----",
+      "category": "user_profile",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775570056589
+    },
+    "insight-1775603436133-t82e": {
+      "id": "insight-1775603436133-t82e",
+      "category": "insights",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1775603436133
+    }
+  },
+  "edges": [],
+  "pageRanks": {
+    "mem-MEMORY-memory-index": 0.2,
+    "mem-feedback_workflow----": 0.2,
+    "mem-project_state----": 0.2,
+    "mem-user_profile----": 0.2,
+    "insight-1775603436133-t82e": 0.2
+  }
+}

@@ -24,11 +24,11 @@ export const useMeetingCategoriesStore = defineStore('meetingCategories', {
   }),
 
   getters: {
-    getById: (state) => (id: string) => {
-      return state.categories.find(category => category.id === id) || null
+    getById: (storeState) => (id: string) => {
+      return storeState.categories.find(category => category.id === id) || null
     },
-    getCategoriesCount: (state) => {
-      return state.categories.length
+    getCategoriesCount: (storeState) => {
+      return storeState.categories.length
     }
   },
 

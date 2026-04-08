@@ -499,8 +499,7 @@
           </v-card>
         </v-col>
       </v-row>
-    </div>
-    
+
     <!-- Dialogs -->
     <v-dialog v-model="coachingDialogOpen" max-width="900px" scrollable>
       <coaching-form
@@ -993,6 +992,7 @@
           </div>
         </v-window-item>
       </v-window>
+    </div>
   </div>
 </template>
 

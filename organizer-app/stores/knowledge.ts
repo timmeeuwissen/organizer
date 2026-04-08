@@ -1,5 +1,6 @@
 // stores/knowledge.ts
 import { defineStore } from 'pinia'
+import { storeT } from '~/plugins/i18n'
 import { useAuthStore } from './auth'
 import { useNotificationStore } from './notification'
 import type { KnowledgeNode, NodeType, EdgeType } from '~/types/models/network'
@@ -16,20 +17,20 @@ export const useKnowledgeStore = defineStore('knowledge', {
   }),
 
   getters: {
-    connectionsForEntity: (state) => (entityType: NodeType, entityId: string) => {
-      const linked = state.edges.filter(
+    connectionsForEntity: (storeState) => (entityType: NodeType, entityId: string) => {
+      const linked = storeState.edges.filter(
         e => e.entityType === entityType && e.entityId === entityId
       )
       return linked
         .map(edge => {
-          const knowledge = state.nodes.find(n => n.id === edge.knowledgeNodeId)
+          const knowledge = storeState.nodes.find(n => n.id === edge.knowledgeNodeId)
           return knowledge ? { knowledge, edge } : null
         })
         .filter((c): c is { knowledge: KnowledgeNode; edge: KnowledgeEdge } => c !== null)
     },
 
-    otherConnectionsForKnowledge: (state) => (knowledgeNodeId: string, excludeEdgeId: string) => {
-      return state.edges.filter(
+    otherConnectionsForKnowledge: (storeState) => (knowledgeNodeId: string, excludeEdgeId: string) => {
+      return storeState.edges.filter(
         e => e.knowledgeNodeId === knowledgeNodeId && e.id !== excludeEdgeId
       )
     },
@@ -64,7 +65,7 @@ export const useKnowledgeStore = defineStore('knowledge', {
         }))
         this.bootstrapped = true
       } catch (err) {
-        useNotificationStore().error('knowledge.loadError')
+        useNotificationStore().error(storeT('knowledge.loadError'))
         throw err
       } finally {
         this.loading = false
@@ -137,7 +138,7 @@ export const useKnowledgeStore = defineStore('knowledge', {
         this.edges = this.edges.filter(e => e.knowledgeNodeId !== id)
         this.nodes = this.nodes.filter(n => n.id !== id)
       } catch (err) {
-        useNotificationStore().error('knowledge.deleteError')
+        useNotificationStore().error(storeT('knowledge.deleteError'))
         throw err
       }
     },
@@ -178,7 +179,7 @@ export const useKnowledgeStore = defineStore('knowledge', {
         await deleteDoc(doc(db, 'knowledgeEdges', edgeId))
         this.edges = this.edges.filter(e => e.id !== edgeId)
       } catch (err) {
-        useNotificationStore().error('knowledge.deleteError')
+        useNotificationStore().error(storeT('knowledge.deleteError'))
         throw err
       }
     },

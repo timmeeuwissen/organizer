@@ -608,7 +608,7 @@ async function onKnowledgeSubmit(data: {
     knowledgeDialog.value = false
     useNotificationStore().success(i18n.t('knowledge.addKnowledge'))
   } catch {
-    useNotificationStore().error('knowledge.saveError')
+    useNotificationStore().error(i18n.t('knowledge.saveError'))
   }
 }
 

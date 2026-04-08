@@ -16,17 +16,17 @@ export const useNetworkStore = defineStore('network', {
   persist: true,
 
   getters: {
-    getNode: (state) => (id: string) =>
-      state.nodes.find(n => n.id === id),
+    getNode: (storeState) => (id: string) =>
+      storeState.nodes.find(n => n.id === id),
 
-    getByEntity: (state) => (type: NodeType, entityId: string) =>
-      state.nodes.find(n => n.type === type && n.entityId === entityId),
+    getByEntity: (storeState) => (type: NodeType, entityId: string) =>
+      storeState.nodes.find(n => n.type === type && n.entityId === entityId),
 
-    getNeighbours: (state) => (nodeId: string, depth = 2): GraphNode[] => {
+    getNeighbours: (storeState) => (nodeId: string, depth = 2): GraphNode[] => {
       if (depth === 0) return []
       // Build adjacency map once for this traversal
       const adj = new Map<string, string[]>()
-      for (const e of state.edges) {
+      for (const e of storeState.edges) {
         if (!adj.has(e.sourceId)) adj.set(e.sourceId, [])
         if (!adj.has(e.targetId)) adj.set(e.targetId, [])
         adj.get(e.sourceId)!.push(e.targetId)
@@ -41,7 +41,7 @@ export const useNetworkStore = defineStore('network', {
         for (const neighbourId of (adj.get(id) ?? [])) {
           if (!visited.has(neighbourId)) {
             visited.add(neighbourId)
-            const node = state.nodes.find(n => n.id === neighbourId)
+            const node = storeState.nodes.find(n => n.id === neighbourId)
             if (node) {
               result.push(node)
               if (remaining > 1) queue.push({ id: neighbourId, remaining: remaining - 1 })
@@ -52,11 +52,11 @@ export const useNetworkStore = defineStore('network', {
       return result
     },
 
-    shortestPath: (state) => (fromId: string, toId: string): GraphNode[] => {
+    shortestPath: (storeState) => (fromId: string, toId: string): GraphNode[] => {
       if (fromId === toId) return []
       // Build adjacency map once for this traversal
       const adj = new Map<string, string[]>()
-      for (const e of state.edges) {
+      for (const e of storeState.edges) {
         if (!adj.has(e.sourceId)) adj.set(e.sourceId, [])
         if (!adj.has(e.targetId)) adj.set(e.targetId, [])
         adj.get(e.sourceId)!.push(e.targetId)
@@ -70,7 +70,7 @@ export const useNetworkStore = defineStore('network', {
         for (const neighbourId of (adj.get(id) ?? [])) {
           if (neighbourId === toId) {
             const fullPath = [...path, toId]
-            const pathNodes = fullPath.map(nId => state.nodes.find(n => n.id === nId))
+            const pathNodes = fullPath.map(nId => storeState.nodes.find(n => n.id === nId))
             if (pathNodes.some(n => !n)) return []  // missing node — return empty rather than partial path
             return pathNodes as GraphNode[]
           }
@@ -83,8 +83,8 @@ export const useNetworkStore = defineStore('network', {
       return []
     },
 
-    nodeDegree: (state) => (nodeId: string): number =>
-      state.edges.filter(e => e.sourceId === nodeId || e.targetId === nodeId).length,
+    nodeDegree: (storeState) => (nodeId: string): number =>
+      storeState.edges.filter(e => e.sourceId === nodeId || e.targetId === nodeId).length,
   },
 
   actions: {

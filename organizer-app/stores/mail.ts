@@ -65,17 +65,17 @@ export const useMailStore = defineStore('mail', {
   }),
 
   getters: {
-    getEmailsByFolder: (state) => (folder: string) => {
-      return state.emails.filter(email => email.folder === folder)
+    getEmailsByFolder: (storeState) => (folder: string) => {
+      return storeState.emails.filter(email => email.folder === folder)
     },
     
-    getUnreadCountByFolder: (state) => (folder: string) => {
+    getUnreadCountByFolder: (storeState) => (folder: string) => {
       // If we have server-side counts, use those
-      if (state.unreadCounts[folder] !== undefined) {
-        return state.unreadCounts[folder];
+      if (storeState.unreadCounts[folder] !== undefined) {
+        return storeState.unreadCounts[folder];
       }
       // Fall back to local counts if necessary
-      return state.emails.filter(email => email.folder === folder && !email.read).length
+      return storeState.emails.filter(email => email.folder === folder && !email.read).length
     },
     
     getConnectedAccounts: () => {
@@ -88,13 +88,13 @@ export const useMailStore = defineStore('mail', {
       )
     },
 
-    paginationInfo: (state) => {
+    paginationInfo: (storeState) => {
       return {
-        currentPage: state.currentPage,
-        pageSize: state.pageSize,
-        totalPages: Math.ceil(state.totalEmails / state.pageSize),
-        totalEmails: state.totalEmails,
-        hasMoreEmails: state.hasMoreEmails
+        currentPage: storeState.currentPage,
+        pageSize: storeState.pageSize,
+        totalPages: Math.ceil(storeState.totalEmails / storeState.pageSize),
+        totalEmails: storeState.totalEmails,
+        hasMoreEmails: storeState.hasMoreEmails
       }
     }
   },
