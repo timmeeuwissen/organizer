@@ -1,0 +1,1085 @@
+[    1653ms] [LOG] Firebase config: {authDomain: organizer-85045.firebaseapp.com, projectId: organizer-85045, storageBucket: organizer-85045.firebasestorage.app, messagingSenderId: 798140005744, measurementId: G-8N4JMBVHNY} @ http://localhost:3000/_nuxt/plugins/firebase.ts:22
+[    1662ms] [WARNING] [2026-04-07T09:44:24.683Z]  @firebase/firestore: Firestore (9.23.0): enableIndexedDbPersistence() will be deprecated in the future, you can use `FirestoreSettings.cache` instead. @ http://localhost:3000/_nuxt/node_modules/.cache/vite/client/deps/chunk-VSCDMDJU.js?v=0127723a:1053
+[    2226ms] [LOG] ✨ %cNuxt DevTools %c Press Shift + Option + D to open DevTools color: black; border-radius: 3px 0 0 3px; padding: 2px 2px 1px 10px; background: #00DC82 border-radius: 0 3px 3px 0; padding: 2px 10px 1px 2px; background: #00DC8220  @ http://localhost:3000/_nuxt/node_modules/@nuxt/devtools/dist/runtime/plugins/devtools.client.js?v=0127723a:51
+[    2994ms] [LOG] Firestore offline persistence enabled @ http://localhost:3000/_nuxt/plugins/firebase.ts:84
+[    2994ms] [LOG] Firebase initialized successfully @ http://localhost:3000/_nuxt/plugins/firebase.ts:98
+[    2994ms] [LOG] Pinia persistence plugin initialized with date reviving @ http://localhost:3000/_nuxt/plugins/pinia-persistence.ts:5
+[    2994ms] [LOG] OIDC logging enabled in development mode @ http://localhost:3000/_nuxt/plugins/oidc.ts:7
+[    2994ms] [LOG] Silent renew helper would be available at: /oidc-silent-renew.html @ http://localhost:3000/_nuxt/plugins/oidc.ts:30
+[    2994ms] [LOG] OIDC plugin initialized @ http://localhost:3000/_nuxt/plugins/oidc.ts:33
+[    2998ms] [INFO] <Suspense> is an experimental feature and its API will likely change. @ http://localhost:3000/_nuxt/node_modules/@vue/runtime-core/dist/runtime-core.esm-bundler.js?v=0127723a:7208
+[    3381ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/utils/api/aiProviders/index.ts:22
+[    3963ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[   72886ms] [LOG] Firebase config: {authDomain: organizer-85045.firebaseapp.com, projectId: organizer-85045, storageBucket: organizer-85045.firebasestorage.app, messagingSenderId: 798140005744, measurementId: G-8N4JMBVHNY} @ http://localhost:3000/_nuxt/plugins/firebase.ts:22
+[   72889ms] [WARNING] [2026-04-07T09:45:35.910Z]  @firebase/firestore: Firestore (9.23.0): enableIndexedDbPersistence() will be deprecated in the future, you can use `FirestoreSettings.cache` instead. @ http://localhost:3000/_nuxt/node_modules/.cache/vite/client/deps/chunk-VSCDMDJU.js?v=3169b213:1053
+[   73174ms] [LOG] ✨ %cNuxt DevTools %c Press Shift + Option + D to open DevTools color: black; border-radius: 3px 0 0 3px; padding: 2px 2px 1px 10px; background: #00DC82 border-radius: 0 3px 3px 0; padding: 2px 10px 1px 2px; background: #00DC8220  @ http://localhost:3000/_nuxt/node_modules/@nuxt/devtools/dist/runtime/plugins/devtools.client.js?v=3169b213:51
+[   73495ms] [LOG] Firestore offline persistence enabled @ http://localhost:3000/_nuxt/plugins/firebase.ts:84
+[   73495ms] [LOG] Firebase initialized successfully @ http://localhost:3000/_nuxt/plugins/firebase.ts:98
+[   73495ms] [LOG] Pinia persistence plugin initialized with date reviving @ http://localhost:3000/_nuxt/plugins/pinia-persistence.ts:5
+[   73496ms] [LOG] OIDC logging enabled in development mode @ http://localhost:3000/_nuxt/plugins/oidc.ts:7
+[   73496ms] [LOG] Silent renew helper would be available at: /oidc-silent-renew.html @ http://localhost:3000/_nuxt/plugins/oidc.ts:30
+[   73496ms] [LOG] OIDC plugin initialized @ http://localhost:3000/_nuxt/plugins/oidc.ts:33
+[   73499ms] [INFO] <Suspense> is an experimental feature and its API will likely change. @ http://localhost:3000/_nuxt/node_modules/@vue/runtime-core/dist/runtime-core.esm-bundler.js?v=3169b213:7208
+[   75752ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/utils/api/aiProviders/index.ts:22
+[   76181ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121760ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121802ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121804ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121804ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121804ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121804ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121805ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121805ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121805ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121805ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121805ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121805ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121805ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121805ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121805ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121805ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121806ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121806ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121806ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121806ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121806ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121806ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121806ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121806ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121806ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121806ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121806ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121807ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121807ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121807ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121807ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121807ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121807ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121807ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121807ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121807ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121807ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121807ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121808ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121808ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121808ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121808ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121808ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121808ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121808ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121808ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121808ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121808ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121808ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121809ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121809ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121809ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121809ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121809ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121809ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121809ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121809ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121809ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121809ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121809ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121809ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121810ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121810ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121810ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121810ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121810ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121810ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121810ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121810ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121810ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121810ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121810ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121810ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121811ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121811ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121811ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121811ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121811ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121811ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121811ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121811ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121812ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121812ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121813ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121813ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121813ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121813ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121813ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121813ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121813ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121813ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121813ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121813ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121814ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121814ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121814ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121814ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121814ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121814ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121814ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121814ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121814ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121814ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121814ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121815ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121815ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121815ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121815ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121815ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121815ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121815ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121815ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121815ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121815ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121815ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121815ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121816ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121816ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121816ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121816ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121816ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121816ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121816ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121816ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121816ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121816ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121816ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121816ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121816ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121817ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121817ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121817ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121817ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121817ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121817ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121817ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121817ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121817ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121817ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121817ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121817ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121818ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121818ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121818ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121818ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121818ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121818ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121818ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121818ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121818ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121818ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121818ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121818ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121819ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121819ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121819ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121819ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121819ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121819ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121819ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121819ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121819ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121819ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121819ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121819ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121819ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121820ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121820ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121820ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121820ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121820ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121820ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121820ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121820ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121820ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121820ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121820ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121820ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121821ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121821ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121821ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121821ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121821ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121821ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121821ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121821ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121821ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121821ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121821ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121821ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121822ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121822ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121822ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121822ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121822ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121822ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121822ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121822ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121822ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121822ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121822ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121822ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121822ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121823ms] [WARNING] [Vue warn]: Unhandled error during execution of app errorHandler @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121835ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121836ms] [WARNING] [Vue warn]: Unhandled error during execution of app errorHandler @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121851ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121851ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121851ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121852ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121852ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121852ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121852ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121852ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121852ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121852ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121852ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121852ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121852ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121853ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121853ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121853ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121853ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121853ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121853ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121853ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121853ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121853ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121853ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121853ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121853ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121854ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121854ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121854ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121854ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121854ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121854ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121854ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121854ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121854ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121854ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121854ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121854ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121855ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121855ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121855ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121855ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121855ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121855ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121855ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121855ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121855ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121855ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121855ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121855ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121855ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121856ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121856ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121856ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121856ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121856ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121856ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121856ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121856ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121856ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121856ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121856ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121856ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121857ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121857ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121857ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121857ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121857ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121857ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121857ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121857ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121857ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121857ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121857ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121857ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121858ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121858ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121858ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121858ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121858ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121858ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121858ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121858ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121858ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121858ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121858ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121858ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121858ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121859ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121859ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121859ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121859ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121859ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121859ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121859ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121859ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121859ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121859ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121859ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121859ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121860ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121860ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121860ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121860ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121860ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121860ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121860ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121860ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121860ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121860ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121860ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121860ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121861ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121861ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121861ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121861ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121861ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121861ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121861ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121861ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121861ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121861ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121861ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121861ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121862ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121862ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121862ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121862ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121862ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121862ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121862ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121862ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121862ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121862ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121862ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121862ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121863ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121863ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121863ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121863ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121863ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121863ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121863ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121863ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121863ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121863ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121863ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121863ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121863ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121864ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121864ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121864ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121864ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121864ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121864ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121864ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121864ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121864ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121864ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121865ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121865ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121865ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121865ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121865ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121865ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121865ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121865ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121866ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121866ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121866ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121866ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121866ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121866ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121866ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121866ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121866ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121866ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121866ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121866ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121867ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121867ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121867ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121867ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121867ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121867ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121867ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121867ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121867ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121867ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121867ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121867ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121868ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121868ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121868ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121868ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121868ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121868ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121869ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121869ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121869ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121869ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121869ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121869ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121869ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121870ms] [WARNING] [Vue warn]: Unhandled error during execution of app errorHandler @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121915ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121915ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121915ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121916ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121917ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121917ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121917ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121917ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121917ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121917ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  121885ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121888ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121888ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121888ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121888ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121888ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121888ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121889ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121889ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121889ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121889ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121889ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121889ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121889ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121889ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121889ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121889ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121890ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121890ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121890ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121890ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121890ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121890ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121890ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121890ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121890ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121890ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121890ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121891ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121891ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121891ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121891ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121891ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121891ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121891ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121891ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121891ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121891ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121891ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121891ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121892ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121892ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121892ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121892ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121892ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121892ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121892ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121892ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121892ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121892ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121892ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121892ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121893ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121893ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121893ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121893ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121893ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121893ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121893ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121893ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121893ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121893ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121893ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121893ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121893ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121894ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121894ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121894ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121894ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121894ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121894ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121894ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121894ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121894ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121894ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121894ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121894ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121895ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121895ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121895ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121895ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121895ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121895ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121895ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121895ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121895ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121895ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121895ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121895ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121895ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121896ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121896ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121896ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121896ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121896ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121896ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121896ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121896ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121896ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121896ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121896ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121896ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121897ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121897ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121897ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121897ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121897ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121897ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121897ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121897ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121897ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121897ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121897ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121897ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121898ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121898ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121898ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121898ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121898ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121898ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121898ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121898ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121898ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121898ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121898ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121898ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121898ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121899ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121899ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121899ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121899ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121899ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121899ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121899ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121899ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121900ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121900ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121900ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121900ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121900ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121900ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121900ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121900ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121900ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121900ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121900ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121901ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121901ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121901ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121901ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121901ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121901ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121901ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121901ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121901ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121901ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121901ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121901ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121902ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121902ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121902ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121902ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121902ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121902ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121902ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121902ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121902ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121902ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121902ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121902ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121903ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121903ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121903ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121903ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121903ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121903ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121903ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121903ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121903ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121903ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121903ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121904ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121904ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121904ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121904ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121904ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121904ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121904ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121904ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121904ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121904ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121904ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121904ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121905ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121905ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121905ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121905ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121905ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121905ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121905ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121905ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121905ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  121905ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121905ms] [WARNING] [Vue warn]: Unhandled error during execution of app errorHandler @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  121930ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  122287ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122287ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122288ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122288ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122288ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122288ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122288ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122288ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122288ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122288ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122288ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122288ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122288ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122289ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122289ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122289ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122289ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122289ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122289ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122289ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122289ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122289ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122289ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122289ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122289ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122290ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122290ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122290ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122290ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122290ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122290ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122290ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122290ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122290ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122290ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122290ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122290ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122291ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122291ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122291ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122291ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122291ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122291ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122291ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122291ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122291ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122291ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122291ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122291ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122291ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122292ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122292ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122292ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122292ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122292ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122292ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122292ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122292ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122292ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122292ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122292ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122292ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122293ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122293ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122293ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122293ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122293ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122293ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122293ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122293ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122293ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122293ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122293ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122293ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122293ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122294ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122294ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122294ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122294ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122294ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122294ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122294ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122294ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122294ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122294ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122294ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122294ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122294ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122295ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122295ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122295ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122295ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122295ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122295ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122295ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122295ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122295ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122295ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122295ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122295ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122295ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122296ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122296ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122296ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122296ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122296ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122296ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122296ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122296ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122296ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122296ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122296ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122296ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122297ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122297ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122297ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122297ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122297ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122297ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122297ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122297ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122297ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122297ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122297ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122297ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122297ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122298ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122298ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122298ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122298ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122298ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122298ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122298ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122298ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122298ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122298ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122298ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122298ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122298ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122299ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122299ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122299ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122299ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122299ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122299ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122299ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122299ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122300ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122300ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122300ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122300ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122300ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122300ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122300ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122300ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122300ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122300ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122300ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122300ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122301ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122301ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122301ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122301ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122301ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122301ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122301ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122301ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122301ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122301ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122301ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122301ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122301ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122302ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122302ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122302ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122302ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122302ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122302ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122302ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122302ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122302ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122302ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122302ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122302ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122303ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122303ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122303ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122303ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122303ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122303ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122303ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122303ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122303ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122303ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122303ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122303ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122303ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122304ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122304ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122304ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122304ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122304ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122304ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122304ms] [WARNING] [Vue warn]: Unhandled error during execution of app errorHandler @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122305ms] [WARNING] [Vue warn]: Unhandled error during execution of mounted hook 
+  at <Index onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< Proxy(Object) > > 
+  at <RouteProvider key="/network" vnode= {__v_isVNode: true, __v_skip: true, type: Object, props: Object, key: null} route= {fullPath: /network, path: /network, query: Object, hash: , name: network}  ... > 
+  at <RouterView name=undefined route=undefined > 
+  at <NuxtPage > 
+  at <VContainer fluid="" > 
+  at <VMain> 
+  at <VApp> 
+  at <Default ref=Ref< Proxy(Object) > > 
+  at <AsyncComponentWrapper ref=Ref< Proxy(Object) > > 
+  at <LayoutLoader key="default" layoutProps= {ref: RefImpl} name="default" > 
+  at <NuxtLayoutProvider layoutProps= {ref: RefImpl} key="default" name="default"  ... > 
+  at <NuxtLayout > 
+  at <VApp > 
+  at <App key=4 > 
+  at <NuxtRoot> @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122562ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122562ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122562ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122562ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122563ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122563ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122563ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122563ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122563ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122563ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122563ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122563ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122563ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122563ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122563ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122564ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122564ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122564ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122564ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122564ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122564ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122564ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122564ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122564ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122564ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122564ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122564ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122565ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122565ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122565ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122565ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122565ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122565ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122565ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122565ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122565ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122565ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122565ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122565ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122565ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122566ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122566ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122566ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122566ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122566ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122566ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122566ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122566ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122566ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122566ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122566ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122566ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122567ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122567ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122567ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122567ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122567ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122567ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122567ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122567ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122567ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122567ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122567ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122567ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122567ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122568ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122568ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122568ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122568ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122568ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122568ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122568ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122568ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122568ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122568ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122568ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122568ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122568ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122569ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122569ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122569ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122569ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122569ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122569ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122569ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122569ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122569ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122569ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122569ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122569ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122569ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122570ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122570ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122570ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122570ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122570ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122570ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122570ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122570ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122570ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122570ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122570ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122570ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122570ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122571ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122571ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122571ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122571ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122571ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122571ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122571ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122571ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122571ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122571ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122571ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122571ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122571ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122572ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122572ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122572ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122572ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122572ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122572ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122572ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122572ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122572ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122572ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122572ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122572ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122572ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122573ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122573ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122573ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122573ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122573ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122573ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122573ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122573ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122573ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122574ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122574ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122574ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122574ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122574ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122574ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122574ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122574ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122574ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122574ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122574ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122574ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122575ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122575ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122575ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122575ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122575ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122575ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122575ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122575ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122575ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122575ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122575ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122576ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122576ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122576ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122576ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122577ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122577ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122577ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122577ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122577ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122577ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122577ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122577ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122577ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122577ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122577ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122577ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122578ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122578ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122578ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122578ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122578ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122578ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122578ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122578ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122578ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122578ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122579ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122579ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122579ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122579ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122579ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122579ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122579ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122579ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122579ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122579ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122579ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122579ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122580ms] [LOG] Proxy(Object) @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:70
+[  122580ms] [WARNING] [intlify] Not found 'app.name' key in 'en' locale messages. @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122580ms] [WARNING] [Vue warn]: Unhandled error during execution of app errorHandler @ http://localhost:3000/_nuxt/components/feedback/FeedbackButton.vue:82
+[  122585ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  122585ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
+[  122585ms] Missing or insufficient permissions.
+[  122585ms] Maximum recursive updates exceeded in component <AIButton>. This means you have a reactive effect that is mutating its own dependencies and thus recursively triggering itself. Possible sources include component template, render function, updated hook or watcher source function.
