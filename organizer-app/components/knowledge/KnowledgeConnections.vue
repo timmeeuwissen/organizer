@@ -86,6 +86,7 @@ import { useI18n } from 'vue-i18n'
 import { useNotificationStore } from '~/stores/notification'
 import { useKnowledgeConnections, type KnowledgeConnectionRow } from '~/composables/useKnowledgeConnections'
 import type { NodeType, EdgeType } from '~/types/models/network'
+import { debugAgentLog } from '~/utils/debugAgentLog'
 
 const { t } = useI18n()
 
@@ -139,6 +140,9 @@ async function handleFormSubmit(data: {
   entityId?: string
 }) {
   const notify = useNotificationStore()
+  // #region agent log
+  debugAgentLog({ hypothesisId: 'H1', location: 'components/knowledge/KnowledgeConnections.vue:handleFormSubmit:start', message: 'Knowledge submit handler entered', data: { editing: !!editingRow.value, nodeType: props.nodeType, entityId: props.entityId, contentLength: data.content?.length ?? 0, certaintyDateType: typeof data.certaintyDate, hasCertaintyDate: !!data.certaintyDate, relationType: data.relationType, hasRelationLabel: !!data.relationLabel } })
+  // #endregion
   try {
     if (editingRow.value) {
       await editKnowledge(editingRow.value.knowledge.id, {
@@ -155,6 +159,9 @@ async function handleFormSubmit(data: {
         data.relationType,
         data.relationLabel
       )
+      // #region agent log
+      debugAgentLog({ hypothesisId: 'H2', location: 'components/knowledge/KnowledgeConnections.vue:handleFormSubmit:after-addKnowledge', message: 'addKnowledge result', data: { createdNodeId: createdNode?.id ?? null, createdNodeLabel: createdNode?.label ?? null } })
+      // #endregion
       // Also connect to optional extra entity
       if (createdNode && data.entityType && data.entityId) {
         const { useKnowledgeStore } = await import('~/stores/knowledge')
@@ -163,7 +170,10 @@ async function handleFormSubmit(data: {
       }
     }
     formOpen.value = false
-  } catch {
+  } catch (error: unknown) {
+    // #region agent log
+    debugAgentLog({ hypothesisId: 'H2', location: 'components/knowledge/KnowledgeConnections.vue:handleFormSubmit:catch', message: 'Knowledge submit failed', data: { error: error instanceof Error ? error.message : String(error) } })
+    // #endregion
     notify.error(t('knowledge.saveError'))
   }
 }

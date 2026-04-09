@@ -5,6 +5,7 @@ import { useAuthStore } from './auth'
 import { useNotificationStore } from './notification'
 import type { KnowledgeNode, NodeType, EdgeType } from '~/types/models/network'
 import type { KnowledgeEdge } from '~/types/models/knowledge'
+import { debugAgentLog } from '~/utils/debugAgentLog'
 
 export const useKnowledgeStore = defineStore('knowledge', {
   persist: true,
@@ -101,6 +102,9 @@ export const useKnowledgeStore = defineStore('knowledge', {
       const db = getFirestore()
       const authStore = useAuthStore()
       const userId = authStore.user?.id
+      // #region agent log
+      debugAgentLog({ hypothesisId: 'H3', location: 'stores/knowledge.ts:create:entry', message: 'knowledge.create called', data: { hasUserId: !!userId, contentLength: partial.content?.length ?? 0, certaintyDateType: typeof partial.certaintyDate, certaintyDateIso: partial.certaintyDate instanceof Date ? partial.certaintyDate.toISOString() : null, tagsCount: Array.isArray(partial.tags) ? partial.tags.length : 0 } })
+      // #endregion
       if (!userId) return undefined
 
       const payload = {
@@ -116,7 +120,10 @@ export const useKnowledgeStore = defineStore('knowledge', {
       let usedCollection: 'knowledgeNodes' | 'graphNodes' = 'knowledgeNodes'
       try {
         ref = await addDoc(collection(db, 'knowledgeNodes'), payload)
-      } catch {
+      } catch (primaryError: unknown) {
+        // #region agent log
+        debugAgentLog({ hypothesisId: 'H5', location: 'stores/knowledge.ts:create:primary-catch', message: 'knowledge.create primary collection failed', data: { error: primaryError instanceof Error ? primaryError.message : String(primaryError) } })
+        // #endregion
         ref = await addDoc(collection(db, 'graphNodes'), payload)
         usedCollection = 'graphNodes'
       }
@@ -132,6 +139,9 @@ export const useKnowledgeStore = defineStore('knowledge', {
       }
       this.nodes.push(node)
       this.nodeCollectionsById[node.id] = usedCollection
+      // #region agent log
+      debugAgentLog({ hypothesisId: 'H2', location: 'stores/knowledge.ts:create:success', message: 'knowledge.create succeeded', data: { nodeId: node.id, usedCollection } })
+      // #endregion
       return node
     },
 
@@ -191,6 +201,9 @@ export const useKnowledgeStore = defineStore('knowledge', {
       const db = getFirestore()
       const authStore = useAuthStore()
       const userId = authStore.user?.id
+      // #region agent log
+      debugAgentLog({ hypothesisId: 'H2', location: 'stores/knowledge.ts:connect:entry', message: 'knowledge.connect called', data: { hasUserId: !!userId, knowledgeNodeId, entityType, entityId, relationType, hasLabel: label !== undefined && label !== '' } })
+      // #endregion
       if (!userId) return undefined
 
       const data: Record<string, unknown> = {
@@ -204,7 +217,10 @@ export const useKnowledgeStore = defineStore('knowledge', {
       let usedCollection: 'knowledgeEdges' | 'graphEdges' = preferred
       try {
         ref = await addDoc(collection(db, preferred), data)
-      } catch {
+      } catch (preferredError: unknown) {
+        // #region agent log
+        debugAgentLog({ hypothesisId: 'H2', location: 'stores/knowledge.ts:connect:preferred-catch', message: 'knowledge.connect preferred collection failed', data: { error: preferredError instanceof Error ? preferredError.message : String(preferredError), preferredCollection: preferred } })
+        // #endregion
         const fallback = preferred === 'knowledgeEdges' ? 'graphEdges' : 'knowledgeEdges'
         ref = await addDoc(collection(db, fallback), data)
         usedCollection = fallback
@@ -216,6 +232,9 @@ export const useKnowledgeStore = defineStore('knowledge', {
       }
       this.edges.push(edge)
       this.edgeCollectionsById[edge.id] = usedCollection
+      // #region agent log
+      debugAgentLog({ hypothesisId: 'H2', location: 'stores/knowledge.ts:connect:success', message: 'knowledge.connect succeeded', data: { edgeId: edge.id, usedCollection } })
+      // #endregion
       return edge
     },
 

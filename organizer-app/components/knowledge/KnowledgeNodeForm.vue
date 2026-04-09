@@ -107,6 +107,7 @@ import { useTeamsStore } from '~/stores/teams'
 import { useCoachingStore } from '~/stores/coaching'
 import type { KnowledgeNode, NodeType, EdgeType, KnowledgeSubtype } from '~/types/models/network'
 import type { KnowledgeEdge } from '~/types/models/knowledge'
+import { debugAgentLog } from '~/utils/debugAgentLog'
 
 const { t } = useI18n()
 
@@ -219,7 +220,13 @@ const entityItems = computed(() => {
 })
 
 async function submit() {
+  // #region agent log
+  debugAgentLog({ hypothesisId: 'H4', location: 'components/knowledge/KnowledgeNodeForm.vue:submit:pre-validate', message: 'Knowledge form submit called', data: { hasKnowledge: !!props.knowledge, contentLength: form.value.content?.length ?? 0, certaintyDateType: typeof form.value.certaintyDate, hasCertaintyDate: !!form.value.certaintyDate, attachEntityType: attachEntityType.value, attachEntityIdPresent: !!attachEntityId.value } })
+  // #endregion
   const { valid: v } = await formRef.value.validate()
+  // #region agent log
+  debugAgentLog({ hypothesisId: 'H1', location: 'components/knowledge/KnowledgeNodeForm.vue:submit:post-validate', message: 'Knowledge form validation result', data: { valid: v, certaintyDateType: typeof form.value.certaintyDate, certaintyDateIso: form.value.certaintyDate instanceof Date ? form.value.certaintyDate.toISOString() : null, tagsCount: Array.isArray(form.value.tags) ? form.value.tags.length : 0 } })
+  // #endregion
   if (!v) return
   saving.value = true
   emit('submit', {
