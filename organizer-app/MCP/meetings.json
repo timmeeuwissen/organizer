@@ -1,0 +1,23 @@
+{
+  "tools": [
+    { "name": "list_meetings", "description": "List meetings.", "inputSchema": { "type": "object", "properties": { "limit": { "type": "integer", "default": 50 }, "offset": { "type": "integer", "default": 0 } } } },
+    { "name": "get_meeting", "description": "Get a meeting by ID.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } } },
+    {
+      "name": "create_meeting",
+      "description": "Create a meeting.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string" },
+          "date": { "type": "string", "format": "date-time" },
+          "duration": { "type": "integer", "description": "Duration in minutes" },
+          "participants": { "type": "array", "items": { "type": "string" }, "description": "Array of person IDs" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    { "name": "update_meeting", "description": "Update a meeting.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "date": { "type": "string" }, "notes": { "type": "string" } } } },
+    { "name": "delete_meeting", "description": "Delete a meeting.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } } }
+  ]
+}

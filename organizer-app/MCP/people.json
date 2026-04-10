@@ -1,0 +1,68 @@
+{
+  "tools": [
+    {
+      "name": "list_people",
+      "description": "List people (contacts) for the authenticated user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "default": 50 },
+          "offset": { "type": "integer", "default": 0 }
+        }
+      }
+    },
+    {
+      "name": "get_person",
+      "description": "Get a single person by ID.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      }
+    },
+    {
+      "name": "create_person",
+      "description": "Create a new person/contact.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["firstName", "lastName"],
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" },
+          "organization": { "type": "string" },
+          "role": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "update_person",
+      "description": "Update an existing person.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "organization": { "type": "string" },
+          "role": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "delete_person",
+      "description": "Delete a person.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      }
+    }
+  ]
+}

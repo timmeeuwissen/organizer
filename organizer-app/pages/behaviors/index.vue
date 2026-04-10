@@ -7,7 +7,10 @@ v-container(fluid)
   v-row
     v-col(cols="12" md="4")
       v-card(class="mb-4")
-        v-card-title(class="bg-primary text-white") {{ $t('behaviors.doWell') }}
+        v-card-title(class="bg-primary text-white d-flex align-center")
+          span {{ $t('behaviors.doWell') }}
+          v-spacer
+          v-icon(size="20") mdi-check
         v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-three-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="doWellBehaviors.length === 0")
@@ -19,15 +22,16 @@ v-container(fluid)
               :key="behavior.id"
               :title="behavior.title"
               :subtitle="behavior.rationale"
-              @click="openBehavior(behavior)"
               data-test="behavior-item"
             )
-              template(v-slot:prepend)
-                v-avatar(color="primary" size="36")
-                  v-icon(color="white") mdi-check
               template(v-slot:append)
-                v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
-                  v-icon mdi-open-in-new
+                v-btn(icon variant="text" size="small" @click.stop="openBehavior(behavior)")
+                  v-icon mdi-pencil
+                v-btn(icon variant="text" size="small" color="error" @click.stop="confirmDeleteBehavior(behavior)")
+                  v-icon mdi-delete
+                v-badge(:content="behavior.actionPlans?.length || 0" color="primary" :model-value="(behavior.actionPlans?.length || 0) > 0")
+                  v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
+                    v-icon mdi-format-list-checks
         v-card-actions
           v-spacer
           v-btn(
@@ -40,7 +44,10 @@ v-container(fluid)
 
     v-col(cols="12" md="4")
       v-card(class="mb-4")
-        v-card-title(class="bg-info text-white") {{ $t('behaviors.wantToDoBetter') }}
+        v-card-title(class="bg-info text-white d-flex align-center")
+          span {{ $t('behaviors.wantToDoBetter') }}
+          v-spacer
+          v-icon(size="20") mdi-trending-up
         v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-three-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="wantToDoBetterBehaviors.length === 0")
@@ -52,15 +59,16 @@ v-container(fluid)
               :key="behavior.id"
               :title="behavior.title"
               :subtitle="behavior.rationale"
-              @click="openBehavior(behavior)"
               data-test="behavior-item"
             )
-              template(v-slot:prepend)
-                v-avatar(color="info" size="36")
-                  v-icon(color="white") mdi-trending-up
               template(v-slot:append)
-                v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
-                  v-icon mdi-open-in-new
+                v-btn(icon variant="text" size="small" @click.stop="openBehavior(behavior)")
+                  v-icon mdi-pencil
+                v-btn(icon variant="text" size="small" color="error" @click.stop="confirmDeleteBehavior(behavior)")
+                  v-icon mdi-delete
+                v-badge(:content="behavior.actionPlans?.length || 0" color="info" :model-value="(behavior.actionPlans?.length || 0) > 0")
+                  v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
+                    v-icon mdi-format-list-checks
         v-card-actions
           v-spacer
           v-btn(
@@ -73,7 +81,10 @@ v-container(fluid)
 
     v-col(cols="12" md="4")
       v-card(class="mb-4")
-        v-card-title(class="bg-warning text-white") {{ $t('behaviors.needToImprove') }}
+        v-card-title(class="bg-warning text-white d-flex align-center")
+          span {{ $t('behaviors.needToImprove') }}
+          v-spacer
+          v-icon(size="20") mdi-alert
         v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-three-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="needToImproveBehaviors.length === 0")
@@ -85,15 +96,16 @@ v-container(fluid)
               :key="behavior.id"
               :title="behavior.title"
               :subtitle="behavior.rationale"
-              @click="openBehavior(behavior)"
               data-test="behavior-item"
             )
-              template(v-slot:prepend)
-                v-avatar(color="warning" size="36")
-                  v-icon(color="white") mdi-alert
               template(v-slot:append)
-                v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
-                  v-icon mdi-open-in-new
+                v-btn(icon variant="text" size="small" @click.stop="openBehavior(behavior)")
+                  v-icon mdi-pencil
+                v-btn(icon variant="text" size="small" color="error" @click.stop="confirmDeleteBehavior(behavior)")
+                  v-icon mdi-delete
+                v-badge(:content="behavior.actionPlans?.length || 0" color="warning" :model-value="(behavior.actionPlans?.length || 0) > 0")
+                  v-btn(icon variant="text" size="small" :to="`/behaviors/${behavior.id}`" @click.stop)
+                    v-icon mdi-format-list-checks
         v-card-actions
           v-spacer
           v-btn(
@@ -121,10 +133,21 @@ v-container(fluid)
   v-dialog(v-model="addDialog" max-width="600px" data-test="add-behavior-dialog")
     behavior-form(
       v-if="addDialog"
+      :initialType="newBehaviorType"
       :loading="formLoading"
       :error="formError"
       @submit="createBehavior"
     )
+
+  // Delete Confirm Dialog
+  v-dialog(v-model="deleteDialog" max-width="400px" data-test="delete-behavior-dialog")
+    v-card
+      v-card-title {{ $t('common.delete') }}
+      v-card-text {{ $t('behaviors.confirmDelete') }}
+      v-card-actions
+        v-spacer
+        v-btn(variant="text" @click="deleteDialog = false") {{ $t('common.cancel') }}
+        v-btn(color="error" variant="tonal" :loading="formLoading" @click="deleteBehaviorConfirmed") {{ $t('common.delete') }}
 
   // Action Plan section
   v-row(v-if="selectedBehavior" data-test="action-plans-section")
@@ -188,6 +211,8 @@ const formLoading = ref(false)
 const formError = ref('')
 const behaviorDialog = ref(false)
 const addDialog = ref(false)
+const deleteDialog = ref(false)
+const behaviorToDelete = ref<Behavior | null>(null)
 const selectedBehavior = ref<Behavior | null>(null)
 const newBehaviorType = ref<'doWell' | 'wantToDoBetter' | 'needToImprove'>('wantToDoBetter')
 
@@ -270,6 +295,31 @@ const deleteBehavior = async () => {
     await behaviorStore.deleteBehavior(selectedBehavior.value.id)
     behaviorDialog.value = false
     selectedBehavior.value = null
+  } catch (error: any) {
+    formError.value = error.message || 'Failed to delete behavior'
+  } finally {
+    formLoading.value = false
+  }
+}
+
+const confirmDeleteBehavior = (behavior: Behavior) => {
+  behaviorToDelete.value = behavior
+  deleteDialog.value = true
+}
+
+const deleteBehaviorConfirmed = async () => {
+  if (!behaviorToDelete.value) { return }
+
+  formLoading.value = true
+  formError.value = ''
+
+  try {
+    await behaviorStore.deleteBehavior(behaviorToDelete.value.id)
+    deleteDialog.value = false
+    behaviorToDelete.value = null
+    if (selectedBehavior.value?.id === behaviorToDelete.value?.id) {
+      selectedBehavior.value = null
+    }
   } catch (error: any) {
     formError.value = error.message || 'Failed to delete behavior'
   } finally {

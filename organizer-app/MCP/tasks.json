@@ -1,0 +1,66 @@
+{
+  "tools": [
+    {
+      "name": "list_tasks",
+      "description": "List tasks for the authenticated user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "default": 50 },
+          "offset": { "type": "integer", "default": 0 }
+        }
+      }
+    },
+    {
+      "name": "get_task",
+      "description": "Get a single task by ID.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      }
+    },
+    {
+      "name": "create_task",
+      "description": "Create a new task.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string", "enum": ["todo", "inProgress", "completed", "delegated"] },
+          "dueDate": { "type": "string", "format": "date-time" },
+          "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+          "projectId": { "type": "string" },
+          "assigneeId": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "update_task",
+      "description": "Update fields on an existing task.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "dueDate": { "type": "string", "format": "date-time" },
+          "priority": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "delete_task",
+      "description": "Delete a task.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      }
+    }
+  ]
+}

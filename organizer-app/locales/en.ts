@@ -193,7 +193,13 @@ export default {
     disabled: 'Disabled',
     integrationModuleActive: '{module} is connected and used in this module.',
     integrationModulePending: '{module} is enabled for this account — connect the account to use it.',
-    integrationModuleOff: '{module} is not enabled for this integration.'
+    integrationModuleOff: '{module} is not enabled for this integration.',
+    apiAccess: 'API Access',
+    apiAccessDescription: 'Use this token to access the organizer API from external tools such as Home Assistant or Claude. Keep it secret.',
+    noApiToken: 'No API token generated yet.',
+    generateToken: 'Generate Token',
+    regenerateToken: 'Regenerate Token',
+    revokeToken: 'Revoke Token'
   },
   integrations: {
     reauthorizeNeeded: 'Reauthorization Required',
@@ -218,7 +224,8 @@ export default {
     addActionPlan: 'Add Action Plan',
     noActionPlans: 'No action plans yet',
     noBehaviors: 'No behaviors yet',
-    progress: 'Progress'
+    progress: 'Progress',
+    confirmDelete: 'Are you sure you want to delete this behavior?'
   },
   calendar: {
     title: 'Calendar',
@@ -655,6 +662,7 @@ export default {
   },
   mail: {
     title: 'Mail',
+    sidebar: 'Mail',
     inbox: 'Inbox',
     sent: 'Sent',
     drafts: 'Drafts',

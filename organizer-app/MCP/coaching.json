@@ -1,0 +1,67 @@
+{
+  "tools": [
+    {
+      "name": "list_coaching",
+      "description": "List coaching records for the authenticated user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "default": 50, "description": "Max records to return (max 200)" },
+          "offset": { "type": "integer", "default": 0 }
+        }
+      }
+    },
+    {
+      "name": "get_coaching",
+      "description": "Get a single coaching record by ID.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "create_coaching",
+      "description": "Create a new coaching record. If title is omitted the person's name is used.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["personId"],
+        "properties": {
+          "personId": { "type": "string" },
+          "title": { "type": "string" },
+          "notes": { "type": "string" },
+          "icon": { "type": "string" },
+          "color": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "update_coaching",
+      "description": "Update fields on an existing coaching record.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "notes": { "type": "string" },
+          "icon": { "type": "string" },
+          "color": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "delete_coaching",
+      "description": "Delete a coaching record.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" }
+        }
+      }
+    }
+  ]
+}

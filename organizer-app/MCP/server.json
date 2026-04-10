@@ -1,0 +1,14 @@
+{
+  "name": "organizer",
+  "version": "1.0.0",
+  "description": "Organizer app MCP server — manage coaching, behaviors, people, teams, projects, tasks, calendar, meetings, feedback, and process documents with AI.",
+  "baseUrl": "http://localhost:3000",
+  "auth": {
+    "type": "bearer",
+    "description": "Generate a token via POST /api/v1/auth/token (requires Firebase ID token). Pass as Authorization: Bearer <token>."
+  },
+  "modules": [
+    "coaching", "behaviors", "people", "teams", "projects",
+    "tasks", "calendar", "meetings", "feedback", "ai"
+  ]
+}

@@ -27,11 +27,11 @@
           <v-col cols="12" md="6">
             <v-text-field
               v-model="formData.title"
-              :rules="rules.required"
               label="Title"
               outlined
               dense
-              required
+              hint="Leave blank to use the person's name"
+              persistent-hint
             />
           </v-col>
 
@@ -239,6 +239,14 @@ export default {
       this.loading = true
 
       try {
+        // Derive title from person name when left blank
+        if (!this.formData.title && this.formData.personId) {
+          const person = this.peopleStore.people.find(p => p.id === this.formData.personId)
+          if (person) {
+            this.formData.title = `${person.firstName} ${person.lastName}`
+          }
+        }
+
         let savedRecord
 
         if (this.isEdit) {

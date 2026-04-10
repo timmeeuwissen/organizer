@@ -1,0 +1,23 @@
+{
+  "tools": [
+    { "name": "list_calendar_events", "description": "List calendar events.", "inputSchema": { "type": "object", "properties": { "limit": { "type": "integer", "default": 50 }, "offset": { "type": "integer", "default": 0 } } } },
+    { "name": "get_calendar_event", "description": "Get a calendar event by ID.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } } },
+    {
+      "name": "create_calendar_event",
+      "description": "Create a calendar event.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["title", "start"],
+        "properties": {
+          "title": { "type": "string" },
+          "start": { "type": "string", "format": "date-time" },
+          "end": { "type": "string", "format": "date-time" },
+          "description": { "type": "string" },
+          "location": { "type": "string" }
+        }
+      }
+    },
+    { "name": "update_calendar_event", "description": "Update a calendar event.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "start": { "type": "string" }, "end": { "type": "string" } } } },
+    { "name": "delete_calendar_event", "description": "Delete a calendar event.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } } }
+  ]
+}

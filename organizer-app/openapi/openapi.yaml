@@ -157,3 +157,413 @@ paths:
           description: "{ ok: true }"
         '400':
           description: Invalid payload
+
+  # ── API v1 — requires Bearer API token ─────────────────────────────────────
+
+  /api/v1/auth/token:
+    post:
+      summary: Issue API token (requires Firebase ID token)
+      tags: [auth]
+      security: [{ FirebaseIdToken: [] }]
+      responses:
+        '200':
+          description: '{ success: true, token: string }'
+        '401':
+          description: Missing or invalid Firebase ID token
+    delete:
+      summary: Revoke API token
+      tags: [auth]
+      security: [{ FirebaseIdToken: [] }]
+      responses:
+        '200':
+          description: '{ success: true, message: string }'
+
+  /api/v1/coaching:
+    get:
+      summary: List coaching records
+      tags: [coaching]
+      security: [{ BearerToken: [] }]
+      parameters: &paginationParams
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+      responses:
+        '200':
+          description: '{ data: CoachingRecord[], meta: { limit, offset, count } }'
+        '401':
+          description: Unauthorized
+    post:
+      summary: Create coaching record
+      tags: [coaching]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: '{ data: CoachingRecord }'
+
+  /api/v1/coaching/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get coaching record
+      tags: [coaching]
+      security: [{ BearerToken: [] }]
+      responses:
+        '200':
+          description: '{ data: CoachingRecord }'
+        '404':
+          description: Not found
+    put:
+      summary: Update coaching record
+      tags: [coaching]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: '{ data: CoachingRecord }'
+    delete:
+      summary: Delete coaching record
+      tags: [coaching]
+      security: [{ BearerToken: [] }]
+      responses:
+        '200':
+          description: '{ data: { id, deleted: true } }'
+
+  /api/v1/behaviors:
+    get:
+      summary: List behaviors
+      tags: [behaviors]
+      security: [{ BearerToken: [] }]
+      parameters: *paginationParams
+      responses:
+        '200':
+          description: '{ data: Behavior[], meta }'
+    post:
+      summary: Create behavior
+      tags: [behaviors]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: '{ data: Behavior }'
+
+  /api/v1/behaviors/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get behavior
+      tags: [behaviors]
+      security: [{ BearerToken: [] }]
+      responses:
+        '200':
+          description: '{ data: Behavior }'
+    put:
+      summary: Update behavior
+      tags: [behaviors]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200':
+          description: '{ data: Behavior }'
+    delete:
+      summary: Delete behavior
+      tags: [behaviors]
+      security: [{ BearerToken: [] }]
+      responses:
+        '200':
+          description: '{ data: { id, deleted: true } }'
+
+  /api/v1/people:
+    get:
+      summary: List people
+      tags: [people]
+      security: [{ BearerToken: [] }]
+      parameters: *paginationParams
+      responses: { '200': { description: '{ data: Person[], meta }' } }
+    post:
+      summary: Create person
+      tags: [people]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Person }' } }
+
+  /api/v1/people/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: string } }]
+    get:
+      summary: Get person
+      tags: [people]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: Person }' } }
+    put:
+      summary: Update person
+      tags: [people]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Person }' } }
+    delete:
+      summary: Delete person
+      tags: [people]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: { id, deleted: true } }' } }
+
+  /api/v1/teams:
+    get:
+      summary: List teams
+      tags: [teams]
+      security: [{ BearerToken: [] }]
+      parameters: *paginationParams
+      responses: { '200': { description: '{ data: Team[], meta }' } }
+    post:
+      summary: Create team
+      tags: [teams]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Team }' } }
+
+  /api/v1/teams/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: string } }]
+    get:
+      summary: Get team
+      tags: [teams]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: Team }' } }
+    put:
+      summary: Update team
+      tags: [teams]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Team }' } }
+    delete:
+      summary: Delete team
+      tags: [teams]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: { id, deleted: true } }' } }
+
+  /api/v1/projects:
+    get:
+      summary: List projects
+      tags: [projects]
+      security: [{ BearerToken: [] }]
+      parameters: *paginationParams
+      responses: { '200': { description: '{ data: Project[], meta }' } }
+    post:
+      summary: Create project
+      tags: [projects]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Project }' } }
+
+  /api/v1/projects/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: string } }]
+    get:
+      summary: Get project
+      tags: [projects]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: Project }' } }
+    put:
+      summary: Update project
+      tags: [projects]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Project }' } }
+    delete:
+      summary: Delete project
+      tags: [projects]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: { id, deleted: true } }' } }
+
+  /api/v1/tasks:
+    get:
+      summary: List tasks
+      tags: [tasks]
+      security: [{ BearerToken: [] }]
+      parameters: *paginationParams
+      responses: { '200': { description: '{ data: Task[], meta }' } }
+    post:
+      summary: Create task
+      tags: [tasks]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Task }' } }
+
+  /api/v1/tasks/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: string } }]
+    get:
+      summary: Get task
+      tags: [tasks]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: Task }' } }
+    put:
+      summary: Update task
+      tags: [tasks]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Task }' } }
+    delete:
+      summary: Delete task
+      tags: [tasks]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: { id, deleted: true } }' } }
+
+  /api/v1/calendar:
+    get:
+      summary: List calendar events
+      tags: [calendar]
+      security: [{ BearerToken: [] }]
+      parameters: *paginationParams
+      responses: { '200': { description: '{ data: CalendarEvent[], meta }' } }
+    post:
+      summary: Create calendar event
+      tags: [calendar]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: CalendarEvent }' } }
+
+  /api/v1/calendar/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: string } }]
+    get:
+      summary: Get calendar event
+      tags: [calendar]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: CalendarEvent }' } }
+    put:
+      summary: Update calendar event
+      tags: [calendar]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: CalendarEvent }' } }
+    delete:
+      summary: Delete calendar event
+      tags: [calendar]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: { id, deleted: true } }' } }
+
+  /api/v1/meetings:
+    get:
+      summary: List meetings
+      tags: [meetings]
+      security: [{ BearerToken: [] }]
+      parameters: *paginationParams
+      responses: { '200': { description: '{ data: Meeting[], meta }' } }
+    post:
+      summary: Create meeting
+      tags: [meetings]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Meeting }' } }
+
+  /api/v1/meetings/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: string } }]
+    get:
+      summary: Get meeting
+      tags: [meetings]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: Meeting }' } }
+    put:
+      summary: Update meeting
+      tags: [meetings]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Meeting }' } }
+    delete:
+      summary: Delete meeting
+      tags: [meetings]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: { id, deleted: true } }' } }
+
+  /api/v1/feedback:
+    get:
+      summary: List feedback entries
+      tags: [feedback]
+      security: [{ BearerToken: [] }]
+      parameters: *paginationParams
+      responses: { '200': { description: '{ data: Feedback[], meta }' } }
+    post:
+      summary: Create feedback entry
+      tags: [feedback]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Feedback }' } }
+
+  /api/v1/feedback/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: string } }]
+    get:
+      summary: Get feedback entry
+      tags: [feedback]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: Feedback }' } }
+    put:
+      summary: Update feedback entry
+      tags: [feedback]
+      security: [{ BearerToken: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: '{ data: Feedback }' } }
+    delete:
+      summary: Delete feedback entry
+      tags: [feedback]
+      security: [{ BearerToken: [] }]
+      responses: { '200': { description: '{ data: { id, deleted: true } }' } }
+
+  /api/v1/ai/process-document:
+    post:
+      summary: Analyze a document and extract structured entities across all modules
+      tags: [ai]
+      security: [{ BearerToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, integration]
+              properties:
+                text:
+                  type: string
+                integration:
+                  type: object
+                  required: [provider, apiKey]
+                hints:
+                  type: object
+                  properties:
+                    modules:
+                      type: array
+                      items: { type: string }
+      responses:
+        '200':
+          description: 'Structured entities, summary, and suggested actions'
+
+components:
+  securitySchemes:
+    BearerToken:
+      type: http
+      scheme: bearer
+      description: Long-lived API token issued via POST /api/v1/auth/token
+    FirebaseIdToken:
+      type: http
+      scheme: bearer
+      description: Short-lived Firebase ID token (for token management only)

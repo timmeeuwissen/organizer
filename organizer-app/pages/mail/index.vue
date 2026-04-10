@@ -21,8 +21,11 @@ v-container(fluid)
             ) {{ $t('mail.goToProfile') }}
 
   //- Skip the "No emails found" message and just show the normal mail interface without any emails
-  v-row(v-else)
-    v-col(cols="12" md="3")
+  .d-flex.align-start.mt-2(v-else style="gap:0")
+    CollapsableFilterPanel(
+      :title="$t('mail.sidebar')"
+      storage-key="mail"
+    )
       v-card(class="mb-4")
         v-card-title {{ $t('mail.folders') }}
         v-list(density="compact" nav)
@@ -107,7 +110,7 @@ v-container(fluid)
                 v-avatar(size="32" :color="getRandomColor(contact.id)")
                   span {{ getContactInitials(contact) }}
 
-    v-col(cols="12" md="9")
+    div(style="flex:1;min-width:0;padding-left:12px")
       v-card
         v-toolbar(density="compact" color="primary")
           template(v-if="!selectedEmail")

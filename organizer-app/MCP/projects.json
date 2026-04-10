@@ -1,0 +1,38 @@
+{
+  "tools": [
+    {
+      "name": "list_projects",
+      "description": "List projects.",
+      "inputSchema": { "type": "object", "properties": { "limit": { "type": "integer", "default": 50 }, "offset": { "type": "integer", "default": 0 } } }
+    },
+    {
+      "name": "get_project",
+      "description": "Get a project by ID.",
+      "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } }
+    },
+    {
+      "name": "create_project",
+      "description": "Create a new project.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "dueDate": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    {
+      "name": "update_project",
+      "description": "Update a project.",
+      "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "description": { "type": "string" }, "status": { "type": "string" } } }
+    },
+    {
+      "name": "delete_project",
+      "description": "Delete a project.",
+      "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } }
+    }
+  ]
+}

@@ -4,8 +4,11 @@ v-container(fluid)
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('tasks.title') }}
 
-  v-row
-    v-col(cols="12" md="3")
+  .d-flex.align-start.mt-2(style="gap:0")
+    CollapsableFilterPanel(
+      :title="$t('tasks.filters')"
+      storage-key="tasks"
+    )
       ModuleIntegrationAccountFilter(
         module-segment="tasks"
         v-model="selectedProviders"
@@ -115,7 +118,7 @@ v-container(fluid)
                   color="error"
                 ) {{ getDaysOverdue(task.dueDate) }}d
 
-    v-col(cols="12" md="9")
+    div(style="flex:1;min-width:0;padding-left:12px")
       v-tabs(v-model="activeTab" grow)
         v-tab(:value="'all'") {{ $t('tasks.allTasks') }}
         v-tab(:value="'todo'") {{ $t('tasks.todoTasks') }}

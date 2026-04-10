@@ -4,8 +4,11 @@ v-container(fluid)
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('people.title') }}
 
-  v-row
-    v-col(cols="12" md="3")
+  .d-flex.align-start.mt-2(style="gap:0")
+    CollapsableFilterPanel(
+      :title="$t('people.filters')"
+      storage-key="people"
+    )
       ModuleIntegrationAccountFilter(
         module-segment="people"
         v-model="selectedProviders"
@@ -46,7 +49,7 @@ v-container(fluid)
                 color="info"
               ) {{ formatDateDistance(person.lastContacted) }}
 
-    v-col(cols="12" md="9")
+    div(style="flex:1;min-width:0;padding-left:12px")
       v-card
         v-card-title.d-flex
           span {{ $t('people.allPeople') }}

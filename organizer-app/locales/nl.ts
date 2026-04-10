@@ -169,7 +169,13 @@ export default {
     disabled: 'Uitgeschakeld',
     integrationModuleActive: '{module} is verbonden en actief in deze module.',
     integrationModulePending: '{module} staat aan voor dit account — verbind het account om het te gebruiken.',
-    integrationModuleOff: '{module} staat niet aan voor deze integratie.'
+    integrationModuleOff: '{module} staat niet aan voor deze integratie.',
+    apiAccess: 'API-toegang',
+    apiAccessDescription: 'Gebruik dit token om toegang te krijgen tot de organizer API vanuit externe tools zoals Home Assistant of Claude. Houd het geheim.',
+    noApiToken: 'Nog geen API-token aangemaakt.',
+    generateToken: 'Token aanmaken',
+    regenerateToken: 'Token vernieuwen',
+    revokeToken: 'Token intrekken'
   },
   behaviors: {
     title: 'Gedragingen',
@@ -186,7 +192,8 @@ export default {
     addActionPlan: 'Actieplan toevoegen',
     noActionPlans: 'Nog geen actieplannen',
     noBehaviors: 'Nog geen gedragingen',
-    progress: 'Voortgang'
+    progress: 'Voortgang',
+    confirmDelete: 'Weet je zeker dat je dit gedrag wilt verwijderen?'
   },
   calendar: {
     title: 'Agenda',
@@ -618,6 +625,7 @@ export default {
   },
   mail: {
     title: 'Mail',
+    sidebar: 'Mail',
     inbox: 'Inbox',
     sent: 'Verzonden',
     drafts: 'Concepten',

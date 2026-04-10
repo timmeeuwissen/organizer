@@ -1,0 +1,38 @@
+{
+  "tools": [
+    {
+      "name": "process_document",
+      "description": "Analyze a document (e.g. email body, meeting notes) and extract structured entities across all organizer modules. Returns matched/suggested people, tasks, meetings, projects, and recommended actions (create, link, update).",
+      "inputSchema": {
+        "type": "object",
+        "required": ["text", "integration"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The raw document text to analyze"
+          },
+          "integration": {
+            "type": "object",
+            "required": ["provider", "apiKey"],
+            "description": "AI provider configuration",
+            "properties": {
+              "provider": { "type": "string", "enum": ["openai", "gemini", "xai", "claude"] },
+              "apiKey": { "type": "string" }
+            }
+          },
+          "hints": {
+            "type": "object",
+            "description": "Optional processing hints",
+            "properties": {
+              "modules": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Modules to look for entities in (default: all)"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

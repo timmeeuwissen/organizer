@@ -1,0 +1,9 @@
+{
+  "tools": [
+    { "name": "list_feedback", "description": "List feedback entries.", "inputSchema": { "type": "object", "properties": { "limit": { "type": "integer", "default": 50 }, "offset": { "type": "integer", "default": 0 } } } },
+    { "name": "get_feedback", "description": "Get a feedback entry by ID.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } } },
+    { "name": "create_feedback", "description": "Create a feedback entry.", "inputSchema": { "type": "object", "required": ["text"], "properties": { "text": { "type": "string" }, "type": { "type": "string" }, "rating": { "type": "integer" } } } },
+    { "name": "update_feedback", "description": "Update a feedback entry.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" }, "text": { "type": "string" }, "rating": { "type": "integer" } } } },
+    { "name": "delete_feedback", "description": "Delete a feedback entry.", "inputSchema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } } }
+  ]
+}

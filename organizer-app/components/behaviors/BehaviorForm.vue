@@ -93,6 +93,10 @@ const props = defineProps({
     type: Object as () => Behavior | null,
     default: null
   },
+  initialType: {
+    type: String as () => 'doWell' | 'wantToDoBetter' | 'needToImprove' | null,
+    default: null
+  },
   loading: {
     type: Boolean,
     default: false
@@ -111,7 +115,7 @@ const form = ref(null)
 const valid = ref(false)
 
 // Form fields
-const type = ref(props.behavior?.type || 'wantToDoBetter')
+const type = ref(props.behavior?.type || props.initialType || 'wantToDoBetter')
 const title = ref(props.behavior?.title || '')
 const rationale = ref(props.behavior?.rationale || '')
 const examples = ref(props.behavior?.examples || [])

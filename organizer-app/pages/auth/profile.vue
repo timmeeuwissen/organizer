@@ -247,6 +247,49 @@ v-container
             :disabled="!hasProfileChanges || isSaving"
           ) {{ $t('common.save') }}
 
+  // API Access section
+  v-card(class="mt-4")
+    v-card-title {{ $t('settings.apiAccess') }}
+    v-card-text
+      p.text-body-2.mb-4 {{ $t('settings.apiAccessDescription') }}
+      .d-flex.align-center.mb-3(v-if="apiToken")
+        v-text-field(
+          :value="apiTokenVisible ? apiToken : apiToken.replace(/./g, '•')"
+          readonly
+          variant="outlined"
+          density="compact"
+          hide-details
+          class="mr-2"
+          append-inner-icon="mdi-content-copy"
+          @click:append-inner="copyApiToken"
+        )
+        v-btn(icon variant="text" size="small" @click="apiTokenVisible = !apiTokenVisible")
+          v-icon {{ apiTokenVisible ? 'mdi-eye-off' : 'mdi-eye' }}
+      v-alert(v-else type="info" variant="tonal" class="mb-3") {{ $t('settings.noApiToken') }}
+    v-card-actions
+      v-btn(
+        v-if="apiToken"
+        color="warning"
+        variant="tonal"
+        :loading="apiTokenLoading"
+        @click="regenerateApiToken"
+      ) {{ $t('settings.regenerateToken') }}
+      v-btn(
+        v-else
+        color="primary"
+        variant="tonal"
+        :loading="apiTokenLoading"
+        @click="generateApiToken"
+      ) {{ $t('settings.generateToken') }}
+      v-spacer
+      v-btn(
+        v-if="apiToken"
+        color="error"
+        variant="text"
+        :loading="apiTokenLoading"
+        @click="revokeApiToken"
+      ) {{ $t('settings.revokeToken') }}
+
   // Integration account dialog (only for adding new integrations)
   integration-account-dialog(
     v-model="showIntegrationDialog"
@@ -307,6 +350,68 @@ const isSaving = ref(false)
 const isEditing = ref(false)
 const errorMsg = ref('')
 const successMsg = ref('')
+
+// API token state
+const apiToken = ref<string | null>(null)
+const apiTokenVisible = ref(false)
+const apiTokenLoading = ref(false)
+
+async function loadApiToken () {
+  try {
+    const auth = getAuth()
+    const idToken = await auth.currentUser?.getIdToken()
+    if (!idToken) { return }
+    // Token is stored in Firestore user doc — read it via the token endpoint (returns current token)
+    const db = getFirestore()
+    const { doc: fsDoc, getDoc } = await import('firebase/firestore')
+    const userSnap = await getDoc(fsDoc(db, 'users', auth.currentUser!.uid))
+    if (userSnap.exists()) {
+      apiToken.value = userSnap.data().apiToken || null
+    }
+  } catch { /* ignore */ }
+}
+
+async function generateApiToken () {
+  apiTokenLoading.value = true
+  try {
+    const auth = getAuth()
+    const idToken = await auth.currentUser?.getIdToken()
+    if (!idToken) { return }
+    const res = await $fetch<{ success: boolean; token: string }>('/api/v1/auth/token', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${idToken}` }
+    })
+    if (res.success) { apiToken.value = res.token }
+  } catch { /* handled by UI */ } finally {
+    apiTokenLoading.value = false
+  }
+}
+
+async function regenerateApiToken () {
+  await generateApiToken()
+}
+
+async function revokeApiToken () {
+  apiTokenLoading.value = true
+  try {
+    const auth = getAuth()
+    const idToken = await auth.currentUser?.getIdToken()
+    if (!idToken) { return }
+    await $fetch('/api/v1/auth/token', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${idToken}` }
+    })
+    apiToken.value = null
+  } catch { /* handled by UI */ } finally {
+    apiTokenLoading.value = false
+  }
+}
+
+function copyApiToken () {
+  if (apiToken.value) {
+    navigator.clipboard.writeText(apiToken.value)
+  }
+}
 
 // Form inputs
 const displayNameInput = ref('')
@@ -430,6 +535,7 @@ onMounted(async () => {
                 router.push('/auth/login')
               } else {
                 loadUserData()
+                loadApiToken()
                 setTimeout(() => { profileFormReady.value = true }, 0)
               }
             }
@@ -442,6 +548,7 @@ onMounted(async () => {
     } else {
       // Already authenticated, load data
       loadUserData()
+      loadApiToken()
       setTimeout(() => { profileFormReady.value = true }, 0)
     }
   } catch (err) {

@@ -1,0 +1,62 @@
+{
+  "tools": [
+    {
+      "name": "list_behaviors",
+      "description": "List behaviors for the authenticated user. Filter by type (doWell, wantToDoBetter, needToImprove) client-side.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "default": 50 },
+          "offset": { "type": "integer", "default": 0 }
+        }
+      }
+    },
+    {
+      "name": "get_behavior",
+      "description": "Get a single behavior by ID.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      }
+    },
+    {
+      "name": "create_behavior",
+      "description": "Create a new behavior.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["type", "title", "rationale"],
+        "properties": {
+          "type": { "type": "string", "enum": ["doWell", "wantToDoBetter", "needToImprove"] },
+          "title": { "type": "string" },
+          "rationale": { "type": "string" },
+          "examples": { "type": "array", "items": { "type": "string" } },
+          "categories": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "name": "update_behavior",
+      "description": "Update an existing behavior.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "rationale": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "delete_behavior",
+      "description": "Delete a behavior.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      }
+    }
+  ]
+}
