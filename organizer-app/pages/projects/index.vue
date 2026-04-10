@@ -3,7 +3,7 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('projects.title') }}
-      
+
   v-row
     v-col(cols="12" md="3")
       v-card(class="mb-4")
@@ -52,7 +52,7 @@ v-container(fluid)
               :color="selectedStatus === 'cancelled' ? 'error' : ''"
               variant="text"
             ) {{ $t('projects.cancelledProjects') }}
-      
+
       v-card(class="mb-4")
         v-card-title {{ $t('common.search') }}
         v-card-text
@@ -65,7 +65,7 @@ v-container(fluid)
             density="compact"
             clearable
           )
-          
+
       v-card(v-if="tags.length > 0")
         v-card-title {{ $t('projects.tags') }}
         v-card-text
@@ -76,7 +76,7 @@ v-container(fluid)
             size="small"
             @click="toggleTag(tag)"
           ) {{ tag }}
-                
+
     v-col(cols="12" md="9")
       v-card
         v-card-title.d-flex
@@ -87,23 +87,25 @@ v-container(fluid)
             prepend-icon="mdi-plus"
             @click="addDialog = true"
           ) {{ $t('projects.createProject') }}
-          
+
         v-card-text
           v-row(v-if="loading")
             v-col(cols="12")
               v-skeleton-loader(type="card" v-for="i in 3" :key="i" class="mb-4")
-          
-          v-alert(v-else-if="filteredProjects.length === 0" type="info" variant="tonal") 
+
+          v-alert(v-else-if="filteredProjects.length === 0" type="info" variant="tonal")
             | {{ $t('projects.noProjects') }}
-          
+
           div.project-grid(v-else)
             project-card.project-card-item(
-              v-for="project in filteredProjects" 
+              v-for="project in filteredProjects"
               :key="project.id"
-              :project="project" 
+              :project="project"
               @navigate="navigateToProject"
               @edit="openEditDialog"
             )
+
+  AdminCard(:items="filteredProjects" class="mt-2")
 
   // Edit Dialog
   v-dialog(v-model="editDialog" max-width="800px")
@@ -111,7 +113,7 @@ v-container(fluid)
       v-card-title.d-flex.align-center
         v-icon(:color="selectedProject.color || getStatusColor(selectedProject.status)" class="mr-2") {{ selectedProject.icon || 'mdi-folder-outline' }}
         span {{ $t('projects.edit') }}: {{ selectedProject.title }}
-      
+
       project-form(
         :project="selectedProject"
         :loading="formLoading"
@@ -119,7 +121,7 @@ v-container(fluid)
         @submit="updateProject"
         @delete="deleteProject"
       )
-  
+
   // Add Dialog
   v-dialog(v-model="addDialog" max-width="800px")
     project-form(
@@ -133,11 +135,14 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useProjectsStore } from '~/stores/projects'
 import { usePeopleStore } from '~/stores/people'
 import type { Project } from '~/types/models'
 import ProjectForm from '~/components/projects/ProjectForm.vue'
 import ProjectCard from '~/components/projects/ProjectCard.vue'
+
+// Import router
 
 const projectsStore = useProjectsStore()
 const peopleStore = usePeopleStore()
@@ -173,43 +178,43 @@ const tags = computed(() => {
 
 const filteredProjects = computed(() => {
   let result = [...projectsStore.projects]
-  
+
   // Filter by status
   if (selectedStatus.value !== 'all') {
     result = result.filter(p => p.status === selectedStatus.value)
   }
-  
+
   // Filter by tags
   if (selectedTags.value.length > 0) {
-    result = result.filter(p => {
+    result = result.filter((p) => {
       return selectedTags.value.some(tag => p.tags.includes(tag))
     })
   }
-  
+
   // Filter by search
   if (search.value) {
     const searchLower = search.value.toLowerCase()
-    result = result.filter(p => {
-      return p.title.toLowerCase().includes(searchLower) || 
+    result = result.filter((p) => {
+      return p.title.toLowerCase().includes(searchLower) ||
         (p.description && p.description.toLowerCase().includes(searchLower))
     })
   }
-  
+
   const rank: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 }
   result.sort((a, b) => (rank[a.priority] || 99) - (rank[b.priority] || 99))
-  
+
   return result
 })
 
 // Helper functions
 const formatDate = (date: Date | null) => {
-  if (!date) return ''
+  if (!date) { return '' }
   return new Date(date).toLocaleDateString()
 }
 
 const getPersonInitials = (id: string) => {
   const person = peopleStore.getById(id)
-  if (!person) return '?'
+  if (!person) { return '?' }
   return `${person.firstName.charAt(0)}${person.lastName.charAt(0)}`
 }
 
@@ -231,21 +236,21 @@ const getStatusColor = (status: string) => {
 
 // Helper to determine if a color is light (for text contrast)
 const isLightColor = (colorValue: string) => {
-  if (!colorValue) return false;
-  
+  if (!colorValue) { return false }
+
   // These colors are known to be light
   const lightColors = [
-    'light-blue', 
-    'light-green', 
-    'amber', 
-    'yellow', 
-    'lime', 
-    'grey-lighten-3', 
+    'light-blue',
+    'light-green',
+    'amber',
+    'yellow',
+    'lime',
+    'grey-lighten-3',
     'grey-lighten-4',
     'grey-lighten-5'
-  ];
-  
-  return lightColors.some(c => colorValue.includes(c));
+  ]
+
+  return lightColors.some(c => colorValue.includes(c))
 }
 
 const getStatusColorLight = (status: string) => {
@@ -302,9 +307,6 @@ const toggleTag = (tag: string) => {
   }
 }
 
-// Import router
-import { useRouter } from 'vue-router'
-
 // Setup router
 const router = useRouter()
 
@@ -323,7 +325,7 @@ const openEditDialog = (project: Project) => {
 const createProject = async (projectData: Partial<Project>) => {
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await projectsStore.createProject(projectData)
     addDialog.value = false
@@ -335,11 +337,11 @@ const createProject = async (projectData: Partial<Project>) => {
 }
 
 const updateProject = async (projectData: Partial<Project>) => {
-  if (!selectedProject.value) return
-  
+  if (!selectedProject.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await projectsStore.updateProject(selectedProject.value.id, projectData)
     editDialog.value = false
@@ -351,11 +353,11 @@ const updateProject = async (projectData: Partial<Project>) => {
 }
 
 const deleteProject = async () => {
-  if (!selectedProject.value) return
-  
+  if (!selectedProject.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await projectsStore.deleteProject(selectedProject.value.id)
     editDialog.value = false

@@ -75,6 +75,12 @@ export default {
     colorGreen: 'Green',
     colorAmber: 'Amber',
     colorDeepOrange: 'Deep Orange',
+    dataModel: 'Data Model',
+    exportCsv: 'Export CSV',
+    deleteTitle: 'Confirm Delete',
+    deleteReferencesWarning: 'This record is referenced by the following items. Deleting it may affect these records:',
+    deleteAnyway: 'Delete Anyway',
+    noReferences: 'No other records reference this item.'
   },
   auth: {
     login: 'Login',
@@ -93,7 +99,7 @@ export default {
     settings: 'Settings',
     rememberMe: 'Remember me',
     noAccount: 'Don\'t have an account?',
-    haveAccount: 'Already have an account?',
+    haveAccount: 'Already have an account?'
   },
   settings: {
     darkMode: 'Dark Mode',
@@ -132,7 +138,7 @@ export default {
     syncContacts: 'Sync Contacts',
     showInCalendar: 'Show in Calendar',
     showInMail: 'Show in Mail',
-    showInTasks: 'Show in Tasks', 
+    showInTasks: 'Show in Tasks',
     showInContacts: 'Show in Contacts',
     accountColor: 'Account Color',
     noIntegrations: 'No integrations added yet',
@@ -187,7 +193,7 @@ export default {
     disabled: 'Disabled',
     integrationModuleActive: '{module} is connected and used in this module.',
     integrationModulePending: '{module} is enabled for this account — connect the account to use it.',
-    integrationModuleOff: '{module} is not enabled for this integration.',
+    integrationModuleOff: '{module} is not enabled for this integration.'
   },
   integrations: {
     reauthorizeNeeded: 'Reauthorization Required',
@@ -212,7 +218,7 @@ export default {
     addActionPlan: 'Add Action Plan',
     noActionPlans: 'No action plans yet',
     noBehaviors: 'No behaviors yet',
-    progress: 'Progress',
+    progress: 'Progress'
   },
   calendar: {
     title: 'Calendar',
@@ -237,7 +243,7 @@ export default {
     noCalendarIntegrations: 'No calendar integrations connected',
     connectCalendarIntegration: 'To view your calendar events, connect a calendar integration in your profile settings.',
     goToProfile: 'Go to Profile',
-    noEvents: 'No events for this day',
+    noEvents: 'No events for this day'
   },
   meetings: {
     filters: 'Filters',
@@ -299,7 +305,7 @@ export default {
     removeWarning: 'All data connected with this category will be disconnected. All information about these connections will permanently be lost.',
     typeAgreed: 'Please type "agreed" to confirm',
     cancelRemove: 'Back to freedom',
-    confirmRemove: 'Remove category',
+    confirmRemove: 'Remove category'
   },
   people: {
     title: 'People',
@@ -325,7 +331,7 @@ export default {
     byRole: 'By Role',
     allPeople: 'All People',
     syncContacts: 'Sync Contacts',
-    accounts: 'Connected Accounts',
+    accounts: 'Connected Accounts'
   },
   teams: {
     title: 'Teams',
@@ -377,7 +383,7 @@ export default {
     assignInboxHelp: 'These messages did not match a member by sender email. Assign each to a column (and optionally a project).',
     assign: 'Assign',
     assignToColumn: 'Person (column)',
-    assigned: 'Assignment saved',
+    assigned: 'Assignment saved'
   },
   projects: {
     title: 'Projects',
@@ -456,7 +462,7 @@ export default {
     priorityLow: 'Low',
     priorityMedium: 'Medium',
     priorityHigh: 'High',
-    priorityUrgent: 'Urgent',
+    priorityUrgent: 'Urgent'
   },
   tasks: {
     title: 'Tasks',
@@ -499,7 +505,7 @@ export default {
       showing: 'Showing {shown} of {total} tasks',
       pageOf: 'Page {page} of {pages}',
       previous: 'Previous',
-      next: 'Next',
+      next: 'Next'
     },
     expandSubtasks: 'Expand subtasks',
     collapseSubtasks: 'Collapse subtasks',
@@ -511,7 +517,7 @@ export default {
     priorityHigh: 'High',
     priorityMedium: 'Medium',
     priorityLow: 'Low',
-    priorityLowest: 'Lowest',
+    priorityLowest: 'Lowest'
   },
   dashboard: {
     title: 'Dashboard',
@@ -525,7 +531,7 @@ export default {
     projectStatus: 'Project Status',
     viewMore: 'View More',
     noUpcomingTasks: 'No upcoming tasks',
-    noMeetingsToday: 'No meetings today',
+    noMeetingsToday: 'No meetings today'
   },
   network: {
     title: 'Network',
@@ -556,7 +562,7 @@ export default {
       team: 'Syncing teams\u2026',
       coaching: 'Syncing coaching\u2026',
       edges: 'Syncing relationships\u2026',
-      done: 'Done',
+      done: 'Done'
     },
     noPath: 'No path found between these nodes',
     pathLength: '{n} hops',
@@ -568,7 +574,7 @@ export default {
       meeting: 'Meeting',
       team: 'Team',
       coaching: 'Coaching',
-      knowledge: 'Knowledge',
+      knowledge: 'Knowledge'
     },
     sidebar: {
       nodeTypes: 'Show node types',
@@ -584,13 +590,13 @@ export default {
       showPath: 'Show path',
       timeRange: 'Time range',
       displayOptions: 'Display options',
-      hideOrphans: 'Hide unconnected nodes',
+      hideOrphans: 'Hide unconnected nodes'
     },
     timeRange: {
       all: 'All time',
       '30d': 'Last 30 days',
-      '90d': 'Last 90 days',
-    },
+      '90d': 'Last 90 days'
+    }
   },
   knowledge: {
     title: 'Knowledge',
@@ -621,20 +627,20 @@ export default {
       reason: 'Reason',
       fact: 'Fact',
       insight: 'Insight',
-      pattern: 'Pattern',
+      pattern: 'Pattern'
     },
     relationTypes: {
       references: 'References',
       related: 'Related',
       contains: 'Contains',
-      stakeholder: 'Stakeholder',
+      stakeholder: 'Stakeholder'
     },
     sources: {
       manual: 'Manual',
       ai: 'AI',
       email: 'Email',
-      note: 'Note',
-    },
+      note: 'Note'
+    }
   },
   statistics: {
     title: 'Statistics',
@@ -645,7 +651,7 @@ export default {
     effortByTaskType: 'Effort by Task Type',
     weeklyBalance: 'Weekly Balance',
     projectCompletion: 'Project Completion',
-    behaviorProgress: 'Behavior Progress',
+    behaviorProgress: 'Behavior Progress'
   },
   mail: {
     title: 'Mail',
@@ -701,8 +707,8 @@ export default {
       attachments: 'Attachments',
       account: 'Account',
       people: 'People link',
-      actions: 'Actions',
-    },
+      actions: 'Actions'
+    }
   },
   coaching: {
     title: 'Coaching',
@@ -727,7 +733,7 @@ export default {
     noTimelineEntries: 'No timeline entries yet',
     noRelatedTasks: 'No related tasks yet',
     progressionHistory: 'Progression History',
-    historyLog: 'History Log',
+    historyLog: 'History Log'
   },
   validation: {
     required: 'This field is required',
@@ -736,7 +742,7 @@ export default {
     maxLength: 'Cannot exceed {max} characters',
     passwordMatch: 'Passwords do not match',
     invalidFormat: 'Invalid format',
-    dateInPast: 'Date cannot be in the past',
+    dateInPast: 'Date cannot be in the past'
   },
   errors: {
     generic: 'An error occurred. Please try again.',
@@ -745,7 +751,7 @@ export default {
     forbidden: 'You do not have permission to access this resource.',
     serverError: 'Server error. Please try again later.',
     networkError: 'Network error. Please check your connection.',
-    validationError: 'Please check your input and try again.',
+    validationError: 'Please check your input and try again.'
   },
   feedback: {
     button: 'Send Feedback',
@@ -826,7 +832,7 @@ export default {
     addAIIntegration: 'Add AI Integration',
     editAIIntegration: 'Edit AI Integration',
     aiProvider: 'AI Provider',
-    apiKey: 'API Key', 
+    apiKey: 'API Key',
     integrationName: 'Integration Name',
     enabled: 'Enabled',
     aiIntegration: 'AI Integration',
@@ -879,4 +885,4 @@ export default {
     claudeInstructions: '1. Sign up or sign in at console.anthropic.com\n2. Navigate to API keys section\n3. Create a new API key\n4. Copy and paste the API key here',
     claudeUrl: 'https://console.anthropic.com/settings/keys'
   }
-};
+}

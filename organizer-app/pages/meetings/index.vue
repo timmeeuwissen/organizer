@@ -3,7 +3,7 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('meetings.title') }}
-  
+
   v-row
     v-col(cols="12" md="3")
       ModuleIntegrationAccountFilter(
@@ -20,14 +20,14 @@ v-container(fluid)
         @filter-change="handleFilterChange"
         @clear-filters="clearFilters"
       )
-      
+
       v-card
         v-card-title {{ $t('meetings.categories') }}
         v-card-text
           v-btn(color="primary" :to="`/meetings/categories`" block)
             v-icon(start) mdi-tag-multiple
             span {{ $t('meetings.categoriesManage') }}
-    
+
     v-col(cols="12" md="9")
       v-row
         v-col(cols="12")
@@ -38,7 +38,7 @@ v-container(fluid)
               v-btn(color="primary" @click="showNewMeetingDialog = true")
                 v-icon(start) mdi-plus
                 span {{ $t('meetings.newMeeting') }}
-            
+
             v-card-text
               v-data-table-virtual(
                 :headers="headers"
@@ -47,10 +47,10 @@ v-container(fluid)
               )
                 template(v-slot:item.startTime="{ item }")
                   span {{ formatDateTime(item.startTime) }}
-                
+
                 template(v-slot:item.title="{ item }")
                   router-link(:to="`/meetings/${item.id}`") {{ item.title }}
-                
+
                 template(v-slot:item.category="{ item }")
                   v-chip(
                     v-if="getCategoryById(item.category)"
@@ -59,7 +59,7 @@ v-container(fluid)
                     size="small"
                   ) {{ getCategoryById(item.category)?.name }}
                   span(v-else) -
-                
+
                 template(v-slot:item.participants="{ item }")
                   v-avatar.mr-1(
                     v-for="participantId in item.participants.slice(0, 3)"
@@ -69,13 +69,13 @@ v-container(fluid)
                   )
                     span {{ getPersonInitials(participantId) }}
                   span(v-if="item.participants.length > 3") +{{ item.participants.length - 3 }}
-                
+
                 template(v-slot:item.actions="{ item }")
                   v-btn(icon variant="text" :to="`/meetings/${item.id}`")
                     v-icon(size="small") mdi-eye
                   v-btn(icon variant="text" :to="`/meetings/${item.id}/edit`")
                     v-icon(size="small") mdi-pencil
-      
+
       v-row
         v-col(cols="12")
           v-card
@@ -87,9 +87,9 @@ v-container(fluid)
                   v-icon mdi-format-list-bulleted
                 v-btn(value="card" :aria-label="$t('common.cardView')")
                   v-icon mdi-view-grid
-            
+
             v-divider
-            
+
             v-card-text
               // List view
               template(v-if="viewMode === 'list'")
@@ -100,10 +100,10 @@ v-container(fluid)
                 )
                   template(v-slot:item.startTime="{ item }")
                     span {{ formatDateTime(item.startTime) }}
-                  
+
                   template(v-slot:item.title="{ item }")
                     router-link(:to="`/meetings/${item.id}`") {{ item.title }}
-                  
+
                   template(v-slot:item.category="{ item }")
                     v-chip(
                       v-if="getCategoryById(item.category)"
@@ -112,7 +112,7 @@ v-container(fluid)
                       size="small"
                     ) {{ getCategoryById(item.category)?.name }}
                     span(v-else) -
-                  
+
                   template(v-slot:item.participants="{ item }")
                     v-avatar.mr-1(
                       v-for="participantId in item.participants.slice(0, 3)"
@@ -122,13 +122,13 @@ v-container(fluid)
                     )
                       span {{ getPersonInitials(participantId) }}
                     span(v-if="item.participants.length > 3") +{{ item.participants.length - 3 }}
-                  
+
                   template(v-slot:item.actions="{ item }")
                     v-btn(icon variant="text" :to="`/meetings/${item.id}`")
                       v-icon(size="small") mdi-eye
                     v-btn(icon variant="text" :to="`/meetings/${item.id}/edit`")
                       v-icon(size="small") mdi-pencil
-              
+
               // Card view
               template(v-else)
                 v-row
@@ -155,7 +155,7 @@ v-container(fluid)
                               :icon="getCategoryById(meeting.category)?.icon || 'mdi-calendar'"
                               color="white"
                             )
-                        
+
                         template(v-slot:append)
                           v-chip(
                             v-if="getCategoryById(meeting.category)"
@@ -163,11 +163,11 @@ v-container(fluid)
                             text-color="white"
                             size="small"
                           ) {{ getCategoryById(meeting.category)?.name }}
-                      
+
                       v-card-text
                         p.text-subtitle-1 {{ formatDateTime(meeting.startTime) }}
                         p.text-body-2.mb-2(v-if="meeting.description") {{ meeting.description }}
-                        
+
                         template(v-if="meeting.participants && meeting.participants.length > 0")
                           p.text-caption {{ $t('meetings.participants') }}:
                           v-avatar.mr-1(
@@ -178,11 +178,13 @@ v-container(fluid)
                           )
                             span {{ getPersonInitials(participantId) }}
                           span(v-if="meeting.participants.length > 5") +{{ meeting.participants.length - 5 }}
-                        
+
                         template(v-if="meeting.summary")
                           p.text-caption.mt-2 {{ $t('meetings.summary') }}:
                           p.text-body-2.meeting-summary {{ meeting.summary }}
-      
+
+      AdminCard(:items="filteredMeetings" class="mt-2")
+
       // New Meeting Dialog
       v-dialog(v-model="showNewMeetingDialog" max-width="800px")
         MeetingForm(
@@ -191,7 +193,7 @@ v-container(fluid)
           @submit="handleMeetingSubmit"
           @plan="handleMeetingPlan"
         )
-      
+
       // Calendar Event Dialog (shown after planning a meeting)
       v-dialog(v-model="showCalendarDialog" max-width="800px")
         CalendarEventForm(
@@ -203,6 +205,7 @@ v-container(fluid)
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
 import FilterContainer from '~/components/common/FilterContainer.vue'
@@ -215,7 +218,6 @@ import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { useCalendarStore } from '~/stores/calendar'
 import type { Meeting } from '~/types/models'
 import { meetingFormToMeetingPayload } from '~/utils/meetingsForm'
-import { useI18n } from 'vue-i18n'
 
 // Define stores
 const meetingsStore = useMeetingsStore()
@@ -269,7 +271,7 @@ const headers = computed(() => [
   { title: t('meetings.tableTitle'), key: 'title', sortable: true },
   { title: t('meetings.tableCategory'), key: 'category', sortable: true },
   { title: t('meetings.tableParticipants'), key: 'participants', sortable: false },
-  { title: t('meetings.tableActions'), key: 'actions', sortable: false },
+  { title: t('meetings.tableActions'), key: 'actions', sortable: false }
 ])
 
 // Filter options
@@ -299,7 +301,7 @@ const periodOptions = computed(() => [
   { title: t('meetings.periodLastWeek'), value: 'week' },
   { title: t('meetings.periodLastMonth'), value: 'month' },
   { title: t('meetings.periodLastQuarter'), value: 'quarter' },
-  { title: t('meetings.periodThisYear'), value: 'year' },
+  { title: t('meetings.periodThisYear'), value: 'year' }
 ])
 
 // Filter configuration for FilterContainer
@@ -329,7 +331,7 @@ const selectFilters = computed(() => [
 // Handle filter changes
 const handleFilterChange = (filters: any) => {
   console.log('[Meetings] Filter changed:', filters)
-  
+
   // Update filter values from the select filters
   if (filters.selectFilters && filters.selectFilters.length >= 4) {
     categoryFilter.value = filters.selectFilters[0].selected
@@ -361,14 +363,14 @@ const filteredMeetings = computed(() => {
 
   // Apply project filter
   if (projectFilter.value) {
-    meetings = meetings.filter(m => 
+    meetings = meetings.filter(m =>
       m.relatedProjects && m.relatedProjects.includes(projectFilter.value)
     )
   }
 
   // Apply person filter
   if (personFilter.value) {
-    meetings = meetings.filter(m => 
+    meetings = meetings.filter(m =>
       m.participants && m.participants.includes(personFilter.value)
     )
   }
@@ -405,10 +407,10 @@ const filteredMeetings = computed(() => {
 const upcomingMeetings = computed(() => {
   // Use the store's upcomingMeetings getter for meetings that need to be planned
   const storeMeetings = meetingsStore.upcomingMeetings
-  
+
   // Apply additional filters based on user's selections
   let result = storeMeetings
-  
+
   // Apply category filter
   if (categoryFilter.value) {
     result = result.filter(m => m.category === categoryFilter.value)
@@ -416,14 +418,14 @@ const upcomingMeetings = computed(() => {
 
   // Apply project filter
   if (projectFilter.value) {
-    result = result.filter(m => 
+    result = result.filter(m =>
       m.relatedProjects && m.relatedProjects.includes(projectFilter.value)
     )
   }
 
   // Apply person filter
   if (personFilter.value) {
-    result = result.filter(m => 
+    result = result.filter(m =>
       m.participants && m.participants.includes(personFilter.value)
     )
   }
@@ -466,8 +468,8 @@ const pastMeetings = computed(() => {
 // Category statistics
 const getCategoryPercentage = (categoryId: string) => {
   const totalMeetings = filteredMeetings.value.length
-  if (totalMeetings === 0) return 0
-  
+  if (totalMeetings === 0) { return 0 }
+
   const categoryMeetings = filteredMeetings.value.filter(m => m.category === categoryId).length
   return (categoryMeetings / totalMeetings) * 100
 }
@@ -476,13 +478,13 @@ const getCategoryPercentage = (categoryId: string) => {
 const handleMeetingSubmit = async (meetingData: any) => {
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     // Prepare meeting data
     const createData = meetingFormToMeetingPayload(meetingData)
-    
+
     await meetingsStore.createMeeting(createData)
-    
+
     // Close dialog on success
     showNewMeetingDialog.value = false
   } catch (error: any) {
@@ -496,22 +498,22 @@ const handleMeetingSubmit = async (meetingData: any) => {
 const handleMeetingPlan = async (meetingData: any) => {
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     // First create the meeting
     const createData = {
       ...meetingFormToMeetingPayload(meetingData),
-      plannedStatus: 'to_be_planned' as const,
+      plannedStatus: 'to_be_planned' as const
     }
-    
+
     const meetingId = await meetingsStore.createMeeting(createData)
-    
+
     if (meetingId) {
       pendingMeetingId.value = meetingId
     } else {
       throw new Error(t('errors.generic'))
     }
-    
+
     // Close meeting dialog and open calendar dialog
     showNewMeetingDialog.value = false
     showCalendarDialog.value = true
@@ -524,11 +526,11 @@ const handleMeetingPlan = async (meetingData: any) => {
 
 // Handle calendar event submission
 const handleCalendarEventSubmit = async (eventData: any) => {
-  if (!pendingMeetingId.value) return
-  
+  if (!pendingMeetingId.value) { return }
+
   calendarFormLoading.value = true
   calendarFormError.value = ''
-  
+
   try {
     // Create calendar event
     const result = await calendarStore.createEvent({
@@ -541,14 +543,14 @@ const handleCalendarEventSubmit = async (eventData: any) => {
       // Link to meeting
       meetingId: pendingMeetingId.value
     })
-    
+
     if (result.success && result.eventId) {
       // Update the meeting with the calendar event ID
       await meetingsStore.updateMeeting(pendingMeetingId.value, {
         calendarEventId: result.eventId
       })
     }
-    
+
     // Reset and close dialog
     pendingMeetingId.value = null
     showCalendarDialog.value = false
@@ -561,12 +563,12 @@ const handleCalendarEventSubmit = async (eventData: any) => {
 
 // Utility functions
 const formatDateTime = (dateTime: Date) => {
-  if (!dateTime) return ''
-  
+  if (!dateTime) { return '' }
+
   const date = new Date(dateTime)
-  return date.toLocaleString(undefined, { 
-    year: 'numeric', 
-    month: 'short', 
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
@@ -579,8 +581,8 @@ const getCategoryById = (categoryId: string) => {
 
 const getPersonInitials = (personId: string) => {
   const person = peopleStore.getById(personId)
-  if (!person) return '??'
-  
+  if (!person) { return '??' }
+
   return `${person.firstName.charAt(0)}${person.lastName.charAt(0)}`
 }
 
@@ -590,7 +592,7 @@ const getRandomColor = (id: string) => {
   for (let i = 0; i < id.length; i++) {
     hash = id.charCodeAt(i) + ((hash << 5) - hash)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }
@@ -602,9 +604,9 @@ onMounted(async () => {
       meetingsStore.fetchMeetings(),
       peopleStore.fetchPeople(),
       projectsStore.fetchProjects(),
-      categoriesStore.fetchCategories(),
+      categoriesStore.fetchCategories()
     ])
-    
+
     // Seed default categories if none exist
     if (categoriesStore.categories.length === 0) {
       await categoriesStore.seedDefaultCategories()

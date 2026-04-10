@@ -3,7 +3,7 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('people.title') }}
-      
+
   v-row
     v-col(cols="12" md="3")
       ModuleIntegrationAccountFilter(
@@ -21,7 +21,7 @@ v-container(fluid)
         @filter-change="handleFilterChange"
         @clear-filters="clearFilters"
       )
-      
+
       v-card(class="mb-4" v-if="recentlyContacted.length > 0 || loading")
         v-card-title {{ $t('people.recentlyContacted') }}
         v-card-text(v-if="loading")
@@ -45,7 +45,7 @@ v-container(fluid)
                 class="ml-2"
                 color="info"
               ) {{ formatDateDistance(person.lastContacted) }}
-                
+
     v-col(cols="12" md="9")
       v-card
         v-card-title.d-flex
@@ -63,7 +63,7 @@ v-container(fluid)
             prepend-icon="mdi-plus"
             @click="addDialog = true"
           ) {{ $t('people.addPerson') }}
-          
+
         v-card-text(v-if="loading")
           v-skeleton-loader(type="table")
         v-card-text(v-else-if="filteredPeople.length === 0")
@@ -81,13 +81,13 @@ v-container(fluid)
                 div.position-relative.d-flex.align-center
                   div.account-indicator(:style="{ backgroundColor: getProviderColor(item) }")
                   v-avatar(
-                    size="32" 
+                    size="32"
                     :color="getProviderColor(item)"
                     class="ml-2 mr-2"
                   )
                     span {{ getInitials(item) }}
                 span {{ `${item.firstName} ${item.lastName}` }}
-                
+
             template(v-slot:item.lastContacted="{ item }")
               v-chip(
                 v-if="item.lastContacted"
@@ -95,7 +95,7 @@ v-container(fluid)
                 :color="getLastContactedColor(item.lastContacted)"
               ) {{ formatDate(item.lastContacted) }}
               span(v-else) -
-              
+
             template(v-slot:item.actions="{ item }")
               v-btn(
                 icon
@@ -122,6 +122,14 @@ v-container(fluid)
               )
                 v-icon mdi-phone
 
+  AdminCard(:items="filteredPeople" class="mt-2")
+
+  DeleteWithReferencesDialog(
+    v-model="deleteConfirmDialog"
+    :references="deleteReferences"
+    @confirm="confirmDeletePerson"
+  )
+
   // View/Edit Dialog
   v-dialog(v-model="personDialog" max-width="600px")
     person-form(
@@ -132,7 +140,7 @@ v-container(fluid)
       @submit="updatePerson"
       @delete="deletePerson"
     )
-  
+
   // Add Dialog
   v-dialog(v-model="addDialog" max-width="600px")
     person-form(
@@ -147,6 +155,7 @@ v-container(fluid)
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePeopleStore } from '~/stores/people'
+import { useDeleteWithReferences } from '~/composables/useDeleteWithReferences'
 import type { Person } from '~/types/models'
 import PersonForm from '~/components/people/PersonForm.vue'
 import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
@@ -179,17 +188,17 @@ const selectedRoles = ref<string[]>([])
 // but for simplicity and to avoid TypeScript issues, we're using direct strings
 const checkboxFilters = computed(() => [
   {
-    title: "Organization", // Would normally be $t('people.byOrganization')
+    title: 'Organization', // Would normally be $t('people.byOrganization')
     items: organizations.value.map(org => ({ value: org })),
     selected: selectedOrganizations.value
   },
   {
-    title: "Team", // Would normally be $t('people.byTeam')
+    title: 'Team', // Would normally be $t('people.byTeam')
     items: teams.value.map(team => ({ value: team })),
     selected: selectedTeams.value
   },
   {
-    title: "Role", // Would normally be $t('people.byRole')
+    title: 'Role', // Would normally be $t('people.byRole')
     items: roles.value.map(role => ({ value: role })),
     selected: selectedRoles.value
   }
@@ -220,12 +229,12 @@ const openPerson = (person: Person) => {
   personDialog.value = true
 }
 
-function tryOpenPersonFromRoute() {
+function tryOpenPersonFromRoute () {
   const pid = route.query.person
   if (typeof pid !== 'string' || !pid.trim()) {
     return
   }
-  const found = peopleStore.people.find((p) => p.id === pid.trim())
+  const found = peopleStore.people.find(p => p.id === pid.trim())
   if (found) {
     openPerson(found)
   }
@@ -256,7 +265,7 @@ onMounted(async () => {
     loading.value = false
   }
   nextTick(() => {
-    selectedProviders.value = connectedAccounts.value.map((account) => account.id)
+    selectedProviders.value = connectedAccounts.value.map(account => account.id)
   })
 })
 
@@ -268,7 +277,7 @@ watch(selectedProviders, (newProviders) => {
 
 // Helper functions for accounts
 const getInitialsFromString = (name: string) => {
-  if (!name) return ''
+  if (!name) { return '' }
   const parts = name.split(' ')
   if (parts.length >= 2) {
     return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`
@@ -278,16 +287,16 @@ const getInitialsFromString = (name: string) => {
 
 // Get the provider color based on the account ID
 const getProviderColor = (person: Person) => {
-  if (!person.providerAccountId) return 'primary'
-  
+  if (!person.providerAccountId) { return 'primary' }
+
   const account = connectedAccounts.value.find(acc => acc.id === person.providerAccountId)
-  if (!account) return 'primary'
-  
+  if (!account) { return 'primary' }
+
   // Check if the account has a predefined color
   if (account.color) {
     return account.color
   }
-  
+
   // Generate deterministic color based on account ID
   let hash = 0
   const id = account.id
@@ -295,7 +304,7 @@ const getProviderColor = (person: Person) => {
     // Simple hash calculation for TypeScript compatibility
     hash = Math.imul(hash, 31) + id.charCodeAt(i)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }
@@ -328,42 +337,42 @@ const hasFilters = computed(() => {
     selectedTeams.value.length > 0 ||
     selectedRoles.value.length > 0 ||
     // Add provider filter check
-    (selectedProviders.value.length > 0 && 
+    (selectedProviders.value.length > 0 &&
      selectedProviders.value.length < connectedAccounts.value.length)
 })
 
 const filteredPeople = computed(() => {
   let result = [...peopleStore.people]
-  
+
   // Filter by provider accounts
   if (selectedProviders.value.length === 0) {
     // If no providers are selected, only show records without a provider
     result = result.filter(p => !p.providerAccountId)
   } else if (connectedAccounts.value.length > 0) {
-    result = result.filter(p => 
+    result = result.filter(p =>
       !p.providerAccountId || // Include records without provider
       selectedProviders.value.includes(p.providerAccountId)
     )
   }
-  
+
   if (selectedOrganizations.value.length > 0) {
-    result = result.filter(p => 
+    result = result.filter(p =>
       p.organization && selectedOrganizations.value.includes(p.organization)
     )
   }
-  
+
   if (selectedTeams.value.length > 0) {
-    result = result.filter(p => 
+    result = result.filter(p =>
       p.team && selectedTeams.value.includes(p.team)
     )
   }
-  
+
   if (selectedRoles.value.length > 0) {
-    result = result.filter(p => 
+    result = result.filter(p =>
       p.role && selectedRoles.value.includes(p.role)
     )
   }
-  
+
   return result
 })
 
@@ -373,35 +382,35 @@ const getInitials = (person: Person) => {
 }
 
 const formatDate = (date: Date | null) => {
-  if (!date) return '-'
+  if (!date) { return '-' }
   return new Date(date).toLocaleDateString()
 }
 
 const formatDateDistance = (date: Date | null) => {
-  if (!date) return ''
-  
+  if (!date) { return '' }
+
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
-  if (days === 0) return 'Today'
-  if (days === 1) return 'Yesterday'
-  if (days < 7) return `${days} days ago`
-  if (days < 30) return `${Math.floor(days / 7)} weeks ago`
-  if (days < 365) return `${Math.floor(days / 30)} months ago`
+
+  if (days === 0) { return 'Today' }
+  if (days === 1) { return 'Yesterday' }
+  if (days < 7) { return `${days} days ago` }
+  if (days < 30) { return `${Math.floor(days / 7)} weeks ago` }
+  if (days < 365) { return `${Math.floor(days / 30)} months ago` }
   return `${Math.floor(days / 365)} years ago`
 }
 
 const getLastContactedColor = (date: Date | null) => {
-  if (!date) return 'grey'
-  
+  if (!date) { return 'grey' }
+
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
-  if (days < 7) return 'success'
-  if (days < 30) return 'info'
-  if (days < 90) return 'warning'
+
+  if (days < 7) { return 'success' }
+  if (days < 30) { return 'info' }
+  if (days < 90) { return 'warning' }
   return 'error'
 }
 
@@ -417,7 +426,7 @@ const clearFilters = () => {
 const createPerson = async (personData: Partial<Person>) => {
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await peopleStore.createPerson(personData)
     addDialog.value = false
@@ -429,11 +438,11 @@ const createPerson = async (personData: Partial<Person>) => {
 }
 
 const updatePerson = async (personData: Partial<Person>) => {
-  if (!selectedPerson.value) return
-  
+  if (!selectedPerson.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await peopleStore.updatePerson(selectedPerson.value.id, personData)
     personDialog.value = false
@@ -444,12 +453,22 @@ const updatePerson = async (personData: Partial<Person>) => {
   }
 }
 
-const deletePerson = async () => {
-  if (!selectedPerson.value) return
-  
+const { getReferences } = useDeleteWithReferences()
+const deleteConfirmDialog = ref(false)
+const deleteReferences = ref<ReturnType<typeof getReferences>>([])
+
+const deletePerson = () => {
+  if (!selectedPerson.value) { return }
+  deleteReferences.value = getReferences('person', selectedPerson.value.id)
+  deleteConfirmDialog.value = true
+}
+
+const confirmDeletePerson = async () => {
+  if (!selectedPerson.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await peopleStore.deletePerson(selectedPerson.value.id)
     personDialog.value = false

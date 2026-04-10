@@ -6,14 +6,14 @@ v-form(
 )
   v-card
     v-card-title {{ isEdit ? $t('meetings.edit') : $t('meetings.add') }}
-    
+
     v-card-text
       v-alert(
         v-if="error"
         type="error"
         class="mb-4"
       ) {{ error }}
-      
+
       v-text-field(
         v-model="subject"
         :label="$t('meetings.subject')"
@@ -21,14 +21,14 @@ v-form(
         required
         prepend-icon="mdi-text-subject"
       )
-      
+
       v-textarea(
         v-model="summary"
         :label="$t('meetings.summary')"
         rows="3"
         prepend-icon="mdi-text-box"
       )
-      
+
       v-select(
         v-model="category"
         :items="meetingCategories"
@@ -39,7 +39,7 @@ v-form(
         :rules="[rules.required]"
         required
       )
-      
+
       v-radio-group(
         v-model="plannedStatus"
         row
@@ -53,7 +53,7 @@ v-form(
           :label="$t('meetings.plannedStatus.to_be_planned')"
           value="to_be_planned"
         )
-      
+
       v-row
         v-col(cols="12" md="6")
           v-menu(
@@ -73,7 +73,7 @@ v-form(
               v-model="date"
               @update:model-value="dateMenu = false"
             )
-        
+
         v-col(cols="12" md="6")
           v-text-field(
             v-model="time"
@@ -82,13 +82,13 @@ v-form(
             prepend-icon="mdi-clock"
             :required="plannedStatus !== 'to_be_planned'"
           )
-      
+
       v-text-field(
         v-model="location"
         :label="$t('meetings.location')"
         prepend-icon="mdi-map-marker"
       )
-      
+
       v-select(
         v-model="participants"
         :items="availablePeople"
@@ -99,14 +99,14 @@ v-form(
         multiple
         chips
       )
-      
+
       v-textarea(
         v-model="notes"
         :label="$t('meetings.notes')"
         rows="3"
         prepend-icon="mdi-note-text"
       )
-      
+
       v-textarea(
         v-model="actionItems"
         :label="$t('meetings.action')"
@@ -124,7 +124,7 @@ v-form(
         multiple
         chips
       )
-    
+
     v-card-actions
       v-spacer
       v-btn(
@@ -140,7 +140,7 @@ v-form(
         :loading="loading"
         :disabled="!valid || loading"
         @click="planMeeting"
-      ) 
+      )
         v-icon(start) mdi-calendar-plus
         span {{ $t('meetings.planThisMeeting') }}
       v-btn(
@@ -152,12 +152,13 @@ v-form(
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { useCalendarStore } from '~/stores/calendar'
+import { useUnsavedChanges } from '~/composables/useUnsavedChanges'
 import type { Meeting } from '~/types/models'
 import { meetingToMeetingFormInput, type MeetingFormInput } from '~/utils/meetingsForm'
 import { requiredTrimmed } from '~/utils/validation'
@@ -179,13 +180,15 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'delete', 'plan'])
 
+const { setNavigationDirty } = useUnsavedChanges()
+
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const categoriesStore = useMeetingCategoriesStore()
 const calendarStore = useCalendarStore()
 const { t } = useI18n()
 
-const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
+const form = ref<{ validate:() => Promise<{ valid: boolean }> } | null>(null)
 const valid = ref(false)
 const dateMenu = ref(false)
 
@@ -208,11 +211,17 @@ const relatedProjects = ref<string[]>(
   initialForm?.relatedProjects ? [...initialForm.relatedProjects] : []
 )
 
+watch(
+  [subject, summary, category, plannedStatus, date, time, location, participants, notes, actionItems, relatedProjects],
+  () => { setNavigationDirty(true) },
+  { deep: true }
+)
+
 // Meeting categories from store
 const meetingCategories = computed(() => categoriesStore.categories)
 
 const availableProjects = computed(() =>
-  projectsStore.projects.map((p) => ({ id: p.id, title: p.title }))
+  projectsStore.projects.map(p => ({ id: p.id, title: p.title }))
 )
 
 // Validation rules
@@ -234,7 +243,7 @@ const handlePlannedStatusChange = () => {
 const isEdit = computed(() => !!props.meeting)
 
 const dateFormatted = computed(() => {
-  if (!date.value) return ''
+  if (!date.value) { return '' }
   return new Date(date.value).toLocaleDateString()
 })
 
@@ -248,8 +257,8 @@ const availablePeople = computed(() => {
 // Submit function
 const submit = async () => {
   const result = await form.value?.validate()
-  if (!result?.valid) return
-  
+  if (!result?.valid) { return }
+
   const meetingData = {
     subject: subject.value.trim(),
     summary: summary.value,
@@ -262,17 +271,18 @@ const submit = async () => {
     notes: notes.value,
     actionItems: actionItems.value,
     calendarEventId: calendarEventId.value,
-    relatedProjects: relatedProjects.value,
+    relatedProjects: relatedProjects.value
   }
-  
+
+  setNavigationDirty(false)
   emit('submit', meetingData)
 }
 
 // Plan meeting - create meeting and open calendar event dialog
 const planMeeting = async () => {
   const result = await form.value?.validate()
-  if (!result?.valid) return
-  
+  if (!result?.valid) { return }
+
   const meetingData = {
     subject: subject.value.trim(),
     summary: summary.value,
@@ -284,9 +294,9 @@ const planMeeting = async () => {
     participants: participants.value,
     notes: notes.value,
     actionItems: actionItems.value,
-    relatedProjects: relatedProjects.value,
+    relatedProjects: relatedProjects.value
   }
-  
+
   emit('plan', meetingData)
 }
 
@@ -294,7 +304,7 @@ const planMeeting = async () => {
 onMounted(async () => {
   // Load people and categories for selects
   const loadPromises = []
-  
+
   if (peopleStore.people.length === 0) {
     loadPromises.push(peopleStore.fetchPeople())
   }
@@ -302,20 +312,20 @@ onMounted(async () => {
   if (projectsStore.projects.length === 0) {
     loadPromises.push(projectsStore.fetchProjects())
   }
-  
+
   if (categoriesStore.categories.length === 0) {
     loadPromises.push(categoriesStore.fetchCategories())
-    
+
     // Seed default categories if none exist after fetching
     if (categoriesStore.categories.length === 0) {
       loadPromises.push(categoriesStore.seedDefaultCategories())
     }
   }
-  
+
   if (loadPromises.length > 0) {
     await Promise.all(loadPromises)
   }
-  
+
   if (props.meeting) {
     const mapped = 'title' in props.meeting
       ? meetingToMeetingFormInput(props.meeting as Meeting)

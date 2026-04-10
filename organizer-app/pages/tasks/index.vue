@@ -3,7 +3,7 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('tasks.title') }}
-      
+
   v-row
     v-col(cols="12" md="3")
       ModuleIntegrationAccountFilter(
@@ -22,7 +22,7 @@ v-container(fluid)
         @filter-change="handleFilterChange"
         @clear-filters="clearFilters"
       )
-      
+
       v-card(class="mb-4")
         v-card-title {{ $t('tasks.mainList') }}
         v-card-text
@@ -39,10 +39,10 @@ v-container(fluid)
             @update:model-value="commitTasksPageSize"
           )
           .text-caption.text-medium-emphasis {{ $t('tasks.pageSizeHint') }}
-      
+
       v-card(class="mb-4")
         v-card-title {{ $t('tasks.upcomingTasks') }}
-        v-card-text(v-if="loading") 
+        v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="upcomingTasks.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('dashboard.noUpcomingTasks') }}
@@ -75,10 +75,10 @@ v-container(fluid)
               template(v-slot:append)
                 v-btn(icon size="small" @click.stop="openTask(task)")
                   v-icon mdi-pencil
-      
+
       v-card
         v-card-title {{ $t('tasks.overdueTasks') }}
-        v-card-text(v-if="loading") 
+        v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="overdueTasks.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('tasks.noTasks') }}
@@ -114,7 +114,7 @@ v-container(fluid)
                   size="small"
                   color="error"
                 ) {{ getDaysOverdue(task.dueDate) }}d
-                
+
     v-col(cols="12" md="9")
       v-tabs(v-model="activeTab" grow)
         v-tab(:value="'all'") {{ $t('tasks.allTasks') }}
@@ -122,7 +122,7 @@ v-container(fluid)
         v-tab(:value="'inProgress'") {{ $t('tasks.inProgressTasks') }}
         v-tab(:value="'completed'") {{ $t('tasks.completedTasks') }}
         v-tab(:value="'delegated'") {{ $t('tasks.delegatedTasks') }}
-      
+
       v-card(class="mt-4")
         v-card-title.d-flex
           span {{ getTabTitle() }}
@@ -132,7 +132,7 @@ v-container(fluid)
             prepend-icon="mdi-plus"
             @click="addDialog = true"
           ) {{ $t('tasks.addTask') }}
-        
+
         v-card-text
           TasksOverviewTable(
             :tasks="filteredTasks"
@@ -145,6 +145,8 @@ v-container(fluid)
             @add-subtask="addSubtask"
           )
 
+  AdminCard(:items="filteredTasks" class="mt-2")
+
   // View/Edit Dialog
   v-dialog(v-model="taskDialog" max-width="800px")
     task-form(
@@ -156,7 +158,7 @@ v-container(fluid)
       @delete="deleteTask"
       @complete="completeTask"
     )
-  
+
   // Add Dialog
   v-dialog(v-model="addDialog" max-width="800px")
     task-form(
@@ -170,11 +172,11 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import { useTasksStore } from '~/stores/tasks'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useAuthStore } from '~/stores/auth'
-import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import type { Task } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 import TasksOverviewTable from '~/components/tasks/TasksOverviewTable.vue'
@@ -185,7 +187,7 @@ import {
   mergeTasksUiSettings,
   normalizeTasksPageSize,
   pruneExpandedTaskIds,
-  type TasksUiSettings,
+  type TasksUiSettings
 } from '~/config/tasksUi'
 
 const route = useRoute()
@@ -296,16 +298,16 @@ const handleFilterChange = (filters: any) => {
 
 // Get provider color based on the account ID
 const getProviderColor = (task: Task) => {
-  if (!task.providerAccountId) return 'primary'
-  
+  if (!task.providerAccountId) { return 'primary' }
+
   const account = connectedAccounts.value.find(acc => acc.id === task.providerAccountId)
-  if (!account) return 'primary'
-  
+  if (!account) { return 'primary' }
+
   // Check if the account has a predefined color
   if (account.color) {
     return account.color
   }
-  
+
   // Generate deterministic color based on account ID
   let hash = 0
   const id = account.id
@@ -313,7 +315,7 @@ const getProviderColor = (task: Task) => {
     // Simple hash calculation for TypeScript compatibility
     hash = Math.imul(hash, 31) + id.charCodeAt(i)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }
@@ -326,33 +328,33 @@ onMounted(async () => {
     // Get integration accounts
     const { $firebase } = useNuxtApp()
     const auth = useAuthStore()
-    
+
     if (auth.user) {
       // Get user settings to find connected accounts with task sync enabled
       const db = getFirestore($firebase as any)
       const userRef = doc(db, 'users', auth.user.id)
       const userSnap = await getDoc(userRef)
-      
+
       if (userSnap.exists() && userSnap.data().settings?.integrationAccounts) {
         const accounts = userSnap.data().settings.integrationAccounts
         integrationAccounts.value = accounts.filter((a: any) => a.syncTasks && a.oauthData.connected)
         providerSyncEnabled.value = integrationAccounts.value.length > 0
-        
+
         // Set the accounts in the tasks store
         tasksStore.setIntegrationAccounts(integrationAccounts.value)
-        
+
         // Initialize selectedProviders with all providers
         selectedProviders.value = connectedAccounts.value.map(account => account.id)
       }
     }
-    
+
     // Fetch data
     await Promise.all([
       tasksStore.fetchTasks(),
       peopleStore.fetchPeople(),
       projectsStore.fetchProjects()
     ])
-    
+
     // If providers are connected, sync tasks from them
     if (providerSyncEnabled.value) {
       await syncTasksFromProviders()
@@ -381,11 +383,11 @@ onMounted(async () => {
 
 // Sync tasks from providers
 const syncTasksFromProviders = async () => {
-  if (!providerSyncEnabled.value) return
-  
+  if (!providerSyncEnabled.value) { return }
+
   syncLoading.value = true
   syncError.value = ''
-  
+
   try {
     await tasksStore.fetchTasksFromProviders()
   } catch (error: any) {
@@ -416,7 +418,7 @@ const hasFilters = computed(() => {
     selectedProjects.value.length > 0 ||
     selectedAssignees.value.length > 0 ||
     // Add provider filter check
-    (selectedProviders.value.length > 0 && 
+    (selectedProviders.value.length > 0 &&
      selectedProviders.value.length < connectedAccounts.value.length) ||
     search.value !== ''
 })
@@ -424,144 +426,144 @@ const hasFilters = computed(() => {
 const upcomingTasks = computed(() => {
   // Filter by provider first
   let tasks = tasksStore.upcomingTasks
-  
+
   // Filter by provider accounts
   if (selectedProviders.value.length === 0) {
     // If no providers are selected, only show tasks without a providerAccountId
     tasks = tasks.filter(task => !task.providerAccountId)
   } else if (connectedAccounts.value.length > 0) {
-    tasks = tasks.filter(task => 
+    tasks = tasks.filter(task =>
       !task.providerAccountId || // Include tasks without provider
       selectedProviders.value.includes(task.providerAccountId)
     )
   }
-  
+
   return tasks.slice(0, 5)
 })
 
 const overdueTasks = computed(() => {
   // Filter by provider first
   let tasks = tasksStore.overdueTasks
-  
+
   // Filter by provider accounts
   if (selectedProviders.value.length === 0) {
     // If no providers are selected, only show tasks without a providerAccountId
     tasks = tasks.filter(task => !task.providerAccountId)
   } else if (connectedAccounts.value.length > 0) {
-    tasks = tasks.filter(task => 
+    tasks = tasks.filter(task =>
       !task.providerAccountId || // Include tasks without provider
       selectedProviders.value.includes(task.providerAccountId)
     )
   }
-  
+
   return tasks.slice(0, 5)
 })
 
 const filteredTasks = computed(() => {
   let result = [] as Task[]
-  
+
   // First filter by tab
   if (activeTab.value === 'all') {
     result = [...tasksStore.tasks]
   } else {
     result = tasksStore.tasks.filter(task => task.status === activeTab.value)
   }
-  
+
   // Filter by provider accounts
   if (selectedProviders.value.length === 0) {
     // If no providers are selected, only show tasks without a providerAccountId
     result = result.filter(task => !task.providerAccountId)
   } else if (connectedAccounts.value.length > 0) {
-    result = result.filter(task => 
+    result = result.filter(task =>
       !task.providerAccountId || // Include tasks without provider
       selectedProviders.value.includes(task.providerAccountId)
     )
   }
-  
+
   // Then apply additional filters
-  
+
   // By status
   if (selectedStatus.value.length > 0) {
     result = result.filter(task => selectedStatus.value.includes(task.status))
   }
-  
+
   // By type
   if (selectedTypes.value.length > 0) {
     result = result.filter(task => selectedTypes.value.includes(task.type))
   }
-  
+
   // By tags
   if (selectedTags.value.length > 0) {
-    result = result.filter(task => 
+    result = result.filter(task =>
       selectedTags.value.some(tag => task.tags.includes(tag))
     )
   }
-  
+
   // By projects
   if (selectedProjects.value.length > 0) {
-    result = result.filter(task => 
+    result = result.filter(task =>
       task.relatedProjects && selectedProjects.value.some(id => task.relatedProjects!.includes(id))
     )
   }
-  
-    // By assignee
+
+  // By assignee
   if (selectedAssignees.value.length > 0) {
-    result = result.filter(task => 
+    result = result.filter(task =>
       task.assignedTo && selectedAssignees.value.includes(task.assignedTo)
     )
   }
-  
+
   // By search
   if (search.value) {
     const searchLower = search.value.toLowerCase()
-    result = result.filter(task => 
-      task.title.toLowerCase().includes(searchLower) || 
+    result = result.filter(task =>
+      task.title.toLowerCase().includes(searchLower) ||
       (task.description && task.description.toLowerCase().includes(searchLower))
     )
   }
-  
+
   // Sort by due date and priority
   result.sort((a, b) => {
     // First by priority
     const priorityDiff = a.priority - b.priority
-    if (priorityDiff !== 0) return priorityDiff
-    
+    if (priorityDiff !== 0) { return priorityDiff }
+
     // Then by due date
-    if (!a.dueDate && !b.dueDate) return 0
-    if (!a.dueDate) return 1
-    if (!b.dueDate) return -1
+    if (!a.dueDate && !b.dueDate) { return 0 }
+    if (!a.dueDate) { return 1 }
+    if (!b.dueDate) { return -1 }
     return a.dueDate.getTime() - b.dueDate.getTime()
   })
-  
+
   return result
 })
 
 // Helper functions
 const formatDate = (date: Date | null | undefined) => {
-  if (!date) return ''
+  if (!date) { return '' }
   return new Date(date).toLocaleDateString()
 }
 
 const getDaysOverdue = (date: Date | null | undefined) => {
-  if (!date) return 0
+  if (!date) { return 0 }
   const now = new Date()
   const diff = now.getTime() - new Date(date).getTime()
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
 const getDueDateColor = (date: Date | null | undefined) => {
-  if (!date) return 'grey'
-  
+  if (!date) { return 'grey' }
+
   const now = new Date()
   const dueDate = new Date(date)
-  
+
   if (dueDate < now) {
     return 'error'
   }
-  
+
   const diff = dueDate.getTime() - now.getTime()
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-  
+
   if (days <= 1) {
     return 'error'
   } else if (days <= 3) {
@@ -678,14 +680,14 @@ const openTask = (task: Task) => {
 const createTask = async (taskData: Partial<Task>) => {
   formLoading.value = true
   formError.value = ''
-  
+
   try {
   // Check if the task should be created with a provider
-  const taskDataAny = taskData as any;
-  if (taskDataAny.storageProvider && taskDataAny.storageProvider !== 'organizer') {
+    const taskDataAny = taskData as any
+    if (taskDataAny.storageProvider && taskDataAny.storageProvider !== 'organizer') {
     // Find the provider account
-    const account = integrationAccounts.value.find(a => a.id === taskDataAny.storageProvider)
-      
+      const account = integrationAccounts.value.find(a => a.id === taskDataAny.storageProvider)
+
       if (account) {
         // Create in provider
         await tasksStore.createTaskWithProvider(taskData, account.id)
@@ -697,7 +699,7 @@ const createTask = async (taskData: Partial<Task>) => {
       // Regular creation in Firestore
       await tasksStore.createTask(taskData)
     }
-    
+
     addDialog.value = false
   } catch (error: any) {
     formError.value = error.message || 'Failed to create task'
@@ -707,11 +709,11 @@ const createTask = async (taskData: Partial<Task>) => {
 }
 
 const updateTask = async (taskData: Partial<Task>) => {
-  if (!selectedTask.value) return
-  
+  if (!selectedTask.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     // Check if this is a provider-synced task
     if (selectedTask.value.providerId && selectedTask.value.providerAccountId) {
@@ -721,7 +723,7 @@ const updateTask = async (taskData: Partial<Task>) => {
       // Regular update
       await tasksStore.updateTask(selectedTask.value.id, taskData)
     }
-    
+
     taskDialog.value = false
   } catch (error: any) {
     formError.value = error.message || 'Failed to update task'
@@ -731,11 +733,11 @@ const updateTask = async (taskData: Partial<Task>) => {
 }
 
 const deleteTask = async () => {
-  if (!selectedTask.value) return
-  
+  if (!selectedTask.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     // Check if this is a provider-synced task
     if (selectedTask.value.providerId && selectedTask.value.providerAccountId) {
@@ -745,7 +747,7 @@ const deleteTask = async () => {
       // Regular delete
       await tasksStore.deleteTask(selectedTask.value.id)
     }
-    
+
     taskDialog.value = false
     selectedTask.value = null
   } catch (error: any) {
@@ -756,11 +758,11 @@ const deleteTask = async () => {
 }
 
 const completeTask = async () => {
-  if (!selectedTask.value) return
-  
+  if (!selectedTask.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     // Check if this is a provider-synced task
     if (selectedTask.value.providerId && selectedTask.value.providerAccountId) {
@@ -770,7 +772,7 @@ const completeTask = async () => {
       // Regular complete
       await tasksStore.markComplete(selectedTask.value.id)
     }
-    
+
     taskDialog.value = false
   } catch (error: any) {
     formError.value = error.message || 'Failed to complete task'
@@ -787,11 +789,11 @@ const isExpanded = (taskId: string): boolean => {
   return expandedTasks.has(taskId)
 }
 
-function allLoadedTaskIds(): Set<string> {
-  return new Set(tasksStore.tasks.map((t) => t.id))
+function allLoadedTaskIds (): Set<string> {
+  return new Set(tasksStore.tasks.map(t => t.id))
 }
 
-function applyTasksExpandedFromUserSettings() {
+function applyTasksExpandedFromUserSettings () {
   expandedTasks.clear()
   const merged = mergeTasksUiSettings(authStore.currentUser?.settings?.tasksUi)
   const valid = allLoadedTaskIds()
@@ -803,7 +805,7 @@ function applyTasksExpandedFromUserSettings() {
 
 let persistTasksExpandedTimer: ReturnType<typeof setTimeout> | null = null
 
-function schedulePersistTasksExpanded() {
+function schedulePersistTasksExpanded () {
   if (!tasksUiReady.value || !authStore.currentUser) {
     return
   }
@@ -818,7 +820,7 @@ function schedulePersistTasksExpanded() {
       const merged = mergeTasksUiSettings(authStore.currentUser?.settings?.tasksUi)
       const payload: TasksUiSettings = {
         ...merged,
-        expandedTaskIds: ids,
+        expandedTaskIds: ids
       }
       await authStore.updateUserSettings({ tasksUi: payload })
     } catch (e) {
@@ -841,7 +843,7 @@ const toggleExpand = (taskId: string) => {
 const addSubtask = async (parentTask: Task) => {
   // Open a dialog that pre-fills the parent task
   selectedTask.value = null // Clear selected task to avoid confusion
-  
+
   // Create a placeholder for the new subtask and set the parent
   const newSubtaskData: Partial<Task> = {
     title: '',
@@ -852,14 +854,14 @@ const addSubtask = async (parentTask: Task) => {
     tags: [...(parentTask.tags || [])],
     relatedProjects: [...(parentTask.relatedProjects || [])]
   }
-  
+
   // Open the add dialog with the subtask data
   tasksStore.setSubtaskParent(parentTask)
   addDialog.value = true
 }
 
 const taskIdsFingerprint = computed(() =>
-  [...tasksStore.tasks.map((t) => t.id)].sort().join('\0'),
+  [...tasksStore.tasks.map(t => t.id)].sort().join('\0')
 )
 
 watch(taskIdsFingerprint, () => {
@@ -880,76 +882,76 @@ watch(taskIdsFingerprint, () => {
 const processedTasks = computed(() => {
   // Use filteredTasks as the source
   const tasks = filteredTasks.value
-  
+
   // Create a map of parent IDs to child tasks
   const taskMap = new Map<string, Task[]>()
-  
+
   // First, group all tasks by their parent ID
   // Handle both parentTask field and parent field from Google Tasks
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     // Check for parentTask (internal app field) or parent (Google Tasks field)
-    const parentId = task.parentTask || task.parent;
-    
+    const parentId = task.parentTask || task.parent
+
     if (parentId) {
       if (!taskMap.has(parentId)) {
         taskMap.set(parentId, [])
       }
-      const childTasks = taskMap.get(parentId);
+      const childTasks = taskMap.get(parentId)
       if (childTasks) {
-        childTasks.push(task);
+        childTasks.push(task)
       }
     }
   })
-  
+
   // Also index tasks by their ID for subtask lookup
   const taskById = new Map<string, Task>()
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     taskById.set(task.id, task)
   })
-  
+
   // Function to check if a task has subtasks based on the subtasks array
   const hasSubtasks = (taskId: string): boolean => {
     const task = taskById.get(taskId)
-    if (!task) return false
-    
+    if (!task) { return false }
+
     // Check if this task has any subtasks defined
-    return (task.subtasks && task.subtasks.length > 0) || 
+    return (task.subtasks && task.subtasks.length > 0) ||
       // Or if any task references this as parent
       (taskMap.has(taskId) && taskMap.get(taskId)!.length > 0)
   }
-  
+
   // Function to recursively process tasks with their levels
-  function processTasksRecursively(
-    parentId: string | null, 
-    level: number, 
+  function processTasksRecursively (
+    parentId: string | null,
+    level: number,
     result: Array<Task & { level: number, hasSubtasks: boolean }>
   ) {
     // Get tasks for this level
-    const levelTasks = parentId === null 
+    const levelTasks = parentId === null
       ? tasks.filter(t => !t.parentTask) // Top-level tasks
       : taskMap.get(parentId) || [] // Child tasks
-    
+
     // Process each task at this level
-    levelTasks.forEach(task => {
+    levelTasks.forEach((task) => {
       // Add the task with its level info
       const processedTask = {
         ...task,
         level,
         hasSubtasks: hasSubtasks(task.id)
       }
-      
+
       result.push(processedTask)
-      
+
       // If this task has children and is expanded, recursively process them
       if (hasSubtasks(task.id) && isExpanded(task.id)) {
         // Look for tasks that reference this as parent
         if (taskMap.has(task.id)) {
           processTasksRecursively(task.id, level + 1, result)
         }
-        
+
         // Also look for tasks in the subtasks array that are in our index
         if (task.subtasks) {
-          task.subtasks.forEach(subtaskId => {
+          task.subtasks.forEach((subtaskId) => {
             const subtask = taskById.get(subtaskId)
             if (subtask && !subtask.parentTask) {
               // Add this subtask
@@ -960,7 +962,7 @@ const processedTasks = computed(() => {
                 hasSubtasks: hasSubtasks(subtask.id)
               }
               result.push(processedSubtask)
-              
+
               // Process this subtask's children if expanded
               if (hasSubtasks(subtask.id) && isExpanded(subtask.id)) {
                 processTasksRecursively(subtask.id, level + 2, result)
@@ -971,7 +973,7 @@ const processedTasks = computed(() => {
       }
     })
   }
-  
+
   // Start with an empty result and process from top level (null parent, level 0)
   const result: Array<Task & { level: number, hasSubtasks: boolean }> = []
   // Only show hierarchical structure in All Tasks tab
@@ -981,7 +983,7 @@ const processedTasks = computed(() => {
   } else {
     // In other tabs, just show flat list of tasks without hierarchy
     // Filter out subtasks that should be under parent tasks
-    tasks.filter(t => !t.parentTask && !t.parent).forEach(task => {
+    tasks.filter(t => !t.parentTask && !t.parent).forEach((task) => {
       result.push({
         ...task,
         level: 0,
@@ -989,15 +991,15 @@ const processedTasks = computed(() => {
       })
     })
   }
-  
+
   return result
 })
 
 const tasksPageSizeSelectItems = computed(() =>
-  TASKS_PAGE_SIZE_OPTIONS.map((n) => ({
+  TASKS_PAGE_SIZE_OPTIONS.map(n => ({
     title: String(n),
-    value: n,
-  })),
+    value: n
+  }))
 )
 
 const tasksPageSizeNorm = computed(() => normalizeTasksPageSize(tasksPageSize.value))
@@ -1008,35 +1010,35 @@ const clampedTaskPage = computed(() =>
   clampTaskListPageIndex(
     tasksCurrentPage.value,
     processedTasks.value.length,
-    tasksPageSizeNorm.value,
-  ),
+    tasksPageSizeNorm.value
+  )
 )
 
 const totalTaskPages = computed(() =>
-  taskListTotalPages(totalTaskRows.value, tasksPageSizeNorm.value),
+  taskListTotalPages(totalTaskRows.value, tasksPageSizeNorm.value)
 )
 
 const pagedProcessedTasks = computed(() =>
-  sliceTaskListPage(processedTasks.value, tasksCurrentPage.value, tasksPageSizeNorm.value),
+  sliceTaskListPage(processedTasks.value, tasksCurrentPage.value, tasksPageSizeNorm.value)
 )
 
 const hasPrevTaskPage = computed(() => clampedTaskPage.value > 0)
 
 const hasNextTaskPage = computed(() => clampedTaskPage.value < totalTaskPages.value - 1)
 
-function commitTasksPageSize(raw: unknown) {
+function commitTasksPageSize (raw: unknown) {
   tasksPageSize.value = normalizeTasksPageSize(raw)
   tasksCurrentPage.value = 0
 }
 
-function loadPreviousTaskPage() {
+function loadPreviousTaskPage () {
   if (!hasPrevTaskPage.value) {
     return
   }
   tasksCurrentPage.value -= 1
 }
 
-function loadNextTaskPage() {
+function loadNextTaskPage () {
   if (!hasNextTaskPage.value) {
     return
   }
@@ -1052,7 +1054,7 @@ watch(
     if (next !== tasksCurrentPage.value) {
       tasksCurrentPage.value = next
     }
-  },
+  }
 )
 
 watch(
@@ -1064,17 +1066,17 @@ watch(
     selectedTags,
     selectedProjects,
     selectedAssignees,
-    selectedProviders,
+    selectedProviders
   ],
   () => {
     tasksCurrentPage.value = 0
   },
-  { deep: true },
+  { deep: true }
 )
 
 // Helper functions for task row display
 const getTaskRowClasses = (task: Task & { level: number, hasSubtasks: boolean }) => {
-  return { 
+  return {
     'text-decoration-line-through': task.status === 'completed',
     'task-parent': task.hasSubtasks,
     'task-child': task.level > 0
@@ -1082,7 +1084,7 @@ const getTaskRowClasses = (task: Task & { level: number, hasSubtasks: boolean })
 }
 
 const getTaskRowStyle = (task: Task & { level: number, hasSubtasks: boolean }) => {
-  return { 
+  return {
     cursor: 'pointer',
     backgroundColor: task.level > 0 ? `rgba(0, 0, 0, ${0.03 * task.level})` : ''
   }

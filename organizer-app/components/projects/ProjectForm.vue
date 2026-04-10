@@ -6,14 +6,14 @@ v-form(
 )
   v-card
     v-card-title {{ isEdit ? $t('projects.edit') : $t('projects.createProject') }}
-    
+
     v-card-text
       v-alert(
         v-if="error"
         type="error"
         class="mb-4"
       ) {{ error }}
-      
+
       // Project title field
       v-text-field(
         v-model="title"
@@ -23,14 +23,14 @@ v-form(
         :prepend-icon="icon"
         class="mb-4"
       )
-      
+
       // Preview card (wrapped in a div to avoid recursive updates)
       div.preview-wrapper.mb-4
         v-card(:color="color" class="pa-2")
           v-card-title.d-flex.align-center
             v-icon(:color="shouldUseWhiteText ? 'white' : 'black'" size="large" class="mr-2") {{ icon }}
             span(:class="shouldUseWhiteText ? 'text-white' : 'text-black'") {{ previewTitle }}
-      
+
       v-row
         v-col(cols="12" md="6")
           v-select(
@@ -45,7 +45,7 @@ v-form(
               div
                 v-avatar(:color="item.value" size="24" class="mr-2")
                 span {{ item.text }}
-            
+
             template(v-slot:item="{ item, props }")
               v-list-item(
                 v-bind="props"
@@ -53,21 +53,21 @@ v-form(
               )
                 template(v-slot:prepend)
                   v-avatar(:color="item.raw.value" size="24")
-        
+
         v-col(cols="12" md="6")
           icon-selector(
             v-model="icon"
             :color="color"
             :label="$t('common.icon')"
           )
-      
+
       v-textarea(
         v-model="description"
         :label="$t('projects.description')"
         rows="3"
         prepend-icon="mdi-text-box"
       )
-      
+
       v-select(
         v-model="status"
         :items="statusOptions"
@@ -82,7 +82,7 @@ v-form(
           v-chip(:color="getStatusColor(item.value)" size="small")
             v-icon(start size="small") {{ getStatusIcon(item.value) }}
             span {{ item.text }}
-      
+
       v-select(
         v-model="priority"
         :label="$t('projects.priority')"
@@ -97,7 +97,7 @@ v-form(
           v-chip(:color="getPriorityColor(item.value)" size="small")
             v-icon(start size="small") mdi-flag
             span {{ item.text }}
-      
+
       v-row
         v-col(cols="12" md="6")
           v-menu(
@@ -118,7 +118,7 @@ v-form(
               v-model="dueDate"
               @update:model-value="dueDateMenu = false"
             )
-        
+
         v-col(cols="12")
           v-card(class="pa-3" elevation="1")
             v-card-title.px-0.d-flex.align-center
@@ -134,8 +134,8 @@ v-form(
               track-color="grey-lighten-3"
             )
             v-progress-linear(
-              :model-value="progress" 
-              height="22" 
+              :model-value="progress"
+              height="22"
               :color="color || 'primary'"
               bg-color="grey-lighten-4"
               rounded
@@ -143,7 +143,7 @@ v-form(
             )
               template(v-slot:default="{ value }")
                 strong {{ Math.round(value) }}%
-      
+
       v-combobox(
         v-model="tags"
         :label="$t('projects.tags')"
@@ -153,7 +153,7 @@ v-form(
         closable-chips
         prepend-icon="mdi-tag-multiple"
       )
-      
+
       v-select(
         v-model="members"
         :items="availablePeople"
@@ -164,7 +164,7 @@ v-form(
         multiple
         chips
       )
-      
+
       v-select(
         v-model="stakeholders"
         :items="availablePeople"
@@ -175,7 +175,7 @@ v-form(
         multiple
         chips
       )
-    
+
     v-card-actions
       v-spacer
       v-btn(
@@ -198,6 +198,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
+import { useUnsavedChanges } from '~/composables/useUnsavedChanges'
 import IconSelector from '~/components/common/IconSelector.vue'
 import type { Project } from '~/types/models'
 import { requiredTrimmed } from '~/utils/validation'
@@ -219,11 +220,13 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'delete'])
 
+const { setNavigationDirty } = useUnsavedChanges()
+
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const { t } = useI18n()
 
-const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
+const form = ref<{ validate:() => Promise<{ valid: boolean }> } | null>(null)
 const valid = ref(false)
 const dueDateMenu = ref(false)
 
@@ -240,6 +243,12 @@ const color = ref(props.project?.color || 'primary')
 const tags = ref(props.project?.tags || [])
 const members = ref(props.project?.members || [])
 const stakeholders = ref(props.project?.stakeholders || [])
+
+watch(
+  [title, description, status, priority, dueDate, progress, icon, color, tags, members, stakeholders],
+  () => { setNavigationDirty(true) },
+  { deep: true }
+)
 
 // Status, priority and color options
 const statusOptions = computed(() => [
@@ -273,7 +282,7 @@ const colorOptions = computed(() => [
   { text: t('common.colorLightBlue'), value: 'light-blue' },
   { text: t('common.colorGreen'), value: 'green' },
   { text: t('common.colorAmber'), value: 'amber' },
-  { text: t('common.colorDeepOrange'), value: 'deep-orange' },
+  { text: t('common.colorDeepOrange'), value: 'deep-orange' }
 ])
 
 // Validation rules
@@ -285,7 +294,7 @@ const rules = {
 const isEdit = computed(() => !!props.project)
 
 const dueDateFormatted = computed(() => {
-  if (!dueDate.value) return ''
+  if (!dueDate.value) { return '' }
   return new Date(dueDate.value).toLocaleDateString()
 })
 
@@ -339,24 +348,24 @@ const previewTitle = computed(() => title.value || t('projects.newProject'))
 const shouldUseWhiteText = computed(() => {
   // These colors are known to be light
   const lightColors = [
-    'light-blue', 
-    'light-green', 
-    'amber', 
-    'yellow', 
-    'lime', 
-    'grey-lighten-3', 
+    'light-blue',
+    'light-green',
+    'amber',
+    'yellow',
+    'lime',
+    'grey-lighten-3',
     'grey-lighten-4',
     'grey-lighten-5'
-  ];
-  
-  return !lightColors.some(c => color.value.includes(c));
+  ]
+
+  return !lightColors.some(c => color.value.includes(c))
 })
 
 // Submit function
 const submit = async () => {
   const result = await form.value?.validate()
-  if (!result?.valid) return
-  
+  if (!result?.valid) { return }
+
   // Create project data with null instead of undefined for dueDate
   const projectData: Partial<Project> = {
     title: title.value.trim(),
@@ -371,7 +380,8 @@ const submit = async () => {
     members: members.value,
     stakeholders: stakeholders.value
   }
-  
+
+  setNavigationDirty(false)
   emit('submit', projectData)
 }
 
@@ -389,8 +399,8 @@ watch(() => props.project, (newProject) => {
     description.value = newProject.description || ''
     status.value = newProject.status
     priority.value = newProject.priority
-    dueDate.value = newProject.dueDate 
-      ? new Date(newProject.dueDate).toISOString().substr(0, 10) 
+    dueDate.value = newProject.dueDate
+      ? new Date(newProject.dueDate).toISOString().substr(0, 10)
       : null
     progress.value = newProject.progress
     icon.value = newProject.icon || 'mdi-folder-outline'

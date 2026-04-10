@@ -20,7 +20,7 @@
               dense
               :disabled="!!personId"
               required
-            ></v-autocomplete>
+            />
           </v-col>
 
           <!-- Title -->
@@ -32,7 +32,7 @@
               outlined
               dense
               required
-            ></v-text-field>
+            />
           </v-col>
 
           <!-- Icon & Color -->
@@ -58,19 +58,19 @@
               outlined
               dense
             >
-              <template v-slot:selection="{ item }">
+              <template #selection="{ item }">
                 <div>
-                  <v-avatar :color="item.value" size="24" class="mr-2"></v-avatar>
+                  <v-avatar :color="item.value" size="24" class="mr-2" />
                   <span>{{ item.text }}</span>
                 </div>
               </template>
-              <template v-slot:item="{ item, props }">
+              <template #item="{ item, props }">
                 <v-list-item
                   v-bind="props"
                   :prepend-avatar="undefined"
                 >
-                  <template v-slot:prepend>
-                    <v-avatar :color="item.raw.value" size="24"></v-avatar>
+                  <template #prepend>
+                    <v-avatar :color="item.raw.value" size="24" />
                   </template>
                 </v-list-item>
               </template>
@@ -85,17 +85,17 @@
               outlined
               auto-grow
               rows="3"
-            ></v-textarea>
+            />
           </v-col>
         </v-row>
       </v-form>
     </v-card-text>
 
-    <v-divider></v-divider>
+    <v-divider />
 
     <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn 
+      <v-spacer />
+      <v-btn
         text
         @click="$emit('close')"
       >
@@ -116,14 +116,15 @@
 <script>
 import { useCoachingStore } from '~/stores/coaching'
 import { usePeopleStore } from '~/stores/people'
+import { useUnsavedChanges } from '~/composables/useUnsavedChanges'
 import IconSelector from '~/components/common/IconSelector.vue'
 
 export default {
+  name: 'CoachingForm',
   components: {
     IconSelector
   },
-  name: 'CoachingForm',
-  
+
   props: {
     coaching: {
       type: Object,
@@ -134,8 +135,8 @@ export default {
       default: ''
     }
   },
-  
-  data() {
+
+  data () {
     return {
       valid: true,
       loading: false,
@@ -144,35 +145,35 @@ export default {
         title: '',
         notes: '',
         icon: 'mdi-account-heart',
-        color: 'primary',
+        color: 'primary'
       },
       rules: {
-        required: [v => !!v || 'This field is required'],
+        required: [v => !!v || 'This field is required']
       }
     }
   },
-  
+
   computed: {
-    isEdit() {
+    isEdit () {
       return !!this.coaching
     },
-    
-    coachingStore() {
+
+    coachingStore () {
       return useCoachingStore()
     },
-    
-    peopleStore() {
+
+    peopleStore () {
       return usePeopleStore()
     },
-    
-    peopleOptions() {
+
+    peopleOptions () {
       return this.peopleStore.people.map(person => ({
         text: `${person.firstName} ${person.lastName}`,
         value: person.id
       }))
     },
-    
-    iconOptions() {
+
+    iconOptions () {
       return [
         { text: 'Account Heart', value: 'mdi-account-heart' },
         { text: 'Star', value: 'mdi-star' },
@@ -185,23 +186,30 @@ export default {
         { text: 'Target', value: 'mdi-target' },
         { text: 'Heart', value: 'mdi-heart' },
         { text: 'Flash', value: 'mdi-flash' },
-        { text: 'Bookmark', value: 'mdi-bookmark' },
+        { text: 'Bookmark', value: 'mdi-bookmark' }
       ]
     },
-    
-    colorOptions() {
+
+    colorOptions () {
       return [
         { text: 'Primary', value: 'primary' },
         { text: 'Secondary', value: 'secondary' },
         { text: 'Success', value: 'success' },
         { text: 'Info', value: 'info' },
         { text: 'Warning', value: 'warning' },
-        { text: 'Error', value: 'error' },
+        { text: 'Error', value: 'error' }
       ]
     }
   },
-  
-  created() {
+
+  watch: {
+    formData: {
+      deep: true,
+      handler () { useUnsavedChanges().setNavigationDirty(true) }
+    }
+  },
+
+  created () {
     // Initialize the form data from the coaching prop
     if (this.coaching) {
       this.formData = {
@@ -212,27 +220,27 @@ export default {
         color: this.coaching.color
       }
     }
-    
+
     // Load people store if needed
     if (this.peopleStore.people.length === 0) {
       this.peopleStore.fetchPeople()
     }
-    
+
     // Set personId from prop if specified
     if (this.personId && !this.formData.personId) {
       this.formData.personId = this.personId
     }
   },
-  
+
   methods: {
-    async save() {
-      if (!this.$refs.form.validate()) return
-      
+    async save () {
+      if (!this.$refs.form.validate()) { return }
+
       this.loading = true
-      
+
       try {
         let savedRecord
-        
+
         if (this.isEdit) {
           // Update existing record
           savedRecord = await this.coachingStore.updateRecord(this.coaching.id, this.formData)
@@ -240,7 +248,8 @@ export default {
           // Create new record
           savedRecord = await this.coachingStore.createRecord(this.formData)
         }
-        
+
+        useUnsavedChanges().setNavigationDirty(false)
         this.$emit('saved', savedRecord.id)
       } catch (error) {
         console.error('Error saving coaching record:', error)

@@ -3,14 +3,14 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4(data-test="behaviors-heading") {{ $t('behaviors.title') }}
-      
+
   v-row
     v-col(cols="12" md="4")
       v-card(class="mb-4")
         v-card-title(class="bg-primary text-white") {{ $t('behaviors.doWell') }}
-        v-card-text(v-if="loading") 
+        v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-three-line" v-for="i in 3" :key="i")
-        v-card-text(v-else-if="doWellBehaviors.length === 0") 
+        v-card-text(v-else-if="doWellBehaviors.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('behaviors.noBehaviors') }}
         v-card-text(v-else)
           v-list(data-test="behaviors-list")
@@ -37,13 +37,13 @@ v-container(fluid)
             @click="openAddBehavior('doWell')"
             data-test="add-behavior-btn"
           ) {{ $t('behaviors.add') }}
-    
+
     v-col(cols="12" md="4")
       v-card(class="mb-4")
         v-card-title(class="bg-info text-white") {{ $t('behaviors.wantToDoBetter') }}
-        v-card-text(v-if="loading") 
+        v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-three-line" v-for="i in 3" :key="i")
-        v-card-text(v-else-if="wantToDoBetterBehaviors.length === 0") 
+        v-card-text(v-else-if="wantToDoBetterBehaviors.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('behaviors.noBehaviors') }}
         v-card-text(v-else)
           v-list
@@ -70,13 +70,13 @@ v-container(fluid)
             @click="openAddBehavior('wantToDoBetter')"
             data-test="add-behavior-btn"
           ) {{ $t('behaviors.add') }}
-    
+
     v-col(cols="12" md="4")
       v-card(class="mb-4")
         v-card-title(class="bg-warning text-white") {{ $t('behaviors.needToImprove') }}
-        v-card-text(v-if="loading") 
+        v-card-text(v-if="loading")
           v-skeleton-loader(type="list-item-three-line" v-for="i in 3" :key="i")
-        v-card-text(v-else-if="needToImproveBehaviors.length === 0") 
+        v-card-text(v-else-if="needToImproveBehaviors.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('behaviors.noBehaviors') }}
         v-card-text(v-else)
           v-list
@@ -105,6 +105,8 @@ v-container(fluid)
           ) {{ $t('behaviors.add') }}
 
   // View/Edit Dialog
+  AdminCard(:items="behaviorStore.behaviors" class="mt-2")
+
   v-dialog(v-model="behaviorDialog" max-width="600px" data-test="behavior-dialog")
     behavior-form(
       v-if="behaviorDialog"
@@ -114,7 +116,7 @@ v-container(fluid)
       @submit="updateBehavior"
       @delete="deleteBehavior"
     )
-  
+
   // Add Dialog
   v-dialog(v-model="addDialog" max-width="600px" data-test="add-behavior-dialog")
     behavior-form(
@@ -143,7 +145,7 @@ v-container(fluid)
               template(v-slot:text)
                 div.mb-2 {{ plan.description }}
                 v-chip(:color="getStatusColor(plan.status)" class="mr-2") {{ plan.status }}
-                
+
                 div.mt-3.d-flex.justify-space-between
                   v-btn(
                     size="small"
@@ -159,9 +161,9 @@ v-container(fluid)
                     prepend-icon="mdi-delete"
                     @click="deleteActionPlan(plan.id)"
                   ) {{ $t('common.delete') }}
-                  
+
           v-alert(v-else type="info" variant="tonal") {{ $t('behaviors.noActionPlans') }}
-        
+
         v-card-actions
           v-spacer
           v-btn(
@@ -190,13 +192,13 @@ const selectedBehavior = ref<Behavior | null>(null)
 const newBehaviorType = ref<'doWell' | 'wantToDoBetter' | 'needToImprove'>('wantToDoBetter')
 
 // Get behaviors by type
-const doWellBehaviors = computed(() => 
+const doWellBehaviors = computed(() =>
   behaviorStore.getBehaviorsByType('doWell')
 )
-const wantToDoBetterBehaviors = computed(() => 
+const wantToDoBetterBehaviors = computed(() =>
   behaviorStore.getBehaviorsByType('wantToDoBetter')
 )
-const needToImproveBehaviors = computed(() => 
+const needToImproveBehaviors = computed(() =>
   behaviorStore.getBehaviorsByType('needToImprove')
 )
 
@@ -226,13 +228,13 @@ const openAddBehavior = (type: 'doWell' | 'wantToDoBetter' | 'needToImprove') =>
 const createBehavior = async (behaviorData: Partial<Behavior>) => {
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     const newBehavior = {
       ...behaviorData,
       type: newBehaviorType.value
     }
-    
+
     await behaviorStore.createBehavior(newBehavior)
     addDialog.value = false
   } catch (error: any) {
@@ -243,11 +245,11 @@ const createBehavior = async (behaviorData: Partial<Behavior>) => {
 }
 
 const updateBehavior = async (behaviorData: Partial<Behavior>) => {
-  if (!selectedBehavior.value) return
-  
+  if (!selectedBehavior.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await behaviorStore.updateBehavior(selectedBehavior.value.id, behaviorData)
     behaviorDialog.value = false
@@ -259,11 +261,11 @@ const updateBehavior = async (behaviorData: Partial<Behavior>) => {
 }
 
 const deleteBehavior = async () => {
-  if (!selectedBehavior.value) return
-  
+  if (!selectedBehavior.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await behaviorStore.deleteBehavior(selectedBehavior.value.id)
     behaviorDialog.value = false
@@ -287,8 +289,8 @@ const editActionPlan = (plan: ActionPlan) => {
 }
 
 const deleteActionPlan = async (planId: string) => {
-  if (!selectedBehavior.value) return
-  
+  if (!selectedBehavior.value) { return }
+
   try {
     await behaviorStore.deleteActionPlan(selectedBehavior.value.id, planId)
   } catch (error: any) {
@@ -298,8 +300,8 @@ const deleteActionPlan = async (planId: string) => {
 
 // Helper functions
 const getActionPlanStatus = (plan: ActionPlan) => {
-  return plan.status === 'completed' 
-    ? 'Completed' 
+  return plan.status === 'completed'
+    ? 'Completed'
     : plan.status === 'inProgress'
       ? 'In Progress'
       : 'Pending'

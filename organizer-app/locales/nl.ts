@@ -52,6 +52,12 @@ export default {
     colorGreen: 'Groen',
     colorAmber: 'Amber',
     colorDeepOrange: 'Donkeroranje',
+    dataModel: 'Datamodel',
+    exportCsv: 'Exporteer CSV',
+    deleteTitle: 'Verwijderen bevestigen',
+    deleteReferencesWarning: 'Dit record wordt gebruikt door de volgende items. Het verwijderen kan deze records beïnvloeden:',
+    deleteAnyway: 'Toch verwijderen',
+    noReferences: 'Geen andere records verwijzen naar dit item.'
   },
   auth: {
     login: 'Inloggen',
@@ -70,7 +76,7 @@ export default {
     settings: 'Instellingen',
     rememberMe: 'Onthoud mij',
     noAccount: 'Nog geen account?',
-    haveAccount: 'Al een account?',
+    haveAccount: 'Al een account?'
   },
   settings: {
     darkMode: 'Donkere Modus',
@@ -163,7 +169,7 @@ export default {
     disabled: 'Uitgeschakeld',
     integrationModuleActive: '{module} is verbonden en actief in deze module.',
     integrationModulePending: '{module} staat aan voor dit account — verbind het account om het te gebruiken.',
-    integrationModuleOff: '{module} staat niet aan voor deze integratie.',
+    integrationModuleOff: '{module} staat niet aan voor deze integratie.'
   },
   behaviors: {
     title: 'Gedragingen',
@@ -180,7 +186,7 @@ export default {
     addActionPlan: 'Actieplan toevoegen',
     noActionPlans: 'Nog geen actieplannen',
     noBehaviors: 'Nog geen gedragingen',
-    progress: 'Voortgang',
+    progress: 'Voortgang'
   },
   calendar: {
     title: 'Agenda',
@@ -201,7 +207,7 @@ export default {
     noCalendarIntegrations: 'Geen agenda-integraties verbonden',
     connectCalendarIntegration: 'Om je agenda-evenementen te bekijken, verbind een agenda-integratie in je profielinstellingen.',
     goToProfile: 'Ga naar Profiel',
-    noEvents: 'Geen evenementen voor deze dag',
+    noEvents: 'Geen evenementen voor deze dag'
   },
   meetings: {
     filters: 'Filters',
@@ -263,7 +269,7 @@ export default {
     removeWarning: 'Alle data die met deze categorie verbonden is wordt ontkoppeld. Informatie over deze koppelingen gaat permanent verloren.',
     typeAgreed: 'Typ \"agreed\" om te bevestigen',
     cancelRemove: 'Terug',
-    confirmRemove: 'Categorie verwijderen',
+    confirmRemove: 'Categorie verwijderen'
   },
   people: {
     title: 'Personen',
@@ -289,7 +295,7 @@ export default {
     byRole: 'Op rol',
     allPeople: 'Alle personen',
     syncContacts: 'Contacten Synchroniseren',
-    accounts: 'Verbonden Accounts',
+    accounts: 'Verbonden Accounts'
   },
   teams: {
     title: 'Teams',
@@ -341,7 +347,7 @@ export default {
     assignInboxHelp: 'Deze berichten matchen niet op e-mailadres van een lid. Wijs toe aan een kolom (optioneel project).',
     assign: 'Toewijzen',
     assignToColumn: 'Persoon (kolom)',
-    assigned: 'Toewijzing opgeslagen',
+    assigned: 'Toewijzing opgeslagen'
   },
   projects: {
     title: 'Projecten',
@@ -419,7 +425,7 @@ export default {
     priorityLow: 'Laag',
     priorityMedium: 'Gemiddeld',
     priorityHigh: 'Hoog',
-    priorityUrgent: 'Urgent',
+    priorityUrgent: 'Urgent'
   },
   tasks: {
     title: 'Taken',
@@ -462,7 +468,7 @@ export default {
       showing: '{shown} van {total} taken',
       pageOf: 'Pagina {page} van {pages}',
       previous: 'Vorige',
-      next: 'Volgende',
+      next: 'Volgende'
     },
     expandSubtasks: 'Subtaken uitklappen',
     collapseSubtasks: 'Subtaken inklappen',
@@ -474,7 +480,7 @@ export default {
     priorityHigh: 'Hoog',
     priorityMedium: 'Gemiddeld',
     priorityLow: 'Laag',
-    priorityLowest: 'Laagst',
+    priorityLowest: 'Laagst'
   },
   dashboard: {
     title: 'Dashboard',
@@ -488,7 +494,7 @@ export default {
     projectStatus: 'Projectstatus',
     viewMore: 'Meer bekijken',
     noUpcomingTasks: 'Geen aankomende taken',
-    noMeetingsToday: 'Geen vergaderingen vandaag',
+    noMeetingsToday: 'Geen vergaderingen vandaag'
   },
   network: {
     title: 'Netwerk',
@@ -519,7 +525,7 @@ export default {
       team: 'Teams synchroniseren\u2026',
       coaching: 'Coaching synchroniseren\u2026',
       edges: 'Relaties synchroniseren\u2026',
-      done: 'Klaar',
+      done: 'Klaar'
     },
     noPath: 'Geen pad gevonden tussen deze knooppunten',
     pathLength: '{n} stappen',
@@ -531,7 +537,7 @@ export default {
       meeting: 'Vergadering',
       team: 'Team',
       coaching: 'Coaching',
-      knowledge: 'Kennis',
+      knowledge: 'Kennis'
     },
     sidebar: {
       nodeTypes: 'Knooppunttypen',
@@ -547,13 +553,13 @@ export default {
       showPath: 'Toon pad',
       timeRange: 'Tijdsbereik',
       displayOptions: 'Weergaveopties',
-      hideOrphans: 'Verberg losse knooppunten',
+      hideOrphans: 'Verberg losse knooppunten'
     },
     timeRange: {
       all: 'Altijd',
       '30d': 'Laatste 30 dagen',
-      '90d': 'Laatste 90 dagen',
-    },
+      '90d': 'Laatste 90 dagen'
+    }
   },
   knowledge: {
     title: 'Kennis',
@@ -584,20 +590,20 @@ export default {
       reason: 'Reden',
       fact: 'Feit',
       insight: 'Inzicht',
-      pattern: 'Patroon',
+      pattern: 'Patroon'
     },
     relationTypes: {
       references: 'Referentie',
       related: 'Gerelateerd',
       contains: 'Bevat',
-      stakeholder: 'Belanghebbende',
+      stakeholder: 'Belanghebbende'
     },
     sources: {
       manual: 'Handmatig',
       ai: 'AI',
       email: 'E-mail',
-      note: 'Notitie',
-    },
+      note: 'Notitie'
+    }
   },
   statistics: {
     title: 'Statistieken',
@@ -608,7 +614,7 @@ export default {
     effortByTaskType: 'Inspanning per taaktype',
     weeklyBalance: 'Wekelijkse balans',
     projectCompletion: 'Projectvoltooiing',
-    behaviorProgress: 'Gedragsvoortgang',
+    behaviorProgress: 'Gedragsvoortgang'
   },
   mail: {
     title: 'Mail',
@@ -663,8 +669,8 @@ export default {
       attachments: 'Bijlagen',
       account: 'Account',
       people: 'Personen-link',
-      actions: 'Acties',
-    },
+      actions: 'Acties'
+    }
   },
   coaching: {
     title: 'Coaching',
@@ -689,7 +695,7 @@ export default {
     noTimelineEntries: 'Nog geen tijdlijn items toegevoegd',
     noRelatedTasks: 'Nog geen gerelateerde taken',
     progressionHistory: 'Voortgangshistorie',
-    historyLog: 'Historielog',
+    historyLog: 'Historielog'
   },
   validation: {
     required: 'Dit veld is verplicht',
@@ -698,7 +704,7 @@ export default {
     maxLength: 'Mag niet meer dan {max} tekens bevatten',
     passwordMatch: 'Wachtwoorden komen niet overeen',
     invalidFormat: 'Ongeldig formaat',
-    dateInPast: 'Datum mag niet in het verleden liggen',
+    dateInPast: 'Datum mag niet in het verleden liggen'
   },
   errors: {
     generic: 'Er is een fout opgetreden. Probeer het opnieuw.',
@@ -707,7 +713,7 @@ export default {
     forbidden: 'U heeft geen toegang tot deze bron.',
     serverError: 'Serverfout. Probeer het later opnieuw.',
     networkError: 'Netwerkfout. Controleer uw verbinding.',
-    validationError: 'Controleer uw invoer en probeer het opnieuw.',
+    validationError: 'Controleer uw invoer en probeer het opnieuw.'
   },
   feedback: {
     button: 'Feedback sturen',
@@ -832,4 +838,4 @@ export default {
     xaiUrl: 'https://x.ai',
     claudeUrl: 'https://console.anthropic.com/settings/keys'
   }
-};
+}

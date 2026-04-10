@@ -36,6 +36,8 @@ v-container(fluid)
           p.text-body-2.text-truncate(v-if="team.description") {{ team.description }}
           p.text-caption.text-medium-emphasis {{ $t('teams.membersCount', { n: team.memberPersonIds.length }) }}
 
+  AdminCard(:items="teamsStore.teams" class="mt-2")
+
   v-dialog(
     :key="createDialogKey"
     v-model="openCreate"
@@ -75,7 +77,7 @@ import { useMailStore } from '~/stores/mail'
 import { useTasksStore } from '~/stores/tasks'
 import {
   buildAllBoardItems,
-  totalAttentionWeight,
+  totalAttentionWeight
 } from '~/composables/useTeamAttentionBoard'
 
 const route = useRoute()
@@ -95,13 +97,13 @@ const newName = ref('')
 const newDescription = ref('')
 const creating = ref(false)
 
-async function openCreateDialog() {
+async function openCreateDialog () {
   createDialogKey.value += 1
   await nextTick()
   openCreate.value = true
 }
 
-function onCreateDialogAfterLeave() {
+function onCreateDialogAfterLeave () {
   const id = pendingNavigateToTeamId.value
   pendingNavigateToTeamId.value = null
   if (id) {
@@ -111,21 +113,21 @@ function onCreateDialogAfterLeave() {
 
 const peopleById = computed(() => {
   const m = new Map<string, (typeof peopleStore.people)[0]>()
-  for (const p of peopleStore.people) m.set(p.id, p)
+  for (const p of peopleStore.people) { m.set(p.id, p) }
   return m
 })
 
 /** teamId -> weighted attention total */
 const scores = ref<Record<string, number>>({})
 
-function attentionColor(score: number | undefined) {
-  if (score == null || Number.isNaN(score)) return 'default'
-  if (score <= 3) return 'success'
-  if (score <= 8) return 'warning'
+function attentionColor (score: number | undefined) {
+  if (score == null || Number.isNaN(score)) { return 'default' }
+  if (score <= 3) { return 'success' }
+  if (score <= 8) { return 'warning' }
   return 'error'
 }
 
-async function refreshScores() {
+async function refreshScores () {
   const teams = teamsStore.teams
   if (!teams.length) {
     scores.value = {}
@@ -141,27 +143,27 @@ async function refreshScores() {
   }
   const o: Record<string, number> = {}
   for (const t of teams) {
-    const members = t.memberPersonIds.map((id) => peopleById.value.get(id)).filter(Boolean) as typeof peopleStore.people
+    const members = t.memberPersonIds.map(id => peopleById.value.get(id)).filter(Boolean) as typeof peopleStore.people
     const meta = teamsStore.mailMetaForTeam(t.id)
     const items = buildAllBoardItems(
       t,
       hasMail ? mailStore.emails : [],
       meta,
       members,
-      tasksStore.tasks,
+      tasksStore.tasks
     )
     o[t.id] = totalAttentionWeight(items)
   }
   scores.value = o
 }
 
-async function submitCreate() {
-  if (!newName.value.trim()) return
+async function submitCreate () {
+  if (!newName.value.trim()) { return }
   creating.value = true
   try {
     const id = await teamsStore.createTeam({
       name: newName.value.trim(),
-      description: newDescription.value.trim() || undefined,
+      description: newDescription.value.trim() || undefined
     })
     newName.value = ''
     newDescription.value = ''

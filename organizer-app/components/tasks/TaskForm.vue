@@ -6,14 +6,14 @@ v-form(
 )
   v-card
     v-card-title {{ isEdit ? $t('tasks.edit') : $t('tasks.addTask') }}
-    
+
     v-card-text
       v-alert(
         v-if="error"
         type="error"
         class="mb-4"
       ) {{ error }}
-      
+
       v-select(
         v-model="storageProvider"
         :items="availableProviders"
@@ -24,7 +24,7 @@ v-form(
         :rules="[rules.required]"
         required
       )
-      
+
       v-text-field(
         v-model="title"
         :label="$t('tasks.title')"
@@ -32,14 +32,14 @@ v-form(
         required
         prepend-icon="mdi-checkbox-marked-outline"
       )
-      
+
       v-textarea(
         v-model="description"
         :label="$t('tasks.description')"
         rows="3"
         prepend-icon="mdi-text-box"
       )
-      
+
       v-select(
         v-model="status"
         :items="statusOptions"
@@ -54,7 +54,7 @@ v-form(
           v-chip(:color="getStatusColor(item.value)" size="small")
             v-icon(start size="small") {{ getStatusIcon(item.value) }}
             span {{ item.text }}
-      
+
       v-select(
         v-model="type"
         :items="typeOptions"
@@ -76,7 +76,7 @@ v-form(
       )
         template(v-slot:selection="{ item }")
           v-chip(:color="getPriorityColor(item.value)" size="small") {{ item.text }}
-      
+
       v-menu(
         v-model="dueDateMenu"
         :close-on-content-click="false"
@@ -95,7 +95,7 @@ v-form(
           v-model="dueDate"
           @update:model-value="dueDateMenu = false"
         )
-      
+
       v-select(
         v-model="assignedTo"
         :items="availablePeople"
@@ -105,7 +105,7 @@ v-form(
         prepend-icon="mdi-account"
         clearable
       )
-      
+
       v-combobox(
         v-model="tags"
         :label="$t('tasks.tags')"
@@ -115,7 +115,7 @@ v-form(
         closable-chips
         prepend-icon="mdi-tag-multiple"
       )
-      
+
       v-select(
         v-model="relatedProjects"
         :items="availableProjects"
@@ -128,19 +128,19 @@ v-form(
       )
 
       // Connections to behaviors and meetings would go here
-      
+
       v-expansion-panels(v-if="isEdit" variant="accordion")
         v-expansion-panel
           v-expansion-panel-title {{ $t('tasks.comments') }}
           v-expansion-panel-text
             template(v-if="comments.length > 0")
               v-card(
-                v-for="comment in comments" 
+                v-for="comment in comments"
                 :key="comment.id"
                 class="mb-2"
                 variant="outlined"
               )
-                v-card-text 
+                v-card-text
                   div.text-subtitle-2 {{ getCommentAuthor(comment) }}
                   div.text-caption.mb-2 {{ formatDate(comment.createdAt) }}
                   div {{ comment.content }}
@@ -150,7 +150,7 @@ v-form(
                     v-icon mdi-pencil
                   v-btn(icon size="small" @click="deleteComment(comment.id)")
                     v-icon mdi-delete
-            
+
             v-textarea(
               v-if="!editingComment"
               v-model="newComment"
@@ -163,16 +163,16 @@ v-form(
               :label="$t('tasks.editComment')"
               rows="2"
             )
-            
+
             v-btn(
               v-if="!editingComment"
-              color="primary" 
+              color="primary"
               :disabled="!newComment"
               @click="addComment"
             ) {{ $t('common.add') }}
             v-btn(
               v-else
-              color="primary" 
+              color="primary"
               :disabled="!editingCommentText"
               @click="saveEditComment"
             ) {{ $t('common.save') }}
@@ -181,14 +181,14 @@ v-form(
               @click="cancelEditComment"
               text
             ) {{ $t('common.cancel') }}
-        
+
         v-expansion-panel
           v-expansion-panel-title {{ $t('tasks.subtasks') }}
           v-expansion-panel-text
             v-list
               template(v-if="subtasks.length > 0")
                 v-list-item(
-                  v-for="subtask in subtasks" 
+                  v-for="subtask in subtasks"
                   :key="subtask.id"
                   :title="subtask.title"
                   :subtitle="subtask.status"
@@ -202,9 +202,9 @@ v-form(
                       v-icon mdi-pencil
                     v-btn(icon size="small" @click="deleteSubtask(subtask.id)")
                       v-icon mdi-delete
-              
+
               v-alert(v-else type="info" variant="tonal") {{ $t('tasks.noSubtasks') }}
-            
+
             v-text-field(
               v-model="newSubtaskTitle"
               :label="$t('tasks.addSubtask')"
@@ -212,11 +212,11 @@ v-form(
               class="mb-2"
             )
             v-btn(
-              color="primary" 
+              color="primary"
               :disabled="!newSubtaskTitle"
               @click="addSubtask"
             ) {{ $t('common.add') }}
-    
+
     v-card-actions
       v-spacer
       v-btn(
@@ -250,6 +250,7 @@ import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
 import { useAuthStore } from '~/stores/auth'
 import { useIntegrationProviders } from '~/composables/useIntegrationProviders'
+import { useUnsavedChanges } from '~/composables/useUnsavedChanges'
 import type { Task, Comment } from '~/types/models'
 import { requiredTrimmed } from '~/utils/validation'
 
@@ -285,13 +286,15 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'delete', 'complete'])
 
+const { setNavigationDirty } = useUnsavedChanges()
+
 const tasksStore = useTasksStore()
 const peopleStore = usePeopleStore()
 const projectsStore = useProjectsStore()
 const authStore = useAuthStore()
 const { t } = useI18n()
 
-const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
+const form = ref<{ validate:() => Promise<{ valid: boolean }> } | null>(null)
 const valid = ref(false)
 const dueDateMenu = ref(false)
 
@@ -307,6 +310,12 @@ const assignedTo = ref(props.task?.assignedTo || '')
 const tags = ref(props.task?.tags || [])
 const relatedProjects = ref(
   props.task?.relatedProjects || (props.initialRelatedProjectIds?.length ? [...props.initialRelatedProjectIds] : [])
+)
+
+watch(
+  [title, description, status, type, priority, dueDate, assignedTo, tags, relatedProjects],
+  () => { setNavigationDirty(true) },
+  { deep: true }
 )
 
 // Get available storage providers
@@ -358,7 +367,7 @@ const rules = {
 const isEdit = computed(() => !!props.task)
 
 const dueDateFormatted = computed(() => {
-  if (!dueDate.value) return ''
+  if (!dueDate.value) { return '' }
   return new Date(dueDate.value).toLocaleDateString()
 })
 
@@ -374,7 +383,7 @@ const availablePeople = computed(() => {
   const filter = props.assigneePersonIdsFilter
   if (filter?.length) {
     const allow = new Set(filter)
-    return list.filter((p) => allow.has(p.id))
+    return list.filter(p => allow.has(p.id))
   }
   return list
 })
@@ -428,23 +437,23 @@ const getCommentAuthor = (comment: Comment) => {
   if (comment.userId === authStore.user?.id) {
     return t('common.you')
   }
-  
+
   const person = peopleStore.getById(comment.userId)
   if (person) {
     return `${person.firstName} ${person.lastName}`
   }
-  
+
   return t('common.unknownUser')
 }
 
 // Comment functions
 const addComment = async () => {
-  if (!props.task || !newComment.value) return
-  
+  if (!props.task || !newComment.value) { return }
+
   try {
     await tasksStore.addComment(props.task.id, newComment.value)
     newComment.value = ''
-    
+
     // Refresh comments
     if (props.task) {
       const task = tasksStore.getById(props.task.id)
@@ -463,11 +472,11 @@ const startEditComment = (comment: Comment) => {
 }
 
 const saveEditComment = async () => {
-  if (!props.task || !editingComment.value) return
-  
+  if (!props.task || !editingComment.value) { return }
+
   try {
     await tasksStore.updateComment(props.task.id, editingComment.value, editingCommentText.value)
-    
+
     // Refresh comments
     if (props.task) {
       const task = tasksStore.getById(props.task.id)
@@ -475,7 +484,7 @@ const saveEditComment = async () => {
         comments.value = task.comments
       }
     }
-    
+
     cancelEditComment()
   } catch (error) {
     console.error('Failed to update comment:', error)
@@ -488,11 +497,11 @@ const cancelEditComment = () => {
 }
 
 const deleteComment = async (commentId: string) => {
-  if (!props.task) return
-  
+  if (!props.task) { return }
+
   try {
     await tasksStore.deleteComment(props.task.id, commentId)
-    
+
     // Refresh comments
     if (props.task) {
       const task = tasksStore.getById(props.task.id)
@@ -507,16 +516,16 @@ const deleteComment = async (commentId: string) => {
 
 // Subtask functions
 const loadSubtasks = async () => {
-  if (!props.task) return
-  
+  if (!props.task) { return }
+
   subtasks.value = props.task.subtasks
     .map(id => tasksStore.getById(id))
     .filter(task => task !== null) as Task[]
 }
 
 const addSubtask = async () => {
-  if (!props.task || !newSubtaskTitle.value) return
-  
+  if (!props.task || !newSubtaskTitle.value) { return }
+
   try {
     await tasksStore.addSubtask(props.task.id, {
       title: newSubtaskTitle.value,
@@ -524,7 +533,7 @@ const addSubtask = async () => {
       priority: priority.value
     })
     newSubtaskTitle.value = ''
-    
+
     // Reload the task to get updated subtasks
     await tasksStore.fetchTask(props.task.id)
     loadSubtasks()
@@ -541,7 +550,7 @@ const editSubtask = (subtaskId: string) => {
 const deleteSubtask = async (subtaskId: string) => {
   try {
     await tasksStore.deleteTask(subtaskId)
-    
+
     // Reload the task to get updated subtasks
     if (props.task) {
       await tasksStore.fetchTask(props.task.id)
@@ -555,8 +564,8 @@ const deleteSubtask = async (subtaskId: string) => {
 // Submit function
 const submit = async () => {
   const result = await form.value?.validate()
-  if (!result?.valid) return
-  
+  if (!result?.valid) { return }
+
   const taskData: Partial<Task> = {
     title: title.value.trim(),
     description: description.value,
@@ -575,7 +584,8 @@ const submit = async () => {
   if (assignedTo.value) {
     taskData.assignedTo = assignedTo.value
   }
-  
+
+  setNavigationDirty(false)
   emit('submit', taskData)
 }
 
@@ -585,25 +595,25 @@ onMounted(async () => {
   if (peopleStore.people.length === 0) {
     await peopleStore.fetchPeople()
   }
-  
+
   if (projectsStore.projects.length === 0) {
     await projectsStore.fetchProjects()
   }
-  
+
   if (props.task) {
     title.value = props.task.title
     description.value = props.task.description || ''
     status.value = props.task.status
     type.value = props.task.type
     priority.value = props.task.priority
-    dueDate.value = props.task.dueDate 
-      ? new Date(props.task.dueDate).toISOString().substr(0, 10) 
+    dueDate.value = props.task.dueDate
+      ? new Date(props.task.dueDate).toISOString().substr(0, 10)
       : null
     assignedTo.value = props.task.assignedTo || ''
     tags.value = [...props.task.tags]
     relatedProjects.value = [...(props.task.relatedProjects || [])]
     comments.value = [...props.task.comments]
-    
+
     // Load subtasks
     loadSubtasks()
   }
@@ -617,7 +627,7 @@ watch(
       assignedTo.value = id
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 watch(
@@ -627,7 +637,7 @@ watch(
       relatedProjects.value = [...ids]
     }
   },
-  { immediate: true, deep: true },
+  { immediate: true, deep: true }
 )
 
 // Watch for changes to the task and update form
@@ -638,8 +648,8 @@ watch(() => props.task, (newTask) => {
     status.value = newTask.status
     type.value = newTask.type
     priority.value = newTask.priority
-    dueDate.value = newTask.dueDate 
-      ? new Date(newTask.dueDate).toISOString().substr(0, 10) 
+    dueDate.value = newTask.dueDate
+      ? new Date(newTask.dueDate).toISOString().substr(0, 10)
       : null
     assignedTo.value = newTask.assignedTo || ''
     tags.value = [...newTask.tags]

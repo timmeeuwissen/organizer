@@ -6,14 +6,14 @@ v-form(
 )
   v-card
     v-card-title {{ isEdit ? $t('people.edit') : $t('people.addPerson') }}
-    
+
     v-card-text
       v-alert(
         v-if="error"
         type="error"
         class="mb-4"
       ) {{ error }}
-      
+
       v-select(
         v-model="storageProvider"
         :items="availableProviders"
@@ -24,7 +24,7 @@ v-form(
         :rules="[rules.required]"
         required
       )
-      
+
       v-row
         v-col(cols="12" sm="6")
           v-text-field(
@@ -34,7 +34,7 @@ v-form(
             required
             prepend-icon="mdi-account"
           )
-        
+
         v-col(cols="12" sm="6")
           v-text-field(
             v-model="lastName"
@@ -43,7 +43,7 @@ v-form(
             required
             prepend-icon="mdi-account"
           )
-      
+
       v-text-field(
         v-model="email"
         :label="$t('people.email')"
@@ -51,31 +51,31 @@ v-form(
         prepend-icon="mdi-email"
         type="email"
       )
-      
+
       v-text-field(
         v-model="phone"
         :label="$t('people.phone')"
         prepend-icon="mdi-phone"
       )
-      
+
       v-text-field(
         v-model="organization"
         :label="$t('people.organization')"
         prepend-icon="mdi-domain"
       )
-      
+
       v-text-field(
         v-model="role"
         :label="$t('people.role')"
         prepend-icon="mdi-briefcase"
       )
-      
+
       v-text-field(
         v-model="team"
         :label="$t('people.team')"
         prepend-icon="mdi-account-group"
       )
-      
+
       v-slider(
         v-if="contactFrequency !== null"
         v-model="contactFrequency"
@@ -86,14 +86,14 @@ v-form(
         :hint="contactFrequencyHint"
         persistent-hint
       )
-      
+
       v-textarea(
         v-model="notes"
         :label="$t('people.notes')"
         rows="3"
         prepend-icon="mdi-note-text"
       )
-    
+
     v-card-actions
       v-spacer
       v-btn(
@@ -112,8 +112,9 @@ v-form(
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useIntegrationProviders } from '~/composables/useIntegrationProviders'
+import { useUnsavedChanges } from '~/composables/useUnsavedChanges'
 import type { Person } from '~/types/models'
 
 const props = defineProps({
@@ -138,6 +139,7 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'delete'])
 
+const { setNavigationDirty } = useUnsavedChanges()
 const form = ref(null)
 const valid = ref(false)
 
@@ -152,6 +154,11 @@ const role = ref(props.person?.role || '')
 const team = ref(props.person?.team || '')
 const contactFrequency = ref(props.person?.contactFrequency || null)
 const notes = ref(props.person?.notes || '')
+
+watch(
+  [storageProvider, firstName, lastName, email, phone, organization, role, team, contactFrequency, notes],
+  () => { setNavigationDirty(true) }
+)
 
 // Get available storage providers
 const { contactProviders } = useIntegrationProviders()
@@ -171,7 +178,7 @@ const contactFrequencyHint = computed(() => {
   if (contactFrequency.value === null || contactFrequency.value === 0) {
     return ''
   }
-  
+
   if (contactFrequency.value === 1) {
     return 'Every day'
   } else if (contactFrequency.value === 7) {
@@ -189,8 +196,8 @@ const contactFrequencyHint = computed(() => {
 
 // Submit function
 const submit = () => {
-  if (!valid.value) return
-  
+  if (!valid.value) { return }
+
   const personData: Partial<Person> = {
     storageProvider: storageProvider.value,
     firstName: firstName.value,
@@ -203,11 +210,12 @@ const submit = () => {
     contactFrequency: contactFrequency.value || undefined,
     notes: notes.value || undefined
   }
-  
+
+  setNavigationDirty(false)
   emit('submit', personData)
 }
 
-function applyPersonOrInitialValues() {
+function applyPersonOrInitialValues () {
   if (props.person) {
     firstName.value = props.person.firstName
     lastName.value = props.person.lastName
@@ -226,16 +234,16 @@ function applyPersonOrInitialValues() {
   if (!iv) {
     return
   }
-  if (iv.firstName != null) firstName.value = iv.firstName
-  if (iv.lastName != null) lastName.value = iv.lastName
-  if (iv.email != null) email.value = iv.email
-  if (iv.phone != null) phone.value = iv.phone
-  if (iv.organization != null) organization.value = iv.organization
-  if (iv.role != null) role.value = iv.role
-  if (iv.team != null) team.value = iv.team
-  if (iv.storageProvider != null) storageProvider.value = iv.storageProvider
-  if (iv.contactFrequency != null) contactFrequency.value = iv.contactFrequency
-  if (iv.notes != null) notes.value = iv.notes
+  if (iv.firstName != null) { firstName.value = iv.firstName }
+  if (iv.lastName != null) { lastName.value = iv.lastName }
+  if (iv.email != null) { email.value = iv.email }
+  if (iv.phone != null) { phone.value = iv.phone }
+  if (iv.organization != null) { organization.value = iv.organization }
+  if (iv.role != null) { role.value = iv.role }
+  if (iv.team != null) { team.value = iv.team }
+  if (iv.storageProvider != null) { storageProvider.value = iv.storageProvider }
+  if (iv.contactFrequency != null) { contactFrequency.value = iv.contactFrequency }
+  if (iv.notes != null) { notes.value = iv.notes }
 }
 
 onMounted(() => {
