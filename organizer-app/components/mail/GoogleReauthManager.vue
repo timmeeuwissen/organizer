@@ -26,22 +26,21 @@ const mailStore = useMailStore()
 // Computed properties
 const connectedAccounts = computed(() => mailStore.getConnectedAccounts)
 const needsReauth = computed(() => {
-  // Check if any connected account needs reauthorization
-  for (const account of connectedAccounts.value) {
-    if (account.type === 'google' && 
-        accountsNeedingReauth.value[account.id]) {
-      currentAccount.value = account
-      return true
-    }
-  }
-  return false
+  return connectedAccounts.value.some(
+    account => account.type === 'google' && accountsNeedingReauth.value[account.id]
+  )
 })
 
-// Watch for changes in accounts needing reauth
+// Watch for changes in accounts needing reauth — set currentAccount and open dialog
 watch(needsReauth, (value) => {
-  if (value && reauthDialog.value) {
-    console.log('Opening reauth dialog for', currentAccount.value.oauthData.email)
-    reauthDialog.value.open()
+  if (value) {
+    const account = connectedAccounts.value.find(
+      a => a.type === 'google' && accountsNeedingReauth.value[a.id]
+    )
+    if (account) { currentAccount.value = account }
+    if (reauthDialog.value) {
+      reauthDialog.value.open()
+    }
   }
 })
 
@@ -54,11 +53,11 @@ onMounted(() => {
 })
 
 // Handle successful reauthorization
-function handleAuthSuccess(tokens) {
-  if (!currentAccount.value) return
-  
+function handleAuthSuccess (tokens) {
+  if (!currentAccount.value) { return }
+
   console.log('Google reauthorization successful for', currentAccount.value.oauthData.email)
-  
+
   // Update the account with new tokens
   const updatedAccount = {
     ...currentAccount.value,
@@ -72,28 +71,28 @@ function handleAuthSuccess(tokens) {
       tokenExpiry: tokens.tokenExpiry || new Date(Date.now() + 3600 * 1000)
     }
   }
-  
+
   // Save the updated account to the auth store
   if (authStore.currentUser && authStore.currentUser.settings) {
     const accounts = [...(authStore.currentUser.settings.integrationAccounts || [])]
     const accountIndex = accounts.findIndex(acc => acc.id === currentAccount.value?.id)
-    
+
     if (accountIndex >= 0) {
       // Update the account
       accounts[accountIndex] = updatedAccount
-      
+
       // Update the user settings
       authStore.updateUserSettings({
         ...authStore.currentUser.settings,
         integrationAccounts: accounts
       })
-      
+
       // Clear reauthorization status
       clearReauthorizationStatus(currentAccount.value)
-      
+
       // Reset current account
       currentAccount.value = null
-      
+
       // Refresh the mail data
       mailStore.fetchEmails()
     }
@@ -101,7 +100,7 @@ function handleAuthSuccess(tokens) {
 }
 
 // Handle reauthorization error
-function handleAuthError(error) {
+function handleAuthError (error) {
   console.error('Google reauthorization error:', error)
   // Could show a notification here
 }

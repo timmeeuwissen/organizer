@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { getDocs, addDoc } from 'firebase/firestore'
 import type { GraphNode, GraphEdge } from '~/types/models/network'
 
 // Mock Firebase — the store imports these
@@ -14,19 +15,19 @@ vi.mock('firebase/firestore', () => ({
   deleteDoc: vi.fn(() => Promise.resolve()),
   doc: vi.fn(() => ({})),
   serverTimestamp: vi.fn(() => new Date('2026-01-01')),
-  getFirestore: vi.fn(() => ({})),
+  getFirestore: vi.fn(() => ({}))
 }))
 
 vi.mock('~/stores/auth', () => ({
-  useAuthStore: () => ({ user: { id: 'user-1' } }),
+  useAuthStore: () => ({ user: { id: 'user-1' } })
 }))
 
 // Helpers
 const now = new Date('2026-01-01')
-function node(id: string, type: GraphNode['type'], entityId: string | null = id): GraphNode {
+function node (id: string, type: GraphNode['type'], entityId: string | null = id): GraphNode {
   return { id, userId: 'user-1', type, entityId, label: id, createdAt: now, updatedAt: now }
 }
-function edge(id: string, sourceId: string, targetId: string, type = 'related'): GraphEdge {
+function edge (id: string, sourceId: string, targetId: string, type = 'related'): GraphEdge {
   return { id, userId: 'user-1', sourceId, targetId, type, createdAt: now, updatedAt: now }
 }
 
@@ -101,7 +102,7 @@ describe('useNetworkStore — getters', () => {
     const { useNetworkStore } = await import('~/stores/network')
     const store = useNetworkStore()
     store.nodes = [node('a', 'person'), node('b', 'project'), node('c', 'task')]
-    store.edges = [edge('e1', 'a', 'b')]   // no edge to c
+    store.edges = [edge('e1', 'a', 'b')] // no edge to c
     const path = store.shortestPath('a', 'c')
     expect(path).toEqual([])
   })
@@ -118,8 +119,6 @@ describe('useNetworkStore — getters', () => {
   })
 })
 
-import { getDocs, addDoc } from 'firebase/firestore'
-
 describe('useNetworkStore — syncFromStores', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -130,14 +129,15 @@ describe('useNetworkStore — syncFromStores', () => {
     vi.mock('~/stores/people', () => ({
       usePeopleStore: () => ({
         people: [{ id: 'p1', firstName: 'Alice', lastName: 'Smith', relatedProjects: [], relatedTasks: [] }],
-      }),
+        fetchPeople: vi.fn().mockResolvedValue(undefined),
+      })
     }))
-    vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [] }) }))
-    vi.mock('~/stores/tasks', () => ({ useTasksStore: () => ({ tasks: [] }) }))
-    vi.mock('~/stores/behaviors', () => ({ useBehaviorsStore: () => ({ behaviors: [] }) }))
-    vi.mock('~/stores/meetings', () => ({ useMeetingsStore: () => ({ meetings: [] }) }))
-    vi.mock('~/stores/teams', () => ({ useTeamsStore: () => ({ teams: [] }) }))
-    vi.mock('~/stores/coaching', () => ({ useCoachingStore: () => ({ records: [] }) }))
+    vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [], fetchProjects: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/tasks', () => ({ useTasksStore: () => ({ tasks: [], fetchTasks: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/behaviors', () => ({ useBehaviorsStore: () => ({ behaviors: [], fetchBehaviors: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/meetings', () => ({ useMeetingsStore: () => ({ meetings: [], fetchMeetings: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/teams', () => ({ useTeamsStore: () => ({ teams: [], fetchTeams: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/coaching', () => ({ useCoachingStore: () => ({ records: [], fetchRecords: vi.fn().mockResolvedValue(undefined) }) }))
 
     vi.mocked(getDocs).mockResolvedValue({ docs: [] } as any)
     vi.mocked(addDoc).mockResolvedValue({ id: 'node-abc' } as any)
@@ -158,20 +158,21 @@ describe('useNetworkStore — syncFromStores', () => {
     vi.mock('~/stores/people', () => ({
       usePeopleStore: () => ({
         people: [{ id: 'p1', firstName: 'Alice', lastName: 'Smith', relatedProjects: [], relatedTasks: [] }],
-      }),
+        fetchPeople: vi.fn().mockResolvedValue(undefined),
+      })
     }))
-    vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [] }) }))
-    vi.mock('~/stores/tasks', () => ({ useTasksStore: () => ({ tasks: [] }) }))
-    vi.mock('~/stores/behaviors', () => ({ useBehaviorsStore: () => ({ behaviors: [] }) }))
-    vi.mock('~/stores/meetings', () => ({ useMeetingsStore: () => ({ meetings: [] }) }))
-    vi.mock('~/stores/teams', () => ({ useTeamsStore: () => ({ teams: [] }) }))
-    vi.mock('~/stores/coaching', () => ({ useCoachingStore: () => ({ records: [] }) }))
+    vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [], fetchProjects: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/tasks', () => ({ useTasksStore: () => ({ tasks: [], fetchTasks: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/behaviors', () => ({ useBehaviorsStore: () => ({ behaviors: [], fetchBehaviors: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/meetings', () => ({ useMeetingsStore: () => ({ meetings: [], fetchMeetings: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/teams', () => ({ useTeamsStore: () => ({ teams: [], fetchTeams: vi.fn().mockResolvedValue(undefined) }) }))
+    vi.mock('~/stores/coaching', () => ({ useCoachingStore: () => ({ records: [], fetchRecords: vi.fn().mockResolvedValue(undefined) }) }))
 
     vi.mocked(getDocs).mockResolvedValue({
       docs: [{
         id: 'existing-node',
-        data: () => ({ type: 'person', entityId: 'p1', label: 'Alice', userId: 'user-1' }),
-      }],
+        data: () => ({ type: 'person', entityId: 'p1', label: 'Alice', userId: 'user-1' })
+      }]
     } as any)
 
     const { useNetworkStore } = await import('~/stores/network')
