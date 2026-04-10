@@ -49,13 +49,13 @@ export interface ContactProvider {
    * @returns True if authenticated
    */
   isAuthenticated(): boolean
-  
+
   /**
    * Authenticate with the contact provider
    * @returns True if authentication successful
    */
   authenticate(): Promise<boolean>
-  
+
   /**
    * Fetch contacts with pagination and search support
    * @param query Query parameters for filtering contacts
@@ -63,28 +63,28 @@ export interface ContactProvider {
    * @returns Contact fetch result with pagination information
    */
   fetchContacts(query?: ContactQuery, pagination?: ContactPagination): Promise<ContactFetchResult>
-  
+
   /**
    * Create a contact
    * @param contact Contact to create
    * @returns True if creation successful and the created contact ID
    */
   createContact(contact: Partial<Person>): Promise<{success: boolean, contactId?: string}>
-  
+
   /**
    * Update a contact
    * @param contact Contact to update
    * @returns True if update was successful
    */
   updateContact(contactId: string, updates: Partial<Person>): Promise<boolean>
-  
+
   /**
    * Delete a contact
    * @param contactId ID of contact to delete
    * @returns True if deletion was successful
    */
   deleteContact(contactId: string): Promise<boolean>
-  
+
   /**
    * Get available contact groups or folders
    * @returns List of contact groups

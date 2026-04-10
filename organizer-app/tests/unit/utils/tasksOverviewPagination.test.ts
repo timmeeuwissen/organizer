@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   clampTaskListPageIndex,
   taskListTotalPages,
-  sliceTaskListPage,
+  sliceTaskListPage
 } from '~/utils/tasksOverviewPagination'
 
 describe('clampTaskListPageIndex', () => {

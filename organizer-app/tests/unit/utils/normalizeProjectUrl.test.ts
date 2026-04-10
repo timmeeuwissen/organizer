@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   normalizeProjectUrl,
-  isValidHttpUrlForProject,
+  isValidHttpUrlForProject
 } from '~/utils/normalizeProjectUrl'
 
 describe('normalizeProjectUrl', () => {

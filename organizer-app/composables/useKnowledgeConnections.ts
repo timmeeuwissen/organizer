@@ -17,7 +17,7 @@ export interface KnowledgeConnectionRow {
   }>
 }
 
-export function useKnowledgeConnections(
+export function useKnowledgeConnections (
   nodeType: NodeType,
   entityId: Ref<string> | string
 ) {
@@ -37,18 +37,18 @@ export function useKnowledgeConnections(
             entityId: e.entityId,
             relationType: e.relationType,
             label: e.label,
-            edgeId: e.id,
-          })),
+            edgeId: e.id
+          }))
       }))
   })
 
-  async function addKnowledge(
+  async function addKnowledge (
     nodeData: Omit<KnowledgeNode, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'type' | 'entityId'>,
     relationType: EdgeType,
     label?: string
   ): Promise<KnowledgeNode | undefined> {
     const node = await knowledgeStore.create(nodeData)
-    if (!node) return undefined
+    if (!node) { return undefined }
     try {
       await knowledgeStore.connect(node.id, nodeType, id.value, relationType, label)
     } catch (error) {
@@ -63,22 +63,22 @@ export function useKnowledgeConnections(
     return node
   }
 
-  async function editKnowledge(
+  async function editKnowledge (
     knowledgeId: string,
     partial: Partial<Pick<KnowledgeNode, 'content' | 'subtype' | 'certainty' | 'certaintyDate' | 'tags' | 'label'>>
   ) {
     await knowledgeStore.update(knowledgeId, partial)
   }
 
-  async function editRelation(edgeId: string, relationType: EdgeType, label?: string) {
+  async function editRelation (edgeId: string, relationType: EdgeType, label?: string) {
     await knowledgeStore.updateConnection(edgeId, relationType, label)
   }
 
-  async function disconnect(edgeId: string) {
+  async function disconnect (edgeId: string) {
     await knowledgeStore.disconnect(edgeId)
   }
 
-  async function removeKnowledge(knowledgeId: string) {
+  async function removeKnowledge (knowledgeId: string) {
     await knowledgeStore.delete(knowledgeId)
   }
 

@@ -1,5 +1,5 @@
-import type { AIAnalysisResult, AIIntegrationData, AIAnalysisEntity } from '~/types/models/aiIntegration'
 import type { AIProvider } from './AIProvider'
+import type { AIAnalysisResult, AIIntegrationData, AIAnalysisEntity } from '~/types/models/aiIntegration'
 import { useAuthStore } from '~/stores/auth'
 
 /**
@@ -7,24 +7,24 @@ import { useAuthStore } from '~/stores/auth'
  * Contains common functionality shared by all providers
  */
 export abstract class BaseAIProvider implements AIProvider {
-  protected apiKey: string;
-  
+  protected apiKey: string
+
   /**
    * Constructor
    * @param integration The integration data
    */
-  constructor(public integration: AIIntegrationData) {
-    this.apiKey = integration.apiKey || '';
+  constructor (public integration: AIIntegrationData) {
+    this.apiKey = integration.apiKey || ''
     if (!this.apiKey) {
-      console.warn(`${this.constructor.name} initialized without an API key`);
+      console.warn(`${this.constructor.name} initialized without an API key`)
     }
   }
-  
+
   /**
    * Get the standard system prompt for text analysis.
    * This is the default prompt used by all AI providers.
    */
-  protected getAnalysisSystemPrompt(): string {
+  protected getAnalysisSystemPrompt (): string {
     return `
       You are an AI assistant that analyzes text and extracts structured information.
       Extract the following types of entities from the provided text:
@@ -54,40 +54,40 @@ export abstract class BaseAIProvider implements AIProvider {
       Provide confidence scores between 0 and 1 indicating how confident you are in each entity extraction.
       If a field is not applicable or not mentioned, omit it from the details.
       Return only the JSON with no additional text.
-    `;
+    `
   }
-  
+
   /**
    * Test if the connection to the AI provider is working by validating the API key
    * Each provider must implement this method
    */
   abstract testConnection(): Promise<boolean>;
-  
+
   /**
    * Analyze text using the AI provider
    * Each provider must implement this method
    */
   abstract analyzeText(text: string): Promise<AIAnalysisResult>;
-  
+
   /**
    * Validate an entity and ensure it conforms to our expected format
    * @param entity The entity to validate
    * @param type The type of entity
    */
-  protected validateEntity(entity: any, type: 'person' | 'project' | 'task' | 'behavior' | 'meeting'): AIAnalysisEntity {
+  protected validateEntity (entity: any, type: 'person' | 'project' | 'task' | 'behavior' | 'meeting'): AIAnalysisEntity {
     return {
-      type: type,
+      type,
       name: entity.name || 'Unnamed ' + type,
       confidence: typeof entity.confidence === 'number' ? entity.confidence : 0.5,
       details: entity.details || {}
-    };
+    }
   }
-  
+
   /**
    * Process the AI response to ensure it matches our AIAnalysisResult format
    * @param result The raw result from the AI provider
    */
-  protected processAnalysisResult(result: any): AIAnalysisResult {
+  protected processAnalysisResult (result: any): AIAnalysisResult {
     // Create a default result structure
     const processed: AIAnalysisResult = {
       people: [],
@@ -96,135 +96,135 @@ export abstract class BaseAIProvider implements AIProvider {
       behaviors: [],
       meetings: [],
       summary: result.summary || 'No summary available'
-    };
-    
+    }
+
     // Process people
     if (Array.isArray(result.people)) {
-      processed.people = result.people.map((person: any) => this.validateEntity(person, 'person'));
+      processed.people = result.people.map((person: any) => this.validateEntity(person, 'person'))
     }
-    
+
     // Process projects
     if (Array.isArray(result.projects)) {
-      processed.projects = result.projects.map((project: any) => this.validateEntity(project, 'project'));
+      processed.projects = result.projects.map((project: any) => this.validateEntity(project, 'project'))
     }
-    
+
     // Process tasks
     if (Array.isArray(result.tasks)) {
       processed.tasks = result.tasks.map((task: any) => {
-        const validTask = this.validateEntity(task, 'task');
-        
+        const validTask = this.validateEntity(task, 'task')
+
         // Convert date strings to Date objects for special fields
         if (validTask.details.dueDate && typeof validTask.details.dueDate === 'string') {
           try {
-            validTask.details.dueDate = new Date(validTask.details.dueDate);
+            validTask.details.dueDate = new Date(validTask.details.dueDate)
           } catch (e) {
-            console.error('Error converting task dueDate to Date:', e);
-            delete validTask.details.dueDate;
+            console.error('Error converting task dueDate to Date:', e)
+            delete validTask.details.dueDate
           }
         }
-        
-        return validTask;
-      });
+
+        return validTask
+      })
     }
-    
+
     // Process behaviors
     if (Array.isArray(result.behaviors)) {
-      processed.behaviors = result.behaviors.map((behavior: any) => this.validateEntity(behavior, 'behavior'));
+      processed.behaviors = result.behaviors.map((behavior: any) => this.validateEntity(behavior, 'behavior'))
     }
-    
+
     // Process meetings
     if (Array.isArray(result.meetings)) {
       processed.meetings = result.meetings.map((meeting: any) => {
-        const validMeeting = this.validateEntity(meeting, 'meeting');
-        
+        const validMeeting = this.validateEntity(meeting, 'meeting')
+
         // Convert date strings to Date objects for special fields
         if (validMeeting.details.startTime && typeof validMeeting.details.startTime === 'string') {
           try {
-            validMeeting.details.startTime = new Date(validMeeting.details.startTime);
+            validMeeting.details.startTime = new Date(validMeeting.details.startTime)
           } catch (e) {
-            console.error('Error converting meeting startTime to Date:', e);
-            delete validMeeting.details.startTime;
+            console.error('Error converting meeting startTime to Date:', e)
+            delete validMeeting.details.startTime
           }
         }
-        
+
         if (validMeeting.details.endTime && typeof validMeeting.details.endTime === 'string') {
           try {
-            validMeeting.details.endTime = new Date(validMeeting.details.endTime);
+            validMeeting.details.endTime = new Date(validMeeting.details.endTime)
           } catch (e) {
-            console.error('Error converting meeting endTime to Date:', e);
-            delete validMeeting.details.endTime;
+            console.error('Error converting meeting endTime to Date:', e)
+            delete validMeeting.details.endTime
           }
         }
-        
-        return validMeeting;
-      });
+
+        return validMeeting
+      })
     }
-    
-    return processed;
+
+    return processed
   }
-  
+
   /**
    * Update the last used timestamp for this integration
    * Safely handles both client and server contexts
    */
-  async updateLastUsed(): Promise<void> {
+  async updateLastUsed (): Promise<void> {
     try {
       // First check if we can access Pinia - if not, we might be in a server context
       // This is a safety measure to prevent errors in SSR or API routes
-      let isClientContext = false;
+      let isClientContext = false
       try {
         // This will throw if we're not in a client context with Pinia available
-        const { getActivePinia } = await import('pinia');
-        isClientContext = !!getActivePinia();
+        const { getActivePinia } = await import('pinia')
+        isClientContext = !!getActivePinia()
       } catch (error) {
-        console.warn('Pinia not available, skipping lastUsed update (probably server context)');
-        return; // Exit early if we're in a server context
+        console.warn('Pinia not available, skipping lastUsed update (probably server context)')
+        return // Exit early if we're in a server context
       }
-      
-      if (!isClientContext) return;
-      
+
+      if (!isClientContext) { return }
+
       // We're in a client context, proceed with store operations
-      const authStore = useAuthStore();
-      
-      if (!authStore.currentUser?.settings?.aiIntegrations) return;
+      const authStore = useAuthStore()
+
+      if (!authStore.currentUser?.settings?.aiIntegrations) { return }
 
       // Find the integration and update its lastUsed timestamp
-      const integrations = [...authStore.currentUser.settings.aiIntegrations];
-      const index = integrations.findIndex(i => i.provider === this.integration.provider);
-      
+      const integrations = [...authStore.currentUser.settings.aiIntegrations]
+      const index = integrations.findIndex(i => i.provider === this.integration.provider)
+
       if (index >= 0) {
         integrations[index] = {
           ...integrations[index],
           lastUsed: new Date()
-        };
-        
+        }
+
         // Update user settings
         await authStore.updateUserSettings({
           aiIntegrations: integrations
-        });
+        })
       }
     } catch (error) {
-      console.error('Error updating lastUsed timestamp:', error);
+      console.error('Error updating lastUsed timestamp:', error)
       // Non-critical error, we can continue without updating the timestamp
     }
   }
-  
+
   /**
    * Helper method to log detailed error information
    * @param error The error to log
    * @param context Additional context about the error
    */
-  protected logError(error: any, context: string): void {
-    console.error(`${context}:`, error);
-    
+  protected logError (error: any, context: string): void {
+    console.error(`${context}:`, error)
+
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      console.error(`Network error: Unable to reach API server. This could be due to network connectivity issues, CORS restrictions, or the API endpoint being unavailable.`);
+      console.error('Network error: Unable to reach API server. This could be due to network connectivity issues, CORS restrictions, or the API endpoint being unavailable.')
     } else if (error instanceof SyntaxError) {
-      console.error(`Parsing error: The API returned a response that could not be parsed as valid JSON.`);
+      console.error('Parsing error: The API returned a response that could not be parsed as valid JSON.')
     } else if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
+      console.error(`Error: ${error.message}`)
       if (error.stack) {
-        console.error('Error stack:', error.stack);
+        console.error('Error stack:', error.stack)
       }
     }
   }

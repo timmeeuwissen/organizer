@@ -3,11 +3,11 @@ div
   // Tabs for different entity types
   v-tabs(:modelValue="modelValue" @update:modelValue="$emit('update:modelValue', $event)" color="primary")
     v-tab(
-      v-for="tab in tabs" 
-      :key="tab.value" 
+      v-for="tab in tabs"
+      :key="tab.value"
       :value="tab.value"
       :class="{ 'error-tab': hasTabErrors(tab.value) }"
-    ) 
+    )
       v-icon(start) {{ tab.icon }}
       | {{ tab.label }} ({{ tab.count }})
       v-icon(
@@ -16,7 +16,7 @@ div
         color="error"
         class="ml-1"
       ) mdi-alert-circle
-  
+
   v-window(:modelValue="modelValue" @update:modelValue="$emit('update:modelValue', $event)")
     v-window-item(
       v-for="tab in tabs"
@@ -27,7 +27,7 @@ div
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -44,14 +44,14 @@ const props = defineProps({
     default: () => ({})
     // Format: { people: ['id1', 'id2'], projects: ['id3'] }
   }
-});
+})
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue'])
 
 // Direct binding now used with :modelValue and @update:modelValue
 
-function hasTabErrors(tabValue) {
-  return props.invalidItems[tabValue] && props.invalidItems[tabValue].length > 0;
+function hasTabErrors (tabValue) {
+  return props.invalidItems[tabValue] && props.invalidItems[tabValue].length > 0
 }
 </script>
 

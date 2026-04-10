@@ -3,11 +3,11 @@
  * @module utils/api/calendarProviders
  */
 
-import type { IntegrationAccount } from '~/types/models'
 import { GoogleCalendarProvider } from './GoogleCalendarProvider'
 import { Office365CalendarProvider } from './Office365CalendarProvider'
 import { ExchangeCalendarProvider } from './ExchangeCalendarProvider'
 import type { CalendarProvider } from './CalendarProvider'
+import type { IntegrationAccount } from '~/types/models'
 
 export * from './CalendarProvider'
 export * from './BaseCalendarProvider'
@@ -20,7 +20,7 @@ export * from './ExchangeCalendarProvider'
  * @param account The integration account
  * @returns Provider implementation for the account type
  */
-export function getCalendarProvider(account: IntegrationAccount): CalendarProvider {
+export function getCalendarProvider (account: IntegrationAccount): CalendarProvider {
   switch (account.type) {
     case 'google':
       return new GoogleCalendarProvider(account)
@@ -38,6 +38,6 @@ export function getCalendarProvider(account: IntegrationAccount): CalendarProvid
  * Alias for getCalendarProvider for backward compatibility
  * @deprecated Use getCalendarProvider instead
  */
-export function createCalendarProvider(account: IntegrationAccount): CalendarProvider {
+export function createCalendarProvider (account: IntegrationAccount): CalendarProvider {
   return getCalendarProvider(account)
 }

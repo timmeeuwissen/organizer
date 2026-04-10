@@ -23,21 +23,21 @@ export interface UserData {
 }
 
 // Initialize Firebase Admin if not already initialized
-function initializeFirebaseAdmin() {
+function initializeFirebaseAdmin () {
   if (getApps().length === 0) {
     const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-    
+
     if (!serviceAccount) {
       console.error('Firebase service account not provided')
       throw new Error('Firebase service account not provided')
     }
-    
+
     try {
       // Parse the service account JSON
       const serviceAccountObj = JSON.parse(
         Buffer.from(serviceAccount, 'base64').toString()
       )
-      
+
       initializeApp({
         credential: cert(serviceAccountObj)
       })
@@ -49,15 +49,15 @@ function initializeFirebaseAdmin() {
 }
 
 // Get user data from Firestore
-async function getUserData(uid: string) {
+async function getUserData (uid: string) {
   try {
     const db = getFirestore()
     const userDoc = await db.collection('users').doc(uid).get()
-    
+
     if (!userDoc.exists) {
       return null
     }
-    
+
     return {
       id: userDoc.id,
       ...userDoc.data()
@@ -71,36 +71,36 @@ async function getUserData(uid: string) {
 /**
  * Get the authentication state from the request
  */
-export async function useAuthState(event: H3Event) {
+export async function useAuthState (event: H3Event) {
   try {
     // Initialize Firebase Admin
     initializeFirebaseAdmin()
-    
+
     // Get authorization header
     const authHeader = event.node.req.headers.authorization
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return { authenticated: false, user: null }
     }
-    
+
     // Extract the token
     const token = authHeader.split('Bearer ')[1]
-    
+
     if (!token) {
       return { authenticated: false, user: null }
     }
-    
+
     try {
       // Verify the token
       const decodedToken = await getAuth().verifyIdToken(token)
-      
+
       // Get the user from Firestore to include settings and other data
       const userData = await getUserData(decodedToken.uid)
-      
+
       if (!userData) {
         return { authenticated: true, user: null }
       }
-      
+
       return {
         authenticated: true,
         user: userData
@@ -118,23 +118,23 @@ export async function useAuthState(event: H3Event) {
 /**
  * Check if a user is authenticated and get their user record
  */
-export async function requireAuth(event: H3Event): Promise<UserData> {
+export async function requireAuth (event: H3Event): Promise<UserData> {
   const { authenticated, user } = await useAuthState(event)
-  
+
   if (!authenticated || !user) {
     throw createError({
       statusCode: 401,
       message: 'Unauthorized'
     })
   }
-  
+
   return user
 }
 
 /**
  * Create an error with the specified status code and message
  */
-export function createError({ statusCode, message }: { statusCode: number; message: string }) {
+export function createError ({ statusCode, message }: { statusCode: number; message: string }) {
   const error = new Error(message) as Error & { statusCode: number }
   error.statusCode = statusCode
   return error

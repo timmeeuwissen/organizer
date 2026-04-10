@@ -18,12 +18,12 @@ export type MicrosoftTokenFailure = {
   details?: unknown
 }
 
-function tokenEndpoint(tenantId: string): string {
+function tokenEndpoint (tenantId: string): string {
   const tenant = tenantId.trim() || 'common'
   return `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`
 }
 
-export async function exchangeMicrosoftRefreshToken(
+export async function exchangeMicrosoftRefreshToken (
   refreshToken: string,
   clientId: string,
   clientSecret: string,
@@ -33,14 +33,14 @@ export async function exchangeMicrosoftRefreshToken(
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
+      Accept: 'application/json'
     },
     body: new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
       refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
+      grant_type: 'refresh_token'
+    })
   })
 
   let data: Record<string, unknown> = {}
@@ -60,8 +60,8 @@ export async function exchangeMicrosoftRefreshToken(
         httpStatus: response.status,
         error: typeof data.error === 'string' ? data.error : 'oauth_error',
         error_description: typeof data.error_description === 'string' ? data.error_description : undefined,
-        details: data,
-      },
+        details: data
+      }
     }
   }
 
@@ -72,8 +72,8 @@ export async function exchangeMicrosoftRefreshToken(
         httpStatus: 502,
         error: 'invalid_response',
         error_description: 'Missing access_token in Microsoft token response',
-        details: data,
-      },
+        details: data
+      }
     }
   }
 
@@ -87,7 +87,7 @@ export async function exchangeMicrosoftRefreshToken(
       expires_in: expiresIn,
       scope: typeof data.scope === 'string' ? data.scope : undefined,
       token_type: tokenType,
-      refresh_token: typeof data.refresh_token === 'string' ? data.refresh_token : undefined,
-    },
+      refresh_token: typeof data.refresh_token === 'string' ? data.refresh_token : undefined
+    }
   }
 }

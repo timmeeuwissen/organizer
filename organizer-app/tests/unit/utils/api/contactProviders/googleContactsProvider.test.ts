@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { GoogleContactsProvider } from '~/utils/api/contactProviders/GoogleContactsProvider'
 import { googleIntegrationAccount } from '../../../helpers/mockIntegrationAccount'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { GoogleContactsProvider } from '~/utils/api/contactProviders/GoogleContactsProvider'
 
 describe('GoogleContactsProvider', () => {
   beforeEach(() => {
@@ -11,12 +11,12 @@ describe('GoogleContactsProvider', () => {
     vi.unstubAllGlobals()
   })
 
-  function contactsAccount() {
+  function contactsAccount () {
     return googleIntegrationAccount({
       oauthData: {
         ...googleIntegrationAccount().oauthData,
-        scope: 'https://www.googleapis.com/auth/contacts.readonly',
-      },
+        scope: 'https://www.googleapis.com/auth/contacts.readonly'
+      }
     })
   }
 
@@ -27,10 +27,10 @@ describe('GoogleContactsProvider', () => {
         connections: [
           {
             names: [{ givenName: 'Jane', familyName: 'Doe' }],
-            emailAddresses: [{ value: 'jane@example.com' }],
-          },
+            emailAddresses: [{ value: 'jane@example.com' }]
+          }
         ],
-        totalItems: 1,
+        totalItems: 1
       })
     )
 

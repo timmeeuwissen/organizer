@@ -19,22 +19,22 @@ export interface MessagePayload {
   dismissible?: boolean
 }
 
-function auditTypeUpper(t: Notification['type']): string {
+function auditTypeUpper (t: Notification['type']): string {
   return t.toUpperCase()
 }
 
-async function postAuditLog(entry: {
+async function postAuditLog (entry: {
   type: string
   text: string
   userId?: string | null
   timestamp?: string
 }): Promise<void> {
-  if (!import.meta.client) return
+  if (!import.meta.client) { return }
   try {
     const nuxt = useNuxtApp()
     await nuxt.$fetch('/api/system/audit', {
       method: 'POST',
-      body: entry,
+      body: entry
     })
   } catch {
     // Non-blocking; UI still shows the snackbar
@@ -45,14 +45,14 @@ export const useNotificationStore = defineStore('notification', {
   state: () => ({
     /** FIFO queue; only the first item is shown in the snackbar at a time. */
     notifications: [] as Notification[],
-    nextId: 1,
+    nextId: 1
   }),
 
   actions: {
     /**
      * Queue a notification (gui-messaging: one visible at a time).
      */
-    add(notification: Partial<Notification>) {
+    add (notification: Partial<Notification>) {
       const id = `notification-${this.nextId++}`
 
       const newNotification: Notification = {
@@ -61,7 +61,7 @@ export const useNotificationStore = defineStore('notification', {
         type: notification.type || 'info',
         timeout: notification.timeout === undefined ? 5000 : notification.timeout,
         dismissible:
-          notification.dismissible === undefined ? true : notification.dismissible,
+          notification.dismissible === undefined ? true : notification.dismissible
       }
 
       this.notifications.push(newNotification)
@@ -70,78 +70,78 @@ export const useNotificationStore = defineStore('notification', {
         type: auditTypeUpper(newNotification.type),
         text: newNotification.message,
         userId: null,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       })
 
       return id
     },
 
-    dismiss(id: string) {
-      const index = this.notifications.findIndex((n) => n.id === id)
+    dismiss (id: string) {
+      const index = this.notifications.findIndex(n => n.id === id)
       if (index !== -1) {
         this.notifications.splice(index, 1)
       }
     },
 
-    success(message: string, options: Partial<Notification> = {}) {
+    success (message: string, options: Partial<Notification> = {}) {
       return this.add({
         message,
         type: 'success',
-        ...options,
+        ...options
       })
     },
 
-    info(message: string, options: Partial<Notification> = {}) {
+    info (message: string, options: Partial<Notification> = {}) {
       return this.add({
         message,
         type: 'info',
-        ...options,
+        ...options
       })
     },
 
-    warning(message: string, options: Partial<Notification> = {}) {
+    warning (message: string, options: Partial<Notification> = {}) {
       return this.add({
         message,
         type: 'warning',
-        ...options,
+        ...options
       })
     },
 
-    error(message: string, options: Partial<Notification> = {}) {
+    error (message: string, options: Partial<Notification> = {}) {
       return this.add({
         message,
         type: 'error',
-        ...options,
+        ...options
       })
     },
 
-    pushSuccess(text: string, options: Partial<Notification> = {}) {
+    pushSuccess (text: string, options: Partial<Notification> = {}) {
       return this.success(text, options)
     },
 
-    pushError(text: string, options: Partial<Notification> = {}) {
+    pushError (text: string, options: Partial<Notification> = {}) {
       return this.error(text, options)
     },
 
-    pushInfo(text: string, options: Partial<Notification> = {}) {
+    pushInfo (text: string, options: Partial<Notification> = {}) {
       return this.info(text, options)
     },
 
-    pushWarning(text: string, options: Partial<Notification> = {}) {
+    pushWarning (text: string, options: Partial<Notification> = {}) {
       return this.warning(text, options)
     },
 
-    push(payload: MessagePayload) {
+    push (payload: MessagePayload) {
       const { text, type, userId: _userId, timestamp: _ts, ...rest } = payload
       return this.add({
         message: text,
         type,
-        ...rest,
+        ...rest
       })
     },
 
-    clear() {
+    clear () {
       this.notifications = []
-    },
-  },
+    }
+  }
 })

@@ -17,37 +17,37 @@ import type { User, UserSettings } from '~/types/models'
 export const useAuthStore = defineStore('auth', {
   persist: {
     // Never persist transient UI state — only the user session
-    pick: ['user'],
+    pick: ['user']
   },
   state: () => ({
     user: null as User | null,
     loading: true,
     saving: false,
-    error: null as string | null,
+    error: null as string | null
   }),
 
   getters: {
-    isAuthenticated: (authState) => !!authState.user,
-    currentUser: (authState) => authState.user,
+    isAuthenticated: authState => !!authState.user,
+    currentUser: authState => authState.user
   },
 
   actions: {
-    async checkAuth() {
+    async checkAuth () {
       if (this.user) {
         return Promise.resolve(this.user)
       }
-      
+
       // In development mode, we can bypass authentication for demo purposes
       if (import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true') {
         await this.createDemoUser()
         return Promise.resolve(this.user)
       }
-      
+
       return this.init()
     },
-    
+
     // Create a demo user with demo email accounts for development
-    async createDemoUser(): Promise<boolean> {
+    async createDemoUser (): Promise<boolean> {
       // Create a demo user with hardcoded values (no Firebase interaction)
       this.user = {
         id: 'demo-user-id',
@@ -65,11 +65,11 @@ export const useAuthStore = defineStore('auth', {
           weekStartsOn: 1, // Default to Monday
           integrationAccounts: []
         }
-      };
-      return true;
+      }
+      return true
     },
 
-    async init() {
+    async init () {
       try {
         // Check if we're in development mode with auth bypass
         const isDev = import.meta.env.DEV
@@ -133,14 +133,14 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async setUser(firebaseUser: FirebaseUser) {
+    async setUser (firebaseUser: FirebaseUser) {
       try {
         const db = getFirestore()
         const userRef = doc(db, 'users', firebaseUser.uid)
-        
+
         try {
           const userSnap = await getDoc(userRef)
-          
+
           if (userSnap.exists()) {
             // User exists in Firestore, use that data
             const data = userSnap.data() as Partial<User>
@@ -158,8 +158,8 @@ export const useAuthStore = defineStore('auth', {
                 emailNotifications: true,
                 calendarSync: false,
                 weekStartsOn: 1,
-                integrationAccounts: [],
-              },
+                integrationAccounts: []
+              }
             }
           } else {
             // New user, create in Firestore
@@ -180,7 +180,7 @@ export const useAuthStore = defineStore('auth', {
                 integrationAccounts: []
               }
             }
-            
+
             try {
               await setDoc(userRef, newUser)
               this.user = newUser
@@ -206,7 +206,7 @@ export const useAuthStore = defineStore('auth', {
               }
             }
           }
-          
+
           // Try to update last login time
           try {
             await setDoc(userRef, { lastLogin: new Date() }, { merge: true })
@@ -227,14 +227,14 @@ export const useAuthStore = defineStore('auth', {
               createdAt: new Date(),
               updatedAt: new Date(),
               lastLogin: new Date(),
-                settings: {
-                  defaultLanguage: 'en',
-                  darkMode: false,
-                  emailNotifications: true,
-                  calendarSync: false,
-                  weekStartsOn: 1, // Default to Monday
-                  integrationAccounts: []
-                }
+              settings: {
+                defaultLanguage: 'en',
+                darkMode: false,
+                emailNotifications: true,
+                calendarSync: false,
+                weekStartsOn: 1, // Default to Monday
+                integrationAccounts: []
+              }
             }
           } else {
             throw error
@@ -247,10 +247,10 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async loginWithEmail(email: string, password: string) {
+    async loginWithEmail (email: string, password: string) {
       this.loading = true
       this.error = null
-      
+
       try {
         const auth = getAuth()
         const { user } = await signInWithEmailAndPassword(auth, email, password)
@@ -263,10 +263,10 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async registerWithEmail(email: string, password: string) {
+    async registerWithEmail (email: string, password: string) {
       this.loading = true
       this.error = null
-      
+
       try {
         const auth = getAuth()
         const { user } = await createUserWithEmailAndPassword(auth, email, password)
@@ -279,7 +279,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async loginWithGoogle() {
+    async loginWithGoogle () {
       this.loading = true
       this.error = null
 
@@ -318,10 +318,10 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async logout() {
+    async logout () {
       this.loading = true
       this.error = null
-      
+
       try {
         const auth = getAuth()
         await signOut(auth)
@@ -338,74 +338,74 @@ export const useAuthStore = defineStore('auth', {
      * Clean an object by removing all undefined values
      * This is needed because Firestore doesn't accept undefined values
      */
-    cleanObject(obj: any): any {
-      if (obj === null || obj === undefined) return obj;
-      
+    cleanObject (obj: any): any {
+      if (obj === null || obj === undefined) { return obj }
+
       if (Array.isArray(obj)) {
-        return obj.map(item => this.cleanObject(item));
-      }
-      
-      if (typeof obj === 'object') {
-        const result: any = {};
-        Object.keys(obj).forEach(key => {
-          const value = this.cleanObject(obj[key]);
-          if (value !== undefined) {
-            result[key] = value;
-          }
-        });
-        return result;
-      }
-      
-      return obj;
-    },
-    
-    async updateUserSettings(settings: Partial<UserSettings>) {
-      if (!this.user) {
-        console.error('Cannot update settings: No user is logged in');
-        return;
+        return obj.map(item => this.cleanObject(item))
       }
 
-      this.saving = true;
-      this.error = null;
-      
+      if (typeof obj === 'object') {
+        const result: any = {}
+        Object.keys(obj).forEach((key) => {
+          const value = this.cleanObject(obj[key])
+          if (value !== undefined) {
+            result[key] = value
+          }
+        })
+        return result
+      }
+
+      return obj
+    },
+
+    async updateUserSettings (settings: Partial<UserSettings>) {
+      if (!this.user) {
+        console.error('Cannot update settings: No user is logged in')
+        return
+      }
+
+      this.saving = true
+      this.error = null
+
       try {
-        const db = getFirestore();
-        const userRef = doc(db, 'users', this.user.id);
-        
+        const db = getFirestore()
+        const userRef = doc(db, 'users', this.user.id)
+
         // Deep merge current settings with new settings
         const updatedSettings = {
           ...this.user.settings,
           ...settings
-        };
-        
+        }
+
         // Clean the settings object to remove any undefined values
         // which would cause Firestore to throw an error
-        const cleanSettings = this.cleanObject(updatedSettings);
-        
+        const cleanSettings = this.cleanObject(updatedSettings)
+
         // Log before saving to help with debugging
         console.log('Updating user settings with cleaned data:', {
           userId: this.user.id,
           hasIntegrationAccounts: Array.isArray(cleanSettings.integrationAccounts),
-          integrationAccountsCount: Array.isArray(cleanSettings.integrationAccounts) 
-            ? cleanSettings.integrationAccounts.length 
+          integrationAccountsCount: Array.isArray(cleanSettings.integrationAccounts)
+            ? cleanSettings.integrationAccounts.length
             : 0,
           hasAiIntegrations: Array.isArray(cleanSettings.aiIntegrations),
-          aiIntegrationsCount: Array.isArray(cleanSettings.aiIntegrations) 
-            ? cleanSettings.aiIntegrations.length 
+          aiIntegrationsCount: Array.isArray(cleanSettings.aiIntegrations)
+            ? cleanSettings.aiIntegrations.length
             : 0,
           aiIntegrations: cleanSettings.aiIntegrations
-        });
-        
+        })
+
         try {
-          await setDoc(userRef, { settings: cleanSettings }, { merge: true });
-          
+          await setDoc(userRef, { settings: cleanSettings }, { merge: true })
+
           // Update local state after successful Firestore update
           this.user = {
             ...this.user,
             settings: cleanSettings as UserSettings
-          };
-          
-          console.log('Settings updated successfully');
+          }
+
+          console.log('Settings updated successfully')
         } catch (firestoreError: any) {
           // Log detailed error info for Firestore errors
           console.error('Firestore error details:', {
@@ -414,29 +414,29 @@ export const useAuthStore = defineStore('auth', {
             message: firestoreError.message,
             stack: firestoreError.stack,
             // Log specific information about integration accounts
-            integrationAccounts: Array.isArray(updatedSettings.integrationAccounts) 
-              ? `Array with ${updatedSettings.integrationAccounts.length} items` 
+            integrationAccounts: Array.isArray(updatedSettings.integrationAccounts)
+              ? `Array with ${updatedSettings.integrationAccounts.length} items`
               : typeof updatedSettings.integrationAccounts
-          });
-          
-          this.error = `Firestore error (${firestoreError.code}): ${firestoreError.message}`;
-          throw firestoreError;
+          })
+
+          this.error = `Firestore error (${firestoreError.code}): ${firestoreError.message}`
+          throw firestoreError
         }
       } catch (error: any) {
-        this.error = error.message || 'Failed to update settings';
-        console.error('Settings update failed:', error);
-        throw error;
+        this.error = error.message || 'Failed to update settings'
+        console.error('Settings update failed:', error)
+        throw error
       } finally {
-        this.saving = false;
+        this.saving = false
       }
     },
 
-    async updateUserProfile(profileData: Partial<User>) {
-      if (!this.user) return
+    async updateUserProfile (profileData: Partial<User>) {
+      if (!this.user) { return }
 
       this.saving = true
       this.error = null
-      
+
       try {
         // Update local state only - Firestore update should be done separately
         // This is useful for reflecting changes immediately in the UI

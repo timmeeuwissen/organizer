@@ -3,14 +3,14 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('dashboard.title') }}
-      
+
   v-row
     v-col(cols="12" md="6" lg="3")
       v-card(class="mb-4")
         v-card-title
           v-icon(start color="primary") mdi-checkbox-marked-outline
           | {{ $t('tasks.upcomingTasks') }}
-        v-card-text(v-if="loadingTasks") 
+        v-card-text(v-if="loadingTasks")
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="upcomingTasks.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('dashboard.noUpcomingTasks') }}
@@ -34,13 +34,13 @@ v-container(fluid)
             color="primary"
             to="/tasks"
           ) {{ $t('dashboard.viewMore') }}
-      
+
     v-col(cols="12" md="6" lg="3")
       v-card(class="mb-4")
         v-card-title
           v-icon(start color="primary") mdi-calendar
           | {{ $t('dashboard.todaysMeetings') }}
-        v-card-text(v-if="loadingMeetings") 
+        v-card-text(v-if="loadingMeetings")
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else)
           v-alert(type="info" variant="tonal") {{ $t('dashboard.noMeetingsToday') }}
@@ -51,13 +51,13 @@ v-container(fluid)
             color="primary"
             to="/meetings"
           ) {{ $t('dashboard.viewMore') }}
-    
+
     v-col(cols="12" md="6" lg="3")
       v-card(class="mb-4")
         v-card-title
           v-icon(start color="primary") mdi-account-group
           | {{ $t('people.recentlyContacted') }}
-        v-card-text(v-if="loadingPeople") 
+        v-card-text(v-if="loadingPeople")
           v-skeleton-loader(type="list-item-avatar-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="recentlyContacted.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('people.noPeople') }}
@@ -85,13 +85,13 @@ v-container(fluid)
             color="primary"
             to="/people"
           ) {{ $t('dashboard.viewMore') }}
-    
+
     v-col(cols="12" md="6" lg="3")
       v-card(class="mb-4")
         v-card-title
           v-icon(start color="primary") mdi-folder-multiple
           | {{ $t('dashboard.projectStatus') }}
-        v-card-text(v-if="loadingProjects") 
+        v-card-text(v-if="loadingProjects")
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="activeProjects.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('projects.noProjects') }}
@@ -116,12 +116,12 @@ v-container(fluid)
             color="primary"
             to="/projects"
           ) {{ $t('dashboard.viewMore') }}
-  
+
   v-row
     v-col(cols="12" md="6")
       v-card
         v-card-title {{ $t('behaviors.title') }}
-        v-card-text(v-if="loadingBehaviors") 
+        v-card-text(v-if="loadingBehaviors")
           v-skeleton-loader(type="list-item-two-line" v-for="i in 3" :key="i")
         v-card-text(v-else-if="behaviors.length === 0")
           v-alert(type="info" variant="tonal") {{ $t('behaviors.noBehaviors') }}
@@ -142,7 +142,7 @@ v-container(fluid)
             color="primary"
             to="/behaviors"
           ) {{ $t('dashboard.viewMore') }}
-    
+
     v-col(cols="12" md="6")
       v-card
         v-card-title {{ $t('dashboard.recentActivity') }}
@@ -186,7 +186,7 @@ onMounted(async () => {
   } finally {
     loadingTasks.value = false
   }
-  
+
   try {
     await peopleStore.fetchPeople()
   } catch (error) {
@@ -194,7 +194,7 @@ onMounted(async () => {
   } finally {
     loadingPeople.value = false
   }
-  
+
   try {
     await projectsStore.fetchProjects()
   } catch (error) {
@@ -202,7 +202,7 @@ onMounted(async () => {
   } finally {
     loadingProjects.value = false
   }
-  
+
   try {
     await behaviorsStore.fetchBehaviors()
   } catch (error) {
@@ -210,7 +210,7 @@ onMounted(async () => {
   } finally {
     loadingBehaviors.value = false
   }
-  
+
   // For now, we don't have meetings implemented
   loadingMeetings.value = false
 })
@@ -234,22 +234,22 @@ const behaviors = computed(() => {
 
 // Helper functions
 const formatDate = (date: Date | null | undefined) => {
-  if (!date) return ''
+  if (!date) { return '' }
   return new Date(date).toLocaleDateString()
 }
 
 const formatDateDistance = (date: Date | null | undefined) => {
-  if (!date) return ''
-  
+  if (!date) { return '' }
+
   const now = new Date()
   const diff = now.getTime() - (date as Date).getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
-  if (days === 0) return 'Today'
-  if (days === 1) return 'Yesterday'
-  if (days < 7) return `${days} days ago`
-  if (days < 30) return `${Math.floor(days / 7)} weeks ago`
-  if (days < 365) return `${Math.floor(days / 30)} months ago`
+
+  if (days === 0) { return 'Today' }
+  if (days === 1) { return 'Yesterday' }
+  if (days < 7) { return `${days} days ago` }
+  if (days < 30) { return `${Math.floor(days / 7)} weeks ago` }
+  if (days < 365) { return `${Math.floor(days / 30)} months ago` }
   return `${Math.floor(days / 365)} years ago`
 }
 
@@ -280,9 +280,9 @@ const getStatusIcon = (status: string) => {
 }
 
 const getProgressColor = (progress: number) => {
-  if (progress < 25) return 'error'
-  if (progress < 50) return 'warning'
-  if (progress < 75) return 'info'
+  if (progress < 25) { return 'error' }
+  if (progress < 50) { return 'warning' }
+  if (progress < 75) { return 'info' }
   return 'success'
 }
 

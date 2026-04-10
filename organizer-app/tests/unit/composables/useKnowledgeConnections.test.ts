@@ -7,21 +7,34 @@ import type { KnowledgeEdge } from '~/types/models/knowledge'
 
 const now = new Date('2026-01-01')
 
-function makeNode(id: string, content = 'test'): KnowledgeNode {
+function makeNode (id: string, content = 'test'): KnowledgeNode {
   return {
-    id, userId: 'u1', type: 'knowledge', entityId: null, label: content,
-    content, subtype: 'fact', source: 'manual',
-    certainty: 0.9, certaintyDate: now, tags: [],
-    createdAt: now, updatedAt: now,
+    id,
+    userId: 'u1',
+    type: 'knowledge',
+    entityId: null,
+    label: content,
+    content,
+    subtype: 'fact',
+    source: 'manual',
+    certainty: 0.9,
+    certaintyDate: now,
+    tags: [],
+    createdAt: now,
+    updatedAt: now
   }
 }
 
-function makeEdge(id: string, nodeId: string, entityType = 'person', entityId = 'p1'): KnowledgeEdge {
+function makeEdge (id: string, nodeId: string, entityType = 'person', entityId = 'p1'): KnowledgeEdge {
   return {
-    id, userId: 'u1', knowledgeNodeId: nodeId,
-    entityType: entityType as any, entityId,
+    id,
+    userId: 'u1',
+    knowledgeNodeId: nodeId,
+    entityType: entityType as any,
+    entityId,
     relationType: 'references',
-    createdAt: now, updatedAt: now,
+    createdAt: now,
+    updatedAt: now
   }
 }
 
@@ -37,8 +50,8 @@ let mockDelete: ReturnType<typeof vi.fn>
 
 vi.mock('~/stores/knowledge', () => ({
   useKnowledgeStore: () => ({
-    get nodes() { return mockNodes },
-    get edges() { return mockEdges },
+    get nodes () { return mockNodes },
+    get edges () { return mockEdges },
     connectionsForEntity: (entityType: string, entityId: string) =>
       mockEdges
         .filter(e => e.entityType === entityType && e.entityId === entityId)
@@ -51,8 +64,8 @@ vi.mock('~/stores/knowledge', () => ({
     update: (...args: any[]) => mockUpdate(...args),
     updateConnection: (...args: any[]) => mockUpdateConnection(...args),
     disconnect: (...args: any[]) => mockDisconnect(...args),
-    delete: (...args: any[]) => mockDelete(...args),
-  }),
+    delete: (...args: any[]) => mockDelete(...args)
+  })
 }))
 
 describe('useKnowledgeConnections', () => {

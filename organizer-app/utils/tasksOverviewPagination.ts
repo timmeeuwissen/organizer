@@ -2,10 +2,10 @@
  * Pure helpers for client-side task list pagination (overview table).
  */
 
-export function clampTaskListPageIndex(
+export function clampTaskListPageIndex (
   currentPage: number,
   totalRows: number,
-  pageSize: number,
+  pageSize: number
 ): number {
   if (totalRows <= 0 || pageSize <= 0) {
     return 0
@@ -14,17 +14,17 @@ export function clampTaskListPageIndex(
   return Math.min(Math.max(0, currentPage), maxPage)
 }
 
-export function taskListTotalPages(totalRows: number, pageSize: number): number {
+export function taskListTotalPages (totalRows: number, pageSize: number): number {
   if (pageSize <= 0) {
     return 1
   }
   return Math.max(1, Math.ceil(totalRows / pageSize) || 1)
 }
 
-export function sliceTaskListPage<T>(
+export function sliceTaskListPage<T> (
   items: readonly T[],
   currentPage: number,
-  pageSize: number,
+  pageSize: number
 ): T[] {
   const clamped = clampTaskListPageIndex(currentPage, items.length, pageSize)
   const start = clamped * pageSize

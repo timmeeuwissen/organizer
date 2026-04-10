@@ -12,14 +12,14 @@
         <strong>Development Mode:</strong>
         {{ demoMode ? 'Using simulated data' : 'Using real authentication' }}
       </div>
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-switch
         v-model="demoMode"
         color="success"
         hide-details
         label="Demo Mode"
         @change="toggleDemoMode"
-      ></v-switch>
+      />
     </div>
   </v-alert>
 </template>
@@ -49,7 +49,7 @@ onMounted(() => {
 const toggleDemoMode = async () => {
   try {
     console.log('DemoModeToggle: Toggling demo mode to', demoMode.value)
-    
+
     // Show confirmation based on new state
     const message = demoMode.value
       ? 'Switching to demo mode with simulated emails'
@@ -58,10 +58,10 @@ const toggleDemoMode = async () => {
 
     // Use localStorage to persist the setting
     localStorage.setItem('demoMode', demoMode.value ? 'true' : 'false')
-    
+
     // Show a confirmation that will disappear when page reloads
     alert(message + '. Page will reload to apply changes.')
-    
+
     // Reload the page to apply the new setting
     window.location.reload()
   } catch (error) {

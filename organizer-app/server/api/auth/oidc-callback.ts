@@ -10,8 +10,8 @@ type OauthState = {
   debug?: boolean
 }
 
-function parseOauthState(stateParam: string | undefined): OauthState {
-  if (!stateParam) return {}
+function parseOauthState (stateParam: string | undefined): OauthState {
+  if (!stateParam) { return {} }
   try {
     return JSON.parse(decodeURIComponent(stateParam)) as OauthState
   } catch {
@@ -19,7 +19,7 @@ function parseOauthState(stateParam: string | undefined): OauthState {
   }
 }
 
-function resolveRedirectUri(event: H3Event): string {
+function resolveRedirectUri (event: H3Event): string {
   const url = getRequestURL(event)
   const origin = `${url.protocol}//${url.host}`
   return `${origin}/auth/callback`
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
       return {
         success: false,
         error: `OAuth error: ${error}`,
-        errorDescription,
+        errorDescription
       }
     }
 
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
       console.error('[API] No authorization code provided in query:', query)
       return {
         success: false,
-        error: 'No authorization code provided in callback URL',
+        error: 'No authorization code provided in callback URL'
       }
     }
 
@@ -71,11 +71,11 @@ export default defineEventHandler(async (event) => {
       if (!clientId || !clientSecret) {
         console.error('[API] Missing Microsoft OAuth credentials', {
           hasClientId: !!clientId,
-          hasClientSecret: !!clientSecret,
+          hasClientSecret: !!clientSecret
         })
         return {
           success: false,
-          error: 'Missing Microsoft OAuth credentials on server',
+          error: 'Missing Microsoft OAuth credentials on server'
         }
       }
 
@@ -94,8 +94,8 @@ export default defineEventHandler(async (event) => {
           method: 'POST',
           body: formData,
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
         })
 
         console.log(
@@ -111,8 +111,8 @@ export default defineEventHandler(async (event) => {
           tokens: tokenResponse,
           clientInfo: {
             clientId,
-            hasClientSecret: !!clientSecret,
-          },
+            hasClientSecret: !!clientSecret
+          }
         }
       } catch (fetchError: unknown) {
         const err = fetchError as { response?: { data?: unknown; status?: number }; message?: string }
@@ -124,8 +124,8 @@ export default defineEventHandler(async (event) => {
           errorDetails: {
             message: err.message,
             data: err.response?.data,
-            status: err.response?.status,
-          },
+            status: err.response?.status
+          }
         }
       }
     }
@@ -138,7 +138,7 @@ export default defineEventHandler(async (event) => {
       console.error('[API] Missing Google OAuth credentials', { hasClientId: !!clientId, hasClientSecret: !!clientSecret })
       return {
         success: false,
-        error: 'Missing OAuth credentials on server',
+        error: 'Missing OAuth credentials on server'
       }
     }
 
@@ -161,8 +161,8 @@ export default defineEventHandler(async (event) => {
         method: 'POST',
         body: formData,
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       })
 
       console.log(
@@ -180,8 +180,8 @@ export default defineEventHandler(async (event) => {
         tokens: tokenResponse,
         clientInfo: {
           clientId,
-          hasClientSecret: !!clientSecret,
-        },
+          hasClientSecret: !!clientSecret
+        }
       }
     } catch (fetchError: unknown) {
       const err = fetchError as { response?: { data?: unknown }; message?: string; stack?: string }
@@ -195,8 +195,8 @@ export default defineEventHandler(async (event) => {
             (err.response?.data as { error_description?: string })?.error_description ||
             (err.response?.data as { error?: string })?.error ||
             err.message,
-          data: err.response?.data,
-        },
+          data: err.response?.data
+        }
       }
     }
   } catch (error: unknown) {
@@ -210,7 +210,7 @@ export default defineEventHandler(async (event) => {
         (err.response?.data as { error_description?: string })?.error_description ||
         (err.response?.data as { error?: string })?.error ||
         err.message,
-      details: err.response?.data,
+      details: err.response?.data
     }
   }
 })

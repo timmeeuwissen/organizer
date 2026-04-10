@@ -1,5 +1,5 @@
-import type { AIAnalysisResult } from '~/types/models/aiIntegration'
 import { BaseAIProvider } from './BaseAIProvider'
+import type { AIAnalysisResult } from '~/types/models/aiIntegration'
 
 const CLAUDE_API_BASE_URL = 'https://api.anthropic.com/v1'
 const CLAUDE_MESSAGES_ENDPOINT = '/messages'
@@ -7,7 +7,7 @@ const CLAUDE_MODELS_ENDPOINT = '/models'
 const ANTHROPIC_VERSION = '2023-06-01'
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514'
 
-function getApiUrl(endpoint: string): string {
+function getApiUrl (endpoint: string): string {
   return `${CLAUDE_API_BASE_URL}${endpoint}`
 }
 
@@ -15,7 +15,7 @@ function getApiUrl(endpoint: string): string {
  * Implementation of the Anthropic Claude provider API
  */
 export class ClaudeProvider extends BaseAIProvider {
-  constructor(integration: any) {
+  constructor (integration: any) {
     super(integration)
 
     if (integration.provider !== 'claude') {
@@ -26,7 +26,7 @@ export class ClaudeProvider extends BaseAIProvider {
   /**
    * Test if the connection to Claude is working by validating the API key
    */
-  async testConnection(): Promise<boolean> {
+  async testConnection (): Promise<boolean> {
     try {
       if (!this.apiKey) {
         console.error('Cannot test Claude connection: No API key provided')
@@ -38,8 +38,8 @@ export class ClaudeProvider extends BaseAIProvider {
         headers: {
           'x-api-key': this.apiKey,
           'anthropic-version': ANTHROPIC_VERSION,
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json'
+        }
       })
 
       if (!response.ok) {
@@ -59,7 +59,7 @@ export class ClaudeProvider extends BaseAIProvider {
    * Analyze text using the Claude API
    * @param text The text to analyze
    */
-  async analyzeText(text: string): Promise<AIAnalysisResult> {
+  async analyzeText (text: string): Promise<AIAnalysisResult> {
     try {
       if (!this.apiKey) {
         throw new Error('No API key provided for Claude analysis')
@@ -76,14 +76,14 @@ export class ClaudeProvider extends BaseAIProvider {
         headers: {
           'x-api-key': this.apiKey,
           'anthropic-version': ANTHROPIC_VERSION,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: DEFAULT_MODEL,
           max_tokens: 2048,
           system: systemPrompt,
-          messages: [{ role: 'user', content: text }],
-        }),
+          messages: [{ role: 'user', content: text }]
+        })
       })
 
       if (!response.ok) {

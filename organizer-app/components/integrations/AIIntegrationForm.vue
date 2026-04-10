@@ -12,24 +12,24 @@
       )
         v-icon(start) mdi-plus
         | {{ $t('integrations.addProvider') }}
-    
+
     v-card-text
       v-alert(
-        v-if="error" 
-        type="error" 
+        v-if="error"
+        type="error"
         class="mb-4"
         closable
         @click:close="error = ''"
       ) {{ error }}
-      
+
       v-alert(
-        v-if="success" 
-        type="success" 
+        v-if="success"
+        type="success"
         class="mb-4"
         closable
         @click:close="success = ''"
       ) {{ success }}
-      
+
       // No integrations message
       v-alert(
         v-if="!userIntegrations.length"
@@ -37,7 +37,7 @@
         variant="tonal"
         class="mb-4"
       ) {{ $t('integrations.noAiProviders') }}
-      
+
       // List of integrations
       v-sheet(
         v-for="(integration, index) in userIntegrations"
@@ -97,7 +97,7 @@
             )
               v-icon(start) mdi-check
               | {{ $t('integrations.test') }}
-    
+
     v-card-actions
       v-spacer
       v-btn(
@@ -149,10 +149,10 @@ const userIntegrations = ref([])
 const user = computed(() => authStore.currentUser)
 
 // Initialize component with user's saved integrations
-function initializeIntegrations() {
+function initializeIntegrations () {
   userIntegrations.value = []
   showPassword.length = 0
-  
+
   // Use props.modelValue if available, otherwise fall back to user settings
   if (props.modelValue && props.modelValue.length > 0) {
     // Deep copy to avoid modifying props directly
@@ -163,7 +163,7 @@ function initializeIntegrations() {
       JSON.stringify(user.value.settings.aiIntegrations)
     )
   }
-  
+
   // Initialize the showPassword array
   showPassword.length = userIntegrations.value.length
   showPassword.fill(false)
@@ -180,11 +180,11 @@ onMounted(() => {
 // Watch for changes to the modelValue prop
 watch(() => props.modelValue, (newValue) => {
   // Skip if this is an internal update
-  if (isInternalUpdate.value) return
-  
+  if (isInternalUpdate.value) { return }
+
   // Set userIntegrations without triggering the other watcher
   userIntegrations.value = newValue ? JSON.parse(JSON.stringify(newValue)) : []
-  
+
   // Reset showPassword array
   showPassword.length = userIntegrations.value.length
   showPassword.fill(false)
@@ -194,10 +194,10 @@ watch(() => props.modelValue, (newValue) => {
 watch(userIntegrations, (newValue) => {
   // Set flag to prevent recursive updates
   isInternalUpdate.value = true
-  
+
   // Emit update event
   emit('update:modelValue', JSON.parse(JSON.stringify(newValue)))
-  
+
   // Reset flag after a small delay to ensure the update is processed
   setTimeout(() => {
     isInternalUpdate.value = false
@@ -205,7 +205,7 @@ watch(userIntegrations, (newValue) => {
 }, { deep: true })
 
 // Add a new integration
-function addIntegration() {
+function addIntegration () {
   const newIntegration = {
     provider: 'openai' as AIProviderType,
     name: i18n.t('integrations.newIntegration'),
@@ -214,19 +214,19 @@ function addIntegration() {
     connected: false,
     createdAt: new Date()
   }
-  
+
   userIntegrations.value.push(newIntegration)
   showPassword.push(true) // Show password by default for new integrations
 }
 
 // Remove an integration
-function removeIntegration(index) {
+function removeIntegration (index) {
   userIntegrations.value.splice(index, 1)
   showPassword.splice(index, 1)
 }
 
 // Get a helpful hint based on the provider type
-function getProviderHint(provider) {
+function getProviderHint (provider) {
   switch (provider) {
     case 'openai':
       return i18n.t('integrations.openaiKeyHint')
@@ -240,18 +240,18 @@ function getProviderHint(provider) {
 }
 
 // Test an integration
-async function testIntegration(index) {
+async function testIntegration (index) {
   const integration = userIntegrations.value[index]
-  
+
   if (!integration.apiKey) {
     error.value = i18n.t('integrations.missingApiKey')
     return
   }
-  
+
   testing.value = index
   error.value = ''
   success.value = ''
-  
+
   try {
     // Create a properly typed integration object
     const typedIntegration: AIIntegrationData = {
@@ -259,11 +259,11 @@ async function testIntegration(index) {
       provider: integration.provider as AIProviderType,
       connected: true
     }
-    
+
     // Get the provider implementation and test the connection
     const provider = getProvider(typedIntegration)
     const result = await provider.testConnection()
-    
+
     if (result) {
       success.value = i18n.t('integrations.connectionSuccessful')
       integration.connected = true
@@ -281,30 +281,30 @@ async function testIntegration(index) {
 }
 
 // Save all integrations
-async function saveIntegrations() {
+async function saveIntegrations () {
   // Validate integrations
   for (const integration of userIntegrations.value) {
     if (!integration.name) {
       error.value = i18n.t('integrations.missingName')
       return
     }
-    
+
     if (integration.enabled && !integration.apiKey) {
       error.value = i18n.t('integrations.missingApiKeyEnabled')
       return
     }
   }
-  
+
   saving.value = true
   error.value = ''
   success.value = ''
-  
+
   try {
     // Update user settings with the new integrations
     await authStore.updateUserSettings({
       aiIntegrations: userIntegrations.value
     })
-    
+
     success.value = i18n.t('integrations.saveSuccess')
   } catch (err) {
     console.error('Save integrations error:', err)

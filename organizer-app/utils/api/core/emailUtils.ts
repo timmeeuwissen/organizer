@@ -9,11 +9,11 @@ import type { EmailPerson } from '~/stores/mail'
  * @param addressString Email address string (e.g., "Name <email@example.com>")
  * @returns EmailPerson object with name and email
  */
-export function parseEmailAddress(addressString: string): EmailPerson {
+export function parseEmailAddress (addressString: string): EmailPerson {
   if (!addressString) {
     return { name: 'Unknown', email: 'unknown@example.com' }
   }
-  
+
   // Try to match "Name <email@example.com>" format
   const match = addressString.match(/^([^<]+)<([^>]+)>$/)
   if (match) {
@@ -22,7 +22,7 @@ export function parseEmailAddress(addressString: string): EmailPerson {
       email: match[2].trim()
     }
   }
-  
+
   // If no match, just use the whole string as both name and email
   return {
     name: addressString,
@@ -35,15 +35,15 @@ export function parseEmailAddress(addressString: string): EmailPerson {
  * @param encoded Base64url encoded string
  * @returns Decoded string
  */
-export function decodeBase64UrlContent(encoded: string): string {
+export function decodeBase64UrlContent (encoded: string): string {
   try {
     // Convert base64url to base64
     const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
-    
+
     // Add padding if needed
     const paddingLength = (4 - (base64.length % 4)) % 4
     const paddedBase64 = base64 + '='.repeat(paddingLength)
-    
+
     // Decode and convert to UTF-8 string
     const rawData = atob(paddedBase64)
     return decodeURIComponent(

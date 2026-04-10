@@ -3,16 +3,16 @@ import {
   getQuery,
   readBody,
   createError,
-  setResponseHeader,
+  setResponseHeader
 } from 'h3'
 import { isAllowedProxyUrl } from '../utils/proxyAllowlist'
 
 /**
  * API proxy endpoint that forwards requests to external APIs
  * This helps avoid CORS issues and provides a consistent way to make external requests
- * 
+ *
  * Usage: /api/proxy?url=https://api.example.com/endpoint
- * 
+ *
  * The request method, headers, and body will be forwarded to the target URL
  * Authorization headers from the client will also be forwarded
  */
@@ -39,11 +39,11 @@ export default defineEventHandler(async (event) => {
     // Get the original request details
     const method = event.node.req.method || 'GET'
     const headers: Record<string, string> = {}
-    
+
     // Copy relevant headers from the original request
     for (const [key, value] of Object.entries(event.node.req.headers)) {
       if (
-        key.toLowerCase() !== 'host' && 
+        key.toLowerCase() !== 'host' &&
         key.toLowerCase() !== 'origin' &&
         key.toLowerCase() !== 'referer' &&
         key.toLowerCase() !== 'content-length'
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
     return data
   } catch (error: any) {
     console.error('API proxy error:', error)
-    
+
     // Return a proper error response
     throw createError({
       statusCode: error.statusCode || 500,

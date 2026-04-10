@@ -8,12 +8,12 @@ const makeItems = (overrides = {}) => [
     icon: 'mdi-check',
     color: 'primary',
     action: vi.fn(),
-    ...overrides,
-  },
+    ...overrides
+  }
 ]
 
 describe('AddButton', () => {
-  function mount(items = makeItems()) {
+  function mount (items = makeItems()) {
     return shallowMount(AddButton, { props: { items } })
   }
 
@@ -25,7 +25,7 @@ describe('AddButton', () => {
   it('renders a list item for each entry in the items prop', () => {
     const items = [
       { title: 'First', icon: 'mdi-one', action: vi.fn() },
-      { title: 'Second', icon: 'mdi-two', action: vi.fn() },
+      { title: 'Second', icon: 'mdi-two', action: vi.fn() }
     ]
     const wrapper = mount(items)
     expect(wrapper.findAll('v-list-item')).toHaveLength(2)

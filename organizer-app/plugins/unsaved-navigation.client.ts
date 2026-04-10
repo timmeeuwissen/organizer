@@ -3,7 +3,7 @@ import { navigationDirty } from '~/composables/useUnsavedChanges'
 export default defineNuxtPlugin({
   name: 'unsaved-navigation',
   dependsOn: ['i18n'],
-  setup(nuxtApp) {
+  setup (nuxtApp) {
     const router = useRouter()
     const gp = nuxtApp.vueApp.config.globalProperties
 
@@ -22,5 +22,5 @@ export default defineNuxtPlugin({
       }
       return false
     })
-  },
+  }
 })

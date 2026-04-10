@@ -1,4 +1,8 @@
 import { describe, it, expect } from 'vitest'
+import {
+  googleIntegrationAccount,
+  office365IntegrationAccount
+} from '../../helpers/mockIntegrationAccount'
 import type { IntegrationAccount } from '~/types/models'
 import { getCalendarProvider } from '~/utils/api/calendarProviders'
 import { getContactProvider } from '~/utils/api/contactProviders'
@@ -7,10 +11,6 @@ import { GoogleCalendarProvider } from '~/utils/api/calendarProviders/GoogleCale
 import { GoogleContactsProvider } from '~/utils/api/contactProviders/GoogleContactsProvider'
 import { GoogleTasksProvider } from '~/utils/api/taskProviders/GoogleTasksProvider'
 import { Office365CalendarProvider } from '~/utils/api/calendarProviders/Office365CalendarProvider'
-import {
-  googleIntegrationAccount,
-  office365IntegrationAccount,
-} from '../../helpers/mockIntegrationAccount'
 
 describe('integration provider factories', () => {
   it('getCalendarProvider maps google and office365', () => {
@@ -37,7 +37,7 @@ describe('integration provider factories', () => {
   it('throws on unsupported calendar account type', () => {
     const acc = {
       ...googleIntegrationAccount(),
-      type: 'bad',
+      type: 'bad'
     } as unknown as IntegrationAccount
     expect(() => getCalendarProvider(acc)).toThrow(/Unsupported account type/)
   })

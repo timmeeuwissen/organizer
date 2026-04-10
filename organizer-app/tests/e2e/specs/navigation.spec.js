@@ -14,7 +14,7 @@
  * Helper: open the navigation drawer.
  * The drawer is toggled by the hamburger icon in the app bar.
  */
-function openDrawer() {
+function openDrawer () {
   cy.get('.v-app-bar .v-app-bar-nav-icon').click()
   // Wait for the drawer to animate into view
   cy.get('.v-navigation-drawer').should('be.visible')

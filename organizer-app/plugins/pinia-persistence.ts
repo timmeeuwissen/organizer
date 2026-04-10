@@ -6,6 +6,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   // Register the persisted state plugin with Pinia
   // @ts-ignore - Using any to bypass type checking
   nuxtApp.$pinia.use(piniaPluginPersistedstate)
-  
+
   console.log('Pinia persistence plugin initialized with date reviving')
 })

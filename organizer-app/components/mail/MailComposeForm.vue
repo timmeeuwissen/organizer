@@ -6,14 +6,14 @@ v-form(
 )
   v-card
     v-card-title {{ $t('mail.compose') }}
-    
+
     v-card-text
       v-alert(
         v-if="error"
         type="error"
         class="mb-4"
       ) {{ error }}
-      
+
       v-select(
         v-model="storageProvider"
         :items="availableProviders"
@@ -24,7 +24,7 @@ v-form(
         :rules="[rules.required]"
         required
       )
-      
+
       v-combobox(
         v-model="to"
         :label="$t('mail.to')"
@@ -38,7 +38,7 @@ v-form(
         :rules="[rules.required]"
         required
       )
-      
+
       v-combobox(
         v-model="cc"
         :label="$t('mail.cc')"
@@ -50,7 +50,7 @@ v-form(
         chips
         closable-chips
       )
-      
+
       v-combobox(
         v-model="bcc"
         :label="$t('mail.bcc')"
@@ -62,7 +62,7 @@ v-form(
         chips
         closable-chips
       )
-      
+
       v-text-field(
         v-model="subject"
         :label="$t('mail.subject')"
@@ -70,7 +70,7 @@ v-form(
         :rules="[rules.required]"
         required
       )
-      
+
       v-textarea(
         v-model="body"
         :label="$t('mail.body')"
@@ -79,13 +79,13 @@ v-form(
         :rules="[rules.required]"
         required
       )
-      
+
       v-expansion-panels(variant="accordion")
         v-expansion-panel
           v-expansion-panel-title {{ $t('mail.attachments') }}
           v-expansion-panel-text
             p {{ $t('mail.attachmentsNotSupported') }}
-    
+
     v-card-actions
       v-btn(
         color="secondary"
@@ -128,6 +128,8 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'save-draft', 'close'])
 
+const { setNavigationDirty } = useUnsavedChanges()
+
 const peopleStore = usePeopleStore()
 
 const form = ref(null)
@@ -141,14 +143,21 @@ const bcc = ref(props.email?.bcc || [])
 const subject = ref(props.email?.subject || '')
 const body = ref(props.email?.body || '')
 
+// Mark dirty when any form field changes
+watch(
+  [storageProvider, to, cc, bcc, subject, body],
+  () => { setNavigationDirty(true) },
+  { deep: true }
+)
+
 // Get available storage providers
 const { mailProviders } = useIntegrationProviders()
 const availableProviders = computed(() => mailProviders.value)
 
 // Validation rules
 const rules = {
-  required: (v) => !!v || 'This field is required',
-  email: (v) => /.+@.+\..+/.test(v) || 'E-mail must be valid'
+  required: v => !!v || 'This field is required',
+  email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid'
 }
 
 // Computed values
@@ -164,8 +173,8 @@ const availableContacts = computed(() => {
 
 // Submit function
 const submit = () => {
-  if (!valid.value) return
-  
+  if (!valid.value) { return }
+
   const emailData = {
     storageProvider: storageProvider.value,
     to: to.value,
@@ -175,7 +184,7 @@ const submit = () => {
     body: body.value,
     date: new Date()
   }
-  
+
   emit('submit', emailData)
 }
 

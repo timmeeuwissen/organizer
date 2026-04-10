@@ -8,10 +8,10 @@ export default defineNuxtPlugin(() => {
     Log.setLevel(Log.INFO)
     console.log('OIDC logging enabled in development mode')
   }
-  
+
   // Set up silent renew iframe path
   const publicPath = '/oidc-silent-renew.html'
-  
+
   // Create the silent renew HTML file
   if (process.client) {
     // Create an OIDC silent renew helper
@@ -34,12 +34,12 @@ export default defineNuxtPlugin(() => {
       </body>
       </html>
     `
-    
+
     // In a real application, this file would be created at build time
     // This is just a simulation of how it would work
     console.log('Silent renew helper would be available at:', publicPath)
   }
-  
+
   // Set up event hooks for OIDC events
   if (process.client) {
     console.log('OIDC plugin initialized')

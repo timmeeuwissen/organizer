@@ -7,7 +7,7 @@ import {
   collection,
   addDoc,
   serverTimestamp,
-  Timestamp,
+  Timestamp
 } from 'firebase/firestore'
 import { getFirestore } from 'firebase/firestore'
 import { useAuthStore } from '~/stores/auth'
@@ -15,7 +15,7 @@ import { createTasksProvider } from '~/utils/api/taskProviders'
 import type { Task, IntegrationAccount } from '~/types/models'
 
 /** Authenticate a provider, returning true on success. */
-async function ensureAuthenticated(
+async function ensureAuthenticated (
   provider: ReturnType<typeof createTasksProvider>,
   account: IntegrationAccount
 ): Promise<boolean> {
@@ -33,25 +33,25 @@ async function ensureAuthenticated(
  * Set the integration accounts that have task sync enabled.
  * Call from the store action: `this.integrationAccounts = setIntegrationAccounts(accounts)`
  */
-export function filterTaskAccounts(accounts: IntegrationAccount[]): IntegrationAccount[] {
-  return accounts.filter((a) => a.syncTasks)
+export function filterTaskAccounts (accounts: IntegrationAccount[]): IntegrationAccount[] {
+  return accounts.filter(a => a.syncTasks)
 }
 
 /**
  * Fetch tasks from all enabled integration accounts in parallel.
  * Returns a map of accountId → Task[].
  */
-export async function fetchProviderTasksParallel(
+export async function fetchProviderTasksParallel (
   integrationAccounts: IntegrationAccount[],
   userId: string
 ): Promise<Record<string, Task[]>> {
   const results = await Promise.all(
     integrationAccounts.map(async (account) => {
-      if (!account.syncTasks || !account.oauthData.connected) return null
+      if (!account.syncTasks || !account.oauthData.connected) { return null }
 
       try {
         const provider = createTasksProvider(account)
-        if (!(await ensureAuthenticated(provider, account))) return null
+        if (!(await ensureAuthenticated(provider, account))) { return null }
 
         const result = await provider.fetchTasks()
         const tasks: Task[] = result.tasks.map((task: Partial<Task>) => ({
@@ -71,7 +71,7 @@ export async function fetchProviderTasksParallel(
           completedAt: task.completedAt || null,
           createdAt: task.createdAt || new Date(),
           updatedAt: task.updatedAt || new Date(),
-          comments: task.comments || [],
+          comments: task.comments || []
         })) as Task[]
 
         console.log(`Fetched ${tasks.length} tasks from ${account.type} (${account.oauthData.email})`)
@@ -85,7 +85,7 @@ export async function fetchProviderTasksParallel(
 
   const syncedTasks: Record<string, Task[]> = {}
   for (const result of results) {
-    if (result) syncedTasks[result.accountId] = result.tasks
+    if (result) { syncedTasks[result.accountId] = result.tasks }
   }
   return syncedTasks
 }
@@ -94,14 +94,14 @@ export async function fetchProviderTasksParallel(
  * Merge provider tasks into Firestore and the local task list.
  * Skips tasks that already exist and are up-to-date.
  */
-export async function mergeProviderTasksIntoFirestore(
+export async function mergeProviderTasksIntoFirestore (
   syncedProviderTasks: Record<string, Task[]>,
   localTasks: Task[],
   userId: string,
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>
 ): Promise<void> {
   const allSyncedTasks: Task[] = Object.values(syncedProviderTasks).flat()
-  if (!allSyncedTasks.length) return
+  if (!allSyncedTasks.length) { return }
 
   const db = getFirestore()
   const tasksRef = collection(db, 'tasks')
@@ -109,7 +109,7 @@ export async function mergeProviderTasksIntoFirestore(
   await Promise.all(
     allSyncedTasks.map(async (task) => {
       const existing = localTasks.find(
-        (t) => t.providerId === task.providerId && t.providerAccountId === task.providerAccountId
+        t => t.providerId === task.providerId && t.providerAccountId === task.providerAccountId
       )
 
       if (!existing) {
@@ -137,7 +137,7 @@ export async function mergeProviderTasksIntoFirestore(
             : Timestamp.fromDate(new Date()),
           description: task.description || '',
           assignedTo: task.assignedTo || null,
-          parentTask: task.parent || task.parentTask || null,
+          parentTask: task.parent || task.parentTask || null
         }
         await addDoc(tasksRef, taskData)
       } else {
@@ -152,14 +152,14 @@ export async function mergeProviderTasksIntoFirestore(
   )
 }
 
-export async function createTaskViaProvider(
+export async function createTaskViaProvider (
   task: Partial<Task>,
   accountId: string,
   integrationAccounts: IntegrationAccount[],
   createLocalTask: (task: Partial<Task>) => Promise<string | undefined>
 ): Promise<string | undefined> {
-  const account = integrationAccounts.find((a) => a.id === accountId)
-  if (!account) throw new Error(`Account ${accountId} not found`)
+  const account = integrationAccounts.find(a => a.id === accountId)
+  if (!account) { throw new Error(`Account ${accountId} not found`) }
 
   const provider = createTasksProvider(account)
   if (!(await ensureAuthenticated(provider, account))) {
@@ -167,12 +167,12 @@ export async function createTaskViaProvider(
   }
 
   const result = await provider.createTask(task)
-  if (!result.success || !result.taskId) throw new Error('Failed to create task in provider')
+  if (!result.success || !result.taskId) { throw new Error('Failed to create task in provider') }
 
   return createLocalTask({ ...task, providerId: result.taskId, providerAccountId: accountId, providerUpdatedAt: new Date() })
 }
 
-export async function updateTaskViaProvider(
+export async function updateTaskViaProvider (
   id: string,
   updates: Partial<Task>,
   getById: (id: string) => Task | null,
@@ -180,11 +180,11 @@ export async function updateTaskViaProvider(
   updateLocalTask: (id: string, updates: Partial<Task>) => Promise<void>
 ): Promise<boolean> {
   const task = getById(id)
-  if (!task) throw new Error('Task not found')
-  if (!task.providerId || !task.providerAccountId) throw new Error('Task is not linked to a provider')
+  if (!task) { throw new Error('Task not found') }
+  if (!task.providerId || !task.providerAccountId) { throw new Error('Task is not linked to a provider') }
 
-  const account = integrationAccounts.find((a) => a.id === task.providerAccountId)
-  if (!account) throw new Error(`Provider account ${task.providerAccountId} not found`)
+  const account = integrationAccounts.find(a => a.id === task.providerAccountId)
+  if (!account) { throw new Error(`Provider account ${task.providerAccountId} not found`) }
 
   const provider = createTasksProvider(account)
   if (!(await ensureAuthenticated(provider, account))) {
@@ -192,24 +192,24 @@ export async function updateTaskViaProvider(
   }
 
   const success = await provider.updateTask(task.providerId, updates)
-  if (!success) throw new Error('Failed to update task in provider')
+  if (!success) { throw new Error('Failed to update task in provider') }
 
   await updateLocalTask(id, { ...updates, providerUpdatedAt: new Date() })
   return true
 }
 
-export async function deleteTaskViaProvider(
+export async function deleteTaskViaProvider (
   id: string,
   getById: (id: string) => Task | null,
   integrationAccounts: IntegrationAccount[],
   deleteLocalTask: (id: string) => Promise<void>
 ): Promise<boolean> {
   const task = getById(id)
-  if (!task) throw new Error('Task not found')
-  if (!task.providerId || !task.providerAccountId) throw new Error('Task is not linked to a provider')
+  if (!task) { throw new Error('Task not found') }
+  if (!task.providerId || !task.providerAccountId) { throw new Error('Task is not linked to a provider') }
 
-  const account = integrationAccounts.find((a) => a.id === task.providerAccountId)
-  if (!account) throw new Error(`Provider account ${task.providerAccountId} not found`)
+  const account = integrationAccounts.find(a => a.id === task.providerAccountId)
+  if (!account) { throw new Error(`Provider account ${task.providerAccountId} not found`) }
 
   const provider = createTasksProvider(account)
   if (!(await ensureAuthenticated(provider, account))) {
@@ -217,24 +217,24 @@ export async function deleteTaskViaProvider(
   }
 
   const success = await provider.deleteTask(task.providerId)
-  if (!success) throw new Error('Failed to delete task in provider')
+  if (!success) { throw new Error('Failed to delete task in provider') }
 
   await deleteLocalTask(id)
   return true
 }
 
-export async function completeTaskViaProvider(
+export async function completeTaskViaProvider (
   id: string,
   getById: (id: string) => Task | null,
   integrationAccounts: IntegrationAccount[],
   markLocalComplete: (id: string) => Promise<void>
 ): Promise<boolean> {
   const task = getById(id)
-  if (!task) throw new Error('Task not found')
-  if (!task.providerId || !task.providerAccountId) throw new Error('Task is not linked to a provider')
+  if (!task) { throw new Error('Task not found') }
+  if (!task.providerId || !task.providerAccountId) { throw new Error('Task is not linked to a provider') }
 
-  const account = integrationAccounts.find((a) => a.id === task.providerAccountId)
-  if (!account) throw new Error(`Provider account ${task.providerAccountId} not found`)
+  const account = integrationAccounts.find(a => a.id === task.providerAccountId)
+  if (!account) { throw new Error(`Provider account ${task.providerAccountId} not found`) }
 
   const provider = createTasksProvider(account)
   if (!(await ensureAuthenticated(provider, account))) {
@@ -242,7 +242,7 @@ export async function completeTaskViaProvider(
   }
 
   const success = await provider.completeTask(task.providerId)
-  if (!success) throw new Error('Failed to complete task in provider')
+  if (!success) { throw new Error('Failed to complete task in provider') }
 
   await markLocalComplete(id)
   return true

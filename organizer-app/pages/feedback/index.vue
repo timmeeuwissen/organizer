@@ -6,14 +6,14 @@ v-container
 
     v-card-text
       v-alert(v-if="feedbackStore.error" type="error" density="compact" class="mb-4") {{ feedbackStore.error }}
-      
+
       v-tabs(v-model="activeTab")
         v-tab(value="new") {{ $t('feedback.tabs.new') }}
         v-tab(value="all") {{ $t('feedback.tabs.all') }}
         v-tab(value="approved") {{ $t('feedback.tabs.approved') }}
         v-tab(value="improved") {{ $t('feedback.tabs.improved') }}
         v-tab(value="archived") {{ $t('feedback.tabs.archived') }}
-      
+
       v-window(v-model="activeTab")
         v-window-item(value="new")
           v-data-table(
@@ -25,13 +25,13 @@ v-container
           )
             template(v-slot:no-data)
               div.pa-4.text-center {{ $t('feedback.noUnseenFeedback') }}
-              
+
             template(v-slot:item.timestamp="{ item }")
               | {{ formatDate(item.timestamp) }}
-            
+
             template(v-slot:item.actions="{ item }")
               v-btn(size="small" @click="viewFeedback(item)" color="primary") {{ $t('feedback.view') }}
-        
+
         v-window-item(value="all")
           v-data-table(
             :items="feedbackStore.feedbacks"
@@ -42,13 +42,13 @@ v-container
           )
             template(v-slot:no-data)
               div.pa-4.text-center {{ $t('feedback.noFeedback') }}
-              
+
             template(v-slot:item.timestamp="{ item }")
               | {{ formatDate(item.timestamp) }}
-            
+
             template(v-slot:item.actions="{ item }")
               v-btn(size="small" @click="viewFeedback(item)" color="primary") {{ $t('feedback.view') }}
-                
+
         v-window-item(value="approved")
           v-data-table(
             :items="feedbackStore.approvedFeedbacks"
@@ -59,13 +59,13 @@ v-container
           )
             template(v-slot:no-data)
               div.pa-4.text-center {{ $t('feedback.noApprovedFeedback') }}
-              
+
             template(v-slot:item.timestamp="{ item }")
               | {{ formatDate(item.timestamp) }}
-            
+
             template(v-slot:item.actions="{ item }")
               v-btn(size="small" @click="viewFeedback(item)" color="primary") {{ $t('feedback.view') }}
-                
+
         v-window-item(value="improved")
           v-data-table(
             :items="feedbackStore.improvedFeedbacks"
@@ -76,13 +76,13 @@ v-container
           )
             template(v-slot:no-data)
               div.pa-4.text-center {{ $t('feedback.noImprovedFeedback') }}
-              
+
             template(v-slot:item.timestamp="{ item }")
               | {{ formatDate(item.timestamp) }}
-            
+
             template(v-slot:item.actions="{ item }")
               v-btn(size="small" @click="viewFeedback(item)" color="primary") {{ $t('feedback.view') }}
-                
+
         v-window-item(value="archived")
           v-data-table(
             :items="feedbackStore.archivedFeedbacks"
@@ -93,10 +93,10 @@ v-container
           )
             template(v-slot:no-data)
               div.pa-4.text-center {{ $t('feedback.noArchivedFeedback') }}
-              
+
             template(v-slot:item.timestamp="{ item }")
               | {{ formatDate(item.timestamp) }}
-            
+
             template(v-slot:item.actions="{ item }")
               v-btn(size="small" @click="viewFeedback(item)" color="primary") {{ $t('feedback.view') }}
 
@@ -132,19 +132,19 @@ v-container
                   color="success"
                   @click="handleFeedbackAction('yes')"
                 ) {{ $t('feedback.actionYes') }}
-                
+
                 v-btn(
                   color="error"
                   @click="handleFeedbackAction('no')"
                 ) {{ $t('feedback.actionNo') }}
-            
+
             div.mt-4(v-if="selectedFeedback.seen && selectedFeedback.userAction")
               v-chip(
                 :color="selectedFeedback.userAction === 'yes' ? 'success' : 'error'"
                 text-color="white"
                 class="mr-2"
               ) {{ selectedFeedback.userAction === 'yes' ? $t('feedback.markedForAction') : $t('feedback.markedAsIgnored') }}
-              
+
             div.mt-4(v-if="selectedFeedback.userAction === 'yes'")
               p.text-h6 {{ $t('feedback.improvedQuestion') }}
               v-switch(
@@ -156,7 +156,7 @@ v-container
               )
               div(v-if="selectedFeedback.improved")
                 p.text-caption {{ $t('feedback.improvedAt') }}: {{ formatDate(selectedFeedback.improvedAt) }}
-                
+
             div.mt-6
               p.text-h6 {{ $t('feedback.archiveQuestion') }}
               v-switch(
@@ -168,7 +168,7 @@ v-container
               )
               div(v-if="selectedFeedback.archived")
                 p.text-caption {{ $t('feedback.archivedAt') }}: {{ formatDate(selectedFeedback.archivedAt) }}
-              
+
             div.mt-4(v-if="selectedFeedback.processedByClaude")
               v-chip(
                 color="purple"
@@ -176,7 +176,7 @@ v-container
                 class="mr-2"
               ) {{ $t('feedback.processedByClaude') }}
               p.text-caption {{ $t('feedback.processedAt') }}: {{ formatDate(selectedFeedback.processedAt) }}
-                
+
       v-card-actions
         v-spacer
         v-btn(color="primary" @click="showDetailDialog = false") {{ $t('common.close') }}
@@ -215,16 +215,16 @@ onMounted(async () => {
   } else if (feedbackStore.error) {
     feedbackStore.error = null
   }
-  
+
   if (authStore.user) {
     await feedbackStore.fetchFeedbacks(authStore.user.id)
   }
 })
 
 // Format date
-function formatDate(date: Date | number | string) {
-  if (!date) return ''
-  
+function formatDate (date: Date | number | string) {
+  if (!date) { return '' }
+
   const d = new Date(date)
   return new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
@@ -236,17 +236,17 @@ function formatDate(date: Date | number | string) {
 }
 
 // View feedback details
-function viewFeedback(feedback: Feedback) {
+function viewFeedback (feedback: Feedback) {
   // Clear any previous errors, safely check if method exists
   if (typeof feedbackStore.clearError === 'function') {
     feedbackStore.clearError()
   } else if (feedbackStore.error) {
     feedbackStore.error = null
   }
-  
+
   selectedFeedback.value = feedback
   showDetailDialog.value = true
-  
+
   // Mark as seen if it wasn't already
   if (!feedback.seen) {
     feedbackStore.markAsSeen(feedback.id)
@@ -254,12 +254,12 @@ function viewFeedback(feedback: Feedback) {
 }
 
 // Handle feedback action (yes/no)
-async function handleFeedbackAction(action: 'yes' | 'no') {
-  if (!selectedFeedback.value) return
-  
+async function handleFeedbackAction (action: 'yes' | 'no') {
+  if (!selectedFeedback.value) { return }
+
   try {
     await feedbackStore.setUserAction(selectedFeedback.value.id, action)
-    
+
     // Update the selected feedback to reflect the changes
     selectedFeedback.value = {
       ...selectedFeedback.value,
@@ -287,13 +287,13 @@ watch(() => selectedFeedback.value, (feedback) => {
   }
 })
 
-async function handleImprovedChange(value: boolean) {
-  if (!selectedFeedback.value) return
-  
+async function handleImprovedChange (value: boolean) {
+  if (!selectedFeedback.value) { return }
+
   handleImprovedLoading.value = true
   try {
     await feedbackStore.markAsImproved(selectedFeedback.value.id, value)
-    
+
     // Update the selected feedback to reflect the changes
     selectedFeedback.value = {
       ...selectedFeedback.value,
@@ -309,20 +309,20 @@ async function handleImprovedChange(value: boolean) {
   }
 }
 
-async function handleArchiveChange(value: boolean) {
-  if (!selectedFeedback.value) return
-  
+async function handleArchiveChange (value: boolean) {
+  if (!selectedFeedback.value) { return }
+
   archiveLoading.value = true
   try {
     await feedbackStore.archiveFeedback(selectedFeedback.value.id, value)
-    
+
     // Update the selected feedback to reflect the changes
     selectedFeedback.value = {
       ...selectedFeedback.value,
       archived: value,
       archivedAt: value ? new Date() : undefined
     }
-    
+
     // If archiving, redirect to the feedback list
     if (value) {
       showDetailDialog.value = false

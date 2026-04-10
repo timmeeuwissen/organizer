@@ -17,7 +17,7 @@ Cypress.Commands.add('login', (email = 'test@example.com', password = 'password1
       if (authStore) {
         authStore.setUser({
           id: 'test-user-id',
-          email: email,
+          email,
           displayName: 'Test User',
           photoURL: 'https://via.placeholder.com/150',
           createdAt: new Date(),
@@ -29,7 +29,7 @@ Cypress.Commands.add('login', (email = 'test@example.com', password = 'password1
 
   // Visit the dashboard page after login
   cy.visit('/dashboard')
-  
+
   // Ensure we're logged in by checking for a common element
   cy.get('[data-test="user-avatar"]', { timeout: 10000 }).should('exist')
 })
@@ -44,9 +44,9 @@ Cypress.Commands.add('logout', () => {
       }
     }
   })
-  
+
   cy.visit('/auth/login')
-  
+
   // Ensure we're logged out
   cy.get('[data-test="login-form"]', { timeout: 10000 }).should('exist')
 })
@@ -54,11 +54,11 @@ Cypress.Commands.add('logout', () => {
 // Command to create test data - useful for setting up state before tests
 Cypress.Commands.add('createTestData', (dataType, data) => {
   cy.window().then((win) => {
-    if (!win.__NUXT__) return
-    
+    if (!win.__NUXT__) { return }
+
     const storeName = `${dataType}s` // e.g., behaviors, projects, tasks
     const store = win.$nuxt.$pinia._s.get(storeName)
-    
+
     if (store && typeof store.add === 'function') {
       // Use the store's add method to create the item
       store.add(data)
@@ -111,11 +111,11 @@ Cypress.Commands.add('navigateTo', (pageName) => {
     network: '/network',
     statistics: '/statistics'
   }
-  
+
   if (!routes[pageName]) {
     throw new Error(`Unknown page: ${pageName}`)
   }
-  
+
   cy.visit(routes[pageName])
 })
 
@@ -127,7 +127,7 @@ Cypress.Commands.add('assertElementExists', (selector) => {
 // Command to fake a current date for testing date-dependent features
 Cypress.Commands.add('mockDate', (isoDate) => {
   const now = new Date(isoDate).getTime()
-  
+
   cy.window().then((win) => {
     cy.stub(win.Date, 'now').returns(now)
   })

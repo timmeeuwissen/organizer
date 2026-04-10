@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_TEAM_BOARD_DISPLAY,
-  mergeTeamBoardDisplay,
+  mergeTeamBoardDisplay
 } from '~/config/teamBoard'
 
 describe('mergeTeamBoardDisplay', () => {
@@ -13,18 +13,18 @@ describe('mergeTeamBoardDisplay', () => {
     expect(
       mergeTeamBoardDisplay({
         density: 'compact',
-        showRecentMail: false,
-      }),
+        showRecentMail: false
+      })
     ).toEqual({
       density: 'compact',
       showRecentMail: false,
-      showTasks: true,
+      showTasks: true
     })
   })
 
   it('ignores invalid density', () => {
     expect(
-      mergeTeamBoardDisplay({ density: 'huge' as 'normal' }),
+      mergeTeamBoardDisplay({ density: 'huge' as 'normal' })
     ).toEqual(DEFAULT_TEAM_BOARD_DISPLAY)
   })
 })

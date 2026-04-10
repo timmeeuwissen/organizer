@@ -2,7 +2,7 @@ import type { IntegrationAccount } from '~/types/models'
 
 const futureExpiry = () => new Date(Date.now() + 3_600_000)
 
-export function googleIntegrationAccount(
+export function googleIntegrationAccount (
   overrides: Partial<IntegrationAccount> = {}
 ): IntegrationAccount {
   const { oauthData: oauthOverrides, ...rest } = overrides
@@ -15,7 +15,7 @@ export function googleIntegrationAccount(
     tokenExpiry: futureExpiry(),
     scope:
       'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly',
-    ...oauthOverrides,
+    ...oauthOverrides
   }
   return {
     id: 'acc-google-1',
@@ -33,11 +33,11 @@ export function googleIntegrationAccount(
     createdAt: new Date(),
     updatedAt: new Date(),
     ...rest,
-    oauthData: oauth,
+    oauthData: oauth
   }
 }
 
-export function office365IntegrationAccount(
+export function office365IntegrationAccount (
   overrides: Partial<IntegrationAccount> = {}
 ): IntegrationAccount {
   const { oauthData: oauthOverrides, ...rest } = overrides
@@ -50,7 +50,7 @@ export function office365IntegrationAccount(
     tokenExpiry: futureExpiry(),
     scope:
       'Mail.Read Calendars.Read Contacts.Read Tasks.ReadWrite offline_access',
-    ...oauthOverrides,
+    ...oauthOverrides
   }
   return {
     id: 'acc-ms-1',
@@ -68,16 +68,16 @@ export function office365IntegrationAccount(
     createdAt: new Date(),
     updatedAt: new Date(),
     ...rest,
-    oauthData: oauth,
+    oauthData: oauth
   }
 }
 
-export function exchangeIntegrationAccount(
+export function exchangeIntegrationAccount (
   overrides: Partial<IntegrationAccount> = {}
 ): IntegrationAccount {
   return office365IntegrationAccount({
     ...overrides,
     id: overrides.id ?? 'acc-exch-1',
-    type: 'exchange',
+    type: 'exchange'
   })
 }

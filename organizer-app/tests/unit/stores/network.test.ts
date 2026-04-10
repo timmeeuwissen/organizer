@@ -129,7 +129,7 @@ describe('useNetworkStore — syncFromStores', () => {
     vi.mock('~/stores/people', () => ({
       usePeopleStore: () => ({
         people: [{ id: 'p1', firstName: 'Alice', lastName: 'Smith', relatedProjects: [], relatedTasks: [] }],
-        fetchPeople: vi.fn().mockResolvedValue(undefined),
+        fetchPeople: vi.fn().mockResolvedValue(undefined)
       })
     }))
     vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [], fetchProjects: vi.fn().mockResolvedValue(undefined) }) }))
@@ -158,7 +158,7 @@ describe('useNetworkStore — syncFromStores', () => {
     vi.mock('~/stores/people', () => ({
       usePeopleStore: () => ({
         people: [{ id: 'p1', firstName: 'Alice', lastName: 'Smith', relatedProjects: [], relatedTasks: [] }],
-        fetchPeople: vi.fn().mockResolvedValue(undefined),
+        fetchPeople: vi.fn().mockResolvedValue(undefined)
       })
     }))
     vi.mock('~/stores/projects', () => ({ useProjectsStore: () => ({ projects: [], fetchProjects: vi.fn().mockResolvedValue(undefined) }) }))

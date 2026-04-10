@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { googleIntegrationAccount } from '../../../helpers/mockIntegrationAccount'
+import { jsonResponse } from '../../../helpers/mockFetch'
 import {
   buildAuthHeaders,
   makeApiRequest,
-  ApiError,
+  ApiError
 } from '~/utils/api/core/apiUtils'
-import { googleIntegrationAccount } from '../../../helpers/mockIntegrationAccount'
-import { jsonResponse } from '../../../helpers/mockFetch'
 
 describe('apiUtils', () => {
   beforeEach(() => {
@@ -19,8 +19,8 @@ describe('apiUtils', () => {
     const acc = googleIntegrationAccount({
       oauthData: {
         ...googleIntegrationAccount().oauthData,
-        accessToken: undefined,
-      },
+        accessToken: undefined
+      }
     })
     expect(() => buildAuthHeaders(acc)).toThrow(/No access token/)
   })
@@ -44,8 +44,8 @@ describe('apiUtils', () => {
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
-          Authorization: 'Bearer test-google-access-token',
-        }),
+          Authorization: 'Bearer test-google-access-token'
+        })
       })
     )
   })
@@ -54,7 +54,7 @@ describe('apiUtils', () => {
     const acc = googleIntegrationAccount()
     vi.mocked(fetch).mockResolvedValue(jsonResponse({}))
     await makeApiRequest('https://example.com/x', acc, {
-      params: { a: '1', b: 'two' },
+      params: { a: '1', b: 'two' }
     })
     expect(vi.mocked(fetch).mock.calls[0][0]).toBe(
       'https://example.com/x?a=1&b=two'

@@ -1,3 +1,7 @@
+import type { AIIntegrationData } from './aiIntegration'
+import type { MailColumnKey, MailPageSize } from '~/config/mailUi'
+import type { TasksUiSettings } from '~/config/tasksUi'
+
 export interface IntegrationOAuthData {
   accessToken?: string; // OAuth access token
   refreshToken?: string; // OAuth refresh token
@@ -25,7 +29,7 @@ export interface IntegrationAccount {
   id: string;
   type: 'exchange' | 'google' | 'office365' | 'imap' | 'pop3';
   color: string; // Color for visual identification in UI
-  
+
   // Application-specific preferences
   syncCalendar: boolean;
   syncMail: boolean;
@@ -35,17 +39,13 @@ export interface IntegrationAccount {
   showInMail: boolean;
   showInTasks: boolean;
   showInContacts: boolean;
-  
+
   // OAuth connection data stored separately
   oauthData: IntegrationOAuthData;
-  
+
   createdAt: Date;
   updatedAt: Date;
 }
-
-import type { AIIntegrationData } from './aiIntegration';
-import type { MailColumnKey, MailPageSize } from '~/config/mailUi';
-import type { TasksUiSettings } from '~/config/tasksUi';
 
 /** Persisted mail list UI (page size, visible columns). */
 export interface MailUiSettings {
@@ -288,5 +288,5 @@ export interface Feedback {
 export type {
   Team,
   TeamMailMeta,
-  TeamColumnLayoutMode,
+  TeamColumnLayoutMode
 } from './team'

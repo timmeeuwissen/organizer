@@ -8,7 +8,7 @@ v-dialog(
     v-card-title
       | {{ $t('ai.analyzeText') }}
       v-spacer
-      
+
       // Display selected AI provider in top-right
       template(v-if="availableIntegrations.length > 0")
         v-select(
@@ -28,21 +28,21 @@ v-dialog(
           color="primary"
           size="small"
           class="mr-2"
-        ) 
+        )
           v-icon(start) {{ getProviderIcon(availableIntegrations[0].provider) }}
           | {{ availableIntegrations[0].name }}
-      
+
       v-btn(icon @click="close")
         v-icon mdi-close
-    
+
     v-alert(
-      v-if="error" 
-      type="error" 
+      v-if="error"
+      type="error"
       class="ma-4"
       closable
       @click:close="error = ''"
     ) {{ error }}
-    
+
     // Input section
     v-card-text(v-if="!isAnalyzing && !analysisResult")
       v-form(ref="form" @submit.prevent="analyzeText")
@@ -59,7 +59,7 @@ v-dialog(
           class="mb-4"
           :rules="[rules.required]"
         )
-        
+
         v-textarea(
           v-model="textToAnalyze"
           :label="$t('ai.textToAnalyze')"
@@ -70,7 +70,7 @@ v-dialog(
           variant="outlined"
           :rules="[rules.required]"
         )
-      
+
       v-card-actions
         v-spacer
         v-btn(
@@ -81,7 +81,7 @@ v-dialog(
         )
           v-icon(start) mdi-brain
           | {{ $t('ai.analyze') }}
-    
+
     // Loading state
     v-card-text(v-if="isAnalyzing")
       v-row(align="center" justify="center" class="py-8")
@@ -93,7 +93,7 @@ v-dialog(
           )
           div.text-h6.mt-4 {{ $t('ai.analyzing') }}
           div.text-body-2.mt-2 {{ $t('ai.analyzingDescription') }}
-    
+
     // Results section
     template(v-if="!isAnalyzing && analysisResult")
       v-card-text
@@ -102,7 +102,7 @@ v-dialog(
           :summary="analysisResult.summary"
           :original-text="textToAnalyze"
         )
-        
+
         // Tabs for different entity types
         entity-tabs(
           v-model="activeTab"
@@ -163,7 +163,7 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-          
+
           // Projects tab
           template(#projects)
             entity-list(
@@ -214,7 +214,7 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-          
+
           // Tasks tab
           template(#tasks)
             entity-list(
@@ -265,7 +265,7 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-          
+
           // Behaviors tab
           template(#behaviors)
             entity-list(
@@ -308,7 +308,7 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-          
+
           // Meetings tab
           template(#meetings)
             entity-list(
@@ -350,7 +350,7 @@ v-dialog(
                       auto-grow
                       rows="2"
                     )
-      
+
       v-card-actions
         template(v-if="!isAnalyzing && analysisResult")
           v-btn(variant="text" color="primary" @click="newAnalysis") {{ $t('ai.newAnalysis') }}
@@ -369,6 +369,9 @@ v-dialog(
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import TextSummary from './analysis/TextSummary.vue'
+import EntityTabs from './analysis/EntityTabs.vue'
+import EntityList from './analysis/EntityList.vue'
 import { useAuthStore } from '~/stores/auth'
 import { getProvider } from '~/utils/api/aiProviders'
 import { usePeopleStore } from '~/stores/people'
@@ -378,9 +381,6 @@ import { useBehaviorsStore } from '~/stores/behaviors'
 import { useMeetingsStore } from '~/stores/meetings'
 
 // Import our custom components
-import TextSummary from './analysis/TextSummary.vue'
-import EntityTabs from './analysis/EntityTabs.vue'
-import EntityList from './analysis/EntityList.vue'
 
 const props = defineProps({
   modelValue: {
@@ -394,7 +394,7 @@ const emit = defineEmits(['update:modelValue'])
 // Single source of truth with parent — avoids props ↔ local ref watch ping-pong (recursive updates).
 const dialogVisible = computed({
   get: () => props.modelValue,
-  set: (v) => emit('update:modelValue', v),
+  set: v => emit('update:modelValue', v)
 })
 const form = ref(null)
 const isAnalyzing = ref(false)
@@ -417,7 +417,7 @@ const invalidItems = ref({
 
 // Validation rules
 const rules = {
-  required: (v) => !!v || 'This field is required'
+  required: v => !!v || 'This field is required'
 }
 
 // Stores
@@ -438,8 +438,8 @@ const availableMeetings = computed(() => meetingsStore.meetings || [])
 
 // Entity tabs configuration
 const entityTabs = computed(() => {
-  if (!analysisResult.value) return []
-  
+  if (!analysisResult.value) { return [] }
+
   return [
     {
       value: 'people',
@@ -477,23 +477,23 @@ const entityTabs = computed(() => {
 // Check if we can save results - requires every entity to have an action selected
 // and all required fields to be filled
 const canSaveResults = computed(() => {
-  if (!analysisResult.value) return false
-  
+  if (!analysisResult.value) { return false }
+
   const allEntities = getAllEntities()
-  
+
   // Every entity must have an action selected
   const allHaveActions = allEntities.every((_, entityIndex) => entityActions.value[entityIndex] !== undefined)
-  
+
   // No validation errors
   const noValidationErrors = Object.values(invalidItems.value).every(arr => arr.length === 0)
-  
+
   return allHaveActions && noValidationErrors
 })
 
 // Helper to get all entities across all tabs
-function getAllEntities() {
-  if (!analysisResult.value) return []
-  
+function getAllEntities () {
+  if (!analysisResult.value) { return [] }
+
   return [
     ...(analysisResult.value.people || []),
     ...(analysisResult.value.projects || []),
@@ -508,8 +508,8 @@ const user = computed(() => authStore.currentUser)
 
 // Get all available AI integrations (enabled ones only)
 const availableIntegrations = computed(() => {
-  if (!user.value?.settings?.aiIntegrations) return []
-  
+  if (!user.value?.settings?.aiIntegrations) { return [] }
+
   return user.value.settings.aiIntegrations
     .filter(integration => integration.enabled && integration.apiKey)
 })
@@ -532,11 +532,11 @@ const selectedProvider = computed({
     if (!provider) {
       return
     }
-    const found = availableIntegrations.value.find((i) => i.provider === provider)
+    const found = availableIntegrations.value.find(i => i.provider === provider)
     if (found) {
       selectedIntegration.value = found
     }
-  },
+  }
 })
 
 // Status and type options for entities
@@ -572,7 +572,7 @@ const behaviorTypeOptions = [
 ]
 
 // Helper function to get provider icon
-function getProviderIcon(provider) {
+function getProviderIcon (provider) {
   switch (provider) {
     case 'openai':
       return 'mdi-brain'
@@ -600,26 +600,26 @@ watch(() => entityActions.value, validateRelationships, { deep: true })
 watch(() => entityRelations.value, validateRelationships, { deep: true })
 
 // Methods
-async function analyzeText() {
+async function analyzeText () {
   console.log('user asks to analyze the text')
   if (!textToAnalyze.value) {
     console.error('nothing to analyze')
     return
   }
-  
+
   isAnalyzing.value = true
   error.value = ''
   entityActions.value = {} // Reset entity actions
   entityRelations.value = {} // Reset entity relations
-  
+
   try {
     // Get the selected integration
     const integration = selectedIntegration.value
-    
+
     if (!integration) {
       throw new Error('No AI integration selected')
     }
-    
+
     // Use the API directly from the server rather than going through client-side providers
     try {
       console.log('requesting server to analyze')
@@ -629,18 +629,18 @@ async function analyzeText() {
       const response = await $fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${authStore.token}`
+          Authorization: `Bearer ${authStore.token}`
         },
         body: {
-          integration: integration, // Send the full integration object
+          integration, // Send the full integration object
           text: textToAnalyze.value
         }
       })
-      
+
       // Update the analysis result
       analysisResult.value = response.result
-      console.log('the server responded with the following message:' , response)
-      
+      console.log('the server responded with the following message:', response)
+
       // Initialize actions as 'ignore' for all entities
       if (analysisResult.value) {
         const allEntities = getAllEntities()
@@ -652,7 +652,7 @@ async function analyzeText() {
       console.error('AI analysis fetch error:', fetchErr)
       throw new Error(fetchErr.message || 'Failed to analyze text')
     }
-    
+
     // The lastUsed field will be updated automatically by the server when an integration is used
   } catch (err) {
     console.error('AI analysis error:', err)
@@ -663,20 +663,20 @@ async function analyzeText() {
 }
 
 // Entity action and relation management
-function updateActions(entityType, actions) {
+function updateActions (entityType, actions) {
   // Update actions for the specific entity type
   entityActions.value = { ...entityActions.value, ...actions }
   validateRelationships()
 }
 
-function updateRelations(entityType, relations) {
+function updateRelations (entityType, relations) {
   // Update relations for the specific entity type
   entityRelations.value = { ...entityRelations.value, ...relations }
   validateRelationships()
 }
 
 // Setup edit state for an entity and mark it as edited
-function setupEditState(entity) {
+function setupEditState (entity) {
   // Deep clone to avoid modifying original
   selectedItemDetails.value = {
     type: getEntityType(entity),
@@ -685,7 +685,7 @@ function setupEditState(entity) {
 }
 
 // Validate all relationships to ensure required relations are set
-function validateRelationships() {
+function validateRelationships () {
   // Reset invalid items
   const newInvalidItems = {
     people: [],
@@ -694,41 +694,41 @@ function validateRelationships() {
     behaviors: [],
     meetings: []
   }
-  
+
   // Check each entity with 'relate' action
   const allEntities = getAllEntities()
-  
+
   allEntities.forEach((entity, index) => {
     const action = entityActions.value[index]
     const type = getEntityType(entity)
     const pluralType = type === 'person' ? 'people' : `${type}s`
-    
+
     // If action is relate, check that a relation is selected
     if (action === 'relate') {
       const relation = entityRelations.value[index]
-      
+
       if (!relation) {
         // Add to invalid items for this type
         newInvalidItems[pluralType].push(index)
       }
     }
   })
-  
+
   // Update the invalid items ref
   invalidItems.value = newInvalidItems
 }
 
 // Save all results
-function saveResults() {
-  if (!canSaveResults.value) return
-  
+function saveResults () {
+  if (!canSaveResults.value) { return }
+
   const allEntities = getAllEntities()
-  
+
   // Process each entity based on its action
   allEntities.forEach((entity, index) => {
     const action = entityActions.value[index]
     const entityType = getEntityType(entity)
-    
+
     if (action === 'add') {
       // Create new entity
       createNewEntity(entityType, entity)
@@ -738,16 +738,16 @@ function saveResults() {
     }
     // Ignore action does nothing
   })
-  
+
   // Close dialog after saving
   close()
 }
 
 // Helper to determine entity type
-function getEntityType(entity) {
+function getEntityType (entity) {
   // Check which array the entity is in
-  if (!analysisResult.value) return null
-  
+  if (!analysisResult.value) { return null }
+
   if (analysisResult.value.people && analysisResult.value.people.includes(entity)) {
     return 'person'
   } else if (analysisResult.value.projects && analysisResult.value.projects.includes(entity)) {
@@ -763,9 +763,9 @@ function getEntityType(entity) {
 }
 
 // Create a new entity in the appropriate store
-function createNewEntity(type, entity) {
+function createNewEntity (type, entity) {
   console.log('Creating new entity:', { type, entity })
-  
+
   // TODO: In a real implementation, this would create the entity in the appropriate store
   // For example:
   if (type === 'person') {
@@ -782,14 +782,14 @@ function createNewEntity(type, entity) {
 }
 
 // Relate to an existing entity
-function relateToEntity(type, entity, relatedEntity) {
+function relateToEntity (type, entity, relatedEntity) {
   console.log('Relating to existing entity:', { type, entity, relatedEntity })
-  
+
   // TODO: Create relationship between entities
   // This would depend on the specific data model of the application
 }
 
-function close() {
+function close () {
   // Reset state and close the dialog
   emit('update:modelValue', false)
   textToAnalyze.value = ''
@@ -807,7 +807,7 @@ function close() {
   error.value = ''
 }
 
-function newAnalysis() {
+function newAnalysis () {
   // Reset state but keep the dialog open
   textToAnalyze.value = ''
   analysisResult.value = null

@@ -1,6 +1,5 @@
 import type { ContactFetchResult, ContactPagination, ContactProvider, ContactQuery } from './ContactProvider'
-import type { Person } from '~/types/models'
-import type { IntegrationAccount } from '~/types/models'
+import type { Person, IntegrationAccount } from '~/types/models'
 import { refreshOAuthToken } from '~/utils/api/emailUtils'
 
 // Type definitions for Google People API
@@ -36,9 +35,9 @@ interface GoogleContactData {
 
 /**
  * Google Contacts provider implementation using People API
- * 
+ *
  * Documentation: https://developers.google.com/people/api/rest
- * 
+ *
  * This provider uses the Google People API to fetch, create, update, and delete contacts.
  * The People API provides a more comprehensive set of fields and capabilities compared
  * to the older Contacts API.
@@ -46,74 +45,74 @@ interface GoogleContactData {
 export class GoogleContactsProvider implements ContactProvider {
   private account: IntegrationAccount
   private pageTokens: Record<number, string> = {}
-  
-  constructor(account: IntegrationAccount) {
+
+  constructor (account: IntegrationAccount) {
     this.account = account
   }
 
-  isAuthenticated(): boolean {
+  isAuthenticated (): boolean {
     // Check access token
     if (!this.account.oauthData.accessToken) {
       console.log(`[GContacts] ${this.account.oauthData.email}: No access token found`)
       return false
     }
-    
+
     // Check token expiry
     // If tokenExpiry is not set, consider the token expired and force a refresh
     if (!this.account.oauthData.tokenExpiry) {
       console.log(`[GContacts] ${this.account.oauthData.email}: No token expiry date set, assuming expired`)
       return false
     }
-    
+
     // Check if token is expired
     if (new Date(this.account.oauthData.tokenExpiry) < new Date()) {
       console.log(`[GContacts] ${this.account.oauthData.email}: Token expired`)
       return false
     }
-    
+
     // Verify proper People API scopes if scope is specified
     if (this.account.oauthData.scope) {
-      const hasContactsScope = 
-        this.account.oauthData.scope.includes('contacts') || 
-        this.account.oauthData.scope.includes('contacts.readonly') || 
+      const hasContactsScope =
+        this.account.oauthData.scope.includes('contacts') ||
+        this.account.oauthData.scope.includes('contacts.readonly') ||
         this.account.oauthData.scope.includes('https://www.googleapis.com/auth/contacts') ||
-        this.account.oauthData.scope.includes('https://www.googleapis.com/auth/contacts.readonly');
-        
+        this.account.oauthData.scope.includes('https://www.googleapis.com/auth/contacts.readonly')
+
       if (!hasContactsScope) {
         console.warn(`[GContacts] ${this.account.oauthData.email}: Google account missing required contacts scopes:`, this.account.oauthData.scope)
         return false
       }
     }
-    
+
     console.log(`[GContacts] ${this.account.oauthData.email}: Authentication valid`)
     return true
   }
 
-  async authenticate(): Promise<boolean> {
+  async authenticate (): Promise<boolean> {
     console.log(`[GContacts] GoogleContactsProvider.authenticate for ${this.account.oauthData.email}`)
-    
+
     if (this.isAuthenticated()) {
       console.log(`[GContacts] ${this.account.oauthData.email} is already authenticated`)
       return true
     }
-    
+
     // Standard OAuth refresh flow for any account with a refresh token
     if (this.account.oauthData.refreshToken) {
       try {
         // Refresh token and get updated account
         const updatedAccount = await refreshOAuthToken(this.account)
-        
+
         // Update this instance's account reference
         this.account = updatedAccount
-        
+
         // Update the account in the pinia store so other components can benefit
         // from the refreshed token without having to refresh again
-        import('~/utils/api/emailUtils').then(module => {
+        import('~/utils/api/emailUtils').then((module) => {
           module.updateAccountInStore(updatedAccount)
-        }).catch(err => {
+        }).catch((err) => {
           console.error('[GContacts] Error importing updateAccountInStore:', err)
         })
-        
+
         console.log(`[GContacts] Successfully refreshed token for ${this.account.oauthData.email}`)
         return true
       } catch (error) {
@@ -121,12 +120,12 @@ export class GoogleContactsProvider implements ContactProvider {
         return false
       }
     }
-    
+
     console.warn(`[GContacts] ${this.account.oauthData.email} has no refresh token, would need to redirect to OAuth flow`)
     return false
   }
 
-  async fetchContacts(query?: ContactQuery, pagination?: ContactPagination): Promise<ContactFetchResult> {
+  async fetchContacts (query?: ContactQuery, pagination?: ContactPagination): Promise<ContactFetchResult> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -145,21 +144,21 @@ export class GoogleContactsProvider implements ContactProvider {
       // Default values
       const pageSize = pagination?.pageSize || 50
       const page = pagination?.page || 0
-      
+
       // API endpoint for Google People API
       const endpoint = 'https://people.googleapis.com/v1/people/me/connections'
-      
+
       // Prepare query parameters
       const params = new URLSearchParams({
         personFields: 'names,emailAddresses,phoneNumbers,organizations,biographies,memberships',
         pageSize: pageSize.toString()
       })
-      
+
       // Add query parameter if provided
       if (query?.query) {
         params.append('query', query.query)
       }
-      
+
       // For Google Contacts, we need to handle pagination with page tokens
       if (page > 0 && this.pageTokens && this.pageTokens[page - 1]) {
         params.append('pageToken', this.pageTokens[page - 1])
@@ -169,21 +168,21 @@ export class GoogleContactsProvider implements ContactProvider {
         console.log(`[GContacts] No token for page ${page}, starting from page 0`)
         return this.fetchContactsFromStart(query, pagination)
       }
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
-      
+
       const url = `${endpoint}?${params.toString()}`
       console.log(`[GContacts] Fetching contacts from: ${url}`)
-      
+
       // Make the request
       const response = await fetch(url, {
         method: 'GET',
-        headers: headers
+        headers
       })
 
       // Check for HTTP errors
@@ -192,33 +191,33 @@ export class GoogleContactsProvider implements ContactProvider {
         console.error('[GContacts] Fetch error:', errorText)
         throw new Error(`Google People API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
 
       // Extract connections
       const connections = data.connections || []
-      
+
       // Store the next page token for future use
       const nextPageToken = data.nextPageToken
       if (nextPageToken) {
-        if (!this.pageTokens) this.pageTokens = {}
+        if (!this.pageTokens) { this.pageTokens = {} }
         this.pageTokens[page] = nextPageToken
       }
-      
+
       // Convert Google contacts to app Person format
       let contacts = connections.map((connection: Record<string, any>) => this.googleContactToPerson(connection))
-      
+
       // Apply additional filters that can't be applied in the API request
       if (query?.organization) {
-        contacts = contacts.filter((contact: Person) => 
+        contacts = contacts.filter((contact: Person) =>
           contact.organization?.toLowerCase().includes(query.organization!.toLowerCase())
         )
       }
 
       if (query?.tags && query.tags.length > 0) {
         contacts = contacts.filter((contact: Person) => {
-          if (!contact.tags) return false
+          if (!contact.tags) { return false }
           return query.tags?.some(tag => contact.tags?.includes(tag))
         })
       }
@@ -243,29 +242,29 @@ export class GoogleContactsProvider implements ContactProvider {
    * Fetch contacts from page 0 and sequentially get tokens
    * until we reach the desired page
    */
-  private async fetchContactsFromStart(query?: ContactQuery, pagination?: ContactPagination): Promise<ContactFetchResult> {
+  private async fetchContactsFromStart (query?: ContactQuery, pagination?: ContactPagination): Promise<ContactFetchResult> {
     const targetPage = pagination?.page || 0
-    
+
     // If target is page 0, just do a normal fetch
     if (targetPage === 0) {
       return this.fetchContacts(query, { page: 0, pageSize: pagination?.pageSize || 50 })
     }
-    
+
     // Start from page 0
     let currentPage = 0
     let result: ContactFetchResult
-    
+
     // Reset page tokens
     this.pageTokens = {}
-    
+
     // Keep fetching pages until we reach the target page
     do {
       // Fetch current page
-      result = await this.fetchContacts(query, { 
-        page: currentPage, 
-        pageSize: pagination?.pageSize || 50 
+      result = await this.fetchContacts(query, {
+        page: currentPage,
+        pageSize: pagination?.pageSize || 50
       })
-      
+
       // Move to next page if there is one
       if (result.hasMore) {
         currentPage++
@@ -273,14 +272,13 @@ export class GoogleContactsProvider implements ContactProvider {
         // No more pages available, return last page
         return result
       }
-      
     } while (currentPage < targetPage)
-    
+
     // Now fetch the target page with the correct token
     return this.fetchContacts(query, pagination)
   }
 
-  async createContact(contact: Partial<Person>): Promise<{ success: boolean; contactId?: string }> {
+  async createContact (contact: Partial<Person>): Promise<{ success: boolean; contactId?: string }> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -292,16 +290,16 @@ export class GoogleContactsProvider implements ContactProvider {
     try {
       // API endpoint for Google People API
       const endpoint = 'https://people.googleapis.com/v1/people:createContact'
-      
+
       // Prepare the contact data in Google People API format
-      const firstName = contact.firstName as string | undefined;
-      const lastName = contact.lastName as string | undefined;
-      const email = contact.email as string | undefined;
-      const phone = contact.phone as string | undefined;
-      const organization = contact.organization as string | undefined;
-      const role = contact.role as string | undefined;
-      const notes = contact.notes as string | undefined;
-      
+      const firstName = contact.firstName as string | undefined
+      const lastName = contact.lastName as string | undefined
+      const email = contact.email as string | undefined
+      const phone = contact.phone as string | undefined
+      const organization = contact.organization as string | undefined
+      const role = contact.role as string | undefined
+      const notes = contact.notes as string | undefined
+
       const googleContact: GoogleContactData = {
         names: [{
           givenName: firstName,
@@ -309,43 +307,45 @@ export class GoogleContactsProvider implements ContactProvider {
         }],
         emailAddresses: email ? [{ value: email }] : [],
         phoneNumbers: phone ? [{ value: phone }] : [],
-        organizations: organization ? [{ 
-          name: organization, 
-          title: role
-        }] : [],
+        organizations: organization
+          ? [{
+              name: organization,
+              title: role
+            }]
+          : [],
         biographies: notes ? [{ value: notes }] : []
       }
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
-      
+
       console.log('[GContacts] Creating contact:', JSON.stringify(googleContact))
-      
+
       // Make the request
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: headers,
+        headers,
         body: JSON.stringify(googleContact)
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[GContacts] Create error:', errorText)
         throw new Error(`Google People API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
-      
+
       // Extract the resourceName and get the ID
       const resourceName = data.resourceName
       const contactId = resourceName ? resourceName.split('/').pop() : undefined
-      
+
       return {
         success: !!contactId,
         contactId
@@ -356,15 +356,15 @@ export class GoogleContactsProvider implements ContactProvider {
     }
   }
 
-  async updateContact(contactId: string, updates: Partial<Person>): Promise<boolean> {
+  async updateContact (contactId: string, updates: Partial<Person>): Promise<boolean> {
     // Type safety for Person properties
-    const firstName = updates.firstName as string | undefined;
-    const lastName = updates.lastName as string | undefined;
-    const email = updates.email as string | undefined;
-    const phone = updates.phone as string | undefined;
-    const organization = updates.organization as string | undefined;
-    const role = updates.role as string | undefined;
-    const notes = updates.notes as string | undefined;
+    const firstName = updates.firstName as string | undefined
+    const lastName = updates.lastName as string | undefined
+    const email = updates.email as string | undefined
+    const phone = updates.phone as string | undefined
+    const organization = updates.organization as string | undefined
+    const role = updates.role as string | undefined
+    const notes = updates.notes as string | undefined
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -375,41 +375,41 @@ export class GoogleContactsProvider implements ContactProvider {
 
     try {
       // First, get the existing contact to have the full resourceName
-      const getEndpoint = `https://people.googleapis.com/v1/people/${contactId}`;
+      const getEndpoint = `https://people.googleapis.com/v1/people/${contactId}`
       const getParams = new URLSearchParams({
         personFields: 'names,emailAddresses,phoneNumbers,organizations,biographies'
-      });
-      
+      })
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
-      
+        Accept: 'application/json'
+      }
+
       // Get the existing contact
       const getResponse = await fetch(`${getEndpoint}?${getParams.toString()}`, {
         method: 'GET',
-        headers: headers
-      });
-      
+        headers
+      })
+
       if (!getResponse.ok) {
-        const errorText = await getResponse.text();
-        console.error('[GContacts] Get contact error:', errorText);
-        throw new Error(`Google People API error: ${getResponse.status} ${getResponse.statusText}`);
+        const errorText = await getResponse.text()
+        console.error('[GContacts] Get contact error:', errorText)
+        throw new Error(`Google People API error: ${getResponse.status} ${getResponse.statusText}`)
       }
-      
-      const existingContact = await getResponse.json();
-      const resourceName = existingContact.resourceName;
-      
+
+      const existingContact = await getResponse.json()
+      const resourceName = existingContact.resourceName
+
       if (!resourceName) {
-        console.error('[GContacts] Resource name not found for contact:', contactId);
-        return false;
+        console.error('[GContacts] Resource name not found for contact:', contactId)
+        return false
       }
-      
+
       // API endpoint for update
-      const updateEndpoint = `https://people.googleapis.com/v1/${resourceName}:updateContact`;
-      
+      const updateEndpoint = `https://people.googleapis.com/v1/${resourceName}:updateContact`
+
       // Build Google People API update payload
       type GoogleUpdatePayload = {
         names?: GooglePersonName[];
@@ -418,80 +418,80 @@ export class GoogleContactsProvider implements ContactProvider {
         organizations?: GoogleOrganization[];
         biographies?: GoogleBiography[];
       };
-      
+
       // Build update fields and updatePersonFields parameter
-      const updateContact: GoogleUpdatePayload = {};
-      const updatePersonFields: string[] = [];
-      
+      const updateContact: GoogleUpdatePayload = {}
+      const updatePersonFields: string[] = []
+
       // Names
       if (firstName !== undefined || lastName !== undefined) {
         updateContact.names = [{
           givenName: firstName || existingContact.names?.[0]?.givenName,
           familyName: lastName || existingContact.names?.[0]?.familyName
-        }];
-        updatePersonFields.push('names');
+        }]
+        updatePersonFields.push('names')
       }
-      
+
       // Email
       if (email !== undefined) {
-        updateContact.emailAddresses = email ? [{ value: email }] : [];
-        updatePersonFields.push('emailAddresses');
+        updateContact.emailAddresses = email ? [{ value: email }] : []
+        updatePersonFields.push('emailAddresses')
       }
-      
+
       // Phone
       if (phone !== undefined) {
-        updateContact.phoneNumbers = phone ? [{ value: phone }] : [];
-        updatePersonFields.push('phoneNumbers');
+        updateContact.phoneNumbers = phone ? [{ value: phone }] : []
+        updatePersonFields.push('phoneNumbers')
       }
-      
+
       // Organization/Role
       if (organization !== undefined || role !== undefined) {
         updateContact.organizations = [{
           name: organization || existingContact.organizations?.[0]?.name,
           title: role || existingContact.organizations?.[0]?.title
-        }];
-        updatePersonFields.push('organizations');
+        }]
+        updatePersonFields.push('organizations')
       }
-      
+
       // Notes
       if (notes !== undefined) {
-        updateContact.biographies = [{ value: notes }];
-        updatePersonFields.push('biographies');
+        updateContact.biographies = [{ value: notes }]
+        updatePersonFields.push('biographies')
       }
-      
+
       if (updatePersonFields.length === 0) {
         // Nothing to update
-        return true;
+        return true
       }
-      
+
       // Prepare update parameters
       const updateParams = new URLSearchParams({
         updatePersonFields: updatePersonFields.join(',')
-      });
-      
-      console.log(`[GContacts] Updating contact ${contactId} with fields:`, updatePersonFields);
-      
+      })
+
+      console.log(`[GContacts] Updating contact ${contactId} with fields:`, updatePersonFields)
+
       // Make the update request
       const updateResponse = await fetch(`${updateEndpoint}?${updateParams.toString()}`, {
         method: 'PATCH',
-        headers: headers,
+        headers,
         body: JSON.stringify(updateContact)
-      });
-      
+      })
+
       if (!updateResponse.ok) {
-        const errorText = await updateResponse.text();
-        console.error('[GContacts] Update error:', errorText);
-        throw new Error(`Google People API error: ${updateResponse.status} ${updateResponse.statusText}`);
+        const errorText = await updateResponse.text()
+        console.error('[GContacts] Update error:', errorText)
+        throw new Error(`Google People API error: ${updateResponse.status} ${updateResponse.statusText}`)
       }
-      
-      return true;
+
+      return true
     } catch (error) {
-      console.error('[GContacts] Error updating contact:', error);
-      return false;
+      console.error('[GContacts] Error updating contact:', error)
+      return false
     }
   }
 
-  async deleteContact(contactId: string): Promise<boolean> {
+  async deleteContact (contactId: string): Promise<boolean> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -503,28 +503,28 @@ export class GoogleContactsProvider implements ContactProvider {
     try {
       // API endpoint for Google People API
       const endpoint = `https://people.googleapis.com/v1/people/${contactId}:deleteContact`
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
+        Accept: 'application/json'
       }
-      
+
       console.log(`[GContacts] Deleting contact: ${contactId}`)
-      
+
       // Make the request
       const response = await fetch(endpoint, {
         method: 'DELETE',
-        headers: headers
+        headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[GContacts] Delete error:', errorText)
         throw new Error(`Google People API error: ${response.status} ${response.statusText}`)
       }
-      
+
       return true
     } catch (error) {
       console.error('[GContacts] Error deleting contact:', error)
@@ -532,7 +532,7 @@ export class GoogleContactsProvider implements ContactProvider {
     }
   }
 
-  async getContactGroups(): Promise<{ id: string; name: string }[]> {
+  async getContactGroups (): Promise<{ id: string; name: string }[]> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -544,36 +544,36 @@ export class GoogleContactsProvider implements ContactProvider {
     try {
       // API endpoint for Google People API
       const endpoint = 'https://people.googleapis.com/v1/contactGroups'
-      
+
       // Prepare query parameters
       const params = new URLSearchParams({
         pageSize: '100'
       })
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
+        Accept: 'application/json'
       }
-      
+
       console.log('[GContacts] Fetching contact groups')
-      
+
       // Make the request
       const response = await fetch(`${endpoint}?${params.toString()}`, {
         method: 'GET',
-        headers: headers
+        headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[GContacts] Get contact groups error:', errorText)
         throw new Error(`Google People API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
-      
+
       // Extract contact groups
       const groups = data.contactGroups || []
       return groups.map((group: Record<string, any>) => ({
@@ -591,7 +591,7 @@ export class GoogleContactsProvider implements ContactProvider {
    * @param googleContact A contact from the Google People API
    * @returns Converted Person object
    */
-  private googleContactToPerson(googleContact: Record<string, any>): Person {
+  private googleContactToPerson (googleContact: Record<string, any>): Person {
     const resourceName = googleContact.resourceName || ''
     const id = resourceName.split('/').pop() || ''
     const firstName = googleContact.names?.[0]?.givenName || ''
@@ -601,9 +601,9 @@ export class GoogleContactsProvider implements ContactProvider {
     const organization = googleContact.organizations?.[0]?.name || null
     const role = googleContact.organizations?.[0]?.title || null
     const notes = googleContact.biographies?.[0]?.value || null
-    
+
     // Extract any tags/labels from Google's contact
-    const tags = googleContact.memberships?.map((membership: Record<string, any>) => 
+    const tags = googleContact.memberships?.map((membership: Record<string, any>) =>
       membership.contactGroupMembership?.contactGroupId || ''
     ).filter(Boolean) || []
 

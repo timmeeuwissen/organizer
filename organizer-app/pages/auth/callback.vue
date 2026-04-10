@@ -6,7 +6,7 @@
         indeterminate
         color="primary"
         size="64"
-      ></v-progress-circular>
+      />
       <div v-else class="text-center">
         <v-icon
           :color="success ? 'success' : 'error'"
@@ -15,8 +15,12 @@
         >
           {{ success ? 'mdi-check-circle' : 'mdi-alert-circle' }}
         </v-icon>
-        <h2 class="text-h5 mb-2">{{ title }}</h2>
-        <p class="text-body-1">{{ message }}</p>
+        <h2 class="text-h5 mb-2">
+          {{ title }}
+        </h2>
+        <p class="text-body-1">
+          {{ message }}
+        </p>
         <v-btn
           color="primary"
           class="mt-6"
@@ -28,7 +32,9 @@
     </div>
 
     <div class="debug-panel mt-8">
-      <h3 class="text-h6 mb-2">Debug Information</h3>
+      <h3 class="text-h6 mb-2">
+        Debug Information
+      </h3>
       <pre class="debug-info">{{ debugInfo }}</pre>
     </div>
   </div>
@@ -38,7 +44,7 @@
 import { ref, onMounted } from 'vue'
 
 definePageMeta({
-  layout: 'blank',
+  layout: 'blank'
 })
 
 const loading = ref(true)
@@ -46,11 +52,11 @@ const success = ref(false)
 const title = ref('Processing Authentication...')
 const message = ref('Please wait while we complete your authentication.')
 
-function closeWindow() {
+function closeWindow () {
   message.value = 'You can now close this window.'
 }
 
-function parseHashParams() {
+function parseHashParams () {
   const hash = window.location.hash.substring(1)
   return hash.split('&').reduce((result, item) => {
     const parts = item.split('=')
@@ -61,8 +67,8 @@ function parseHashParams() {
   }, {})
 }
 
-function providerFromState(stateParam) {
-  if (!stateParam) return 'google'
+function providerFromState (stateParam) {
+  if (!stateParam) { return 'google' }
   try {
     const stateObj = JSON.parse(decodeURIComponent(stateParam))
     return stateObj.provider === 'microsoft' ? 'microsoft' : 'google'
@@ -72,12 +78,12 @@ function providerFromState(stateParam) {
 }
 
 const debugInfo = ref('Initializing...')
-function addDebugInfo(info) {
+function addDebugInfo (info) {
   debugInfo.value += '\n' + info
   console.log('[Callback Debug]', info)
 }
 
-async function handleCodeFlow(code, provider) {
+async function handleCodeFlow (code, provider) {
   try {
     addDebugInfo('Handling authorization code flow with code: ' + code.substring(0, 5) + '...')
     addDebugInfo('Provider (from state): ' + provider)
@@ -122,7 +128,7 @@ async function handleCodeFlow(code, provider) {
       window.opener.postMessage(
         {
           type: successType,
-          tokens: data.tokens,
+          tokens: data.tokens
         },
         window.location.origin
       )
@@ -167,7 +173,7 @@ async function handleCodeFlow(code, provider) {
       window.opener.postMessage(
         {
           type: errorType,
-          error: error.message || 'Authentication failed during code exchange',
+          error: error.message || 'Authentication failed during code exchange'
         },
         window.location.origin
       )
@@ -232,14 +238,14 @@ onMounted(async () => {
       access_token: accessToken,
       id_token: idToken,
       expires_in: parseInt(expiresIn, 10),
-      token_type: hashParams.token_type || 'Bearer',
+      token_type: hashParams.token_type || 'Bearer'
     }
 
     if (window.opener && window.opener !== window) {
       window.opener.postMessage(
         {
           type: 'GOOGLE_AUTH_SUCCESS',
-          tokens,
+          tokens
         },
         window.location.origin
       )
@@ -263,7 +269,7 @@ onMounted(async () => {
       window.opener.postMessage(
         {
           type: 'GOOGLE_AUTH_ERROR',
-          error: error.message || 'Authentication failed',
+          error: error.message || 'Authentication failed'
         },
         window.location.origin
       )

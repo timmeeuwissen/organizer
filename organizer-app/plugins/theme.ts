@@ -6,8 +6,8 @@ export default defineNuxtPlugin((nuxtApp) => {
   // Create global theme service
   const theme = {
     isDark: false,
-    
-    init() {
+
+    init () {
       // Try to get saved preference
       try {
         const savedTheme = localStorage.getItem('theme')
@@ -22,15 +22,15 @@ export default defineNuxtPlugin((nuxtApp) => {
         console.error('Error initializing theme:', err)
       }
     },
-    
-    toggle(value?: boolean) {
+
+    toggle (value?: boolean) {
       try {
         // Set the value or toggle current value
         this.isDark = value !== undefined ? value : !this.isDark
-        
+
         // Save preference
         localStorage.setItem('theme', this.isDark ? 'dark' : 'light')
-        
+
         // Apply the theme
         this.applyTheme()
         return true
@@ -39,8 +39,8 @@ export default defineNuxtPlugin((nuxtApp) => {
         return false
       }
     },
-    
-    applyTheme() {
+
+    applyTheme () {
       try {
         // useTheme() only works inside component setup; use engine from createVuetify (plugins/vuetify.ts).
         if (vuetifyThemeEngine) {
@@ -62,12 +62,12 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
     }
   }
-  
+
   // Initialize theme on client side
   if (process.client) {
     theme.init()
   }
-  
+
   // Expose the theme service
   nuxtApp.provide('theme', theme)
 })

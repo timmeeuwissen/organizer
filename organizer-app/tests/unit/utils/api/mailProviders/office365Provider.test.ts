@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { Office365Provider } from '~/utils/api/mailProviders/Office365Provider'
 import { office365IntegrationAccount } from '../../../helpers/mockIntegrationAccount'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { Office365Provider } from '~/utils/api/mailProviders/Office365Provider'
 
 describe('Office365Provider', () => {
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('Office365Provider', () => {
     expect(opts.headers).toMatchObject(
       expect.objectContaining({
         Authorization: 'Bearer test-ms-access-token',
-        ConsistencyLevel: 'eventual',
+        ConsistencyLevel: 'eventual'
       })
     )
   })
@@ -40,14 +40,14 @@ describe('Office365Provider', () => {
               id: 'm1',
               subject: 'Hello',
               from: {
-                emailAddress: { name: 'A', address: 'a@b.com' },
+                emailAddress: { name: 'A', address: 'a@b.com' }
               },
               toRecipients: [],
               receivedDateTime: '2024-01-02T12:00:00Z',
               bodyPreview: 'preview',
-              isRead: true,
-            },
-          ],
+              isRead: true
+            }
+          ]
         })
       )
 

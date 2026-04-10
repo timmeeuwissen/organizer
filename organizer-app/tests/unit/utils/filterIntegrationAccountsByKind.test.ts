@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { filterIntegrationAccountsByKind } from '~/utils/filterIntegrationAccountsByKind'
 import type { IntegrationAccount } from '~/types/models'
 
-function baseAccount(overrides: Partial<IntegrationAccount> = {}): IntegrationAccount {
+function baseAccount (overrides: Partial<IntegrationAccount> = {}): IntegrationAccount {
   const now = new Date()
   return {
     id: 'a1',
@@ -19,11 +19,11 @@ function baseAccount(overrides: Partial<IntegrationAccount> = {}): IntegrationAc
     oauthData: {
       connected: true,
       email: 'u@example.com',
-      name: 'User',
+      name: 'User'
     },
     createdAt: now,
     updatedAt: now,
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -37,19 +37,19 @@ describe('filterIntegrationAccountsByKind', () => {
         id: 'z',
         syncMail: true,
         showInMail: true,
-        oauthData: { connected: false, email: 'z', name: 'Z' },
-      }),
+        oauthData: { connected: false, email: 'z', name: 'Z' }
+      })
     ]
     const r = filterIntegrationAccountsByKind(list, 'mail')
-    expect(r.map((a) => a.id)).toEqual(['m'])
+    expect(r.map(a => a.id)).toEqual(['m'])
   })
 
   it('calendar: requires syncCalendar, showInCalendar, connected', () => {
     const list = [
       baseAccount({ id: 'c', syncCalendar: true, showInCalendar: true }),
-      baseAccount({ id: 'n', showInCalendar: false }),
+      baseAccount({ id: 'n', showInCalendar: false })
     ]
-    expect(filterIntegrationAccountsByKind(list, 'calendar').map((a) => a.id)).toEqual(['c'])
+    expect(filterIntegrationAccountsByKind(list, 'calendar').map(a => a.id)).toEqual(['c'])
   })
 
   it('tasks: requires syncTasks, showInTasks, connected', () => {
@@ -68,10 +68,10 @@ describe('filterIntegrationAccountsByKind', () => {
         id: 'cal',
         syncCalendar: true,
         showInCalendar: false,
-        oauthData: { connected: true, email: 'x', name: 'n' },
-      }),
+        oauthData: { connected: true, email: 'x', name: 'n' }
+      })
     ]
-    expect(filterIntegrationAccountsByKind(list, 'meetings').map((a) => a.id)).toEqual(['cal'])
+    expect(filterIntegrationAccountsByKind(list, 'meetings').map(a => a.id)).toEqual(['cal'])
   })
 
   it('treats undefined accounts as empty', () => {

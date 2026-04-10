@@ -3,11 +3,11 @@ v-menu(location="bottom end" :offset="[0, 5]" v-model="menu")
   template(v-slot:activator="{ props }")
     v-btn(icon v-bind="props" @click.stop)
       v-icon mdi-plus
-  
+
   v-list
     v-list-item(
-      v-for="(item, i) in items" 
-      :key="i" 
+      v-for="(item, i) in items"
+      :key="i"
       @click.stop.prevent="item.action"
       :to="null"
     )

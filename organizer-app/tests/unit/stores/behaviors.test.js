@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Import after mocks are defined
+import { setActivePinia, createPinia } from 'pinia'
+import { useBehaviorsStore } from '../../../stores/behaviors'
+import { useAuthStore } from '../../../stores/auth'
+
 // Mocks must be defined before importing the modules
 vi.mock('../../../stores/auth', () => ({
   useAuthStore: vi.fn(() => ({
@@ -83,11 +88,6 @@ vi.mock('firebase/firestore', () => {
   }
 })
 
-// Import after mocks are defined
-import { setActivePinia, createPinia } from 'pinia'
-import { useBehaviorsStore } from '../../../stores/behaviors'
-import { useAuthStore } from '../../../stores/auth'
-
 // Mock behavior data for tests
 const mockBehaviorData = [
   {
@@ -119,7 +119,7 @@ describe('Behaviors Store', () => {
   beforeEach(() => {
     // Create a fresh pinia and make it active
     setActivePinia(createPinia())
-    
+
     // Reset all mocks
     vi.clearAllMocks()
   })
@@ -131,7 +131,7 @@ describe('Behaviors Store', () => {
 
   it('should fetch behaviors', async () => {
     const store = useBehaviorsStore()
-    
+
     // Override the mocked implementation for this test
     globalThis.__behaviorsFirestoreMocks.mockGetDocs.mockResolvedValueOnce({
       docs: mockBehaviorData.map(behavior => ({
@@ -143,10 +143,10 @@ describe('Behaviors Store', () => {
         })
       }))
     })
-    
+
     // Call the method
     await store.fetchBehaviors()
-    
+
     // Verify the behaviors were fetched
     expect(store.behaviors.length).toBe(2)
     expect(store.behaviors[0].title).toBe('Test Behavior 1')
@@ -162,13 +162,13 @@ describe('Behaviors Store', () => {
       examples: ['New Example'],
       categories: ['New Category']
     }
-    
+
     // Mock the implementation for this test
     globalThis.__behaviorsFirestoreMocks.mockAddDoc.mockResolvedValueOnce({ id: 'newBehaviorId' })
-    
+
     // Call the method
     await store.createBehavior(newBehavior)
-    
+
     // Manually update the behaviors array since we're mocking Firebase
     store.behaviors = [{
       id: 'newBehaviorId',
@@ -177,7 +177,7 @@ describe('Behaviors Store', () => {
       createdAt: new Date(),
       updatedAt: new Date()
     }]
-    
+
     expect(store.behaviors.length).toBe(1)
     expect(store.behaviors[0].id).toBe('newBehaviorId')
     expect(store.behaviors[0].title).toBe('New Behavior')
@@ -185,7 +185,7 @@ describe('Behaviors Store', () => {
 
   it('should update an existing behavior', async () => {
     const store = useBehaviorsStore()
-    
+
     // Setup initial state
     store.behaviors = [{
       id: 'behavior1',
@@ -198,12 +198,12 @@ describe('Behaviors Store', () => {
       createdAt: new Date(),
       updatedAt: new Date()
     }]
-    
+
     const updatedData = {
       title: 'Updated Title',
       rationale: 'Updated Rationale'
     }
-    
+
     // Mock update to actually modify the store data
     globalThis.__behaviorsFirestoreMocks.mockUpdateDoc.mockImplementationOnce(() => {
       store.behaviors[0] = {
@@ -213,10 +213,10 @@ describe('Behaviors Store', () => {
       }
       return Promise.resolve()
     })
-    
+
     // Call the method
     await store.updateBehavior('behavior1', updatedData)
-    
+
     // Verify the behavior was updated
     expect(store.behaviors[0].title).toBe('Updated Title')
     expect(store.behaviors[0].rationale).toBe('Updated Rationale')
@@ -224,7 +224,7 @@ describe('Behaviors Store', () => {
 
   it('should delete a behavior', async () => {
     const store = useBehaviorsStore()
-    
+
     // Setup initial state
     store.behaviors = [{
       id: 'behavior1',
@@ -237,23 +237,23 @@ describe('Behaviors Store', () => {
       createdAt: new Date(),
       updatedAt: new Date()
     }]
-    
+
     // Mock delete to actually modify the store data
     globalThis.__behaviorsFirestoreMocks.mockDeleteDoc.mockImplementationOnce(() => {
       store.behaviors = store.behaviors.filter(b => b.id !== 'behavior1')
       return Promise.resolve()
     })
-    
+
     // Call the method
     await store.deleteBehavior('behavior1')
-    
+
     // Verify the behavior was deleted
     expect(store.behaviors.length).toBe(0)
   })
 
   it('should filter behaviors by type', async () => {
     const store = useBehaviorsStore()
-    
+
     // Setup behaviors with different types
     store.behaviors = [
       {
@@ -290,16 +290,16 @@ describe('Behaviors Store', () => {
         updatedAt: new Date()
       }
     ]
-    
+
     // Test filtering by different types
     const doWellBehaviors = store.getBehaviorsByType('doWell')
     expect(doWellBehaviors.length).toBe(1)
     expect(doWellBehaviors[0].title).toBe('Do Well Behavior')
-    
+
     const wantToDoBetterBehaviors = store.getBehaviorsByType('wantToDoBetter')
     expect(wantToDoBetterBehaviors.length).toBe(1)
     expect(wantToDoBetterBehaviors[0].title).toBe('Want to Do Better Behavior')
-    
+
     const needToImproveBehaviors = store.getBehaviorsByType('needToImprove')
     expect(needToImproveBehaviors.length).toBe(1)
     expect(needToImproveBehaviors[0].title).toBe('Need to Improve Behavior')

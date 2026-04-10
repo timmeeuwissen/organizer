@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { setActivePinia, createPinia } from 'pinia'
+import { useTasksStore } from '../../../stores/tasks'
+import type { Task } from '~/types/models'
+
 vi.mock('~/stores/auth', () => ({
   useAuthStore: vi.fn(() => ({ user: { id: 'test-user-id' } }))
 }))
@@ -17,28 +21,24 @@ vi.mock('firebase/firestore', () => ({
   deleteDoc: vi.fn(() => Promise.resolve()),
   serverTimestamp: vi.fn(() => new Date()),
   getFirestore: vi.fn(() => ({})),
-  Timestamp: { fromDate: vi.fn((d) => d) },
+  Timestamp: { fromDate: vi.fn(d => d) }
 }))
 
 vi.mock('../../../stores/tasks/providerSync', () => ({
-  filterTaskAccounts: vi.fn((a) => a),
+  filterTaskAccounts: vi.fn(a => a),
   fetchProviderTasksParallel: vi.fn(() => Promise.resolve({})),
   mergeProviderTasksIntoFirestore: vi.fn(() => Promise.resolve()),
   createTaskViaProvider: vi.fn(),
   updateTaskViaProvider: vi.fn(),
   deleteTaskViaProvider: vi.fn(),
-  completeTaskViaProvider: vi.fn(),
+  completeTaskViaProvider: vi.fn()
 }))
-
-import { setActivePinia, createPinia } from 'pinia'
-import { useTasksStore } from '../../../stores/tasks'
-import type { Task } from '~/types/models'
 
 const now = new Date()
 const yesterday = new Date(now.getTime() - 86_400_000)
 const tomorrow = new Date(now.getTime() + 86_400_000)
 
-function makeTask(overrides: Partial<Task>): Task {
+function makeTask (overrides: Partial<Task>): Task {
   return {
     id: 'task1',
     userId: 'test-user-id',
@@ -53,7 +53,7 @@ function makeTask(overrides: Partial<Task>): Task {
     comments: [],
     createdAt: now,
     updatedAt: now,
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -72,7 +72,7 @@ describe('Tasks Store – getters', () => {
     store.tasks = [
       makeTask({ id: 't1', status: 'todo' }),
       makeTask({ id: 't2', status: 'inProgress' }),
-      makeTask({ id: 't3', status: 'completed' }),
+      makeTask({ id: 't3', status: 'completed' })
     ]
     expect(store.todoTasks).toHaveLength(1)
     expect(store.todoTasks[0].id).toBe('t1')
@@ -83,10 +83,10 @@ describe('Tasks Store – getters', () => {
     store.tasks = [
       makeTask({ id: 't1', status: 'todo' }),
       makeTask({ id: 't2', status: 'completed' }),
-      makeTask({ id: 't3', status: 'completed' }),
+      makeTask({ id: 't3', status: 'completed' })
     ]
     expect(store.completedTasks).toHaveLength(2)
-    expect(store.completedTasks.every((t) => t.status === 'completed')).toBe(true)
+    expect(store.completedTasks.every(t => t.status === 'completed')).toBe(true)
   })
 
   it('upcomingTasks returns active tasks with future due dates, sorted ascending', () => {
@@ -97,7 +97,7 @@ describe('Tasks Store – getters', () => {
       makeTask({ id: 't1', status: 'todo', dueDate: future2 }),
       makeTask({ id: 't2', status: 'inProgress', dueDate: future1 }),
       makeTask({ id: 't3', status: 'todo', dueDate: yesterday }),
-      makeTask({ id: 't4', status: 'completed', dueDate: future1 }),
+      makeTask({ id: 't4', status: 'completed', dueDate: future1 })
     ]
     const result = store.upcomingTasks
     expect(result).toHaveLength(2)
@@ -113,7 +113,7 @@ describe('Tasks Store – getters', () => {
       makeTask({ id: 't1', status: 'todo', dueDate: past2 }),
       makeTask({ id: 't2', status: 'inProgress', dueDate: past1 }),
       makeTask({ id: 't3', status: 'todo', dueDate: tomorrow }),
-      makeTask({ id: 't4', status: 'completed', dueDate: past1 }),
+      makeTask({ id: 't4', status: 'completed', dueDate: past1 })
     ]
     const result = store.overdueTasks
     expect(result).toHaveLength(2)
@@ -125,7 +125,7 @@ describe('Tasks Store – getters', () => {
     const store = useTasksStore()
     store.tasks = [
       makeTask({ id: 't1', tags: ['alpha', 'beta'] }),
-      makeTask({ id: 't2', tags: ['beta', 'gamma'] }),
+      makeTask({ id: 't2', tags: ['beta', 'gamma'] })
     ]
     const tags = store.getTags
     expect(tags).toHaveLength(3)

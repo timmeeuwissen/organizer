@@ -19,14 +19,14 @@ div
     )
       template(#details-form="{ entity, onChange }")
         slot(name="details-form" :entity="entity" :onChange="onChange")
-  
-  // Empty state    
+
+  // Empty state
   v-alert(v-else type="info" variant="tonal") {{ emptyMessage }}
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import EntityItem from './EntityItem.vue';
+import { computed } from 'vue'
+import EntityItem from './EntityItem.vue'
 
 const props = defineProps({
   entities: {
@@ -73,21 +73,21 @@ const props = defineProps({
     type: Array,
     default: () => []
   }
-});
+})
 
-const emit = defineEmits(['update:actions', 'update:relations', 'edit']);
+const emit = defineEmits(['update:actions', 'update:relations', 'edit'])
 
-function updateEntityAction(entityIndex, action) {
-  const newActions = { ...props.entityActions, [entityIndex]: action };
-  emit('update:actions', newActions);
+function updateEntityAction (entityIndex, action) {
+  const newActions = { ...props.entityActions, [entityIndex]: action }
+  emit('update:actions', newActions)
 }
 
-function updateEntityRelation(entityIndex, relation) {
-  const newRelations = { ...props.entityRelations, [entityIndex]: relation };
-  emit('update:relations', newRelations);
+function updateEntityRelation (entityIndex, relation) {
+  const newRelations = { ...props.entityRelations, [entityIndex]: relation }
+  emit('update:relations', newRelations)
 }
 
-function isItemInvalid(entityIndex) {
-  return props.invalids.includes(entityIndex);
+function isItemInvalid (entityIndex) {
+  return props.invalids.includes(entityIndex)
 }
 </script>

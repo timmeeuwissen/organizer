@@ -129,7 +129,7 @@ import type { Task } from '~/types/models'
 import {
   clampTaskListPageIndex,
   sliceTaskListPage,
-  taskListTotalPages,
+  taskListTotalPages
 } from '~/utils/tasksOverviewPagination'
 
 const props = withDefaults(defineProps<{
@@ -140,7 +140,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   loading: false,
   showHierarchy: true,
-  pageSize: 20,
+  pageSize: 20
 })
 const { t } = useI18n()
 
@@ -156,8 +156,7 @@ const currentPage = ref(0)
 
 const isExpanded = (taskId: string): boolean => expandedTasks.has(taskId)
 const toggleExpand = (taskId: string) => {
-  if (expandedTasks.has(taskId)) expandedTasks.delete(taskId)
-  else expandedTasks.add(taskId)
+  if (expandedTasks.has(taskId)) { expandedTasks.delete(taskId) } else { expandedTasks.add(taskId) }
 }
 
 const processedTasks = computed(() => {
@@ -166,27 +165,27 @@ const processedTasks = computed(() => {
 
   tasks.forEach((task) => {
     const parentId = task.parentTask || task.parent
-    if (!parentId) return
-    if (!taskMap.has(parentId)) taskMap.set(parentId, [])
+    if (!parentId) { return }
+    if (!taskMap.has(parentId)) { taskMap.set(parentId, []) }
     taskMap.get(parentId)?.push(task)
   })
 
   const taskById = new Map<string, Task>()
-  tasks.forEach((task) => taskById.set(task.id, task))
+  tasks.forEach(task => taskById.set(task.id, task))
 
   const hasSubtasks = (taskId: string): boolean => {
     const task = taskById.get(taskId)
-    if (!task) return false
+    if (!task) { return false }
     return (task.subtasks && task.subtasks.length > 0) || (taskMap.get(taskId)?.length || 0) > 0
   }
 
-  function processTasksRecursively(
+  function processTasksRecursively (
     parentId: string | null,
     level: number,
     result: Array<Task & { level: number; hasSubtasks: boolean }>
   ) {
     const levelTasks = parentId === null
-      ? tasks.filter((t) => !t.parentTask && !t.parent)
+      ? tasks.filter(t => !t.parentTask && !t.parent)
       : taskMap.get(parentId) || []
 
     levelTasks.forEach((task) => {
@@ -194,7 +193,7 @@ const processedTasks = computed(() => {
       result.push(processedTask)
 
       if (props.showHierarchy && hasSubtasks(task.id) && isExpanded(task.id)) {
-        if (taskMap.has(task.id)) processTasksRecursively(task.id, level + 1, result)
+        if (taskMap.has(task.id)) { processTasksRecursively(task.id, level + 1, result) }
         if (task.subtasks) {
           task.subtasks.forEach((subtaskId) => {
             const subtask = taskById.get(subtaskId)
@@ -203,7 +202,7 @@ const processedTasks = computed(() => {
                 ...subtask,
                 level: level + 1,
                 parentTask: task.id,
-                hasSubtasks: hasSubtasks(subtask.id),
+                hasSubtasks: hasSubtasks(subtask.id)
               })
             }
           })
@@ -228,13 +227,13 @@ const pagedProcessedTasks = computed(() =>
 const hasPrevTaskPage = computed(() => clampedTaskPage.value > 0)
 const hasNextTaskPage = computed(() => clampedTaskPage.value < totalTaskPages.value - 1)
 
-function loadPreviousTaskPage() {
-  if (!hasPrevTaskPage.value) return
+function loadPreviousTaskPage () {
+  if (!hasPrevTaskPage.value) { return }
   currentPage.value -= 1
 }
 
-function loadNextTaskPage() {
-  if (!hasNextTaskPage.value) return
+function loadNextTaskPage () {
+  if (!hasNextTaskPage.value) { return }
   currentPage.value += 1
 }
 
@@ -242,19 +241,19 @@ watch(
   () => processedTasks.value.length,
   () => {
     const next = clampTaskListPageIndex(currentPage.value, totalTaskRows.value, props.pageSize)
-    if (next !== currentPage.value) currentPage.value = next
-  },
+    if (next !== currentPage.value) { currentPage.value = next }
+  }
 )
 
 const formatDate = (date: Date | null | undefined) => (date ? new Date(date).toLocaleDateString() : '')
 const getDueDateColor = (date: Date | null | undefined) => {
-  if (!date) return 'grey'
+  if (!date) { return 'grey' }
   const now = new Date()
   const dueDate = new Date(date)
-  if (dueDate < now) return 'error'
+  if (dueDate < now) { return 'error' }
   const days = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  if (days <= 1) return 'error'
-  if (days <= 3) return 'warning'
+  if (days <= 1) { return 'error' }
+  if (days <= 3) { return 'warning' }
   return 'success'
 }
 const getStatusText = (status: string) =>
@@ -263,7 +262,7 @@ const getStatusText = (status: string) =>
     inProgress: t('tasks.inProgressTasks'),
     completed: t('tasks.completedTasks'),
     delegated: t('tasks.delegatedTasks'),
-    cancelled: t('tasks.cancelledTasks'),
+    cancelled: t('tasks.cancelledTasks')
   }[status] || status)
 const getStatusIcon = (status: string) =>
   ({ todo: 'mdi-checkbox-blank-outline', inProgress: 'mdi-progress-check', completed: 'mdi-checkbox-marked', delegated: 'mdi-account-arrow-right', cancelled: 'mdi-cancel' }[status] || 'mdi-help')
@@ -274,7 +273,7 @@ const getTypeText = (type?: string) =>
     task: t('tasks.typeTask'),
     routine: t('tasks.typeRoutine'),
     delegation: t('tasks.typeDelegation'),
-    followUp: t('tasks.typeFollowUp'),
+    followUp: t('tasks.typeFollowUp')
   }[type || ''] || (type || ''))
 const getTypeColor = (type?: string) =>
   ({ task: 'primary', routine: 'secondary', delegation: 'warning', followUp: 'info' }[type || ''] || 'grey')
@@ -284,7 +283,7 @@ const getPriorityText = (priority: number | string) => {
       low: t('projects.priorityLow'),
       medium: t('projects.priorityMedium'),
       high: t('projects.priorityHigh'),
-      urgent: t('projects.priorityUrgent'),
+      urgent: t('projects.priorityUrgent')
     }[priority] || priority)
   }
   return ({
@@ -292,7 +291,7 @@ const getPriorityText = (priority: number | string) => {
     2: t('tasks.priorityHigh'),
     3: t('tasks.priorityMedium'),
     4: t('tasks.priorityLow'),
-    5: t('tasks.priorityLowest'),
+    5: t('tasks.priorityLowest')
   }[priority as 1 | 2 | 3 | 4 | 5] || `P${priority}`)
 }
 const getPriorityColor = (priority: number | string) => {
@@ -304,14 +303,14 @@ const getPriorityColor = (priority: number | string) => {
 const getTaskRowClasses = (task: Task & { level: number; hasSubtasks: boolean }) => ({
   'text-decoration-line-through': task.status === 'completed',
   'task-parent': task.hasSubtasks,
-  'task-child': task.level > 0,
+  'task-child': task.level > 0
 })
 const getTaskRowStyle = (task: Task & { level: number; hasSubtasks: boolean }) => ({
   cursor: 'pointer',
-  backgroundColor: task.level > 0 ? `rgba(0, 0, 0, ${0.03 * task.level})` : '',
+  backgroundColor: task.level > 0 ? `rgba(0, 0, 0, ${0.03 * task.level})` : ''
 })
 const getProviderColor = (providerAccountId?: string) => {
-  if (!providerAccountId) return 'primary'
+  if (!providerAccountId) { return 'primary' }
   let hash = 0
   for (let i = 0; i < providerAccountId.length; i += 1) {
     hash = Math.imul(hash, 31) + providerAccountId.charCodeAt(i)

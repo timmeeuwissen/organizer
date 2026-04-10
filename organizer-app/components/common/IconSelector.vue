@@ -10,7 +10,7 @@
       v-icon(size="small") mdi-close
     v-btn(size="small" icon @click="openIconSelector" variant="text")
       v-icon(size="small") mdi-pencil
-  
+
   // Empty state with add button
   .d-flex.align-center.mt-2(v-else)
     span.text-subtitle-2.text-medium-emphasis {{ placeholder || $t('meetings.categoryIcon') }}
@@ -37,18 +37,18 @@
           hide-details
           class="max-w-xs"
         )
-      
+
       v-divider
-      
+
       v-card-text.dialog-content
         div(v-if="loading")
           .d-flex.justify-center.align-center.pa-4
             v-progress-circular(indeterminate)
             span.ml-2 {{ $t('common.loading') }}
-        
+
         div(v-else-if="loadError")
           .text-center.text-error.pa-4 {{ loadError }}
-        
+
         div(v-else)
           // Tab navigation for categories (when not searching)
           v-tabs(
@@ -64,16 +64,16 @@
               :key="key"
               :value="key"
             ) {{ translation }}
-          
+
           // All results when searching
           div(v-if="searchQuery")
             .text-subtitle-2.mb-2.text-grey {{ filteredIcons.length }} {{ $t('common.select') }}
             v-row(dense)
               v-col(
-                v-for="icon in filteredIcons" 
-                :key="icon.icon" 
-                cols="2" 
-                sm="2" 
+                v-for="icon in filteredIcons"
+                :key="icon.icon"
+                cols="2"
+                sm="2"
                 md="1"
                 class="icon-wrapper"
               )
@@ -87,16 +87,16 @@
                     class="d-flex align-center justify-center"
                   )
                     v-icon(:icon="icon.icon" :size="24")
-                    
+
                     v-tooltip(location="bottom")
                       template(v-slot:activator="{ props: tooltipProps }")
                         .icon-tooltip-trigger(v-bind="tooltipProps")
                       span {{ getIconTranslatedName(icon.icon) }}
-          
+
           // Show all categories when not searching
           .categories-container.pa-2(v-else ref="categoriesContainer")
             .category-section(
-              v-for="(category, categoryKey) in categoriesByKey" 
+              v-for="(category, categoryKey) in categoriesByKey"
               :key="categoryKey"
               :id="`category-${categoryKey}`"
               :ref="el => { if (el) categoryRefs[categoryKey] = el }"
@@ -104,10 +104,10 @@
               .category-title.text-subtitle-1.py-2.sticky-header {{ category.translation }}
               v-row(dense)
                 v-col(
-                  v-for="icon in category.icons" 
-                  :key="icon.icon" 
-                  cols="2" 
-                  sm="2" 
+                  v-for="icon in category.icons"
+                  :key="icon.icon"
+                  cols="2"
+                  sm="2"
                   md="1"
                   class="icon-wrapper"
                 )
@@ -121,12 +121,12 @@
                       class="d-flex align-center justify-center"
                     )
                       v-icon(:icon="icon.icon" :size="24")
-                      
+
                       v-tooltip(location="bottom")
                         template(v-slot:activator="{ props: tooltipProps }")
                           .icon-tooltip-trigger(v-bind="tooltipProps")
                         span {{ getIconTranslatedName(icon.icon) }}
-      
+
       v-card-actions
         v-spacer
         v-btn(text @click="dialog = false") {{ $t('common.cancel') }}
@@ -219,19 +219,19 @@ const iconName = computed(() => {
 // Get category translations for the current locale
 const categoryTranslations = computed(() => {
   const translations: { [key: string]: string } = {}
-  
+
   for (const categoryKey in categories.value) {
     const categoryData = categories.value[categoryKey]
-    translations[categoryKey] = categoryData[locale.value] || categoryData['en'] || categoryKey
+    translations[categoryKey] = categoryData[locale.value] || categoryData.en || categoryKey
   }
-  
+
   return translations
 })
 
 // Organize icons by category for display
 const categoriesByKey = computed(() => {
   const result: Record<string, CategoryWithIcons> = {}
-  
+
   // Initialize categories
   for (const categoryKey in categories.value) {
     result[categoryKey] = {
@@ -239,9 +239,9 @@ const categoriesByKey = computed(() => {
       icons: []
     }
   }
-  
+
   // Add icons to their respective categories
-  iconData.value.forEach(icon => {
+  iconData.value.forEach((icon) => {
     if (icon.category && result[icon.category]) {
       result[icon.category].icons.push({
         icon: icon.icon,
@@ -249,7 +249,7 @@ const categoriesByKey = computed(() => {
       })
     }
   })
-  
+
   return result
 })
 
@@ -258,30 +258,30 @@ const filteredIcons = computed(() => {
   if (!searchQuery.value) {
     return []
   }
-  
+
   const query = searchQuery.value.toLowerCase()
   return iconData.value
-    .filter(iconItem => {
+    .filter((iconItem) => {
       // Search in icon name
       if (iconItem.icon.toLowerCase().includes(query)) {
         return true
       }
-      
+
       // Search in translations
       for (const lang in iconItem.translations) {
         if (iconItem.translations[lang].toLowerCase().includes(query)) {
           return true
         }
       }
-      
+
       return false
     })
 })
 
 // Scroll to selected category
 const scrollToCategory = (categoryKey: string) => {
-  if (!categoryKey || !categoryRefs[categoryKey]) return
-  
+  if (!categoryKey || !categoryRefs[categoryKey]) { return }
+
   nextTick(() => {
     categoryRefs[categoryKey].scrollIntoView({ behavior: 'smooth', block: 'start' })
   })
@@ -290,7 +290,7 @@ const scrollToCategory = (categoryKey: string) => {
 // Open icon selector dialog
 const openIconSelector = () => {
   dialog.value = true
-  
+
   // Load icons if not already loaded
   if (iconData.value.length === 0 && !loading.value && !loadError.value) {
     fetchIcons()

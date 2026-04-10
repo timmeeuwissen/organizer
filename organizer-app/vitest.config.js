@@ -1,7 +1,7 @@
-import { defineConfig } from 'vitest/config'
-import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { defineConfig } from 'vitest/config'
+import vue from '@vitejs/plugin-vue'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -10,8 +10,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '~': path.resolve(__dirname, '.'),
-      '#app': path.resolve(__dirname, 'tests/unit/mocks/nuxt-app.ts'),
-    },
+      '#app': path.resolve(__dirname, 'tests/unit/mocks/nuxt-app.ts')
+    }
   },
   test: {
     globals: true,
@@ -28,7 +28,7 @@ export default defineConfig({
     ],
     include: [
       '**/tests/unit/**/*.test.{js,ts}',
-      '**/tests/unit/**/*.spec.{js,ts}',
-    ],
+      '**/tests/unit/**/*.spec.{js,ts}'
+    ]
   }
 })

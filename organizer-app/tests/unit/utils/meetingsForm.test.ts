@@ -15,7 +15,7 @@ describe('meetingFormToMeetingPayload', () => {
       participants: ['p1'],
       notes: 'Bring metrics',
       actionItems: 'Follow up',
-      relatedProjects: ['project-1'],
+      relatedProjects: ['project-1']
     })
 
     expect(payload.title).toBe('Weekly sync')
@@ -30,7 +30,7 @@ describe('meetingFormToMeetingPayload', () => {
       subject: 'Plan later',
       plannedStatus: 'to_be_planned',
       date: '2026-04-08',
-      time: '10:30',
+      time: '10:30'
     })
 
     expect(payload.startTime).toBeUndefined()
@@ -52,7 +52,7 @@ describe('meetingToMeetingFormInput', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       notes: 'some notes',
-      relatedProjects: ['project-1'],
+      relatedProjects: ['project-1']
     } as Meeting
 
     const mapped = meetingToMeetingFormInput(meeting)

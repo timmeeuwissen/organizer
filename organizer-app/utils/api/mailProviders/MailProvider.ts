@@ -55,13 +55,13 @@ export interface MailProvider {
    * @returns True if authenticated
    */
   isAuthenticated(): boolean
-  
+
   /**
    * Authenticate with the mail provider
    * @returns True if authentication successful
    */
   authenticate(): Promise<boolean>
-  
+
   /**
    * Fetch emails with pagination and search support
    * @param query Query parameters for filtering emails
@@ -69,21 +69,21 @@ export interface MailProvider {
    * @returns Email fetch result with pagination information
    */
   fetchEmails(query?: EmailQuery, pagination?: EmailPagination): Promise<EmailFetchResult>
-  
+
   /**
    * Send an email
    * @param email Email to send
    * @returns True if send was successful
    */
   sendEmail(email: Email): Promise<boolean>
-  
+
   /**
    * Count emails in a folder or matching a query
    * @param query Query parameters for filtering emails
    * @returns Total count of matching emails
    */
   countEmails(query?: EmailQuery): Promise<number>
-  
+
   /**
    * Get folder counts without fetching email content
    * @returns Object with folder names as keys and counts as values

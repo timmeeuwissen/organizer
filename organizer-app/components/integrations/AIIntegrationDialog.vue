@@ -5,29 +5,29 @@ v-dialog(
   persistent
 )
   v-card
-    v-card-title 
+    v-card-title
       | {{ isEditMode ? $t('ai.editIntegration') : $t('ai.addIntegration') }}
       v-spacer
       v-btn(icon @click="close")
         v-icon mdi-close
-    
+
     v-card-text
       v-alert(
-        v-if="error" 
-        type="error" 
+        v-if="error"
+        type="error"
         class="mb-4"
         closable
         @click:close="error = ''"
       ) {{ error }}
-      
+
       v-alert(
-        v-if="success" 
-        type="success" 
+        v-if="success"
+        type="success"
         class="mb-4"
         closable
         @click:close="success = ''"
       ) {{ success }}
-      
+
       v-form(ref="form")
         v-row(align="center")
           v-col(cols="12" md="6")
@@ -70,7 +70,7 @@ v-dialog(
                   @click="openProviderSite"
                 )
                   | {{ $t('ai.visitProviderSite') }}
-          
+
           v-col(cols="12")
             v-text-field(
               v-model="integration.apiKey"
@@ -91,7 +91,7 @@ v-dialog(
               color="primary"
               hide-details
             )
-        
+
     v-card-actions
       v-btn(
         color="primary"
@@ -176,7 +176,7 @@ const isEditMode = computed(() => {
 // Watch for dialog visibility change
 watch(() => props.modelValue, (newVal) => {
   dialogVisible.value = newVal
-  
+
   if (newVal) {
     // Initialize integration data when dialog opens
     if (props.integrationData) {
@@ -193,7 +193,7 @@ watch(() => props.modelValue, (newVal) => {
         createdAt: new Date()
       })
     }
-    
+
     // Show password by default for new integrations
     showPassword.value = !isEditMode.value
   }
@@ -205,7 +205,7 @@ watch(() => dialogVisible.value, (newVal) => {
 })
 
 // Get a helpful hint based on the provider type
-function getProviderHint(provider) {
+function getProviderHint (provider) {
   switch (provider) {
     case 'openai':
       return i18n.t('ai.openaiKeyHint')
@@ -221,23 +221,23 @@ function getProviderHint(provider) {
 }
 
 // Test the integration
-async function testIntegration() {
+async function testIntegration () {
   if (!integration.apiKey) {
     error.value = i18n.t('ai.missingApiKey')
     return
   }
-  
+
   testing.value = true
   error.value = ''
   success.value = ''
-  
+
   try {
     // Create a payload with the integration details
     const payload = {
       provider: integration.provider,
       apiKey: integration.apiKey
     }
-    
+
     // Call the application's API endpoint to test the token
     const response = await fetch('/api/ai/test-integration', {
       method: 'POST',
@@ -246,9 +246,9 @@ async function testIntegration() {
       },
       body: JSON.stringify(payload)
     })
-    
+
     const result = await response.json()
-    
+
     if (response.ok && result.success) {
       success.value = i18n.t('ai.connectionSuccessful')
       integration.connected = true
@@ -266,7 +266,7 @@ async function testIntegration() {
 }
 
 // Save the integration
-async function save() {
+async function save () {
   console.log('User asks for save')
   // Validate form
   if (form.value) {
@@ -276,7 +276,7 @@ async function save() {
       return
     }
   }
-  
+
   if (!integration.connected) {
     await testIntegration()
     if (!integration.connected) {
@@ -290,25 +290,25 @@ async function save() {
     console.error('missing integration name')
     return
   }
-  
+
   if (integration.enabled && !integration.apiKey) {
     error.value = i18n.t('ai.missingApiKeyEnabled')
     console.error('Missing API-key')
     return
   }
-  
+
   saving.value = true
-  
+
   try {
     console.log('attempting to save')
 
     // Update the integration's updatedAt timestamp
     integration.updatedAt = new Date()
-    
+
     // Emit save event with deep copy of integration
     console.log('emitting save state')
     emit('save', JSON.parse(JSON.stringify(integration)))
-    
+
     // Close dialog after successful save
     dialogVisible.value = false
   } catch (err) {
@@ -320,22 +320,22 @@ async function save() {
 }
 
 // Close the dialog
-function close() {
+function close () {
   // Reset state
   error.value = ''
   success.value = ''
-  
+
   // Close dialog
   dialogVisible.value = false
 }
 
 // Toggle help section visibility
-function toggleHelp() {
+function toggleHelp () {
   showHelp.value = !showHelp.value
 }
 
 // Get provider-specific instructions
-function getProviderInstructions(provider) {
+function getProviderInstructions (provider) {
   switch (provider) {
     case 'openai':
       return i18n.t('ai.openaiInstructions')
@@ -351,9 +351,9 @@ function getProviderInstructions(provider) {
 }
 
 // Open provider site in a new window
-function openProviderSite() {
+function openProviderSite () {
   let url = ''
-  
+
   switch (integration.provider) {
     case 'openai':
       url = i18n.t('ai.openaiUrl')
@@ -370,7 +370,7 @@ function openProviderSite() {
     default:
       return
   }
-  
+
   if (url) {
     window.open(url, '_blank')
   }

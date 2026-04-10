@@ -15,7 +15,7 @@ export interface MeetingFormInput {
   relatedProjects?: string[]
 }
 
-function parseDateTime(dateInput?: string | Date | null, time?: string): Date | null {
+function parseDateTime (dateInput?: string | Date | null, time?: string): Date | null {
   if (!dateInput || !time) {
     return null
   }
@@ -25,7 +25,7 @@ function parseDateTime(dateInput?: string | Date | null, time?: string): Date | 
     return null
   }
 
-  const [hours, minutes] = time.split(':').map((value) => Number.parseInt(value, 10))
+  const [hours, minutes] = time.split(':').map(value => Number.parseInt(value, 10))
   if (Number.isNaN(hours) || Number.isNaN(minutes)) {
     return null
   }
@@ -35,7 +35,7 @@ function parseDateTime(dateInput?: string | Date | null, time?: string): Date | 
   return next
 }
 
-export function meetingFormToMeetingPayload(input: MeetingFormInput): Partial<Meeting> {
+export function meetingFormToMeetingPayload (input: MeetingFormInput): Partial<Meeting> {
   const plannedStatus = input.plannedStatus || 'held'
   const payload: Partial<Meeting> = {
     title: input.subject?.trim() || '',
@@ -46,7 +46,7 @@ export function meetingFormToMeetingPayload(input: MeetingFormInput): Partial<Me
     participants: input.participants || [],
     notes: input.notes || '',
     relatedProjects: input.relatedProjects || [],
-    calendarEventId: input.calendarEventId || undefined,
+    calendarEventId: input.calendarEventId || undefined
   }
 
   if (input.actionItems && input.actionItems.trim().length > 0) {
@@ -64,7 +64,7 @@ export function meetingFormToMeetingPayload(input: MeetingFormInput): Partial<Me
   return payload
 }
 
-export function meetingToMeetingFormInput(meeting: Meeting): MeetingFormInput {
+export function meetingToMeetingFormInput (meeting: Meeting): MeetingFormInput {
   return {
     subject: meeting.title,
     summary: meeting.summary || '',
@@ -81,6 +81,6 @@ export function meetingToMeetingFormInput(meeting: Meeting): MeetingFormInput {
     notes: meeting.notes || '',
     actionItems: ((meeting as Meeting & { actionItems?: string }).actionItems || ''),
     calendarEventId: meeting.calendarEventId || null,
-    relatedProjects: [...(meeting.relatedProjects || [])],
+    relatedProjects: [...(meeting.relatedProjects || [])]
   }
 }

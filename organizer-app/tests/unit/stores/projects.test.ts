@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { setActivePinia, createPinia } from 'pinia'
+import { useProjectsStore } from '../../../stores/projects'
+import type { Project } from '~/types/models'
+
 vi.mock('~/stores/auth', () => ({
   useAuthStore: vi.fn(() => ({ user: { id: 'test-user-id' } }))
 }))
@@ -16,16 +20,12 @@ vi.mock('firebase/firestore', () => ({
   updateDoc: vi.fn(() => Promise.resolve()),
   deleteDoc: vi.fn(() => Promise.resolve()),
   serverTimestamp: vi.fn(() => new Date()),
-  getFirestore: vi.fn(() => ({})),
+  getFirestore: vi.fn(() => ({}))
 }))
-
-import { setActivePinia, createPinia } from 'pinia'
-import { useProjectsStore } from '../../../stores/projects'
-import type { Project } from '~/types/models'
 
 const now = new Date()
 
-function makeProject(overrides: Partial<Project>): Project {
+function makeProject (overrides: Partial<Project>): Project {
   return {
     id: 'proj1',
     userId: 'test-user-id',
@@ -40,7 +40,7 @@ function makeProject(overrides: Partial<Project>): Project {
     tags: [],
     createdAt: now,
     updatedAt: now,
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -59,10 +59,10 @@ describe('Projects Store – getters', () => {
     store.projects = [
       makeProject({ id: 'p1', status: 'active' }),
       makeProject({ id: 'p2', status: 'completed' }),
-      makeProject({ id: 'p3', status: 'active' }),
+      makeProject({ id: 'p3', status: 'active' })
     ]
     expect(store.activeProjects).toHaveLength(2)
-    expect(store.activeProjects.every((p) => p.status === 'active')).toBe(true)
+    expect(store.activeProjects.every(p => p.status === 'active')).toBe(true)
   })
 
   it('completedProjects returns only completed-status projects', () => {
@@ -70,7 +70,7 @@ describe('Projects Store – getters', () => {
     store.projects = [
       makeProject({ id: 'p1', status: 'active' }),
       makeProject({ id: 'p2', status: 'completed' }),
-      makeProject({ id: 'p3', status: 'onHold' }),
+      makeProject({ id: 'p3', status: 'onHold' })
     ]
     expect(store.completedProjects).toHaveLength(1)
     expect(store.completedProjects[0].id).toBe('p2')
@@ -81,12 +81,12 @@ describe('Projects Store – getters', () => {
     store.projects = [
       makeProject({ id: 'p1', tags: ['frontend', 'urgent'] }),
       makeProject({ id: 'p2', tags: ['backend'] }),
-      makeProject({ id: 'p3', tags: ['frontend'] }),
+      makeProject({ id: 'p3', tags: ['frontend'] })
     ]
     const result = store.getByTag('frontend')
     expect(result).toHaveLength(2)
-    expect(result.map((p) => p.id)).toContain('p1')
-    expect(result.map((p) => p.id)).toContain('p3')
+    expect(result.map(p => p.id)).toContain('p1')
+    expect(result.map(p => p.id)).toContain('p3')
   })
 
   it('getByTag returns empty array when no match', () => {

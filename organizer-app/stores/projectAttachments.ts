@@ -8,21 +8,21 @@ import {
   setDoc,
   deleteDoc,
   serverTimestamp,
-  orderBy,
+  orderBy
+  , getFirestore
 } from 'firebase/firestore'
-import { getFirestore } from 'firebase/firestore'
 import {
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
-  deleteObject,
+  deleteObject
 } from 'firebase/storage'
 import { useNuxtApp } from '#app'
 import { useAuthStore } from './auth'
 import type { ProjectLink, ProjectFile, ProjectMailLink } from '~/types/models/projectAttachments'
 import { normalizeProjectUrl, isValidHttpUrlForProject } from '~/utils/normalizeProjectUrl'
 
-function mapLinkDoc(id: string, data: Record<string, unknown>): ProjectLink {
+function mapLinkDoc (id: string, data: Record<string, unknown>): ProjectLink {
   return {
     id,
     userId: String(data.userId ?? ''),
@@ -30,11 +30,11 @@ function mapLinkDoc(id: string, data: Record<string, unknown>): ProjectLink {
     url: String(data.url ?? ''),
     title: data.title != null ? String(data.title) : undefined,
     createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() ?? new Date(),
-    updatedAt: (data.updatedAt as { toDate?: () => Date })?.toDate?.() ?? new Date(),
+    updatedAt: (data.updatedAt as { toDate?: () => Date })?.toDate?.() ?? new Date()
   }
 }
 
-function mapFileDoc(id: string, data: Record<string, unknown>): ProjectFile {
+function mapFileDoc (id: string, data: Record<string, unknown>): ProjectFile {
   return {
     id,
     userId: String(data.userId ?? ''),
@@ -44,11 +44,11 @@ function mapFileDoc(id: string, data: Record<string, unknown>): ProjectFile {
     mimeType: String(data.mimeType ?? ''),
     size: Number(data.size ?? 0),
     createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() ?? new Date(),
-    updatedAt: (data.updatedAt as { toDate?: () => Date })?.toDate?.() ?? new Date(),
+    updatedAt: (data.updatedAt as { toDate?: () => Date })?.toDate?.() ?? new Date()
   }
 }
 
-function mapMailLinkDoc(id: string, data: Record<string, unknown>): ProjectMailLink {
+function mapMailLinkDoc (id: string, data: Record<string, unknown>): ProjectMailLink {
   return {
     id,
     userId: String(data.userId ?? ''),
@@ -59,11 +59,11 @@ function mapMailLinkDoc(id: string, data: Record<string, unknown>): ProjectMailL
       data.subjectSnapshot != null ? String(data.subjectSnapshot) : undefined,
     fromSnapshot: data.fromSnapshot != null ? String(data.fromSnapshot) : undefined,
     createdAt: (data.createdAt as { toDate?: () => Date })?.toDate?.() ?? new Date(),
-    updatedAt: (data.updatedAt as { toDate?: () => Date })?.toDate?.() ?? new Date(),
+    updatedAt: (data.updatedAt as { toDate?: () => Date })?.toDate?.() ?? new Date()
   }
 }
 
-function formatError(e: unknown): string {
+function formatError (e: unknown): string {
   const code =
     e && typeof e === 'object' && 'code' in e ? String((e as { code: string }).code) : ''
   const base = e instanceof Error ? e.message : 'Request failed'
@@ -73,13 +73,13 @@ function formatError(e: unknown): string {
   return base
 }
 
-function isMissingIndexError(e: unknown): boolean {
+function isMissingIndexError (e: unknown): boolean {
   const code =
     e && typeof e === 'object' && 'code' in e ? String((e as { code: string }).code) : ''
   return code === 'failed-precondition'
 }
 
-function sortByCreatedDesc<T extends { createdAt: Date }>(rows: T[]): T[] {
+function sortByCreatedDesc<T extends { createdAt: Date }> (rows: T[]): T[] {
   return [...rows].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 }
 
@@ -90,34 +90,34 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
     mailLinksByProjectId: {} as Record<string, ProjectMailLink[]>,
     mailLinksByMessageKey: {} as Record<string, ProjectMailLink[]>,
     loading: false,
-    error: null as string | null,
+    error: null as string | null
   }),
 
   getters: {
     linksForProject:
-      (storeState) =>
-      (projectId: string): ProjectLink[] =>
-        storeState.linksByProjectId[projectId] ?? [],
+      storeState =>
+        (projectId: string): ProjectLink[] =>
+          storeState.linksByProjectId[projectId] ?? [],
     filesForProject:
-      (storeState) =>
-      (projectId: string): ProjectFile[] =>
-        storeState.filesByProjectId[projectId] ?? [],
+      storeState =>
+        (projectId: string): ProjectFile[] =>
+          storeState.filesByProjectId[projectId] ?? [],
     mailLinksForProject:
-      (storeState) =>
-      (projectId: string): ProjectMailLink[] =>
-        storeState.mailLinksByProjectId[projectId] ?? [],
+      storeState =>
+        (projectId: string): ProjectMailLink[] =>
+          storeState.mailLinksByProjectId[projectId] ?? [],
     mailLinksForMessage:
-      (storeState) =>
-      (accountId: string, emailId: string): ProjectMailLink[] => {
-        const key = messageKey(accountId, emailId)
-        return storeState.mailLinksByMessageKey[key] ?? []
-      },
+      storeState =>
+        (accountId: string, emailId: string): ProjectMailLink[] => {
+          const key = messageKey(accountId, emailId)
+          return storeState.mailLinksByMessageKey[key] ?? []
+        }
   },
 
   actions: {
-    async fetchForProject(projectId: string) {
+    async fetchForProject (projectId: string) {
       const authStore = useAuthStore()
-      if (!authStore.user) throw new Error('Not signed in')
+      if (!authStore.user) { throw new Error('Not signed in') }
 
       this.loading = true
       this.error = null
@@ -136,7 +136,7 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
               )
             )
           } catch (e) {
-            if (!isMissingIndexError(e)) throw e
+            if (!isMissingIndexError(e)) { throw e }
             // Fallback path avoids composite index requirement.
             return getDocs(
               query(
@@ -151,16 +151,16 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
         const [linksSnap, filesSnap, mailSnap] = await Promise.all([
           fetchScoped('projectLinks'),
           fetchScoped('projectFiles'),
-          fetchScoped('projectMailLinks'),
+          fetchScoped('projectMailLinks')
         ])
 
-        this.linksByProjectId[projectId] = sortByCreatedDesc(linksSnap.docs.map((d) =>
+        this.linksByProjectId[projectId] = sortByCreatedDesc(linksSnap.docs.map(d =>
           mapLinkDoc(d.id, d.data() as Record<string, unknown>)
         ))
-        this.filesByProjectId[projectId] = sortByCreatedDesc(filesSnap.docs.map((d) =>
+        this.filesByProjectId[projectId] = sortByCreatedDesc(filesSnap.docs.map(d =>
           mapFileDoc(d.id, d.data() as Record<string, unknown>)
         ))
-        this.mailLinksByProjectId[projectId] = sortByCreatedDesc(mailSnap.docs.map((d) =>
+        this.mailLinksByProjectId[projectId] = sortByCreatedDesc(mailSnap.docs.map(d =>
           mapMailLinkDoc(d.id, d.data() as Record<string, unknown>)
         ))
       } catch (e: unknown) {
@@ -172,9 +172,9 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
       }
     },
 
-    async fetchMailLinksForMessage(accountId: string, emailId: string) {
+    async fetchMailLinksForMessage (accountId: string, emailId: string) {
       const authStore = useAuthStore()
-      if (!authStore.user) return
+      if (!authStore.user) { return }
 
       const key = messageKey(accountId, emailId)
       this.loading = true
@@ -188,7 +188,7 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
           where('emailId', '==', emailId)
         )
         const snap = await getDocs(q)
-        this.mailLinksByMessageKey[key] = snap.docs.map((d) =>
+        this.mailLinksByMessageKey[key] = snap.docs.map(d =>
           mapMailLinkDoc(d.id, d.data() as Record<string, unknown>)
         )
       } catch (e: unknown) {
@@ -199,9 +199,9 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
       }
     },
 
-    async addLink(projectId: string, rawUrl: string, title?: string) {
+    async addLink (projectId: string, rawUrl: string, title?: string) {
       const authStore = useAuthStore()
-      if (!authStore.user) throw new Error('Not signed in')
+      if (!authStore.user) { throw new Error('Not signed in') }
 
       if (!isValidHttpUrlForProject(rawUrl)) {
         throw new Error('Invalid URL')
@@ -215,7 +215,7 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
         url,
         title: title?.trim() || null,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       })
       // Optimistic local insert for immediate visibility.
       const current = this.linksByProjectId[projectId] ?? []
@@ -226,23 +226,23 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
         url,
         title: title?.trim() || undefined,
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       }
       this.linksByProjectId[projectId] = [optimistic, ...current]
       await this.fetchForProject(projectId)
       return ref.id
     },
 
-    async deleteLink(projectId: string, linkId: string) {
+    async deleteLink (projectId: string, linkId: string) {
       const db = getFirestore()
       await deleteDoc(doc(db, 'projectLinks', linkId))
       await this.fetchForProject(projectId)
     },
 
-    async updateLink(projectId: string, linkId: string, rawUrl: string, title?: string) {
+    async updateLink (projectId: string, linkId: string, rawUrl: string, title?: string) {
       const authStore = useAuthStore()
-      if (!authStore.user) throw new Error('Not signed in')
-      if (!isValidHttpUrlForProject(rawUrl)) throw new Error('Invalid URL')
+      if (!authStore.user) { throw new Error('Not signed in') }
+      if (!isValidHttpUrlForProject(rawUrl)) { throw new Error('Invalid URL') }
 
       const url = normalizeProjectUrl(rawUrl)
       const db = getFirestore()
@@ -253,21 +253,21 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
           projectId,
           url,
           title: title?.trim() || null,
-          updatedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         },
         { merge: true }
       )
       await this.fetchForProject(projectId)
     },
 
-    async addMailLink(
+    async addMailLink (
       projectId: string,
       accountId: string,
       emailId: string,
       snapshots?: { subject?: string; from?: string }
     ) {
       const authStore = useAuthStore()
-      if (!authStore.user) throw new Error('Not signed in')
+      if (!authStore.user) { throw new Error('Not signed in') }
 
       const db = getFirestore()
       const dupQ = query(
@@ -278,7 +278,7 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
       )
       const existing = await getDocs(dupQ)
       const dupDoc = existing.docs.find(
-        (d) => (d.data() as { projectId?: string }).projectId === projectId
+        d => (d.data() as { projectId?: string }).projectId === projectId
       )
       if (dupDoc) {
         return dupDoc.id
@@ -293,14 +293,14 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
         subjectSnapshot: snapshots?.subject ?? null,
         fromSnapshot: snapshots?.from ?? null,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       })
       await this.fetchForProject(projectId)
       await this.fetchMailLinksForMessage(accountId, emailId)
       return ref.id
     },
 
-    async deleteMailLink(
+    async deleteMailLink (
       projectId: string,
       linkId: string,
       accountId: string,
@@ -312,9 +312,9 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
       await this.fetchMailLinksForMessage(accountId, emailId)
     },
 
-    async uploadFile(projectId: string, file: File) {
+    async uploadFile (projectId: string, file: File) {
       const authStore = useAuthStore()
-      if (!authStore.user) throw new Error('Not signed in')
+      if (!authStore.user) { throw new Error('Not signed in') }
 
       const nuxtApp = useNuxtApp()
       const storage = nuxtApp.$storage
@@ -344,21 +344,21 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
         mimeType: file.type || 'application/octet-stream',
         size: file.size,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       })
 
       await this.fetchForProject(projectId)
       return fileId
     },
 
-    async getFileDownloadUrl(storagePath: string): Promise<string> {
+    async getFileDownloadUrl (storagePath: string): Promise<string> {
       const nuxtApp = useNuxtApp()
       const storage = nuxtApp.$storage
-      if (!storage) throw new Error('Storage not available')
+      if (!storage) { throw new Error('Storage not available') }
       return getDownloadURL(storageRef(storage, storagePath))
     },
 
-    async deleteFile(projectId: string, fileMeta: ProjectFile) {
+    async deleteFile (projectId: string, fileMeta: ProjectFile) {
       const nuxtApp = useNuxtApp()
       const storage = nuxtApp.$storage
       if (storage && fileMeta.storagePath) {
@@ -377,10 +377,10 @@ export const useProjectAttachmentsStore = defineStore('projectAttachments', {
       const db = getFirestore()
       await deleteDoc(doc(db, 'projectFiles', fileMeta.id))
       await this.fetchForProject(projectId)
-    },
-  },
+    }
+  }
 })
 
-function messageKey(accountId: string, emailId: string) {
+function messageKey (accountId: string, emailId: string) {
   return `${accountId}:${emailId}`
 }

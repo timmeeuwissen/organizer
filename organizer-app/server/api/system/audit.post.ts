@@ -6,7 +6,7 @@ const BodySchema = z.object({
   type: z.enum(['SUCCESS', 'ERROR', 'INFO', 'WARNING']),
   text: z.string().min(1).max(20_000),
   userId: z.string().nullable().optional(),
-  timestamp: z.string().optional(),
+  timestamp: z.string().optional()
 })
 
 export default defineEventHandler(async (event) => {
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid audit payload',
-      data: parsed.error.flatten(),
+      data: parsed.error.flatten()
     })
   }
 
@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
     ts,
     type: parsed.data.type,
     text: parsed.data.text,
-    userId: parsed.data.userId ?? null,
+    userId: parsed.data.userId ?? null
   })
 
   return { ok: true }

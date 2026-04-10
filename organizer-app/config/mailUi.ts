@@ -42,14 +42,14 @@ export const MAIL_TABLE_COLUMNS: MailTableColumnDef[] = [
     defaultVisible: true,
     sortable: false,
     width: '48px',
-    optional: true,
+    optional: true
   },
   { key: 'account', titleKey: 'mail.columns.account', defaultVisible: true, sortable: false, width: '120px', optional: true },
   { key: 'people', titleKey: 'mail.columns.people', defaultVisible: true, sortable: false, width: '56px', optional: true },
-  { key: 'actions', titleKey: 'mail.columns.actions', defaultVisible: true, sortable: false, width: '100px', optional: false },
+  { key: 'actions', titleKey: 'mail.columns.actions', defaultVisible: true, sortable: false, width: '100px', optional: false }
 ]
 
-export function defaultMailColumnVisibility(): Record<MailColumnKey, boolean> {
+export function defaultMailColumnVisibility (): Record<MailColumnKey, boolean> {
   const r = {} as Record<MailColumnKey, boolean>
   for (const c of MAIL_TABLE_COLUMNS) {
     r[c.key] = c.defaultVisible
@@ -57,7 +57,7 @@ export function defaultMailColumnVisibility(): Record<MailColumnKey, boolean> {
   return r
 }
 
-export function mergeMailColumnVisibility(
+export function mergeMailColumnVisibility (
   saved?: Partial<Record<MailColumnKey, boolean>>
 ): Record<MailColumnKey, boolean> {
   const base = defaultMailColumnVisibility()
@@ -72,7 +72,7 @@ export function mergeMailColumnVisibility(
   return base
 }
 
-export function normalizeMailPageSize(n: unknown): MailPageSize {
+export function normalizeMailPageSize (n: unknown): MailPageSize {
   const num = typeof n === 'number' ? n : Number(n)
   if (Number.isFinite(num) && (MAIL_PAGE_SIZE_OPTIONS as readonly number[]).includes(num)) {
     return num as MailPageSize
@@ -80,4 +80,4 @@ export function normalizeMailPageSize(n: unknown): MailPageSize {
   return 20
 }
 
-export const MAIL_COLUMNS_FOR_PICKER = MAIL_TABLE_COLUMNS.filter((c) => c.optional !== false)
+export const MAIL_COLUMNS_FOR_PICKER = MAIL_TABLE_COLUMNS.filter(c => c.optional !== false)

@@ -1,55 +1,55 @@
+import type { CalendarProvider, CalendarEventQuery, CalendarFetchResult } from './CalendarProvider'
 import type { IntegrationAccount } from '~/types/models'
 import type { CalendarEvent, CalendarPerson } from '~/stores/calendar'
 import { refreshOAuthToken } from '~/utils/api/emailUtils'
-import type { CalendarProvider, CalendarEventQuery, CalendarFetchResult } from './CalendarProvider'
 
 /**
  * Exchange Calendar provider implementation
  */
 export class ExchangeCalendarProvider implements CalendarProvider {
   private account: IntegrationAccount
-  
-  constructor(account: IntegrationAccount) {
+
+  constructor (account: IntegrationAccount) {
     this.account = account
   }
-  
-  isAuthenticated(): boolean {
+
+  isAuthenticated (): boolean {
     console.log(`ExchangeCalendarProvider.isAuthenticated check for ${this.account.oauthData.email}:`, {
       hasAccessToken: !!this.account.oauthData.accessToken,
       tokenExpiry: this.account.oauthData.tokenExpiry,
       currentTime: new Date(),
       isTokenExpired: this.account.oauthData.tokenExpiry ? new Date(this.account.oauthData.tokenExpiry) < new Date() : 'No expiry set',
       scope: this.account.oauthData.scope
-    });
-    
+    })
+
     // Check access token
     if (!this.account.oauthData.accessToken) {
-      console.log(`${this.account.oauthData.email}: No access token found`);
-      return false;
+      console.log(`${this.account.oauthData.email}: No access token found`)
+      return false
     }
-    
+
     // Check token expiry
     // If tokenExpiry is not set, consider the token expired and force a refresh
     if (!this.account.oauthData.tokenExpiry) {
-      console.log(`${this.account.oauthData.email}: No token expiry date set, assuming expired`);
-      return false;
+      console.log(`${this.account.oauthData.email}: No token expiry date set, assuming expired`)
+      return false
     }
-    
+
     // Check if token is expired
     if (new Date(this.account.oauthData.tokenExpiry) < new Date()) {
-      console.log(`${this.account.oauthData.email}: Token expired`);
-      return false;
+      console.log(`${this.account.oauthData.email}: Token expired`)
+      return false
     }
-    
-    console.log(`${this.account.oauthData.email}: Authentication valid`);
-    return true;
+
+    console.log(`${this.account.oauthData.email}: Authentication valid`)
+    return true
   }
-  
-  async authenticate(): Promise<boolean> {
+
+  async authenticate (): Promise<boolean> {
     if (this.isAuthenticated()) {
       return true
     }
-    
+
     if (this.account.oauthData.refreshToken) {
       try {
         this.account = await refreshOAuthToken(this.account)
@@ -59,15 +59,15 @@ export class ExchangeCalendarProvider implements CalendarProvider {
         return false
       }
     }
-    
+
     // Would need to redirect user to OAuth flow
     return false
   }
-  
+
   /**
    * Fetch calendar events with query support
    */
-  async fetchEvents(query?: CalendarEventQuery): Promise<CalendarFetchResult> {
+  async fetchEvents (query?: CalendarEventQuery): Promise<CalendarFetchResult> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -78,16 +78,16 @@ export class ExchangeCalendarProvider implements CalendarProvider {
         }
       }
     }
-    
+
     try {
       // Check if we have proper configuration
       if (!this.account.server) {
         throw new Error('Exchange server URL is required')
       }
-      
+
       // API endpoint for Exchange Web Services
       const calendarId = query?.calendarId || ''
-      
+
       // Use different endpoints based on whether a specific calendar ID is provided
       let endpoint: string
       if (calendarId) {
@@ -95,72 +95,72 @@ export class ExchangeCalendarProvider implements CalendarProvider {
       } else {
         endpoint = `${this.account.server}/api/v2.0/me/events`
       }
-      
+
       // Build query parameters
       const params = new URLSearchParams({
-        '$select': 'id,subject,bodyPreview,organizer,attendees,start,end,location,isAllDay',
-        '$orderby': 'start/dateTime asc',
-        '$top': '50' // Limit to 50 events per request
+        $select: 'id,subject,bodyPreview,organizer,attendees,start,end,location,isAllDay',
+        $orderby: 'start/dateTime asc',
+        $top: '50' // Limit to 50 events per request
       })
-      
+
       // Add date range to query
       if (query?.startDate || query?.endDate) {
         let filterString = ''
-        
+
         if (query?.startDate) {
           const startDate = new Date(query.startDate).toISOString()
           filterString += `start/dateTime ge '${startDate}'`
         }
-        
+
         if (query?.startDate && query?.endDate) {
           filterString += ' and '
         }
-        
+
         if (query?.endDate) {
           const endDate = new Date(query.endDate).toISOString()
           filterString += `end/dateTime le '${endDate}'`
         }
-        
+
         params.append('$filter', filterString)
       }
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Prefer': 'exchange.timezone="UTC"'
+        Accept: 'application/json',
+        Prefer: 'exchange.timezone="UTC"'
       }
-      
+
       // Make the request
       const url = `${endpoint}?${params.toString()}`
       console.log(`[Exchange] Fetching events from: ${url}`)
-      
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: headers
+        headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[Exchange] Fetch error:', errorText)
         throw new Error(`Exchange API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
-      
+
       // Process events
       const events: CalendarEvent[] = []
-      
+
       if (data.value && Array.isArray(data.value)) {
         for (const item of data.value) {
           try {
             // Extract start and end times
             let startTime: Date, endTime: Date
-            let allDay = !!item.isAllDay
-            
+            const allDay = !!item.isAllDay
+
             if (allDay) {
               // All-day event
               startTime = new Date(item.start.dateTime + 'Z') // Ensure UTC
@@ -172,16 +172,18 @@ export class ExchangeCalendarProvider implements CalendarProvider {
               startTime = new Date(item.start.dateTime + 'Z') // Ensure UTC
               endTime = new Date(item.end.dateTime + 'Z') // Ensure UTC
             }
-            
+
             // Extract organizer
-            const organizer: CalendarPerson | undefined = item.organizer?.emailAddress ? {
-              name: item.organizer.emailAddress.name,
-              email: item.organizer.emailAddress.address
-            } : undefined
-            
+            const organizer: CalendarPerson | undefined = item.organizer?.emailAddress
+              ? {
+                  name: item.organizer.emailAddress.name,
+                  email: item.organizer.emailAddress.address
+                }
+              : undefined
+
             // Extract attendees
             const attendees: CalendarPerson[] = []
-            
+
             if (item.attendees && Array.isArray(item.attendees)) {
               for (const attendee of item.attendees) {
                 if (attendee.emailAddress) {
@@ -192,13 +194,13 @@ export class ExchangeCalendarProvider implements CalendarProvider {
                 }
               }
             }
-            
+
             // Extract location
-            let location = undefined
+            let location
             if (item.location && item.location.displayName) {
               location = item.location.displayName
             }
-            
+
             // Create event object
             const event: CalendarEvent = {
               id: item.id,
@@ -212,17 +214,17 @@ export class ExchangeCalendarProvider implements CalendarProvider {
               attendees: attendees.length > 0 ? attendees : undefined,
               calendarId: query?.calendarId
             }
-            
+
             events.push(event)
           } catch (err) {
             console.error('[Exchange] Error processing event:', err, item)
           }
         }
       }
-      
+
       // Check if there are more events (pagination)
       const hasMore = !!data['@odata.nextLink']
-      
+
       return {
         events,
         hasMore
@@ -235,11 +237,11 @@ export class ExchangeCalendarProvider implements CalendarProvider {
       }
     }
   }
-  
+
   /**
    * Create a calendar event
    */
-  async createEvent(event: CalendarEvent): Promise<{success: boolean, eventId?: string}> {
+  async createEvent (event: CalendarEvent): Promise<{success: boolean, eventId?: string}> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -247,16 +249,16 @@ export class ExchangeCalendarProvider implements CalendarProvider {
         return { success: false }
       }
     }
-    
+
     try {
       // Check if we have proper configuration
       if (!this.account.server) {
         throw new Error('Exchange server URL is required')
       }
-      
+
       // API endpoint for Exchange Web Services
       const calendarId = event.calendarId || ''
-      
+
       // Use different endpoints based on whether a specific calendar ID is provided
       let endpoint: string
       if (calendarId) {
@@ -264,28 +266,28 @@ export class ExchangeCalendarProvider implements CalendarProvider {
       } else {
         endpoint = `${this.account.server}/api/v2.0/me/events`
       }
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
-      
+
       // Convert event to Exchange format
       const exchangeEvent: any = {
         subject: event.title,
         bodyPreview: event.description || '',
         isAllDay: event.allDay
       }
-      
+
       // Handle location if provided
       if (event.location) {
         exchangeEvent.location = {
           displayName: event.location
         }
       }
-      
+
       // Handle start and end times
       if (event.allDay) {
         // All-day event
@@ -293,7 +295,7 @@ export class ExchangeCalendarProvider implements CalendarProvider {
         const endDate = new Date(event.endTime)
         // For all-day events, the end date is exclusive, so add one day
         endDate.setDate(endDate.getDate() + 1)
-        
+
         exchangeEvent.start = {
           dateTime: startDate.toISOString().split('T')[0] + 'T00:00:00',
           timeZone: 'UTC'
@@ -313,7 +315,7 @@ export class ExchangeCalendarProvider implements CalendarProvider {
           timeZone: 'UTC'
         }
       }
-      
+
       // Add attendees if present
       if (event.attendees && event.attendees.length > 0) {
         exchangeEvent.attendees = event.attendees.map(attendee => ({
@@ -324,26 +326,26 @@ export class ExchangeCalendarProvider implements CalendarProvider {
           type: 'required'
         }))
       }
-      
+
       // Make the request
       console.log(`[Exchange] Creating event at: ${endpoint}`)
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: headers,
+        headers,
         body: JSON.stringify(exchangeEvent)
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[Exchange] Create error:', errorText)
         throw new Error(`Exchange API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
-      
+
       // Return the success status and the event ID
       return {
         success: true,
@@ -354,11 +356,11 @@ export class ExchangeCalendarProvider implements CalendarProvider {
       return { success: false }
     }
   }
-  
+
   /**
    * Update a calendar event
    */
-  async updateEvent(event: CalendarEvent): Promise<boolean> {
+  async updateEvent (event: CalendarEvent): Promise<boolean> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -366,37 +368,37 @@ export class ExchangeCalendarProvider implements CalendarProvider {
         return false
       }
     }
-    
+
     try {
       // Check if we have proper configuration
       if (!this.account.server) {
         throw new Error('Exchange server URL is required')
       }
-      
+
       // API endpoint for Exchange Web Services
       const endpoint = `${this.account.server}/api/v2.0/me/events/${event.id}`
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
-      
+
       // Convert event to Exchange format
       const exchangeEvent: any = {
         subject: event.title,
         bodyPreview: event.description || '',
         isAllDay: event.allDay
       }
-      
+
       // Handle location if provided
       if (event.location) {
         exchangeEvent.location = {
           displayName: event.location
         }
       }
-      
+
       // Handle start and end times
       if (event.allDay) {
         // All-day event
@@ -404,7 +406,7 @@ export class ExchangeCalendarProvider implements CalendarProvider {
         const endDate = new Date(event.endTime)
         // For all-day events, the end date is exclusive, so add one day
         endDate.setDate(endDate.getDate() + 1)
-        
+
         exchangeEvent.start = {
           dateTime: startDate.toISOString().split('T')[0] + 'T00:00:00',
           timeZone: 'UTC'
@@ -424,7 +426,7 @@ export class ExchangeCalendarProvider implements CalendarProvider {
           timeZone: 'UTC'
         }
       }
-      
+
       // Add attendees if present
       if (event.attendees && event.attendees.length > 0) {
         exchangeEvent.attendees = event.attendees.map(attendee => ({
@@ -435,34 +437,34 @@ export class ExchangeCalendarProvider implements CalendarProvider {
           type: 'required'
         }))
       }
-      
+
       // Make the request
       console.log(`[Exchange] Updating event at: ${endpoint}`)
-      
+
       const response = await fetch(endpoint, {
         method: 'PATCH',
-        headers: headers,
+        headers,
         body: JSON.stringify(exchangeEvent)
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[Exchange] Update error:', errorText)
         throw new Error(`Exchange API error: ${response.status} ${response.statusText}`)
       }
-      
+
       return true
     } catch (error) {
       console.error('[Exchange] Error updating event:', error)
       return false
     }
   }
-  
+
   /**
    * Delete a calendar event
    */
-  async deleteEvent(eventId: string): Promise<boolean> {
+  async deleteEvent (eventId: string): Promise<boolean> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -470,48 +472,48 @@ export class ExchangeCalendarProvider implements CalendarProvider {
         return false
       }
     }
-    
+
     try {
       // Check if we have proper configuration
       if (!this.account.server) {
         throw new Error('Exchange server URL is required')
       }
-      
+
       // API endpoint for Exchange Web Services
       const endpoint = `${this.account.server}/api/v2.0/me/events/${eventId}`
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
+        Accept: 'application/json'
       }
-      
+
       // Make the request
       console.log(`[Exchange] Deleting event at: ${endpoint}`)
-      
+
       const response = await fetch(endpoint, {
         method: 'DELETE',
-        headers: headers
+        headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[Exchange] Delete error:', errorText)
         throw new Error(`Exchange API error: ${response.status} ${response.statusText}`)
       }
-      
+
       return true
     } catch (error) {
       console.error('[Exchange] Error deleting event:', error)
       return false
     }
   }
-  
+
   /**
    * Get available calendars
    */
-  async getCalendars(): Promise<{id: string, name: string, primary: boolean}[]> {
+  async getCalendars (): Promise<{id: string, name: string, primary: boolean}[]> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -519,43 +521,43 @@ export class ExchangeCalendarProvider implements CalendarProvider {
         return []
       }
     }
-    
+
     try {
       // Check if we have proper configuration
       if (!this.account.server) {
         throw new Error('Exchange server URL is required')
       }
-      
+
       // API endpoint for Exchange Web Services
       const endpoint = `${this.account.server}/api/v2.0/me/calendars`
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
+        Accept: 'application/json'
       }
-      
+
       // Make the request
-      console.log(`[Exchange] Fetching calendar list`)
-      
+      console.log('[Exchange] Fetching calendar list')
+
       const response = await fetch(endpoint, {
         method: 'GET',
-        headers: headers
+        headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[Exchange] Calendar list error:', errorText)
         throw new Error(`Exchange API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
-      
+
       // Extract calendars
       const calendars: {id: string, name: string, primary: boolean}[] = []
-      
+
       if (data.value && Array.isArray(data.value)) {
         for (const item of data.value) {
           if (item.id && item.name) {
@@ -567,7 +569,7 @@ export class ExchangeCalendarProvider implements CalendarProvider {
           }
         }
       }
-      
+
       return calendars
     } catch (error) {
       console.error('[Exchange] Error fetching calendars:', error)

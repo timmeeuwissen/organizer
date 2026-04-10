@@ -9,7 +9,7 @@ export interface IntegrationModuleUsage {
   state: ModuleUsageState
 }
 
-function syncAndShow(sync: boolean, show: boolean): boolean {
+function syncAndShow (sync: boolean, show: boolean): boolean {
   return !!(sync && show)
 }
 
@@ -18,7 +18,7 @@ function syncAndShow(sync: boolean, show: boolean): boolean {
  * - Mail, Calendar, Tasks, People: connected + sync* + showIn*
  * - Meetings: connected + syncCalendar (see pages/meetings/index.vue)
  */
-export function getIntegrationModuleUsage(account: IntegrationAccount): IntegrationModuleUsage[] {
+export function getIntegrationModuleUsage (account: IntegrationAccount): IntegrationModuleUsage[] {
   const connected = !!account.oauthData?.connected
 
   const state = (enabledForModule: boolean): ModuleUsageState => {
@@ -42,6 +42,6 @@ export function getIntegrationModuleUsage(account: IntegrationAccount): Integrat
     { key: 'calendar', state: state(calendarEnabled) },
     { key: 'tasks', state: state(tasksEnabled) },
     { key: 'people', state: state(peopleEnabled) },
-    { key: 'meetings', state: state(meetingsEnabled) },
+    { key: 'meetings', state: state(meetingsEnabled) }
   ]
 }

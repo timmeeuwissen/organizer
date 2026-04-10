@@ -10,5 +10,5 @@ module.exports = defineConfig({
     video: false,
     screenshotOnRunFailure: true,
     experimentalStudio: true
-  },
+  }
 })

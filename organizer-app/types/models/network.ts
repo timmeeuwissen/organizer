@@ -16,7 +16,7 @@ export interface GraphNode {
   id: string
   userId: string
   type: NodeType
-  entityId: string | null   // ID in source store; null for knowledge nodes
+  entityId: string | null // ID in source store; null for knowledge nodes
   label: string
   createdAt: Date
   updatedAt: Date
@@ -29,7 +29,7 @@ export interface KnowledgeNode extends GraphNode {
   subtype: KnowledgeSubtype
   source: KnowledgeSource
   sourceRef?: string
-  certainty: number          // 0.0–1.0
+  certainty: number // 0.0–1.0
   certaintyDate: Date
   tags: string[]
 }
@@ -45,7 +45,7 @@ export interface GraphEdge {
   updatedAt: Date
 }
 
-export function isKnowledgeNode(node: GraphNode): node is KnowledgeNode {
+export function isKnowledgeNode (node: GraphNode): node is KnowledgeNode {
   return node.type === 'knowledge'
 }
 

@@ -5,7 +5,7 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('mail.title') }}
-  
+
   template(v-if="connectedAccounts.length === 0")
     v-row(justify="center" align="center" class="mt-4")
       v-col(cols="12" md="8")
@@ -19,7 +19,7 @@ v-container(fluid)
               :to="'/auth/profile'"
               prepend-icon="mdi-account-cog"
             ) {{ $t('mail.goToProfile') }}
-  
+
   //- Skip the "No emails found" message and just show the normal mail interface without any emails
   v-row(v-else)
     v-col(cols="12" md="3")
@@ -37,7 +37,7 @@ v-container(fluid)
           )
             template(v-slot:append)
               v-chip(size="x-small" v-if="getUnreadCount(folder.id) > 0") {{ getUnreadCount(folder.id) }}
-      
+
       ModuleIntegrationAccountFilter(
         module-segment="mail"
         v-model="selectedProviders"
@@ -49,7 +49,7 @@ v-container(fluid)
             size="small"
             :color="getAccountStatusColor(account)"
           ) {{ getAccountStatusMessage(account) }}
-      
+
       v-card(class="mb-4")
         v-card-title {{ $t('mail.viewAndColumns') }}
         v-card-text
@@ -76,7 +76,7 @@ v-container(fluid)
             density="compact"
             hide-details
           )
-      
+
       v-card
         v-card-title {{ $t('mail.contacts') }}
         v-card-text
@@ -106,7 +106,7 @@ v-container(fluid)
               template(v-slot:prepend)
                 v-avatar(size="32" :color="getRandomColor(contact.id)")
                   span {{ getContactInitials(contact) }}
-    
+
     v-col(cols="12" md="9")
       v-card
         v-toolbar(density="compact" color="primary")
@@ -140,7 +140,7 @@ v-container(fluid)
               v-icon mdi-link-variant
             v-btn(icon @click="deleteEmail")
               v-icon mdi-delete
-        
+
         template(v-if="!selectedEmail")
           v-card-title(:class="{ 'pa-0': true }")
             v-data-table-virtual(
@@ -159,22 +159,22 @@ v-container(fluid)
                     :color="item.read ? 'gray' : 'primary'"
                     size="small"
                   )
-              
+
               template(v-slot:item.from="{ item }")
                 span(:class="{ 'font-weight-bold': !item.read }") {{ item.from.name }}
-              
+
               template(v-slot:item.fromEmail="{ item }")
                 span.text-caption(:class="{ 'font-weight-bold': !item.read }") {{ item.from.email }}
-              
+
               template(v-slot:item.to="{ item }")
                 span.text-caption(:class="{ 'font-weight-bold': !item.read }") {{ formatToSummary(item) }}
-              
+
               template(v-slot:item.subject="{ item }")
                 span(:class="{ 'font-weight-bold': !item.read }") {{ item.subject }}
-              
+
               template(v-slot:item.date="{ item }")
                 span(:class="{ 'font-weight-bold': !item.read }") {{ formatDate(item.date) }}
-              
+
               template(v-slot:item.attachments="{ item }")
                 v-icon(
                   v-if="item.attachments && item.attachments.length"
@@ -182,10 +182,10 @@ v-container(fluid)
                   color="primary"
                 ) mdi-paperclip
                 span.text-caption.text-medium-emphasis(v-else) —
-              
+
               template(v-slot:item.account="{ item }")
                 span.text-caption.text-truncate(style="max-width: 7rem") {{ getAccountLabel(item.accountId) }}
-              
+
               template(v-slot:item.people="{ item }")
                 template(v-if="item.from?.email")
                   nuxt-link.text-decoration-none(
@@ -206,22 +206,22 @@ v-container(fluid)
                     :title="$t('mail.addPersonFromEmail')"
                     @click.stop="openAddPersonFromEmail(item.from)"
                   ) {{ $t('people.addPerson') }}
-              
+
               template(v-slot:item.actions="{ item }")
                 v-btn(icon variant="text" @click.stop="markAsRead(item)")
                   v-icon(size="small") {{ item.read ? 'mdi-email' : 'mdi-email-open' }}
                 v-btn(icon variant="text" @click.stop="deleteEmail(item)")
                   v-icon(size="small") mdi-delete
-              
+
               template(v-slot:bottom)
                 div.d-flex.align-center.justify-center.my-3(v-if="mailStore.loading")
                   v-progress-circular(indeterminate color="primary")
                   span.ml-2 Loading emails...
-                
+
                 div.d-flex.align-center.justify-space-between.px-4.py-2(v-else)
-                  div.text-caption 
+                  div.text-caption
                     span Showing {{ tableEmails.length }} of {{ paginationInfo.totalEmails }} emails
-                  
+
                   div.d-flex.align-center
                     v-btn(
                       variant="text"
@@ -230,9 +230,9 @@ v-container(fluid)
                       @click="loadPreviousPage"
                       prepend-icon="mdi-chevron-left"
                     ) Previous
-                    
+
                     span.mx-2 Page {{ paginationInfo.currentPage + 1 }} of {{ Math.max(1, paginationInfo.totalPages) }}
-                    
+
                     v-btn(
                       variant="text"
                       size="small"
@@ -240,7 +240,7 @@ v-container(fluid)
                       @click="loadNextPage"
                       append-icon="mdi-chevron-right"
                     ) Next
-        
+
         template(v-else)
           v-card-text
             v-row
@@ -274,14 +274,14 @@ v-container(fluid)
                       ) {{ $t('people.addPerson') }}
                   v-spacer
                   div.text-body-2 {{ formatDatetime(selectedEmail.date) }}
-                
+
                 v-chip.mb-2(
                   v-for="person in selectedEmail.to"
                   :key="person.email"
                   size="small"
                   class="mr-1"
                 ) To: {{ person.name }}
-                
+
                 template(v-if="selectedEmail.cc && selectedEmail.cc.length > 0")
                   v-chip.mb-2(
                     v-for="person in selectedEmail.cc"
@@ -289,7 +289,7 @@ v-container(fluid)
                     size="small"
                     class="mr-1"
                   ) Cc: {{ person.name }}
-                
+
                 div.email-body.mt-4.pa-2(v-html="selectedEmail.body")
 
                 div.mt-3(v-if="messageProjectLinks.length > 0")
@@ -302,9 +302,9 @@ v-container(fluid)
                     @click:close.stop="unlinkMailProject(lnk)"
                   )
                     nuxt-link.text-decoration-none(:to="`/projects/${lnk.projectId}`") {{ projectTitle(lnk.projectId) }}
-                
+
                 v-divider(class="my-4")
-                
+
                 template(v-if="selectedEmail.attachments && selectedEmail.attachments.length > 0")
                   h3.text-subtitle-1 {{ $t('mail.attachments') }}
                   div.d-flex.flex-wrap
@@ -315,7 +315,7 @@ v-container(fluid)
                       link
                       variant="outlined"
                     ) {{ attachment.name }}
-      
+
       // Compose dialog
       v-dialog(v-model="showComposeDialog" max-width="800px")
         v-card
@@ -324,9 +324,9 @@ v-container(fluid)
             v-spacer
             v-btn(icon variant="text" @click="showComposeDialog = false")
               v-icon mdi-close
-          
+
           v-divider
-          
+
           v-card-text
             v-form(ref="composeForm")
               v-text-field(
@@ -337,7 +337,7 @@ v-container(fluid)
                 class="mb-2"
                 required
               )
-              
+
               v-text-field(
                 v-model="composeData.cc"
                 :label="$t('mail.cc')"
@@ -345,7 +345,7 @@ v-container(fluid)
                 density="comfortable"
                 class="mb-2"
               )
-              
+
               v-text-field(
                 v-model="composeData.subject"
                 :label="$t('mail.subject')"
@@ -354,7 +354,7 @@ v-container(fluid)
                 class="mb-2"
                 required
               )
-              
+
               v-textarea(
                 v-model="composeData.body"
                 :label="$t('mail.body')"
@@ -363,7 +363,7 @@ v-container(fluid)
                 rows="10"
                 required
               )
-              
+
               v-file-input(
                 v-model="composeData.attachments"
                 :label="$t('mail.attachments')"
@@ -373,24 +373,24 @@ v-container(fluid)
                 chips
                 prepend-icon="mdi-paperclip"
               )
-          
+
           v-divider
-          
+
           v-card-actions
             v-btn(
               color="primary"
               prepend-icon="mdi-send"
               @click="sendEmail"
             ) {{ $t('mail.send') }}
-            
+
             v-btn(
               variant="outlined"
               prepend-icon="mdi-content-save"
               @click="saveDraft"
             ) {{ $t('mail.saveDraft') }}
-            
+
             v-spacer
-            
+
             v-btn(
               variant="text"
               @click="showComposeDialog = false"
@@ -443,7 +443,7 @@ import {
   MAIL_TABLE_COLUMNS,
   mergeMailColumnVisibility,
   normalizeMailPageSize,
-  type MailColumnKey,
+  type MailColumnKey
 } from '~/config/mailUi'
 import { usePersonDialog } from '~/composables/usePersonDialog'
 
@@ -467,7 +467,7 @@ const { accounts: connectedAccounts } = useModuleIntegrationAccounts('mail')
 const loading = computed(() => mailStore.loading)
 
 const mailPageSize = ref<ReturnType<typeof normalizeMailPageSize>>(20)
-const mailPageSizeSelectItems = MAIL_PAGE_SIZE_OPTIONS.map((n) => ({ title: String(n), value: n }))
+const mailPageSizeSelectItems = MAIL_PAGE_SIZE_OPTIONS.map(n => ({ title: String(n), value: n }))
 const visibleColumns = reactive<Record<MailColumnKey, boolean>>(mergeMailColumnVisibility())
 const mailUiReady = ref(false)
 
@@ -477,11 +477,11 @@ const emailHeaders = computed(() => {
       return true
     }
     return visibleColumns[def.key]
-  }).map((def) => ({
+  }).map(def => ({
     title: def.key === 'read' ? '' : t(def.titleKey),
     key: def.key,
     sortable: def.sortable ?? false,
-    width: def.width,
+    width: def.width
   }))
 })
 
@@ -500,7 +500,7 @@ const composeData = ref({
   cc: '',
   subject: '',
   body: '',
-  attachments: [],
+  attachments: []
 })
 const composeForm = ref(null)
 
@@ -510,33 +510,26 @@ const filteredEmails = computed(() => {
   if (!mailStore.emails) {
     return []
   }
-  
+
   // Filter by provider accounts
   let result = [...mailStore.emails]
-  
+
   // Filter by provider accounts
   if (selectedProviders.value.length === 0) {
     // If no providers are selected, only show emails without an account ID
     result = result.filter(email => !email.accountId)
   } else if (connectedAccounts.value.length > 0) {
-    result = result.filter(email => 
+    result = result.filter(email =>
       !email.accountId || // Include emails without an account ID (shouldn't happen normally)
       selectedProviders.value.includes(email.accountId)
     )
   }
-  
+
   // Minimize reactive dependencies in this function
   const count = result.length
   const page = mailStore.currentPage
   const total = mailStore.totalEmails
-  
-  // Use a non-reactive timer to log so we don't create circular dependencies
-  if (count > 0) {
-    setTimeout(() => {
-      console.log(`Displaying ${count} emails for ${selectedFolder.value} (page ${page + 1}, total: ${total})`)
-    }, 0)
-  }
-  
+
   return result
 })
 
@@ -546,7 +539,7 @@ const tableEmails = computed(() => {
   return filteredEmails.value.slice(0, cap)
 })
 
-function applyMailUiFromUserSettings() {
+function applyMailUiFromUserSettings () {
   const s = authStore.currentUser?.settings?.mailUi
   mailPageSize.value = normalizeMailPageSize(s?.pageSize)
   const merged = mergeMailColumnVisibility(s?.visibleColumns)
@@ -556,7 +549,7 @@ function applyMailUiFromUserSettings() {
 }
 
 let persistMailUiTimer: ReturnType<typeof setTimeout> | null = null
-async function commitMailPageSize(raw: unknown) {
+async function commitMailPageSize (raw: unknown) {
   const size = normalizeMailPageSize(raw)
   mailPageSize.value = size
   if (!mailUiReady.value) {
@@ -570,7 +563,7 @@ async function commitMailPageSize(raw: unknown) {
   schedulePersistMailUi()
 }
 
-function schedulePersistMailUi() {
+function schedulePersistMailUi () {
   if (!mailUiReady.value || !authStore.currentUser) {
     return
   }
@@ -582,7 +575,7 @@ function schedulePersistMailUi() {
     try {
       const payload: MailUiSettings = {
         pageSize: mailPageSize.value,
-        visibleColumns: { ...(toRaw(visibleColumns) as Record<MailColumnKey, boolean>) },
+        visibleColumns: { ...(toRaw(visibleColumns) as Record<MailColumnKey, boolean>) }
       }
       await authStore.updateUserSettings({ mailUi: payload })
     } catch (e) {
@@ -602,7 +595,7 @@ watch(
   { deep: true }
 )
 
-function formatToSummary(item: Email) {
+function formatToSummary (item: Email) {
   if (!item.to?.length) {
     return '—'
   }
@@ -614,12 +607,12 @@ function formatToSummary(item: Email) {
   return `${label} +${item.to.length - 1}`
 }
 
-function findPersonByEmail(email: string | undefined) {
+function findPersonByEmail (email: string | undefined) {
   if (!email) {
     return null
   }
   const lower = email.toLowerCase()
-  return peopleStore.people.find((p) => p.email?.toLowerCase() === lower) ?? null
+  return peopleStore.people.find(p => p.email?.toLowerCase() === lower) ?? null
 }
 
 const senderMatchedPerson = computed(() =>
@@ -628,12 +621,12 @@ const senderMatchedPerson = computed(() =>
     : null
 )
 
-function peopleContactLink(person: Person) {
+function peopleContactLink (person: Person) {
   return { path: '/people', query: { person: person.id } }
 }
 
 // Pug misparses `!)` inside `:to="..."`; keep link building in script.
-function peopleContactLinkByEmail(email: string | undefined) {
+function peopleContactLinkByEmail (email: string | undefined) {
   const p = findPersonByEmail(email)
   if (!p) {
     return { path: '/people' }
@@ -641,7 +634,7 @@ function peopleContactLinkByEmail(email: string | undefined) {
   return peopleContactLink(p)
 }
 
-function buildPersonPrefillFromEmailSender(from: EmailPerson): Partial<Person> {
+function buildPersonPrefillFromEmailSender (from: EmailPerson): Partial<Person> {
   const email = from.email?.trim() || ''
   const name = (from.name || '').trim()
   if (!email && !name) {
@@ -657,7 +650,7 @@ function buildPersonPrefillFromEmailSender(from: EmailPerson): Partial<Person> {
   return { firstName: parts[0], lastName: parts.slice(1).join(' '), email }
 }
 
-function openAddPersonFromEmail(from: EmailPerson) {
+function openAddPersonFromEmail (from: EmailPerson) {
   const prefill = buildPersonPrefillFromEmailSender(from)
   if (personDialogSvc) {
     personDialogSvc.openAdd(Object.keys(prefill).length > 0 ? prefill : null)
@@ -666,11 +659,11 @@ function openAddPersonFromEmail(from: EmailPerson) {
   navigateTo({ path: '/people', query: { search: from.email || undefined } })
 }
 
-function getAccountLabel(accountId: string | undefined) {
+function getAccountLabel (accountId: string | undefined) {
   if (!accountId) {
     return '—'
   }
-  const acc = connectedAccounts.value.find((a) => a.id === accountId)
+  const acc = connectedAccounts.value.find(a => a.id === accountId)
   if (!acc) {
     return '—'
   }
@@ -688,14 +681,14 @@ const messageProjectLinks = computed(() => {
 })
 
 const availableProjectsForMail = computed(() =>
-  projectsStore.projects.map((p) => ({ id: p.id, title: p.title }))
+  projectsStore.projects.map(p => ({ id: p.id, title: p.title }))
 )
 
-function projectTitle(projectId: string) {
+function projectTitle (projectId: string) {
   return projectsStore.getById(projectId)?.title ?? projectId
 }
 
-async function openLinkProjectDialog() {
+async function openLinkProjectDialog () {
   if (projectsStore.projects.length === 0) {
     await projectsStore.fetchProjects()
   }
@@ -703,7 +696,7 @@ async function openLinkProjectDialog() {
   showLinkProjectDialog.value = true
 }
 
-async function saveMailProjectLink() {
+async function saveMailProjectLink () {
   const em = selectedEmail.value
   if (!em || !linkProjectId.value || !em.accountId) {
     return
@@ -711,7 +704,7 @@ async function saveMailProjectLink() {
   try {
     await attachmentsStore.addMailLink(linkProjectId.value, em.accountId, em.id, {
       subject: em.subject,
-      from: em.from?.name || em.from?.email || '',
+      from: em.from?.name || em.from?.email || ''
     })
     notify.pushSuccess(t('projects.mailLinked'))
     showLinkProjectDialog.value = false
@@ -720,7 +713,7 @@ async function saveMailProjectLink() {
   }
 }
 
-async function unlinkMailProject(lnk: ProjectMailLink) {
+async function unlinkMailProject (lnk: ProjectMailLink) {
   try {
     await attachmentsStore.deleteMailLink(lnk.projectId, lnk.id, lnk.accountId, lnk.emailId)
     notify.pushSuccess(t('projects.mailUnlinked'))
@@ -740,32 +733,32 @@ watch(
 
 const filteredContacts = computed(() => {
   let result = peopleStore.people
-  
+
   if (contactSearch.value) {
     const searchTerm = contactSearch.value.toLowerCase()
     result = result.filter(
-      contact => 
+      contact =>
         contact.firstName.toLowerCase().includes(searchTerm) ||
         contact.lastName.toLowerCase().includes(searchTerm) ||
         (contact.email && contact.email.toLowerCase().includes(searchTerm))
     )
   }
-  
+
   return result.slice(0, 10) // Limit to 10 for performance
 })
 
 // Get email provider color based on the accountId
 const getEmailProviderColor = (email: Email) => {
-  if (!email.accountId) return 'primary'
-  
+  if (!email.accountId) { return 'primary' }
+
   const account = connectedAccounts.value.find(acc => acc.id === email.accountId)
-  if (!account) return 'primary'
-  
+  if (!account) { return 'primary' }
+
   // Check if the account has a predefined color
   if (account.color) {
     return account.color
   }
-  
+
   // Generate deterministic color based on account ID
   let hash = 0
   const id = account.id
@@ -773,7 +766,7 @@ const getEmailProviderColor = (email: Email) => {
     // Simple hash calculation for TypeScript compatibility
     hash = Math.imul(hash, 31) + id.charCodeAt(i)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }
@@ -816,7 +809,7 @@ onMounted(async () => {
 
     // Initialize selectedProviders with all providers by default
     await nextTick()
-    selectedProviders.value = connectedAccounts.value.map((account) => account.id)
+    selectedProviders.value = connectedAccounts.value.map(account => account.id)
     await tryApplyMailDeepLink()
   } finally {
     // Must stay true even when a step fails, or page-size changes never refetch
@@ -829,22 +822,22 @@ const refreshUnreadCountsTimer = setInterval(() => {
   if (connectedAccounts.value.length > 0) {
     // Use setTimeout to prevent Vue from tracking this as a reactive dependency
     setTimeout(async () => {
-      console.log('Refreshing unread counts...');
-      await mailStore.loadFolderCounts();
-    }, 0);
+      console.log('Refreshing unread counts...')
+      await mailStore.loadFolderCounts()
+    }, 0)
   }
-}, 300000); // refresh every 5 minutes instead of every minute
+}, 300000) // refresh every 5 minutes instead of every minute
 
 // Clean up timer on component unmount
 onUnmounted(() => {
-  clearInterval(refreshUnreadCountsTimer);
-});
+  clearInterval(refreshUnreadCountsTimer)
+})
 
 // Methods
 const getUnreadCount = (folderId: string) => {
   // Don't log here - this method is called frequently from the template
   // and can cause reactive update issues
-  return mailStore.getUnreadCountByFolder(folderId);
+  return mailStore.getUnreadCountByFolder(folderId)
 }
 
 const formatDate = (date: Date) => {
@@ -852,10 +845,10 @@ const formatDate = (date: Date) => {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
-  
+
   const emailDate = new Date(date)
   const emailDay = new Date(emailDate.getFullYear(), emailDate.getMonth(), emailDate.getDate())
-  
+
   if (emailDay.getTime() === today.getTime()) {
     return emailDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
   } else if (emailDay.getTime() === yesterday.getTime()) {
@@ -880,7 +873,7 @@ const formatDatetime = (date: Date) => {
 
 const handleEmailClick = (event: any, { item }: { item: Email }) => {
   selectedEmail.value = item
-  
+
   // Mark as read
   if (!item.read) {
     markAsRead(item)
@@ -889,14 +882,14 @@ const handleEmailClick = (event: any, { item }: { item: Email }) => {
 
 const markAsRead = (email: Email) => {
   mailStore.markEmailAsRead(email.id, !email.read)
-  
+
   // Update selectedEmail if it's the same email
   if (selectedEmail.value?.id === email.id) {
     selectedEmail.value = { ...selectedEmail.value, read: !selectedEmail.value.read }
   }
 }
 
-async function tryApplyMailDeepLink() {
+async function tryApplyMailDeepLink () {
   const accountId = typeof route.query.accountId === 'string' ? route.query.accountId : ''
   const emailId = typeof route.query.emailId === 'string' ? route.query.emailId : ''
   if (!accountId || !emailId) {
@@ -905,7 +898,7 @@ async function tryApplyMailDeepLink() {
   if (!selectedProviders.value.includes(accountId)) {
     selectedProviders.value = [...selectedProviders.value, accountId]
   }
-  const found = mailStore.emails.find((e) => e.id === emailId && e.accountId === accountId)
+  const found = mailStore.emails.find(e => e.id === emailId && e.accountId === accountId)
   if (found) {
     selectedEmail.value = found
     if (!found.read) {
@@ -920,10 +913,10 @@ async function tryApplyMailDeepLink() {
 
 const deleteEmail = (email?: Email) => {
   const emailToDelete = email || selectedEmail.value
-  if (!emailToDelete) return
-  
+  if (!emailToDelete) { return }
+
   mailStore.deleteEmail(emailToDelete.id)
-  
+
   if (selectedEmail.value?.id === emailToDelete.id) {
     selectedEmail.value = null
   }
@@ -937,16 +930,16 @@ const refreshEmails = async () => {
 }
 
 const loadNextPage = async () => {
-  console.log("Loading next page...")
+  console.log('Loading next page...')
   selectedEmail.value = null // Clear selection before page change
   await mailStore.fetchNextPage()
   console.log(`After fetchNextPage: page ${mailStore.currentPage + 1}, ${mailStore.emails.length} emails`)
 }
 
 const loadPreviousPage = async () => {
-  if (mailStore.currentPage <= 0) return
-  
-  console.log("Loading previous page...")
+  if (mailStore.currentPage <= 0) { return }
+
+  console.log('Loading previous page...')
   selectedEmail.value = null // Clear selection before page change
   const prevPage = mailStore.currentPage - 1
   await mailStore.fetchEmails(
@@ -962,9 +955,9 @@ const performSearch = async () => {
     folder: selectedFolder.value,
     query: emailSearch.value || undefined
   }
-  
+
   console.log('Performing search at provider level:', query)
-  
+
   await mailStore.fetchEmails(query, { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) })
 }
 
@@ -973,7 +966,7 @@ const getContactInitials = (contact: Person) => {
 }
 
 const getInitialsFromString = (name: string) => {
-  if (!name) return ''
+  if (!name) { return '' }
   const parts = name.split(' ')
   if (parts.length >= 2) {
     return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`
@@ -995,51 +988,51 @@ const getRandomColor = (id: string) => {
   for (let i = 0; i < id.length; i++) {
     hash = id.charCodeAt(i) + ((hash << 5) - hash)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }
 
 const composeToContact = (contact: Person) => {
-  if (!contact.email) return
-  
+  if (!contact.email) { return }
+
   composeData.value.to = `${contact.firstName} ${contact.lastName} <${contact.email}>`
   composeData.value.subject = ''
   composeData.value.body = ''
   composeData.value.cc = ''
   composeData.value.attachments = []
-  
+
   showComposeDialog.value = true
 }
 
 const replyToEmail = () => {
-  if (!selectedEmail.value) return
-  
+  if (!selectedEmail.value) { return }
+
   composeData.value.to = `${selectedEmail.value.from.name} <${selectedEmail.value.from.email}>`
   composeData.value.subject = `RE: ${selectedEmail.value.subject}`
   composeData.value.body = `<br><br>On ${formatDatetime(selectedEmail.value.date)}, ${selectedEmail.value.from.name} wrote:<br><blockquote style="padding-left: 1em; border-left: 4px solid #ccc">${selectedEmail.value.body}</blockquote>`
   composeData.value.cc = ''
   composeData.value.attachments = []
-  
+
   showComposeDialog.value = true
 }
 
 const forwardEmail = () => {
-  if (!selectedEmail.value) return
-  
+  if (!selectedEmail.value) { return }
+
   composeData.value.to = ''
   composeData.value.subject = `FW: ${selectedEmail.value.subject}`
   composeData.value.body = `<br><br>---------- Forwarded message ----------<br>From: ${selectedEmail.value.from.name} <${selectedEmail.value.from.email}><br>Date: ${formatDatetime(selectedEmail.value.date)}<br>Subject: ${selectedEmail.value.subject}<br><br>${selectedEmail.value.body}`
   composeData.value.cc = ''
   composeData.value.attachments = []
-  
+
   showComposeDialog.value = true
 }
 
 const sendEmail = () => {
   // Log the body content to help debug
-  console.log('Compose body before sending:', composeData.value.body);
-  
+  console.log('Compose body before sending:', composeData.value.body)
+
   // Create email from form data
   const newEmail: Email = {
     id: `sent-${Date.now()}`,
@@ -1048,7 +1041,7 @@ const sendEmail = () => {
       name: 'Me',
       email: 'me@example.com'
     },
-    to: composeData.value.to.split(',').map(recipient => {
+    to: composeData.value.to.split(',').map((recipient) => {
       const match = recipient.match(/(.*)<(.*)>/)
       if (match) {
         return {
@@ -1066,15 +1059,15 @@ const sendEmail = () => {
     read: true,
     folder: 'sent'
   }
-  
+
   // Double-check email has body
-  console.log('Email object body before sending:', newEmail.body);
-  
+  console.log('Email object body before sending:', newEmail.body)
+
   // Use mail store to send the email
-  console.log('Sending email via mailStore.sendEmail with body:', newEmail.body);
+  console.log('Sending email via mailStore.sendEmail with body:', newEmail.body)
   mailStore.sendEmail(newEmail)
   showComposeDialog.value = false
-  
+
   // Reset compose data
   composeData.value = {
     to: '',
@@ -1094,7 +1087,7 @@ const saveDraft = () => {
       name: 'Me',
       email: 'me@example.com'
     },
-    to: composeData.value.to.split(',').map(recipient => {
+    to: composeData.value.to.split(',').map((recipient) => {
       const match = recipient.match(/(.*)<(.*)>/)
       if (match) {
         return {
@@ -1112,11 +1105,11 @@ const saveDraft = () => {
     read: true,
     folder: 'drafts'
   }
-  
+
   // Use mail store to save the draft
   mailStore.saveDraft(newEmail)
   showComposeDialog.value = false
-  
+
   // Reset compose data
   composeData.value = {
     to: '',

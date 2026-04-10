@@ -1,6 +1,5 @@
 import type { ContactFetchResult, ContactPagination, ContactProvider, ContactQuery } from './ContactProvider'
-import type { Person } from '~/types/models'
-import type { IntegrationAccount } from '~/types/models'
+import type { Person, IntegrationAccount } from '~/types/models'
 import { refreshOAuthToken } from '~/utils/api/emailUtils'
 
 /**
@@ -8,31 +7,31 @@ import { refreshOAuthToken } from '~/utils/api/emailUtils'
  */
 export class Office365ContactsProvider implements ContactProvider {
   private account: IntegrationAccount
-  
-  constructor(account: IntegrationAccount) {
+
+  constructor (account: IntegrationAccount) {
     this.account = account
   }
 
-  isAuthenticated(): boolean {
+  isAuthenticated (): boolean {
     // Check access token
     if (!this.account.oauthData.accessToken) {
       console.log(`[O365Contacts] ${this.account.oauthData.email}: No access token found`)
       return false
     }
-    
+
     // Check token expiry
     // If tokenExpiry is not set, consider the token expired and force a refresh
     if (!this.account.oauthData.tokenExpiry) {
       console.log(`[O365Contacts] ${this.account.oauthData.email}: No token expiry date set, assuming expired`)
       return false
     }
-    
+
     // Check if token is expired
     if (new Date(this.account.oauthData.tokenExpiry) < new Date()) {
       console.log(`[O365Contacts] ${this.account.oauthData.email}: Token expired`)
       return false
     }
-    
+
     // Verify proper MS Graph scopes if scope is specified (Graph uses e.g. Contacts.Read)
     if (this.account.oauthData.scope) {
       const s = this.account.oauthData.scope.toLowerCase()
@@ -47,36 +46,36 @@ export class Office365ContactsProvider implements ContactProvider {
         return false
       }
     }
-    
+
     console.log(`[O365Contacts] ${this.account.oauthData.email}: Authentication valid`)
     return true
   }
 
-  async authenticate(): Promise<boolean> {
+  async authenticate (): Promise<boolean> {
     console.log(`[O365Contacts] Office365ContactsProvider.authenticate for ${this.account.oauthData.email}`)
-    
+
     if (this.isAuthenticated()) {
       console.log(`[O365Contacts] ${this.account.oauthData.email} is already authenticated`)
       return true
     }
-    
+
     // Standard OAuth refresh flow for any account with a refresh token
     if (this.account.oauthData.refreshToken) {
       try {
         // Refresh token and get updated account
         const updatedAccount = await refreshOAuthToken(this.account)
-        
+
         // Update this instance's account reference
         this.account = updatedAccount
-        
+
         // Update the account in the pinia store so other components can benefit
         // from the refreshed token without having to refresh again
-        import('~/utils/api/emailUtils').then(module => {
+        import('~/utils/api/emailUtils').then((module) => {
           module.updateAccountInStore(updatedAccount)
-        }).catch(err => {
+        }).catch((err) => {
           console.error('[O365Contacts] Error importing updateAccountInStore:', err)
         })
-        
+
         console.log(`[O365Contacts] Successfully refreshed token for ${this.account.oauthData.email}`)
         return true
       } catch (error) {
@@ -84,12 +83,12 @@ export class Office365ContactsProvider implements ContactProvider {
         return false
       }
     }
-    
+
     console.warn(`[O365Contacts] ${this.account.oauthData.email} has no refresh token, would need to redirect to OAuth flow`)
     return false
   }
 
-  async fetchContacts(query?: ContactQuery, pagination?: ContactPagination): Promise<ContactFetchResult> {
+  async fetchContacts (query?: ContactQuery, pagination?: ContactPagination): Promise<ContactFetchResult> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -108,66 +107,66 @@ export class Office365ContactsProvider implements ContactProvider {
       // Default values
       const pageSize = pagination?.pageSize || 50
       const skipCount = pagination?.page ? pagination.page * pageSize : 0
-      
+
       // API endpoint for Office 365 contacts (Microsoft Graph API)
       const endpoint = 'https://graph.microsoft.com/v1.0/me/contacts'
-      
+
       // Prepare query parameters
       const params = new URLSearchParams({
-        '$top': pageSize.toString(),
-        '$skip': skipCount.toString(),
+        $top: pageSize.toString(),
+        $skip: skipCount.toString(),
         // Select specific fields to optimize response size
-        '$select': 'id,givenName,surname,emailAddresses,mobilePhone,businessPhones,companyName,jobTitle,notes,categories,createdDateTime,lastModifiedDateTime'
+        $select: 'id,givenName,surname,emailAddresses,mobilePhone,businessPhones,companyName,jobTitle,notes,categories,createdDateTime,lastModifiedDateTime'
       })
-      
+
       // Build filter query if needed
       if (query?.query) {
         // Search in first name, last name, or email
         params.append('$filter', `contains(givenName,'${query.query}') or contains(surname,'${query.query}') or contains(emailAddresses/any(e:e/address),'${query.query}')`)
       }
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
-      
+
       const url = `${endpoint}?${params.toString()}`
       console.log(`[O365Contacts] Fetching contacts from: ${url}`)
-      
+
       // Make the request
       const response = await fetch(url, {
         method: 'GET',
-        headers: headers
+        headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[O365Contacts] Fetch error:', errorText)
         throw new Error(`Microsoft Graph API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
-      
+
       // Extract contacts
       const office365Contacts = data.value || []
-      
+
       // Convert Office 365 contacts to app Person format
       let contacts = office365Contacts.map((contact: any) => this.office365ContactToPerson(contact))
-      
+
       // Apply additional filters that can't be applied in the API request
       if (query?.organization) {
-        contacts = contacts.filter((contact: Person) => 
+        contacts = contacts.filter((contact: Person) =>
           contact.organization?.toLowerCase().includes(query.organization!.toLowerCase())
         )
       }
 
       if (query?.tags && query.tags.length > 0) {
         contacts = contacts.filter((contact: Person) => {
-          if (!contact.tags) return false
+          if (!contact.tags) { return false }
           return query.tags?.some(tag => contact.tags?.includes(tag))
         })
       }
@@ -188,7 +187,7 @@ export class Office365ContactsProvider implements ContactProvider {
     }
   }
 
-  async createContact(contact: Partial<Person>): Promise<{ success: boolean, contactId?: string }> {
+  async createContact (contact: Partial<Person>): Promise<{ success: boolean, contactId?: string }> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -200,49 +199,51 @@ export class Office365ContactsProvider implements ContactProvider {
     try {
       // API endpoint for Office 365 contacts (Microsoft Graph API)
       const endpoint = 'https://graph.microsoft.com/v1.0/me/contacts'
-      
+
       // Prepare the contact data in Office 365 format
       const office365Contact = {
         givenName: contact.firstName,
         surname: contact.lastName,
-        emailAddresses: contact.email ? [
-          {
-            address: contact.email,
-            name: `${contact.firstName} ${contact.lastName}`
-          }
-        ] : [],
+        emailAddresses: contact.email
+          ? [
+              {
+                address: contact.email,
+                name: `${contact.firstName} ${contact.lastName}`
+              }
+            ]
+          : [],
         mobilePhone: contact.phone,
         companyName: contact.organization,
         jobTitle: contact.role,
         notes: contact.notes
       }
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
-      
+
       console.log('[O365Contacts] Creating contact:', office365Contact)
-      
+
       // Make the request
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: headers,
+        headers,
         body: JSON.stringify(office365Contact)
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[O365Contacts] Create error:', errorText)
         throw new Error(`Microsoft Graph API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
-      
+
       return {
         success: true,
         contactId: data.id
@@ -253,7 +254,7 @@ export class Office365ContactsProvider implements ContactProvider {
     }
   }
 
-  async updateContact(contactId: string, updates: Partial<Person>): Promise<boolean> {
+  async updateContact (contactId: string, updates: Partial<Person>): Promise<boolean> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -265,7 +266,7 @@ export class Office365ContactsProvider implements ContactProvider {
     try {
       // API endpoint for Office 365 contacts (Microsoft Graph API)
       const endpoint = `https://graph.microsoft.com/v1.0/me/contacts/${contactId}`
-      
+
       // Build update object
       const updateData: Record<string, any> = {}
 
@@ -306,30 +307,30 @@ export class Office365ContactsProvider implements ContactProvider {
         // Nothing to update
         return true
       }
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
-      
+
       console.log(`[O365Contacts] Updating contact ${contactId}:`, updateData)
-      
+
       // Make the request
       const response = await fetch(endpoint, {
         method: 'PATCH',
-        headers: headers,
+        headers,
         body: JSON.stringify(updateData)
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[O365Contacts] Update error:', errorText)
         throw new Error(`Microsoft Graph API error: ${response.status} ${response.statusText}`)
       }
-      
+
       return true
     } catch (error) {
       console.error('[O365Contacts] Error updating contact:', error)
@@ -337,7 +338,7 @@ export class Office365ContactsProvider implements ContactProvider {
     }
   }
 
-  async deleteContact(contactId: string): Promise<boolean> {
+  async deleteContact (contactId: string): Promise<boolean> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -349,28 +350,28 @@ export class Office365ContactsProvider implements ContactProvider {
     try {
       // API endpoint for Office 365 contacts (Microsoft Graph API)
       const endpoint = `https://graph.microsoft.com/v1.0/me/contacts/${contactId}`
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
+        Accept: 'application/json'
       }
-      
+
       console.log(`[O365Contacts] Deleting contact: ${contactId}`)
-      
+
       // Make the request
       const response = await fetch(endpoint, {
         method: 'DELETE',
-        headers: headers
+        headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[O365Contacts] Delete error:', errorText)
         throw new Error(`Microsoft Graph API error: ${response.status} ${response.statusText}`)
       }
-      
+
       return true
     } catch (error) {
       console.error('[O365Contacts] Error deleting contact:', error)
@@ -378,7 +379,7 @@ export class Office365ContactsProvider implements ContactProvider {
     }
   }
 
-  async getContactGroups(): Promise<{ id: string; name: string }[]> {
+  async getContactGroups (): Promise<{ id: string; name: string }[]> {
     if (!this.isAuthenticated()) {
       const authenticated = await this.authenticate()
       if (!authenticated) {
@@ -390,31 +391,31 @@ export class Office365ContactsProvider implements ContactProvider {
     try {
       // API endpoint for Office 365 contact folders (Microsoft Graph API)
       const endpoint = 'https://graph.microsoft.com/v1.0/me/contactFolders'
-      
+
       // Prepare headers with authentication
       const headers = {
-        'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${this.account.oauthData.accessToken}`,
+        Accept: 'application/json'
       }
-      
+
       console.log('[O365Contacts] Fetching contact folders')
-      
+
       // Make the request
       const response = await fetch(endpoint, {
         method: 'GET',
-        headers: headers
+        headers
       })
-      
+
       // Check for HTTP errors
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[O365Contacts] Get contact folders error:', errorText)
         throw new Error(`Microsoft Graph API error: ${response.status} ${response.statusText}`)
       }
-      
+
       // Parse the response
       const data = await response.json()
-      
+
       // Extract contact folders
       const folders = data.value || []
       return folders.map((folder: any) => ({
@@ -428,7 +429,7 @@ export class Office365ContactsProvider implements ContactProvider {
   }
 
   // Helper method to convert Office 365 contact format to our app's Person format
-  private office365ContactToPerson(office365Contact: any): Person {
+  private office365ContactToPerson (office365Contact: any): Person {
     return {
       id: office365Contact.id,
       userId: '', // Will be set by the store

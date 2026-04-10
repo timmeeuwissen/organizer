@@ -3,11 +3,11 @@
  * Please use the modular imports from './mailProviders/' directory instead.
  */
 
-import type { IntegrationAccount } from '~/types/models'
 import type { MailProvider } from './mailProviders/MailProvider'
 import { GmailProvider } from './mailProviders/GmailProvider'
 import { Office365Provider } from './mailProviders/Office365Provider'
 import { ExchangeProvider } from './mailProviders/ExchangeProvider'
+import type { IntegrationAccount } from '~/types/models'
 
 // Important: We're not using export * to avoid circular dependency issues
 // Instead, we're explicitly exporting functions needed by the application
@@ -17,7 +17,7 @@ import { ExchangeProvider } from './mailProviders/ExchangeProvider'
  * @param account The integration account
  * @returns Provider implementation for the account type
  */
-export function getMailProvider(account: IntegrationAccount): MailProvider {
+export function getMailProvider (account: IntegrationAccount): MailProvider {
   switch (account.type) {
     case 'google':
       return new GmailProvider(account)
@@ -35,7 +35,7 @@ export function getMailProvider(account: IntegrationAccount): MailProvider {
  * Alias for getMailProvider for backward compatibility
  * @deprecated Use getMailProvider instead
  */
-export function createMailProvider(account: IntegrationAccount): MailProvider {
+export function createMailProvider (account: IntegrationAccount): MailProvider {
   return getMailProvider(account)
 }
 

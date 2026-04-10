@@ -7,7 +7,7 @@ const BodySchema = z.object({
   port: z.number().int().positive(),
   encryption: z.enum(['none', 'tls', 'starttls']),
   username: z.string().min(1),
-  password: z.string().min(1),
+  password: z.string().min(1)
 })
 
 /**
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid request body',
-      data: parsed.error.flatten(),
+      data: parsed.error.flatten()
     })
   }
 
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
         secure: encryption === 'tls',
         auth: { user: username, pass: password },
         tls: encryption === 'starttls' ? { rejectUnauthorized: false } : undefined,
-        logger: false,
+        logger: false
       })
       await client.connect()
       await client.logout()
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
       const client = new POP3Client(port, host, {
         tlserrs: false,
         enabletls: encryption === 'tls',
-        debug: false,
+        debug: false
       })
       await new Promise<void>((resolve, reject) => {
         client.on('connect', () => {

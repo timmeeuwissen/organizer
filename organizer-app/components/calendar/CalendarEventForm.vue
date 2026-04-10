@@ -6,14 +6,14 @@ v-form(
 )
   v-card
     v-card-title {{ isEdit ? $t('calendar.edit') : $t('calendar.event') }}
-    
+
     v-card-text
       v-alert(
         v-if="error"
         type="error"
         class="mb-4"
       ) {{ error }}
-      
+
       v-select(
         v-model="storageProvider"
         :items="availableProviders"
@@ -24,7 +24,7 @@ v-form(
         :rules="[rules.required]"
         required
       )
-      
+
       v-text-field(
         v-model="title"
         :label="$t('calendar.title')"
@@ -32,19 +32,19 @@ v-form(
         required
         prepend-icon="mdi-text"
       )
-      
+
       v-textarea(
         v-model="description"
         :label="$t('calendar.description')"
         rows="3"
         prepend-icon="mdi-text-box"
       )
-      
+
       v-checkbox(
         v-model="allDay"
         :label="$t('calendar.allDay')"
       )
-      
+
       v-row
         v-col(cols="12" md="6")
           v-menu(
@@ -65,7 +65,7 @@ v-form(
               v-model="startDate"
               @update:model-value="startDateMenu = false"
             )
-        
+
         v-col(cols="12" md="6" v-if="!allDay")
           v-text-field(
             v-model="startTime"
@@ -75,7 +75,7 @@ v-form(
             :rules="[rules.required]"
             required
           )
-      
+
       v-row
         v-col(cols="12" md="6")
           v-menu(
@@ -96,7 +96,7 @@ v-form(
               v-model="endDate"
               @update:model-value="endDateMenu = false"
             )
-        
+
         v-col(cols="12" md="6" v-if="!allDay")
           v-text-field(
             v-model="endTime"
@@ -106,18 +106,18 @@ v-form(
             :rules="[rules.required]"
             required
           )
-      
+
       v-text-field(
         v-model="location"
         :label="$t('meetings.location')"
         prepend-icon="mdi-map-marker"
       )
-      
+
       v-checkbox(
         v-model="recurring"
         :label="$t('calendar.recurring')"
       )
-      
+
       template(v-if="recurring")
         v-select(
           v-model="recurrenceType"
@@ -127,14 +127,14 @@ v-form(
           item-value="value"
           prepend-icon="mdi-repeat"
         )
-        
+
         v-text-field(
           v-model="recurrenceEnd"
           :label="$t('calendar.recurrenceEnd')"
           type="date"
           prepend-icon="mdi-calendar-end"
         )
-      
+
       v-select(
         v-model="participants"
         :items="availablePeople"
@@ -145,7 +145,7 @@ v-form(
         multiple
         chips
       )
-    
+
     v-card-actions
       v-spacer
       v-btn(
@@ -164,7 +164,7 @@ v-form(
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { usePeopleStore } from '~/stores/people'
 import { useIntegrationProviders } from '~/composables/useIntegrationProviders'
 
@@ -185,6 +185,8 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'delete'])
 
+const { setNavigationDirty } = useUnsavedChanges()
+
 const peopleStore = usePeopleStore()
 
 const form = ref(null)
@@ -198,18 +200,25 @@ const title = ref(props.event?.title || '')
 const description = ref(props.event?.description || '')
 const allDay = ref(props.event?.allDay || false)
 const startDate = ref(props.event?.start ? new Date(props.event.start).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10))
-const startTime = ref(props.event?.start && !props.event.allDay ? 
-  new Date(props.event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 
-  '09:00')
+const startTime = ref(props.event?.start && !props.event.allDay
+  ? new Date(props.event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+  : '09:00')
 const endDate = ref(props.event?.end ? new Date(props.event.end).toISOString().substr(0, 10) : new Date().toISOString().substr(0, 10))
-const endTime = ref(props.event?.end && !props.event.allDay ? 
-  new Date(props.event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 
-  '10:00')
+const endTime = ref(props.event?.end && !props.event.allDay
+  ? new Date(props.event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+  : '10:00')
 const location = ref(props.event?.location || '')
 const recurring = ref(props.event?.recurring || false)
 const recurrenceType = ref(props.event?.recurrenceType || 'daily')
 const recurrenceEnd = ref(props.event?.recurrenceEnd || '')
 const participants = ref(props.event?.participants || [])
+
+// Mark dirty when any form field changes
+watch(
+  [storageProvider, title, description, allDay, startDate, startTime, endDate, endTime, location, recurring, recurrenceType, recurrenceEnd, participants],
+  () => { setNavigationDirty(true) },
+  { deep: true }
+)
 
 // Get available storage providers
 const { calendarProviders } = useIntegrationProviders()
@@ -225,19 +234,19 @@ const recurrenceTypeOptions = [
 
 // Validation rules
 const rules = {
-  required: (v) => !!v || 'This field is required'
+  required: v => !!v || 'This field is required'
 }
 
 // Computed values
 const isEdit = computed(() => !!props.event)
 
 const startDateFormatted = computed(() => {
-  if (!startDate.value) return ''
+  if (!startDate.value) { return '' }
   return new Date(startDate.value).toLocaleDateString()
 })
 
 const endDateFormatted = computed(() => {
-  if (!endDate.value) return ''
+  if (!endDate.value) { return '' }
   return new Date(endDate.value).toLocaleDateString()
 })
 
@@ -250,25 +259,25 @@ const availablePeople = computed(() => {
 
 // Submit function
 const submit = () => {
-  if (!valid.value) return
-  
+  if (!valid.value) { return }
+
   // Combine date and time
   let start, end
-  
+
   if (allDay.value) {
     start = new Date(startDate.value)
     end = new Date(endDate.value)
   } else {
     const [startHours, startMinutes] = startTime.value.split(':').map(Number)
     const [endHours, endMinutes] = endTime.value.split(':').map(Number)
-    
+
     start = new Date(startDate.value)
     start.setHours(startHours, startMinutes, 0)
-    
+
     end = new Date(endDate.value)
     end.setHours(endHours, endMinutes, 0)
   }
-  
+
   const eventData = {
     storageProvider: storageProvider.value,
     title: title.value,
@@ -282,7 +291,8 @@ const submit = () => {
     recurrenceEnd: recurring.value && recurrenceEnd.value ? new Date(recurrenceEnd.value) : undefined,
     participants: participants.value
   }
-  
+
+  setNavigationDirty(false)
   emit('submit', eventData)
 }
 

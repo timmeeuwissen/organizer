@@ -5,13 +5,13 @@ v-container(class="fill-height" fluid)
       v-card(class="elevation-12")
         v-toolbar(color="primary" dark)
           v-toolbar-title {{ $t('auth.forgotPassword') }}
-        
+
         v-card-text
           p.mb-4 {{ $t('auth.forgotPasswordInstructions') }}
-          
+
           v-alert(v-if="error" type="error" class="mb-4") {{ error }}
           v-alert(v-if="successMessage" type="success" class="mb-4") {{ successMessage }}
-          
+
           v-form(ref="form" v-model="valid" @submit.prevent="resetPassword")
             v-text-field(
               v-model="email"
@@ -21,7 +21,7 @@ v-container(class="fill-height" fluid)
               :rules="[rules.required, rules.email]"
               :disabled="submitted"
             )
-        
+
         v-card-actions
           v-spacer
           v-btn(
@@ -31,11 +31,11 @@ v-container(class="fill-height" fluid)
             @click="resetPassword"
             block
           ) {{ $t('auth.sendResetLink') }}
-          
+
         v-card-text(class="text-center" v-if="!submitted")
           v-btn(
-            variant="text" 
-            color="primary" 
+            variant="text"
+            color="primary"
             to="/auth/login"
           ) {{ $t('auth.backToLogin') }}
 </template>
@@ -61,22 +61,22 @@ const rules = {
 const resetPassword = async () => {
   error.value = ''
   successMessage.value = ''
-  
-  if (!valid.value) return
-  
+
+  if (!valid.value) { return }
+
   loading.value = true
-  
+
   try {
     const auth = getAuth()
     await sendPasswordResetEmail(auth, email.value)
-    
+
     // Success
     submitted.value = true
     successMessage.value = 'A password reset link has been sent to your email address.'
   } catch (err: any) {
-    error.value = 
-      err.code === 'auth/user-not-found' 
-        ? 'No account found with this email address.' 
+    error.value =
+      err.code === 'auth/user-not-found'
+        ? 'No account found with this email address.'
         : err.message || 'Failed to send reset email'
   } finally {
     loading.value = false

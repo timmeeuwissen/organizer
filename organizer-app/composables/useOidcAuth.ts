@@ -9,7 +9,7 @@ Log.setLevel(Log.INFO)
 // Store the UserManager instance to keep it consistent
 let _userManager: UserManager | null = null
 
-export function useOidcAuth() {
+export function useOidcAuth () {
   const isAuthenticated = ref(false)
   const user = ref<User | null>(null)
   const error = ref<Error | null>(null)
@@ -18,7 +18,7 @@ export function useOidcAuth() {
   /**
    * Initialize the OIDC UserManager with the specified provider settings
    */
-  function initializeUserManager(providerId: string, clientId: string, clientSecret?: string) {
+  function initializeUserManager (providerId: string, clientId: string, clientSecret?: string) {
     // Common settings for all providers
     const baseSettings = {
       automaticSilentRenew: true,
@@ -26,7 +26,7 @@ export function useOidcAuth() {
       loadUserInfo: true,
       userStore: new WebStorageStateStore({ store: window.localStorage })
     }
-    
+
     // Provider-specific settings
     const providerSettings: Record<string, any> = {
       google: {
@@ -62,74 +62,74 @@ export function useOidcAuth() {
         accessTokenExpiringNotificationTime: 10
       }
     }
-    
+
     // Ensure the provider exists in our settings
     if (!providerSettings[providerId]) {
       throw new Error(`Unsupported provider: ${providerId}`)
     }
-    
+
     // Create and store the UserManager instance
     _userManager = new UserManager({
       ...baseSettings,
       ...providerSettings[providerId]
     })
-    
+
     // Set up event handlers
     _userManager.events.addUserLoaded((loadedUser) => {
       console.log(`OIDC: User loaded for ${providerId}`, loadedUser)
       user.value = loadedUser
       isAuthenticated.value = true
     })
-    
+
     _userManager.events.addUserUnloaded(() => {
       console.log(`OIDC: User unloaded for ${providerId}`)
       user.value = null
       isAuthenticated.value = false
     })
-    
+
     _userManager.events.addSilentRenewError((err) => {
       console.error(`OIDC: Silent renew error for ${providerId}`, err)
       error.value = err
     })
-    
+
     _userManager.events.addAccessTokenExpiring(() => {
       console.log(`OIDC: Access token expiring for ${providerId}`)
     })
-    
+
     return _userManager
   }
-  
+
   /**
    * Begin the login process using the popup approach
    */
-  async function loginWithPopup(providerId: string, clientId?: string, clientSecret?: string) {
+  async function loginWithPopup (providerId: string, clientId?: string, clientSecret?: string) {
     isLoading.value = true
     error.value = null
-    
+
     try {
       // Use runtime config if no clientId/secret is provided
       const runtimeConfig = useRuntimeConfig()
       const actualClientId = clientId || runtimeConfig.public.google?.clientId
       // Try to get client secret from environment
       const actualClientSecret = clientSecret || process.env.GOOGLE_CLIENT_SECRET
-      
+
       if (!actualClientId) {
         throw new Error(`No client ID provided for ${providerId}`)
       }
-      
+
       // Initialize the UserManager if needed
       const userManager = _userManager || initializeUserManager(providerId, actualClientId, actualClientSecret)
-      
+
       // Start the popup login process
       const popupUser = await userManager.signinPopup()
-      
+
       // Update state
       user.value = popupUser
       isAuthenticated.value = true
-      
+
       // Format tokens for app consumption
       const tokens = formatUserTokens(popupUser, providerId)
-      
+
       return tokens
     } catch (err) {
       console.error(`OIDC popup login error for ${providerId}:`, err)
@@ -139,28 +139,28 @@ export function useOidcAuth() {
       isLoading.value = false
     }
   }
-  
+
   /**
    * Begin the login process using the redirect approach
    */
-  async function loginWithRedirect(providerId: string, clientId?: string, clientSecret?: string) {
+  async function loginWithRedirect (providerId: string, clientId?: string, clientSecret?: string) {
     isLoading.value = true
     error.value = null
-    
+
     try {
       // Use runtime config if no clientId/secret is provided
       const runtimeConfig = useRuntimeConfig()
       const actualClientId = clientId || runtimeConfig.public.google?.clientId
       // Try to get client secret from environment
       const actualClientSecret = clientSecret || process.env.GOOGLE_CLIENT_SECRET
-      
+
       if (!actualClientId) {
         throw new Error(`No client ID provided for ${providerId}`)
       }
-      
+
       // Initialize the UserManager if needed
       const userManager = _userManager || initializeUserManager(providerId, actualClientId, actualClientSecret)
-      
+
       // Start the redirect login process
       await userManager.signinRedirect()
     } catch (err) {
@@ -171,27 +171,27 @@ export function useOidcAuth() {
       isLoading.value = false
     }
   }
-  
+
   /**
    * Handle the callback after authentication redirect
    */
-  async function handleAuthCallback() {
+  async function handleAuthCallback () {
     isLoading.value = true
     error.value = null
-    
+
     try {
       // UserManager must be initialized before handling the callback
       if (!_userManager) {
         throw new Error('UserManager not initialized')
       }
-      
+
       // Process the callback
       const callbackUser = await _userManager.signinRedirectCallback()
-      
+
       // Update state
       user.value = callbackUser
       isAuthenticated.value = true
-      
+
       return callbackUser
     } catch (err) {
       console.error('OIDC callback handling error:', err)
@@ -201,16 +201,16 @@ export function useOidcAuth() {
       isLoading.value = false
     }
   }
-  
+
   /**
    * Logout the current user
    */
-  async function logout() {
+  async function logout () {
     if (!_userManager) {
       console.warn('Cannot logout: UserManager not initialized')
       return
     }
-    
+
     try {
       await _userManager.signoutRedirect()
     } catch (err) {
@@ -218,11 +218,11 @@ export function useOidcAuth() {
       error.value = err as Error
     }
   }
-  
+
   /**
    * Format user tokens to match the application's expected format
    */
-  function formatUserTokens(user: User, providerId: string) {
+  function formatUserTokens (user: User, providerId: string) {
     return {
       accessToken: user.access_token,
       refreshToken: user.refresh_token,
@@ -233,16 +233,16 @@ export function useOidcAuth() {
       idToken: user.id_token
     }
   }
-  
+
   /**
    * Get the current authenticated user
    */
-  async function getUser() {
+  async function getUser () {
     if (!_userManager) {
       console.warn('Cannot get user: UserManager not initialized')
       return null
     }
-    
+
     try {
       const currentUser = await _userManager.getUser()
       user.value = currentUser
@@ -254,7 +254,7 @@ export function useOidcAuth() {
       return null
     }
   }
-  
+
   return {
     isAuthenticated,
     user,

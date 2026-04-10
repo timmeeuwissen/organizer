@@ -18,7 +18,7 @@ const breadcrumbItems = computed(() => {
     const last = i === list.length - 1
     const item: { title: string; disabled: boolean; to?: string } = {
       title: s.title,
-      disabled: last,
+      disabled: last
     }
     if (s.to && !last) {
       item.to = s.to

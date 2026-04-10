@@ -7,27 +7,27 @@
  * the structure of the Firestore database
  */
 
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+const fs = require('fs')
+const path = require('path')
+const crypto = require('crypto')
 
 // Function to generate UUIDs without external dependencies
-function generateId() {
-  return crypto.randomBytes(16).toString('hex');
+function generateId () {
+  return crypto.randomBytes(16).toString('hex')
 }
 
 // Create a timestamp in the format Firestore would use
-function createTimestamp() {
+function createTimestamp () {
   return {
     _seconds: Math.floor(Date.now() / 1000),
     _nanoseconds: 0
-  };
+  }
 }
 
 // Create sample user data
-function createSampleData() {
+function createSampleData () {
   // Create sample user with no integrations
-  const basicUserId = `test-user-${Date.now()}`;
+  const basicUserId = `test-user-${Date.now()}`
   const basicUser = {
     id: basicUserId,
     email: 'test@example.com',
@@ -43,10 +43,10 @@ function createSampleData() {
       calendarSync: false,
       integrationAccounts: []
     }
-  };
+  }
 
   // Create sample user with integrations
-  const integrationUserId = `test-user-with-integrations-${Date.now()}`;
+  const integrationUserId = `test-user-with-integrations-${Date.now()}`
   const integratedUser = {
     id: integrationUserId,
     email: 'integrated@example.com',
@@ -103,17 +103,17 @@ function createSampleData() {
         }
       ]
     }
-  };
+  }
 
   // Create the users collection
   const usersCollection = {
     [basicUserId]: basicUser,
     [integrationUserId]: integratedUser
-  };
+  }
 
   // Create sample meeting categories
-  const meetingCategoriesCollection = {};
-  
+  const meetingCategoriesCollection = {}
+
   // Create categories for basic user
   const basicUserCategories = [
     {
@@ -146,23 +146,23 @@ function createSampleData() {
       createdAt: createTimestamp(),
       updatedAt: createTimestamp()
     }
-  ];
-  
+  ]
+
   // Add categories to the collection
-  basicUserCategories.forEach(category => {
-    meetingCategoriesCollection[category.id] = category;
-  });
-  
+  basicUserCategories.forEach((category) => {
+    meetingCategoriesCollection[category.id] = category
+  })
+
   // Create sample meetings
-  const meetingsCollection = {};
-  
+  const meetingsCollection = {}
+
   // Create meetings for basic user
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
+  const now = new Date()
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+
   const basicUserMeetings = [
     {
       id: generateId(),
@@ -204,56 +204,55 @@ function createSampleData() {
       createdAt: createTimestamp(),
       updatedAt: createTimestamp()
     }
-  ];
-  
+  ]
+
   // Add meetings to the collection
-  basicUserMeetings.forEach(meeting => {
-    meetingsCollection[meeting.id] = meeting;
-  });
+  basicUserMeetings.forEach((meeting) => {
+    meetingsCollection[meeting.id] = meeting
+  })
 
   // Create the database structure
   const database = {
     users: usersCollection,
     meetingCategories: meetingCategoriesCollection,
     meetings: meetingsCollection
-  };
+  }
 
-  return database;
+  return database
 }
 
 // Main function
-function main() {
-  console.log('Creating sample database structure...');
-  
+function main () {
+  console.log('Creating sample database structure...')
+
   try {
     // Create the database structure
-    const database = createSampleData();
-    
+    const database = createSampleData()
+
     // Define the output directory and file path
-    const outputDir = path.join(process.cwd(), 'firebase-export');
-    const outputFile = path.join(outputDir, 'firebase-export.json');
-    
+    const outputDir = path.join(process.cwd(), 'firebase-export')
+    const outputFile = path.join(outputDir, 'firebase-export.json')
+
     // Create the output directory if it doesn't exist
     if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
+      fs.mkdirSync(outputDir, { recursive: true })
     }
-    
+
     // Write the database structure to a file
-    fs.writeFileSync(outputFile, JSON.stringify(database, null, 2));
-    
-    console.log(`Sample database structure created at: ${outputFile}`);
-    console.log('\nTo import this data into Firebase:');
-    console.log('1. Go to Firebase Console');
-    console.log('2. Navigate to Firestore Database');
-    console.log('3. Click on "Import/Export" and select the JSON file');
-    console.log('\nAlternatively, you can use this sample data as a reference');
-    console.log('for how to structure your Firestore database.');
-    
+    fs.writeFileSync(outputFile, JSON.stringify(database, null, 2))
+
+    console.log(`Sample database structure created at: ${outputFile}`)
+    console.log('\nTo import this data into Firebase:')
+    console.log('1. Go to Firebase Console')
+    console.log('2. Navigate to Firestore Database')
+    console.log('3. Click on "Import/Export" and select the JSON file')
+    console.log('\nAlternatively, you can use this sample data as a reference')
+    console.log('for how to structure your Firestore database.')
   } catch (error) {
-    console.error('Error creating sample database structure:', error);
-    process.exit(1);
+    console.error('Error creating sample database structure:', error)
+    process.exit(1)
   }
 }
 
 // Run the main function
-main();
+main()

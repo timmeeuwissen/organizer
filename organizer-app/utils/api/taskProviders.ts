@@ -3,11 +3,11 @@
  * Please use the modular imports from './taskProviders/' directory instead.
  */
 
-import type { IntegrationAccount } from '~/types/models'
 import type { TaskProvider } from './taskProviders/TaskProvider'
 import { GoogleTasksProvider } from './taskProviders/GoogleTasksProvider'
 import { Office365TasksProvider } from './taskProviders/Office365TasksProvider'
 import { ExchangeTasksProvider } from './taskProviders/ExchangeTasksProvider'
+import type { IntegrationAccount } from '~/types/models'
 
 // Important: We're not using export * to avoid circular dependency issues
 // Instead, we're explicitly exporting functions needed by the application
@@ -17,7 +17,7 @@ import { ExchangeTasksProvider } from './taskProviders/ExchangeTasksProvider'
  * @param account The integration account
  * @returns Provider implementation for the account type
  */
-export function getTaskProvider(account: IntegrationAccount): TaskProvider {
+export function getTaskProvider (account: IntegrationAccount): TaskProvider {
   switch (account.type) {
     case 'google':
       return new GoogleTasksProvider(account)
@@ -34,7 +34,7 @@ export function getTaskProvider(account: IntegrationAccount): TaskProvider {
  * Alias for getTaskProvider for backward compatibility
  * @deprecated Use getTaskProvider instead
  */
-export function createTasksProvider(account: IntegrationAccount): TaskProvider {
+export function createTasksProvider (account: IntegrationAccount): TaskProvider {
   return getTaskProvider(account)
 }
 

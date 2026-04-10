@@ -104,31 +104,36 @@ const formOpen = ref(false)
 const editingRow = ref<KnowledgeConnectionRow | null>(null)
 
 const entityRoutes: Record<string, string> = {
-  person: '/people', project: '/projects', task: '/tasks',
-  behavior: '/behaviors', meeting: '/meetings', team: '/teams', coaching: '/coaching',
+  person: '/people',
+  project: '/projects',
+  task: '/tasks',
+  behavior: '/behaviors',
+  meeting: '/meetings',
+  team: '/teams',
+  coaching: '/coaching'
 }
 
-function entityRoute(entityType: NodeType, entityId: string) {
+function entityRoute (entityType: NodeType, entityId: string) {
   return `${entityRoutes[entityType] ?? '/'}/${entityId}`
 }
 
-function certaintyColor(certainty: number) {
-  if (certainty >= 0.8) return 'success'
-  if (certainty >= 0.6) return 'warning'
+function certaintyColor (certainty: number) {
+  if (certainty >= 0.8) { return 'success' }
+  if (certainty >= 0.6) { return 'warning' }
   return 'error'
 }
 
-function openAdd() {
+function openAdd () {
   editingRow.value = null
   formOpen.value = true
 }
 
-function openEdit(row: KnowledgeConnectionRow) {
+function openEdit (row: KnowledgeConnectionRow) {
   editingRow.value = row
   formOpen.value = true
 }
 
-async function handleFormSubmit(data: {
+async function handleFormSubmit (data: {
   content: string
   subtype: any
   certainty: number
@@ -150,7 +155,7 @@ async function handleFormSubmit(data: {
         subtype: data.subtype,
         certainty: data.certainty,
         certaintyDate: data.certaintyDate,
-        tags: data.tags,
+        tags: data.tags
       })
       await editRelation(editingRow.value.edge.id, data.relationType, data.relationLabel)
     } else {
@@ -178,7 +183,7 @@ async function handleFormSubmit(data: {
   }
 }
 
-async function handleDisconnect(edgeId: string) {
+async function handleDisconnect (edgeId: string) {
   const notify = useNotificationStore()
   try {
     await disconnect(edgeId)
@@ -187,13 +192,13 @@ async function handleDisconnect(edgeId: string) {
   }
 }
 
-async function handleDelete(row: KnowledgeConnectionRow) {
+async function handleDelete (row: KnowledgeConnectionRow) {
   const notify = useNotificationStore()
   const otherCount = row.otherConnections.length
   const msg = otherCount > 0
     ? t('knowledge.confirmDeleteWithConnections', { n: otherCount })
     : t('knowledge.confirmDelete')
-  if (!confirm(msg)) return
+  if (!confirm(msg)) { return }
   try {
     await removeKnowledge(row.knowledge.id)
   } catch {

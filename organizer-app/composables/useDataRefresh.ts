@@ -11,7 +11,7 @@ import type { IntegrationAccount } from '~/types/models'
 /**
  * Composable for refreshing data from all connected providers
  */
-export function useDataRefresh() {
+export function useDataRefresh () {
   const isRefreshing = ref(false)
   const lastRefreshed = ref<Date | null>(null)
   const refreshError = ref<string | null>(null)
@@ -24,11 +24,11 @@ export function useDataRefresh() {
   /**
    * Refresh mail data for a single account. Returns true on success.
    */
-  async function refreshMail(account: IntegrationAccount): Promise<boolean> {
+  async function refreshMail (account: IntegrationAccount): Promise<boolean> {
     const mailProvider = getMailProvider(account)
     if (!mailProvider.isAuthenticated()) {
       const ok = await mailProvider.authenticate()
-      if (!ok) return false
+      if (!ok) { return false }
     }
     await mailStore.loadFolderCounts()
     await mailStore.fetchEmails()
@@ -38,11 +38,11 @@ export function useDataRefresh() {
   /**
    * Refresh calendar data for a single account. Returns true on success.
    */
-  async function refreshCalendar(account: IntegrationAccount): Promise<boolean> {
+  async function refreshCalendar (account: IntegrationAccount): Promise<boolean> {
     const calendarProvider = getCalendarProvider(account)
     if (!calendarProvider.isAuthenticated()) {
       const ok = await calendarProvider.authenticate()
-      if (!ok) return false
+      if (!ok) { return false }
     }
     const today = new Date()
     const startDate = new Date(today.getFullYear(), today.getMonth(), 1)
@@ -54,11 +54,11 @@ export function useDataRefresh() {
   /**
    * Refresh contacts data for a single account. Returns true on success.
    */
-  async function refreshContacts(account: IntegrationAccount): Promise<boolean> {
+  async function refreshContacts (account: IntegrationAccount): Promise<boolean> {
     const contactsProvider = createContactsProvider(account)
     if (!contactsProvider.isAuthenticated()) {
       const ok = await contactsProvider.authenticate()
-      if (!ok) return false
+      if (!ok) { return false }
     }
     await peopleStore.fetchContactsFromProvider(account)
     return true
@@ -68,7 +68,7 @@ export function useDataRefresh() {
    * Run all enabled sync operations for one account in parallel.
    * Returns { succeeded, failed } counts.
    */
-  async function refreshAccount(account: IntegrationAccount): Promise<{ succeeded: number; failed: number }> {
+  async function refreshAccount (account: IntegrationAccount): Promise<{ succeeded: number; failed: number }> {
     if (!account.oauthData.connected || !account.oauthData.accessToken) {
       return { succeeded: 0, failed: 0 }
     }
@@ -111,19 +111,19 @@ export function useDataRefresh() {
   /**
    * Refresh data from all connected providers in parallel.
    */
-  async function refreshAllData() {
-    if (isRefreshing.value) return
+  async function refreshAllData () {
+    if (isRefreshing.value) { return }
     isRefreshing.value = true
     refreshError.value = null
 
     try {
       const accounts = authStore.currentUser?.settings?.integrationAccounts || []
 
-      if (accounts.length === 0) return
+      if (accounts.length === 0) { return }
 
       // Process all accounts in parallel
       const accountResults = await Promise.all(
-        accounts.map((account) =>
+        accounts.map(account =>
           refreshAccount(account).catch((err) => {
             console.error(`Error processing account ${account.oauthData.email}:`, err)
             return { succeeded: 0, failed: 1 }
@@ -152,6 +152,6 @@ export function useDataRefresh() {
     isRefreshing,
     lastRefreshed,
     refreshError,
-    refreshAllData,
+    refreshAllData
   }
 }

@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 const EmailPersonSchema = z.object({
   name: z.string(),
-  email: z.string().email(),
+  email: z.string().email()
 })
 
 const BodySchema = z.object({
@@ -17,8 +17,8 @@ const BodySchema = z.object({
     from: EmailPersonSchema,
     to: z.array(EmailPersonSchema),
     cc: z.array(EmailPersonSchema).optional(),
-    body: z.string(),
-  }),
+    body: z.string()
+  })
 })
 
 /**
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid request body',
-      data: parsed.error.flatten(),
+      data: parsed.error.flatten()
     })
   }
 
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
       port: smtpPort,
       secure: smtpEncryption === 'tls',
       auth: { user: username, pass: password },
-      ...(smtpEncryption === 'starttls' ? { starttls: { required: true } } : {}),
+      ...(smtpEncryption === 'starttls' ? { starttls: { required: true } } : {})
     } as any)
 
     await transporter.sendMail({
@@ -55,14 +55,14 @@ export default defineEventHandler(async (event) => {
       to: email.to.map(r => `"${r.name}" <${r.email}>`).join(', '),
       cc: email.cc?.map(r => `"${r.name}" <${r.email}>`).join(', '),
       subject: email.subject,
-      text: email.body,
+      text: email.body
     })
 
     return { success: true }
   } catch (err: any) {
     throw createError({
       statusCode: 500,
-      statusMessage: err.message || 'SMTP send failed',
+      statusMessage: err.message || 'SMTP send failed'
     })
   }
 })

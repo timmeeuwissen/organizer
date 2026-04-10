@@ -16,13 +16,13 @@ const MODULE_I18N: Record<string, string> = {
   statistics: 'statistics.title',
   network: 'network.title',
   feedback: 'feedback.title',
-  auth: 'auth.login',
+  auth: 'auth.login'
 }
 
 /**
  * Breadcrumb trail and module label derived from the current route (incremental GUI rules alignment).
  */
-export function useAppNavigationContext() {
+export function useAppNavigationContext () {
   const route = useRoute()
   const router = useRouter()
   const { t } = useI18n()
@@ -35,7 +35,7 @@ export function useAppNavigationContext() {
   const segments = computed(() => {
     const parts = route.path.split('/').filter(Boolean)
     const items: { title: string; to?: string }[] = [
-      { title: t('common.welcome'), to: '/dashboard' },
+      { title: t('common.welcome'), to: '/dashboard' }
     ]
     if (parts.length === 0) {
       return items
@@ -53,7 +53,7 @@ export function useAppNavigationContext() {
       }
       items.push({
         title,
-        to,
+        to
       })
     }
     return items

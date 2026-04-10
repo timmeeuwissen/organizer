@@ -2,14 +2,14 @@
   <v-card>
     <v-card-title class="d-flex">
       <span>{{ isNew ? 'New Knowledge Document' : 'Edit Knowledge Document' }}</span>
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-btn icon @click="$emit('close')">
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </v-card-title>
-    
-    <v-divider></v-divider>
-    
+
+    <v-divider />
+
     <v-card-text>
       <v-form
         ref="form"
@@ -24,8 +24,8 @@
           outlined
           dense
           class="mb-4"
-        ></v-text-field>
-        
+        />
+
         <!-- Description -->
         <v-textarea
           v-model="description"
@@ -36,8 +36,8 @@
           auto-grow
           rows="2"
           class="mb-4"
-        ></v-textarea>
-        
+        />
+
         <!-- Tags -->
         <v-combobox
           v-model="tags"
@@ -49,27 +49,27 @@
           dense
           class="mb-4"
           :delimiters="[',', ' ']"
-        ></v-combobox>
-        
+        />
+
         <!-- Content (Markdown Editor) -->
         <div class="mb-4">
           <label class="v-label theme--light">Content</label>
           <div class="editor-wrapper">
-            <md-editor 
+            <md-editor
               v-model="content"
               :preview="previewMode"
-              @onPreviewStateChanged="previewMode = $event"
               language="en-US"
+              @on-preview-state-changed="previewMode = $event"
             />
           </div>
         </div>
       </v-form>
     </v-card-text>
-    
-    <v-divider></v-divider>
-    
+
+    <v-divider />
+
     <v-card-actions>
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-btn
         text
         @click="$emit('close')"
@@ -88,42 +88,42 @@
 </template>
 
 <script>
-import { useCoachingStore } from '~/stores/coaching'
 import { ref, computed, onMounted } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { MdEditor } from 'md-editor-v3'
+import { useCoachingStore } from '~/stores/coaching'
 import 'md-editor-v3/lib/style.css'
 
 export default {
   name: 'KnowledgeDocumentForm',
-  
+
   components: {
     MdEditor
   },
-  
+
   props: {
     document: {
       type: Object,
       default: null
     }
   },
-  
+
   emits: ['close', 'saved'],
-  
-  setup(props, { emit }) {
+
+  setup (props, { emit }) {
     const coachingStore = useCoachingStore()
     const form = ref(null)
     const loading = ref(false)
     const previewMode = ref(false)
-    
+
     // Form fields
     const title = ref('')
     const description = ref('')
     const tags = ref([])
     const content = ref('')
-    
+
     const isNew = computed(() => !props.document)
-    
+
     onMounted(() => {
       if (props.document) {
         // Populate form with existing document data
@@ -133,17 +133,17 @@ export default {
         content.value = props.document.content || ''
       }
     })
-    
+
     const validateForm = () => {
-      if (!form.value) return false
+      if (!form.value) { return false }
       return form.value.validate()
     }
-    
+
     const saveDocument = async () => {
-      if (!validateForm()) return
-      
+      if (!validateForm()) { return }
+
       loading.value = true
-      
+
       try {
         const documentData = {
           title: title.value,
@@ -151,17 +151,17 @@ export default {
           tags: tags.value.map(tag => typeof tag === 'string' ? tag : tag.text || '').filter(Boolean),
           content: content.value
         }
-        
+
         let savedId
-        
+
         if (isNew.value) {
           // Create new document
           const newDocument = {
             ...documentData,
             // Don't generate ID here, let Firestore do it
-            id: '' 
+            id: ''
           }
-          
+
           savedId = await coachingStore.saveKnowledgeDocument(newDocument)
         } else {
           // Update existing document
@@ -169,10 +169,10 @@ export default {
             ...props.document,
             ...documentData
           }
-          
+
           savedId = await coachingStore.saveKnowledgeDocument(updatedDocument)
         }
-        
+
         emit('saved', savedId)
       } catch (error) {
         console.error('Error saving knowledge document:', error)
@@ -180,7 +180,7 @@ export default {
         loading.value = false
       }
     }
-    
+
     return {
       form,
       loading,

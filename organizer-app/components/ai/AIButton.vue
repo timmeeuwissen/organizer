@@ -1,14 +1,14 @@
 <template lang="pug">
 div.ai-button
   v-btn(
-    icon 
+    icon
     color="primary"
     v-if="showButton"
     @click="showDialog = true"
     :title="$t('ai.analyzeText')"
   )
     v-icon mdi-brain
-  
+
   // Mount only when open — avoids running dialog setup/watchers on every page (e.g. Mail).
   AIAnalysisDialog(v-if="showDialog" v-model="showDialog")
 </template>
@@ -34,8 +34,8 @@ const showButton = computed(() => {
   if (!user.value || !user.value.settings || !user.value.settings.aiIntegrations) {
     return false
   }
-  
-  return user.value.settings.aiIntegrations.some(integration => 
+
+  return user.value.settings.aiIntegrations.some(integration =>
     isValidIntegration(integration)
   )
 })

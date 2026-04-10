@@ -23,11 +23,11 @@ v-card(
         | {{ formatDate(project.dueDate) }}
   v-card-text
     div.mb-2(v-if="project.description" class="text-truncate") {{ project.description }}
-    
+
     // Progress bar
     v-progress-linear(
-      :model-value="project.progress" 
-      height="20" 
+      :model-value="project.progress"
+      height="20"
       color="white"
       bg-color="rgba(255, 255, 255, 0.2)"
       rounded
@@ -35,10 +35,10 @@ v-card(
     )
       template(v-slot:default="{ value }")
         strong.text-white {{ Math.round(value) }}%
-    
+
     div.d-flex.mt-3(v-if="project.tags.length > 0")
       v-chip(
-        v-for="tag in project.tags.slice(0, 3)" 
+        v-for="tag in project.tags.slice(0, 3)"
         :key="tag"
         size="x-small"
         color="white"
@@ -51,10 +51,10 @@ v-card(
         color="white"
         text-color="black"
       ) +{{ project.tags.length - 3 }}
-  
+
   v-card-actions
     v-avatar.ml-2(
-      v-for="(memberId, index) in project.members.slice(0, 3)" 
+      v-for="(memberId, index) in project.members.slice(0, 3)"
       :key="memberId"
       :color="getAvatarColor(index)"
       size="30"
@@ -68,14 +68,14 @@ v-card(
     v-chip(
       :color="getStatusColorLight(project.status)"
       size="small"
-    ) 
+    )
       v-icon(size="small" start) {{ getStatusIcon(project.status) }}
       | {{ getStatusText(project.status) }}
 </template>
 
 <script setup lang="ts">
-import { usePeopleStore } from '~/stores/people'
 import { useI18n } from 'vue-i18n'
+import { usePeopleStore } from '~/stores/people'
 import type { Project } from '~/types/models'
 
 // Props
@@ -95,13 +95,13 @@ const { t } = useI18n()
 
 // Helper functions
 const formatDate = (date: Date | null) => {
-  if (!date) return ''
+  if (!date) { return '' }
   return new Date(date).toLocaleDateString()
 }
 
 const getPersonInitials = (id: string) => {
   const person = peopleStore.getById(id)
-  if (!person) return '?'
+  if (!person) { return '?' }
   return `${person.firstName.charAt(0)}${person.lastName.charAt(0)}`
 }
 
@@ -156,21 +156,21 @@ const getStatusIcon = (status: string) => {
 
 // Helper to determine if a color is light (for text contrast)
 const isLightColor = (colorValue: string) => {
-  if (!colorValue) return false;
-  
+  if (!colorValue) { return false }
+
   // These colors are known to be light
   const lightColors = [
-    'light-blue', 
-    'light-green', 
-    'amber', 
-    'yellow', 
-    'lime', 
-    'grey-lighten-3', 
+    'light-blue',
+    'light-green',
+    'amber',
+    'yellow',
+    'lime',
+    'grey-lighten-3',
     'grey-lighten-4',
     'grey-lighten-5'
-  ];
-  
-  return lightColors.some(c => colorValue.includes(c));
+  ]
+
+  return lightColors.some(c => colorValue.includes(c))
 }
 </script>
 

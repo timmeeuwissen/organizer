@@ -18,16 +18,16 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits } from 'vue'
 
-defineEmits(['update:view', 'navigate']);
+defineEmits(['update:view', 'navigate'])
 
 const props = defineProps({
   currentView: {
     type: String,
     required: true
   }
-});
+})
 
 // Calendar view options
 const calendarViews = [
@@ -35,10 +35,10 @@ const calendarViews = [
   { title: 'calendar.week', value: 'week' },
   { title: 'calendar.day', value: 'day' },
   { title: 'calendar.schedule', value: 'schedule' }
-];
+]
 
 // Get button color based on selected view
 const getViewButtonColor = (viewValue) => {
-  return props.currentView === viewValue ? 'primary' : '';
-};
+  return props.currentView === viewValue ? 'primary' : ''
+}
 </script>

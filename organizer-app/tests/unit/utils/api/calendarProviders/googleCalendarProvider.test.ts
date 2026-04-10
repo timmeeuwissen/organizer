@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { GoogleCalendarProvider } from '~/utils/api/calendarProviders/GoogleCalendarProvider'
 import { googleIntegrationAccount } from '../../../helpers/mockIntegrationAccount'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { GoogleCalendarProvider } from '~/utils/api/calendarProviders/GoogleCalendarProvider'
 
 describe('GoogleCalendarProvider', () => {
   beforeEach(() => {
@@ -11,12 +11,12 @@ describe('GoogleCalendarProvider', () => {
     vi.unstubAllGlobals()
   })
 
-  function calendarAccount() {
+  function calendarAccount () {
     return googleIntegrationAccount({
       oauthData: {
         ...googleIntegrationAccount().oauthData,
-        scope: 'https://www.googleapis.com/auth/calendar.readonly',
-      },
+        scope: 'https://www.googleapis.com/auth/calendar.readonly'
+      }
     })
   }
 
@@ -29,9 +29,9 @@ describe('GoogleCalendarProvider', () => {
             id: 'e1',
             summary: 'Meet',
             start: { dateTime: '2024-06-01T10:00:00Z' },
-            end: { dateTime: '2024-06-01T11:00:00Z' },
-          },
-        ],
+            end: { dateTime: '2024-06-01T11:00:00Z' }
+          }
+        ]
       })
     )
 

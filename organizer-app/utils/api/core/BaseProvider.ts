@@ -1,7 +1,7 @@
-import type { IntegrationAccount } from '~/types/models'
 import { hasValidOAuthTokens, refreshOAuthToken, updateAccountInStore } from '../core/oauthUtils'
 import { makeApiRequest, ApiError } from '../core/apiUtils'
 import type { ApiRequestOptions } from '../core/apiUtils'
+import type { IntegrationAccount } from '~/types/models'
 
 /**
  * Base provider class with common functionality for all integration providers
@@ -9,7 +9,7 @@ import type { ApiRequestOptions } from '../core/apiUtils'
 export abstract class BaseProvider {
   protected account: IntegrationAccount
 
-  constructor(account: IntegrationAccount) {
+  constructor (account: IntegrationAccount) {
     this.account = account
   }
 
@@ -18,7 +18,7 @@ export abstract class BaseProvider {
    * provider-specific error conditions (e.g. Google invalid_grant).
    * @param errorMessage The error message from the failed refresh
    */
-  protected onTokenRefreshFailed(_errorMessage: string): void {
+  protected onTokenRefreshFailed (_errorMessage: string): void {
     // Default: no-op. Override in provider subclasses.
   }
 
@@ -26,7 +26,7 @@ export abstract class BaseProvider {
    * Check if provider is authenticated
    * @returns True if authenticated
    */
-  isAuthenticated(): boolean {
+  isAuthenticated (): boolean {
     return hasValidOAuthTokens(this.account)
   }
 
@@ -34,7 +34,7 @@ export abstract class BaseProvider {
    * Authenticate with the provider
    * @returns True if authentication successful
    */
-  async authenticate(): Promise<boolean> {
+  async authenticate (): Promise<boolean> {
     if (this.isAuthenticated()) {
       return true
     }
@@ -44,13 +44,13 @@ export abstract class BaseProvider {
       try {
         // Refresh token and get updated account
         const updatedAccount = await refreshOAuthToken(this.account)
-        
+
         // Update this instance's account reference
         this.account = updatedAccount
-        
+
         // Update the account in the pinia store
         updateAccountInStore(updatedAccount)
-        
+
         console.log(`Successfully refreshed token for ${this.account.oauthData.email}`)
         return true
       } catch (error) {
@@ -58,11 +58,11 @@ export abstract class BaseProvider {
         return false
       }
     }
-    
+
     console.warn(`${this.account.oauthData.email} has no refresh token, would need to redirect to OAuth flow`)
     return false
   }
-  
+
   /**
    * Make an authenticated request to the provider API
    * Handles authentication checks and errors with automatic retry
@@ -70,91 +70,91 @@ export abstract class BaseProvider {
    * @param options Request options
    * @returns Response data
    */
-  protected async makeRequest<T = any>(url: string, options: ApiRequestOptions = {}): Promise<T> {
-    const maxRetries = 2; // Maximum number of retries for token refresh
-    let retryCount = 0;
-    const provider = this.account.type;
-    const email = this.account.oauthData.email;
-    
+  protected async makeRequest<T = any> (url: string, options: ApiRequestOptions = {}): Promise<T> {
+    const maxRetries = 2 // Maximum number of retries for token refresh
+    let retryCount = 0
+    const provider = this.account.type
+    const email = this.account.oauthData.email
+
     // Helper function to log with consistent format
-    const log = (message: string) => console.log(`[${provider}:${email}] ${message}`);
-    
+    const log = (message: string) => console.log(`[${provider}:${email}] ${message}`)
+
     log(`About to make a request to ${url}`)
 
     while (true) {
       try {
         // Always check authentication state before making a request
         if (!this.isAuthenticated()) {
-          log(`Token expired or missing, authenticating before request to ${url}`);
-          const authenticated = await this.authenticate();
+          log(`Token expired or missing, authenticating before request to ${url}`)
+          const authenticated = await this.authenticate()
           if (!authenticated) {
-            throw new Error(`Authentication failed for ${provider} provider`);
+            throw new Error(`Authentication failed for ${provider} provider`)
           }
-          log(`Authentication successful, proceeding with request`);
+          log('Authentication successful, proceeding with request')
         }
-        
+
         // Make the actual API request
-        log(`Making request to ${url}`);
-        return await makeApiRequest(url, this.account, options) as T;
+        log(`Making request to ${url}`)
+        return await makeApiRequest(url, this.account, options) as T
       } catch (error) {
         // Handle different error cases
         if (error instanceof ApiError) {
-          const status = error.status;
-          
+          const status = error.status
+
           // Handle unauthorized errors (expired token)
           if ((status === 401 || status === 403) && retryCount < maxRetries) {
-            retryCount++;
-            log(`Received ${status} error (try ${retryCount}/${maxRetries}), refreshing token and retrying`);
-            
+            retryCount++
+            log(`Received ${status} error (try ${retryCount}/${maxRetries}), refreshing token and retrying`)
+
             try {
               // Force token refresh regardless of current token state
-              this.account = await refreshOAuthToken(this.account);
-              log(`Token refreshed successfully, retrying request`);
-              continue; // Retry the request with new token
+              this.account = await refreshOAuthToken(this.account)
+              log('Token refreshed successfully, retrying request')
+              continue // Retry the request with new token
             } catch (refreshError: unknown) {
-              const errorMessage = refreshError instanceof Error 
-                ? refreshError.message 
-                : String(refreshError);
-              log(`Token refresh failed: ${errorMessage}`);
-              this.onTokenRefreshFailed(errorMessage);
-              throw new Error(`Authentication error: Token refresh failed - ${errorMessage}`);
+              const errorMessage = refreshError instanceof Error
+                ? refreshError.message
+                : String(refreshError)
+              log(`Token refresh failed: ${errorMessage}`)
+              this.onTokenRefreshFailed(errorMessage)
+              throw new Error(`Authentication error: Token refresh failed - ${errorMessage}`)
             }
           }
-          
+
           // For rate limiting errors, we could implement backoff retry here
           if (status === 429 && retryCount < maxRetries) {
-            retryCount++;
-            const backoffTime = 1000 * retryCount; // Simple backoff strategy
-            log(`Rate limited (${status}), backing off for ${backoffTime}ms before retry ${retryCount}/${maxRetries}`);
-            await new Promise(resolve => setTimeout(resolve, backoffTime));
-            continue; // Retry after backoff
+            retryCount++
+            const backoffTime = 1000 * retryCount // Simple backoff strategy
+            log(`Rate limited (${status}), backing off for ${backoffTime}ms before retry ${retryCount}/${maxRetries}`)
+            await new Promise(resolve => setTimeout(resolve, backoffTime))
+            continue // Retry after backoff
           }
-          
+
           // For other status errors, add context before rethrowing
-          log(`Request failed with status ${status}: ${error.message}`);
-          throw new Error(`${provider} API error (${status}): ${error.message}`);
+          log(`Request failed with status ${status}: ${error.message}`)
+          throw new Error(`${provider} API error (${status}): ${error.message}`)
         }
-        
+
         // For network or other non-API errors
-        log(`Request failed with error: ${error}`);
-        throw error; // Rethrow original error
+        log(`Request failed with error: ${error}`)
+        throw error // Rethrow original error
       }
     }
   }
-  
+
   /**
    * Get the provider type (for logging and error messages)
    * @returns The provider type from the account
    */
-  getProviderType(): string {
+  getProviderType (): string {
     return this.account.type
   }
-  
+
   /**
    * Get the user's email (for logging and error messages)
    * @returns The email address from the account
    */
-  getUserEmail(): string {
+  getUserEmail (): string {
     return this.account.oauthData.email
   }
 }

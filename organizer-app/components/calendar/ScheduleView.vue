@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, computed } from 'vue';
+import { defineProps, computed } from 'vue'
 
 const props = defineProps({
   selectedDate: {
@@ -39,90 +39,90 @@ const props = defineProps({
     type: Array,
     required: true
   }
-});
+})
 
 // Get events for selected date
 const selectedDateEvents = computed(() => {
-  if (!props.selectedDate || !props.events) return [];
-  
+  if (!props.selectedDate || !props.events) { return [] }
+
   return props.events
-    .filter(event => {
-      if (!event || !event.date) return false;
+    .filter((event) => {
+      if (!event || !event.date) { return false }
       try {
-        const eventDate = new Date(event.date);
-        return isSameDay(eventDate, props.selectedDate);
+        const eventDate = new Date(event.date)
+        return isSameDay(eventDate, props.selectedDate)
       } catch (e) {
-        return false;
+        return false
       }
     })
     .sort((a, b) => {
-      if (!a.startTime) return -1;
-      if (!b.startTime) return 1;
-      return a.startTime.getTime() - b.startTime.getTime();
-    });
-});
+      if (!a.startTime) { return -1 }
+      if (!b.startTime) { return 1 }
+      return a.startTime.getTime() - b.startTime.getTime()
+    })
+})
 
 // Helper functions
 const isSameDay = (date1, date2) => {
   return date1.getFullYear() === date2.getFullYear() &&
     date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate();
-};
+    date1.getDate() === date2.getDate()
+}
 
 const formatSelectedDate = (date) => {
-  if (!date) return '';
-  return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-};
+  if (!date) { return '' }
+  return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+}
 
 const formatEventTime = (event) => {
-  if (!event || !event.startTime) return '';
-  
-  let timeStr = event.startTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  
+  if (!event || !event.startTime) { return '' }
+
+  let timeStr = event.startTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+
   if (event.endTime) {
-    timeStr += ' - ' + event.endTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    timeStr += ' - ' + event.endTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
   }
-  
-  return timeStr;
-};
+
+  return timeStr
+}
 
 const getEventClass = (event) => {
-  if (!event || !event.type) return '';
-  return `event-${event.type}`;
-};
+  if (!event || !event.type) { return '' }
+  return `event-${event.type}`
+}
 
 const getEventIcon = (type) => {
-  if (!type) return 'mdi-calendar';
-  
+  if (!type) { return 'mdi-calendar' }
+
   switch (type) {
-    case 'meeting': return 'mdi-account-group';
-    case 'task': return 'mdi-checkbox-marked-outline';
-    default: return 'mdi-calendar';
+    case 'meeting': return 'mdi-account-group'
+    case 'task': return 'mdi-checkbox-marked-outline'
+    default: return 'mdi-calendar'
   }
-};
+}
 
 const getEventLink = (event) => {
-  if (!event || !event.type || !event.id) return '#';
-  
+  if (!event || !event.type || !event.id) { return '#' }
+
   if (event.type === 'meeting') {
-    return `/meetings/${event.id}`;
+    return `/meetings/${event.id}`
   } else if (event.type === 'task') {
-    return `/tasks?id=${event.id}`;
+    return `/tasks?id=${event.id}`
   }
-  
-  return '#';
-};
+
+  return '#'
+}
 </script>
 
 <style lang="scss" scoped>
 .calendar-schedule {
   max-height: 600px;
   overflow-y: auto;
-  
+
   .event-task {
     background-color: rgba(25, 118, 210, 0.05);
   }
-  
+
   .event-meeting {
     background-color: rgba(76, 175, 80, 0.05);
   }

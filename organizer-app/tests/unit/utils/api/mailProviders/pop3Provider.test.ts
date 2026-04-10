@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { Pop3Provider } from '~/utils/api/mailProviders/Pop3Provider'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { Pop3Provider } from '~/utils/api/mailProviders/Pop3Provider'
 
-function makeAccount(overrides: Record<string, any> = {}) {
+function makeAccount (overrides: Record<string, any> = {}) {
   return {
     id: 'acc-pop3-1',
     type: 'pop3',
@@ -29,9 +29,9 @@ function makeAccount(overrides: Record<string, any> = {}) {
       smtpHost: 'smtp.example.com',
       smtpPort: 587,
       smtpEncryption: 'starttls',
-      ...overrides.oauthData,
+      ...overrides.oauthData
     },
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -56,13 +56,13 @@ describe('Pop3Provider', () => {
             read: false,
             folder: 'inbox',
             body: '',
-            attachments: [],
-          },
+            attachments: []
+          }
         ],
         totalCount: 1,
         page: 0,
         pageSize: 50,
-        hasMore: false,
+        hasMore: false
       })
     )
 

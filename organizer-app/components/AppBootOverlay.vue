@@ -31,7 +31,7 @@ const props = withDefaults(
   }>(),
   {
     progress: 0,
-    iconSrc: '/favicon.ico',
+    iconSrc: '/favicon.ico'
   }
 )
 

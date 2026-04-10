@@ -3,7 +3,7 @@ import {
   readBody,
   createError,
   setResponseHeader,
-  isError,
+  isError
 } from 'h3'
 import { z } from 'zod'
 import { getProvider } from '~/utils/api/aiProviders'
@@ -16,13 +16,13 @@ const IntegrationSchema = z
     name: z.string().optional(),
     apiKey: z.string().min(1),
     enabled: z.boolean().optional(),
-    connected: z.boolean().optional(),
+    connected: z.boolean().optional()
   })
   .passthrough()
 
 const BodySchema = z.object({
   integration: IntegrationSchema,
-  text: z.string().min(1),
+  text: z.string().min(1)
 })
 
 /**
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 400,
         statusMessage: 'Invalid request body',
-        data: parsed.error.flatten(),
+        data: parsed.error.flatten()
       })
     }
 
@@ -79,7 +79,7 @@ export default defineEventHandler(async (event) => {
 
       return {
         success: true,
-        result,
+        result
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err)
@@ -88,7 +88,7 @@ export default defineEventHandler(async (event) => {
         success: false,
         error:
           message ||
-          `Error analyzing text with provider: ${integration.provider}`,
+          `Error analyzing text with provider: ${integration.provider}`
       }
     }
   } catch (error: unknown) {
@@ -99,7 +99,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error in AI text analysis endpoint:', error)
     return {
       success: false,
-      error: message || 'An error occurred during text analysis',
+      error: message || 'An error occurred during text analysis'
     }
   }
 })

@@ -11,7 +11,7 @@ export interface AuditLinePayload {
 /**
  * Append one JSON line to the audit log (parseable JSONL for gui-messaging).
  */
-export async function appendAuditJsonLine(
+export async function appendAuditJsonLine (
   logPath: string,
   payload: AuditLinePayload
 ): Promise<void> {

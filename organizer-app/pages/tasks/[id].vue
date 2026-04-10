@@ -66,12 +66,12 @@ const activeTab = ref('details')
 
 const task = computed(() => tasksStore.getById(route.params.id as string))
 
-function getPersonName(personId: string) {
+function getPersonName (personId: string) {
   const p = peopleStore.getById(personId)
   return p ? `${p.firstName} ${p.lastName}` : personId
 }
 
-function formatDate(date: Date) {
+function formatDate (date: Date) {
   return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }).format(new Date(date))
 }
 
@@ -80,7 +80,7 @@ onMounted(async () => {
   await Promise.all([
     tasksStore.tasks.length === 0 ? tasksStore.fetchTasks() : Promise.resolve(),
     peopleStore.people.length === 0 ? peopleStore.fetchPeople() : Promise.resolve(),
-    knowledgeStore.bootstrapped ? Promise.resolve() : knowledgeStore.load(),
+    knowledgeStore.bootstrapped ? Promise.resolve() : knowledgeStore.load()
   ])
   loading.value = false
 })

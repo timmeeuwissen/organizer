@@ -16,8 +16,8 @@ describe('exchangeGoogleRefreshToken', () => {
           access_token: 'new-access',
           expires_in: 3600,
           token_type: 'Bearer',
-          scope: 'email',
-        }),
+          scope: 'email'
+        })
       })
     )
 
@@ -39,8 +39,8 @@ describe('exchangeGoogleRefreshToken', () => {
         headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           error: 'invalid_grant',
-          error_description: 'Bad Request',
-        }),
+          error_description: 'Bad Request'
+        })
       })
     )
 
@@ -58,7 +58,7 @@ describe('exchangeGoogleRefreshToken', () => {
       vi.fn().mockResolvedValue({
         ok: true,
         headers: new Headers({ 'content-type': 'application/json' }),
-        json: async () => ({}),
+        json: async () => ({})
       })
     )
 

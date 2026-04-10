@@ -8,7 +8,7 @@ div
     class="feedback-button"
     :title="$t('feedback.button')"
   )
-  
+
   v-dialog(v-model="showFeedbackForm" max-width="700px")
     v-card
       v-card-title {{ $t('feedback.title') }}
@@ -32,11 +32,11 @@ div
             v-model="includeConsoleLogs"
             :label="$t('feedback.includeConsoleLogs')"
           )
-          
+
           div(v-if="includeScreenshot && screenshotPreview" class="mt-3")
             p.text-subtitle-2 {{ $t('feedback.screenshotPreview') }}:
             v-img(:src="screenshotPreview" max-height="250" contain)
-      
+
       v-card-actions
         v-spacer
         v-btn(color="grey" text @click="showFeedbackForm = false") {{ $t('common.cancel') }}
@@ -46,7 +46,7 @@ div
           :loading="submitting"
           :disabled="!isFormValid || submitting"
         ) {{ $t('feedback.submit') }}
-        
+
   v-snackbar(v-model="showSnackbar" :timeout="4000")
     | {{ snackbarText }}
     template(v-slot:actions)
@@ -55,9 +55,9 @@ div
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import { useFeedbackStore } from '~/stores/feedback'
-import { useRoute } from 'vue-router'
 
 // Stores
 const authStore = useAuthStore()
@@ -96,120 +96,120 @@ onBeforeUnmount(() => {
 })
 
 // Capture console logs
-function setupConsoleCapture() {
+function setupConsoleCapture () {
   // Store original console methods
   originalConsoleLog = console.log
   originalConsoleError = console.error
   originalConsoleWarn = console.warn
   originalConsoleInfo = console.info
-  
+
   // Helper function to safely stringify objects, avoiding circular references
-  function safeStringify(obj: any): string {
-    if (obj === null || obj === undefined) return String(obj);
-    
-    if (typeof obj !== 'object') return String(obj);
-    
+  function safeStringify (obj: any): string {
+    if (obj === null || obj === undefined) { return String(obj) }
+
+    if (typeof obj !== 'object') { return String(obj) }
+
     try {
       // Use a WeakSet to track visited objects and avoid circular references
-      const seen = new WeakSet();
-      
+      const seen = new WeakSet()
+
       const stringified = JSON.stringify(obj, (key, value) => {
         // Skip functions
-        if (typeof value === 'function') return '[Function]';
-        
+        if (typeof value === 'function') { return '[Function]' }
+
         // Handle DOM nodes
-        if (value instanceof Node) return `[${value.nodeName}]`;
-        
+        if (value instanceof Node) { return `[${value.nodeName}]` }
+
         // If it's an object, check for circular references
         if (typeof value === 'object' && value !== null) {
           if (seen.has(value)) {
-            return '[Circular Reference]';
+            return '[Circular Reference]'
           }
-          seen.add(value);
+          seen.add(value)
         }
-        
-        return value;
-      }, 2);
-      
-      return stringified;
+
+        return value
+      }, 2)
+
+      return stringified
     } catch (err) {
       // If anything goes wrong, return a simple description
-      return `[${Object.prototype.toString.call(obj)}]`;
+      return `[${Object.prototype.toString.call(obj)}]`
     }
   }
-  
+
   // Safe stringifier for console arguments
-  function formatLogArgs(args: any[]): string {
-    return args.map(arg => {
+  function formatLogArgs (args: any[]): string {
+    return args.map((arg) => {
       try {
-        return typeof arg === 'object' ? safeStringify(arg) : String(arg);
+        return typeof arg === 'object' ? safeStringify(arg) : String(arg)
       } catch (e) {
-        return '[Unstringifiable Object]';
+        return '[Unstringifiable Object]'
       }
-    }).join(' ');
+    }).join(' ')
   }
-  
+
   // Override console.log
-  console.log = function() {
+  console.log = function () {
     // Call the original function
     originalConsoleLog.apply(console, arguments)
-    
+
     // Store in our cache
     const args = Array.from(arguments)
     const logString = formatLogArgs(args)
-    
+
     addToConsoleCache(`[LOG] ${logString}`)
   }
-  
+
   // Override console.error
-  console.error = function() {
+  console.error = function () {
     // Call the original function
     originalConsoleError.apply(console, arguments)
-    
+
     // Store in our cache
     const args = Array.from(arguments)
     const logString = formatLogArgs(args)
-    
+
     addToConsoleCache(`[ERROR] ${logString}`)
   }
-  
+
   // Override console.warn
-  console.warn = function() {
+  console.warn = function () {
     // Call the original function
     originalConsoleWarn.apply(console, arguments)
-    
+
     // Store in our cache
     const args = Array.from(arguments)
     const logString = formatLogArgs(args)
-    
+
     addToConsoleCache(`[WARN] ${logString}`)
   }
-  
+
   // Override console.info
-  console.info = function() {
+  console.info = function () {
     // Call the original function
     originalConsoleInfo.apply(console, arguments)
-    
+
     // Store in our cache
     const args = Array.from(arguments)
     const logString = formatLogArgs(args)
-    
+
     addToConsoleCache(`[INFO] ${logString}`)
   }
 }
 
 // Restore original console methods
-function restoreConsole() {
-  if (originalConsoleLog) console.log = originalConsoleLog
-  if (originalConsoleError) console.error = originalConsoleError
-  if (originalConsoleWarn) console.warn = originalConsoleWarn
-  if (originalConsoleInfo) console.info = originalConsoleInfo
+function restoreConsole () {
+  if (originalConsoleLog) { console.log = originalConsoleLog }
+  if (originalConsoleError) { console.error = originalConsoleError }
+  if (originalConsoleWarn) { console.warn = originalConsoleWarn }
+  if (originalConsoleInfo) { console.info = originalConsoleInfo }
 }
 
 // Add to console cache, keeping only the last MAX_CONSOLE_LOGS
-function addToConsoleCache(log: string) {
+function addToConsoleCache (log: string) {
   consoleLogsCache.value.push(log)
-  
+
   // Keep only the last MAX_CONSOLE_LOGS
   if (consoleLogsCache.value.length > MAX_CONSOLE_LOGS) {
     consoleLogsCache.value = consoleLogsCache.value.slice(-MAX_CONSOLE_LOGS)
@@ -217,14 +217,14 @@ function addToConsoleCache(log: string) {
 }
 
 // Toggle feedback form
-async function toggleFeedbackForm() {
+async function toggleFeedbackForm () {
   if (!showFeedbackForm.value) {
     // Take screenshot first before showing the form
     await takeScreenshot()
-    
+
     // Reset form
     resetForm()
-    
+
     // Now show the form after screenshot is taken
     showFeedbackForm.value = true
   } else {
@@ -234,33 +234,33 @@ async function toggleFeedbackForm() {
 }
 
 // Reset the form
-function resetForm() {
+function resetForm () {
   feedbackText.value = ''
   includeScreenshot.value = true
   includeConsoleLogs.value = true
 }
 
 // Take a screenshot of the current page
-async function takeScreenshot() {
+async function takeScreenshot () {
   try {
     // Use html2canvas to take a screenshot
     // This requires importing the library
     const html2canvas = (await import('html2canvas')).default
-    
+
     // Exclude the feedback form itself from the screenshot
     const dialogElements = document.querySelectorAll('.v-dialog--active')
     const originalDisplay: string[] = []
-    
+
     // Temporarily hide dialogs for the screenshot
     dialogElements.forEach((el: any) => {
       originalDisplay.push(el.style.display)
       el.style.display = 'none'
     })
-    
+
     const canvas = await html2canvas(document.body)
     const dataUrl = canvas.toDataURL('image/png')
     screenshotPreview.value = dataUrl
-    
+
     // Restore dialog visibility
     dialogElements.forEach((el: any, i: number) => {
       el.style.display = originalDisplay[i] || ''
@@ -272,15 +272,15 @@ async function takeScreenshot() {
 }
 
 // Submit feedback
-async function submitFeedback() {
-  if (!form.value) return
-  
+async function submitFeedback () {
+  if (!form.value) { return }
+
   // Validate form
   const { valid } = await form.value.validate()
-  if (!valid || !authStore.user) return
-  
+  if (!valid || !authStore.user) { return }
+
   submitting.value = true
-  
+
   try {
     // Clear any previous errors, safely check if method exists
     if (typeof feedbackStore.clearError === 'function') {
@@ -288,24 +288,23 @@ async function submitFeedback() {
     } else if (feedbackStore.error) {
       feedbackStore.error = null
     }
-    
+
     // Format console logs to a maximum of 256 characters, handling circular references
-    let consoleLogs = '';
+    let consoleLogs = ''
     if (includeConsoleLogs.value) {
       try {
         // Safely convert console logs to string, avoiding circular references
         consoleLogs = consoleLogsCache.value
-          .map(log => {
-            try { return log; }
-            catch (e) { return '[Unable to stringify log]'; }
+          .map((log) => {
+            try { return log } catch (e) { return '[Unable to stringify log]' }
           })
           .join('\n')
-          .substring(0, 256);
+          .substring(0, 256)
       } catch (e) {
-        consoleLogs = '[Error processing console logs]';
+        consoleLogs = '[Error processing console logs]'
       }
     }
-    
+
     // Create feedback object
     const feedback = {
       userId: authStore.user.id,
@@ -320,15 +319,15 @@ async function submitFeedback() {
       createdAt: new Date(),
       updatedAt: new Date()
     }
-    
+
     // Save to store/backend
     const result = await feedbackStore.addFeedback(feedback)
-    
+
     // Only show success message if no errors
     if (result && !feedbackStore.error) {
       snackbarText.value = 'Feedback submitted successfully!'
       showSnackbar.value = true
-      
+
       // Close form
       showFeedbackForm.value = false
     } else if (feedbackStore.error) {

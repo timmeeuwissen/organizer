@@ -22,5 +22,5 @@ export const MODULE_INTEGRATION_FILTER_KIND: Record<
   calendar: 'calendar',
   tasks: 'tasks',
   people: 'contacts',
-  meetings: 'meetings',
+  meetings: 'meetings'
 }

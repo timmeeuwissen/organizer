@@ -15,29 +15,35 @@
           {{ coaching.title }}
         </div>
       </div>
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-menu bottom left>
-        <template v-slot:activator="{ on, attrs }">
+        <template #activator="{ on, attrs }">
           <v-btn
             icon
             small
-            @click.stop="$event.stopPropagation()"
             v-bind="attrs"
+            @click.stop="$event.stopPropagation()"
             v-on="on"
           >
-            <v-icon small>mdi-dots-vertical</v-icon>
+            <v-icon small>
+              mdi-dots-vertical
+            </v-icon>
           </v-btn>
         </template>
         <v-list>
           <v-list-item @click="$emit('edit')">
             <v-list-item-title>
-              <v-icon small class="mr-2">mdi-pencil</v-icon>
+              <v-icon small class="mr-2">
+                mdi-pencil
+              </v-icon>
               Edit
             </v-list-item-title>
           </v-list-item>
           <v-list-item @click="$emit('delete')">
             <v-list-item-title class="error--text">
-              <v-icon small class="mr-2" color="error">mdi-delete</v-icon>
+              <v-icon small class="mr-2" color="error">
+                mdi-delete
+              </v-icon>
               Delete
             </v-list-item-title>
           </v-list-item>
@@ -49,8 +55,10 @@
       <!-- Person info -->
       <div v-if="person" class="d-flex align-center mb-2">
         <v-avatar size="24" color="primary" class="mr-2">
-          <v-icon v-if="!person.avatar" x-small dark>mdi-account</v-icon>
-          <v-img v-else :src="person.avatar"></v-img>
+          <v-icon v-if="!person.avatar" x-small dark>
+            mdi-account
+          </v-icon>
+          <v-img v-else :src="person.avatar" />
         </v-avatar>
         <span class="text-caption">{{ personName }}</span>
       </div>
@@ -63,40 +71,48 @@
           class="mr-1"
           color="success"
         >
-          <v-icon x-small left>mdi-flash</v-icon>
+          <v-icon x-small left>
+            mdi-flash
+          </v-icon>
           {{ coaching.strengths.length }}
         </v-chip>
-        
+
         <v-chip
           x-small
           outlined
           class="mr-1"
           color="error"
         >
-          <v-icon x-small left>mdi-alert</v-icon>
+          <v-icon x-small left>
+            mdi-alert
+          </v-icon>
           {{ coaching.weaknesses.length }}
         </v-chip>
-        
+
         <v-chip
           x-small
           outlined
           class="mr-1"
           color="primary"
         >
-          <v-icon x-small left>mdi-flag</v-icon>
+          <v-icon x-small left>
+            mdi-flag
+          </v-icon>
           {{ coaching.goals.length }}
         </v-chip>
-        
+
         <v-chip
           x-small
           outlined
           class="mr-1"
           color="grey"
         >
-          <v-icon x-small left>mdi-timeline</v-icon>
+          <v-icon x-small left>
+            mdi-timeline
+          </v-icon>
           {{ coaching.timeline.length }}
         </v-chip>
-        
+
         <v-chip
           v-if="coaching.relatedTasks && coaching.relatedTasks.length"
           x-small
@@ -104,7 +120,9 @@
           class="mr-1"
           color="info"
         >
-          <v-icon x-small left>mdi-clipboard-check</v-icon>
+          <v-icon x-small left>
+            mdi-clipboard-check
+          </v-icon>
           {{ coaching.relatedTasks.length }}
         </v-chip>
       </div>
@@ -119,7 +137,7 @@
         :value="goalProgress.percentage"
         height="4"
         :color="coaching.color"
-      ></v-progress-linear>
+      />
 
       <!-- Updated date -->
       <div class="text-caption text-right grey--text mt-1">
@@ -134,34 +152,34 @@ import { usePeopleStore } from '~/stores/people'
 
 export default {
   name: 'CoachingCard',
-  
+
   props: {
     coaching: {
       type: Object,
       required: true
     }
   },
-  
+
   computed: {
-    peopleStore() {
+    peopleStore () {
       return usePeopleStore()
     },
-    
-    person() {
+
+    person () {
       return this.peopleStore.getById(this.coaching.personId)
     },
-    
-    personName() {
-      if (!this.person) return 'Unknown Person'
+
+    personName () {
+      if (!this.person) { return 'Unknown Person' }
       return `${this.person.firstName} ${this.person.lastName}`
     },
-    
-    goalProgress() {
+
+    goalProgress () {
       const goals = this.coaching.goals || []
       const total = goals.length
       const completed = goals.filter(goal => goal.status === 'completed').length
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
-      
+
       return {
         total,
         completed,
@@ -169,18 +187,18 @@ export default {
       }
     }
   },
-  
+
   methods: {
-    formatDate(date) {
-      if (!date) return ''
+    formatDate (date) {
+      if (!date) { return '' }
       try {
         return new Date(date).toLocaleDateString()
       } catch (e) {
         return ''
       }
     },
-    
-    viewDetails() {
+
+    viewDetails () {
       // Emit navigate event instead of directly using router
       this.$emit('navigate', this.coaching)
     }

@@ -3,13 +3,13 @@
  * @module utils/api/mailProviders
  */
 
-import type { IntegrationAccount } from '~/types/models'
 import { GmailProvider } from './GmailProvider'
 import { Office365Provider } from './Office365Provider'
 import { ExchangeProvider } from './ExchangeProvider'
 import { ImapProvider } from './ImapProvider'
 import { Pop3Provider } from './Pop3Provider'
 import type { MailProvider } from './MailProvider'
+import type { IntegrationAccount } from '~/types/models'
 
 export * from './MailProvider'
 export * from './BaseMailProvider'
@@ -24,7 +24,7 @@ export * from './Pop3Provider'
  * @param account The integration account
  * @returns Provider implementation for the account type
  */
-export function getMailProvider(account: IntegrationAccount): MailProvider {
+export function getMailProvider (account: IntegrationAccount): MailProvider {
   switch (account.type) {
     case 'google':
       return new GmailProvider(account)
@@ -45,6 +45,6 @@ export function getMailProvider(account: IntegrationAccount): MailProvider {
  * Alias for getMailProvider for backward compatibility
  * @deprecated Use getMailProvider instead
  */
-export function createMailProvider(account: IntegrationAccount): MailProvider {
+export function createMailProvider (account: IntegrationAccount): MailProvider {
   return getMailProvider(account)
 }

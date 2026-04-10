@@ -1,20 +1,20 @@
-import type { AIIntegrationData } from '~/types/models/aiIntegration'
 import type { AIProvider } from './AIProvider'
 import { XAIProvider } from './XAIProvider'
 import { OpenAIProvider } from './OpenAIProvider'
 import { GeminiProvider } from './GeminiProvider'
 import { ClaudeProvider } from './ClaudeProvider'
+import type { AIIntegrationData } from '~/types/models/aiIntegration'
 
 /**
  * Factory function to get the appropriate AI provider implementation
  * @param integration The AI integration data
  * @returns Provider implementation for the account type
  */
-export function getProvider(integration: AIIntegrationData): AIProvider {
+export function getProvider (integration: AIIntegrationData): AIProvider {
   if (!integration || !integration.provider) {
     throw new Error('Invalid integration: missing provider type')
   }
-  
+
   // Create the appropriate provider based on the type
   switch (integration.provider) {
     case 'xai':
@@ -35,7 +35,7 @@ export function getProvider(integration: AIIntegrationData): AIProvider {
  * @param integration The AI integration to check
  * @returns True if the integration is valid and can be used
  */
-export function isValidAIIntegration(integration: AIIntegrationData): boolean {
+export function isValidAIIntegration (integration: AIIntegrationData): boolean {
   console.log(integration)
   return (
     integration &&

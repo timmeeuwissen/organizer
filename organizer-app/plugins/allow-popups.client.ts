@@ -4,7 +4,7 @@
  * same-tab navigation.  Has no effect in production builds.
  */
 export default defineNuxtPlugin(() => {
-  if (!import.meta.dev) return
+  if (!import.meta.dev) { return }
 
   const _open = window.open.bind(window)
 
@@ -17,7 +17,7 @@ export default defineNuxtPlugin(() => {
 
     if (!popup || popup.closed) {
       // Popup was blocked — navigate the current tab instead
-      if (url) window.location.href = url.toString()
+      if (url) { window.location.href = url.toString() }
       return null
     }
 

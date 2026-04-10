@@ -6,7 +6,7 @@ export const TASKS_PAGE_SIZE_OPTIONS = [10, 15, 20, 25, 50, 100] as const
 
 export type TasksPageSize = (typeof TASKS_PAGE_SIZE_OPTIONS)[number]
 
-export function normalizeTasksPageSize(n: unknown): TasksPageSize {
+export function normalizeTasksPageSize (n: unknown): TasksPageSize {
   const num = typeof n === 'number' ? n : Number(n)
   if (Number.isFinite(num) && (TASKS_PAGE_SIZE_OPTIONS as readonly number[]).includes(num)) {
     return num as TasksPageSize
@@ -23,9 +23,9 @@ export interface TasksUiSettings {
   expandedTaskIds?: string[]
 }
 
-export function pruneExpandedTaskIds(
+export function pruneExpandedTaskIds (
   ids: string[] | undefined,
-  validTaskIds: ReadonlySet<string>,
+  validTaskIds: ReadonlySet<string>
 ): string[] {
   if (!ids?.length) {
     return []
@@ -45,8 +45,8 @@ export function pruneExpandedTaskIds(
   return out
 }
 
-export function mergeTasksUiSettings(
-  saved: Partial<TasksUiSettings> | null | undefined,
+export function mergeTasksUiSettings (
+  saved: Partial<TasksUiSettings> | null | undefined
 ): TasksUiSettings {
   const raw = Array.isArray(saved?.expandedTaskIds)
     ? saved.expandedTaskIds.filter((id): id is string => typeof id === 'string' && id.length > 0)
@@ -64,6 +64,6 @@ export function mergeTasksUiSettings(
     }
   }
   return {
-    expandedTaskIds: expanded,
+    expandedTaskIds: expanded
   }
 }

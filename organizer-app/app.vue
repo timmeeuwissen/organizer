@@ -4,7 +4,7 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    
+
     <!-- Network status notifications -->
     <v-snackbar
       v-model="showOfflineWarning"
@@ -13,11 +13,13 @@
       location="top"
     >
       <div class="d-flex align-center">
-        <v-icon class="mr-2">mdi-wifi-off</v-icon>
+        <v-icon class="mr-2">
+          mdi-wifi-off
+        </v-icon>
         <span>{{ $t('common.offlineWarning') }}</span>
       </div>
     </v-snackbar>
-    
+
     <v-snackbar
       v-model="showOnlineNotification"
       :timeout="5000"
@@ -25,7 +27,9 @@
       location="top"
     >
       <div class="d-flex align-center">
-        <v-icon class="mr-2">mdi-wifi</v-icon>
+        <v-icon class="mr-2">
+          mdi-wifi
+        </v-icon>
         <span>{{ $t('common.onlineNotification') }}</span>
       </div>
     </v-snackbar>
@@ -33,9 +37,9 @@
 </template>
 
 <script setup lang="ts">
+import { watch, ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useNetworkStatus } from '~/composables/useNetworkStatus'
-import { watch, ref } from 'vue'
 
 const { isBootComplete, bootProgress } = useAppInitialLoad()
 
@@ -57,7 +61,7 @@ watch(isOnline, (online) => {
 
 // Initialize auth on app load
 onMounted(() => {
-  authStore.init().catch(error => {
+  authStore.init().catch((error) => {
     console.error('Failed to initialize auth:', error)
   })
 })

@@ -9,7 +9,7 @@ const BodySchema = z.object({
   password: z.string().min(1),
   folder: z.string().optional().default('INBOX'),
   page: z.number().int().nonnegative().optional().default(0),
-  pageSize: z.number().int().positive().optional().default(50),
+  pageSize: z.number().int().positive().optional().default(50)
 })
 
 /**
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid request body',
-      data: parsed.error.flatten(),
+      data: parsed.error.flatten()
     })
   }
 
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
       secure: encryption === 'tls',
       auth: { user: username, pass: password },
       tls: encryption === 'starttls' ? { rejectUnauthorized: false } : undefined,
-      logger: false,
+      logger: false
     })
 
     await client.connect()
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
         flags: true,
         envelope: true,
         bodyStructure: true,
-        source: false,
+        source: false
       })) {
         const env = msg.envelope
         emails.push({
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
           folder,
           body: '',
           attachments: [],
-          accountId: username,
+          accountId: username
         })
       }
       // Return in reverse (newest first)
@@ -87,12 +87,12 @@ export default defineEventHandler(async (event) => {
       totalCount,
       page,
       pageSize,
-      hasMore: (page + 1) * pageSize < totalCount,
+      hasMore: (page + 1) * pageSize < totalCount
     }
   } catch (err: any) {
     throw createError({
       statusCode: 500,
-      statusMessage: err.message || 'IMAP fetch failed',
+      statusMessage: err.message || 'IMAP fetch failed'
     })
   }
 })

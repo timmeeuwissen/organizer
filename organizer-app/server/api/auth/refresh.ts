@@ -2,7 +2,7 @@ import {
   defineEventHandler,
   readBody,
   setResponseHeader,
-  setResponseStatus,
+  setResponseStatus
 } from 'h3'
 import { exchangeGoogleRefreshToken } from '~/server/utils/oauth/googleTokenRefresh'
 import { exchangeMicrosoftRefreshToken } from '~/server/utils/oauth/microsoftTokenRefresh'
@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
         setResponseStatus(event, 500)
         return {
           error: 'server_configuration',
-          error_description: 'Server is missing Google API credentials',
+          error_description: 'Server is missing Google API credentials'
         }
       }
 
@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
             error: 'invalid_grant',
             error_description:
               failure.error_description ||
-              'Refresh token is invalid or has expired. Re-authenticate your account.',
+              'Refresh token is invalid or has expired. Re-authenticate your account.'
           }
         }
 
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
         return {
           error: failure.error,
           error_description: failure.error_description,
-          details: failure.details,
+          details: failure.details
         }
       }
 
@@ -85,7 +85,7 @@ export default defineEventHandler(async (event) => {
         setResponseStatus(event, 500)
         return {
           error: 'server_configuration',
-          error_description: 'Server is missing Microsoft OAuth credentials',
+          error_description: 'Server is missing Microsoft OAuth credentials'
         }
       }
 
@@ -108,7 +108,7 @@ export default defineEventHandler(async (event) => {
             error: 'invalid_grant',
             error_description:
               failure.error_description ||
-              'Refresh token is invalid or has expired. Re-authenticate your account.',
+              'Refresh token is invalid or has expired. Re-authenticate your account.'
           }
         }
 
@@ -116,7 +116,7 @@ export default defineEventHandler(async (event) => {
         return {
           error: failure.error,
           error_description: failure.error_description,
-          details: failure.details,
+          details: failure.details
         }
       }
 
@@ -126,14 +126,14 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 400)
     return {
       error: 'unsupported_provider',
-      error_description: `Unsupported provider: ${provider ?? '(missing)'}`,
+      error_description: `Unsupported provider: ${provider ?? '(missing)'}`
     }
   } catch (error) {
     console.error(`Error refreshing token for ${provider}:`, error)
     setResponseStatus(event, 500)
     return {
       error: 'internal_error',
-      error_description: 'Internal server error during token refresh',
+      error_description: 'Internal server error during token refresh'
     }
   }
 })

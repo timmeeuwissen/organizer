@@ -198,14 +198,14 @@ defineEmits<{
 }>()
 
 const nodeTypes: { value: NodeType; icon: string }[] = [
-  { value: 'person',    icon: 'mdi-account' },
-  { value: 'project',  icon: 'mdi-folder-multiple' },
-  { value: 'task',     icon: 'mdi-checkbox-marked-outline' },
+  { value: 'person', icon: 'mdi-account' },
+  { value: 'project', icon: 'mdi-folder-multiple' },
+  { value: 'task', icon: 'mdi-checkbox-marked-outline' },
   { value: 'behavior', icon: 'mdi-account-cog' },
-  { value: 'meeting',  icon: 'mdi-account-group-outline' },
-  { value: 'team',     icon: 'mdi-account-multiple-outline' },
+  { value: 'meeting', icon: 'mdi-account-group-outline' },
+  { value: 'team', icon: 'mdi-account-multiple-outline' },
   { value: 'coaching', icon: 'mdi-account-heart' },
-  { value: 'knowledge',icon: 'mdi-lightbulb-outline' },
+  { value: 'knowledge', icon: 'mdi-lightbulb-outline' }
 ]
 
 const { t } = useI18n()
@@ -213,7 +213,7 @@ const { t } = useI18n()
 const timeRangeItems = computed(() => [
   { title: t('network.timeRange.all'), value: 'all' },
   { title: t('network.timeRange.30d'), value: '30d' },
-  { title: t('network.timeRange.90d'), value: '90d' },
+  { title: t('network.timeRange.90d'), value: '90d' }
 ])
 
 const pathTargetOptions = computed(() =>

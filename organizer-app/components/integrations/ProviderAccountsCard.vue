@@ -13,7 +13,7 @@ v-card(class="mb-4" v-if="accounts.length > 0")
           div.account-indicator(:style="{ backgroundColor: getAccountColor(account) }")
           v-avatar(size="32" :color="getAccountColor(account)" class="ml-2")
             span {{ getInitialsFromString(account.name) }}
-      
+
       template(v-slot:append)
         div.d-flex.align-center
           v-switch(
@@ -49,7 +49,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const getInitialsFromString = (name: string) => {
-  if (!name) return ''
+  if (!name) { return '' }
   const parts = name.split(' ')
   if (parts.length >= 2) {
     return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`
@@ -58,8 +58,8 @@ const getInitialsFromString = (name: string) => {
 }
 
 const getAccountColor = (account: IntegrationAccount) => {
-  if (account.color) return account.color
-  
+  if (account.color) { return account.color }
+
   // Generate deterministic color based on account ID
   let hash = 0
   const id = account.id
@@ -67,7 +67,7 @@ const getAccountColor = (account: IntegrationAccount) => {
     // Simple hash calculation for TypeScript compatibility
     hash = Math.imul(hash, 31) + id.charCodeAt(i)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }
@@ -80,7 +80,7 @@ const isAccountSelected = (accountId: string) => {
 // Direct toggle function
 const toggleAccount = (accountId: string, checked: boolean) => {
   const newValue = [...props.modelValue]
-  
+
   if (checked && !newValue.includes(accountId)) {
     // Add to selected
     newValue.push(accountId)
@@ -91,7 +91,7 @@ const toggleAccount = (accountId: string, checked: boolean) => {
       newValue.splice(index, 1)
     }
   }
-  
+
   // Emit the updated array
   emit('update:modelValue', newValue)
 }

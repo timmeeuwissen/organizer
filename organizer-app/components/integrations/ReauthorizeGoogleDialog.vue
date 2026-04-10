@@ -9,7 +9,7 @@ v-dialog(
     v-card-text
       p {{ $t('integrations.googleTokenExpired') }}
       p {{ $t('integrations.reauthorizeInstructions') }}
-      
+
     v-card-actions
       v-spacer
       v-btn(color="primary" variant="tonal" @click="dialog = false") {{ $t('common.cancel') }}
@@ -42,7 +42,7 @@ const open = () => {
 }
 
 // Handle Google auth success
-function handleGoogleAuthSuccess(tokens) {
+function handleGoogleAuthSuccess (tokens) {
   console.log('Google reauthorization successful')
   emit('auth-success', {
     ...tokens,
@@ -52,7 +52,7 @@ function handleGoogleAuthSuccess(tokens) {
 }
 
 // Handle Google auth error
-function handleGoogleAuthError(error) {
+function handleGoogleAuthError (error) {
   console.error('Google reauthorization error:', error)
   emit('auth-error', error)
   dialog.value = false

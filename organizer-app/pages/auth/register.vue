@@ -5,7 +5,7 @@ v-container(class="fill-height" fluid)
       v-card(class="elevation-12")
         v-toolbar(color="primary" dark)
           v-toolbar-title {{ $t('auth.register') }}
-        
+
         v-card-text
           v-alert(v-if="error" type="error" class="mb-4") {{ error }}
           v-form(ref="form" v-model="valid" @submit.prevent="register")
@@ -40,7 +40,7 @@ v-container(class="fill-height" fluid)
               :append-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
               @click:append="showConfirmPassword = !showConfirmPassword"
             )
-        
+
         v-card-actions
           v-spacer
           v-btn(
@@ -50,7 +50,7 @@ v-container(class="fill-height" fluid)
             @click="register"
             block
           ) {{ $t('auth.register') }}
-          
+
         v-card-text(class="text-center")
           v-btn(
             variant="text"
@@ -61,13 +61,13 @@ v-container(class="fill-height" fluid)
             prepend-icon="mdi-google"
             class="mb-2"
           ) {{ $t('auth.googleRegister') }}
-          
+
           v-divider(class="my-3")
-          
+
           div {{ $t('auth.haveAccount') }}
             v-btn(
-              variant="text" 
-              color="primary" 
+              variant="text"
+              color="primary"
               to="/auth/login"
               class="ml-1"
             ) {{ $t('auth.login') }}
@@ -75,8 +75,8 @@ v-container(class="fill-height" fluid)
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -103,12 +103,12 @@ const passwordMatch = (v: string) => v === password.value || 'Passwords do not m
 
 const register = async () => {
   error.value = ''
-  if (!valid.value) return
-  
+  if (!valid.value) { return }
+
   try {
     loading.value = true
     await authStore.registerWithEmail(email.value, password.value)
-    
+
     // Navigate to dashboard after successful registration
     router.push('/dashboard')
   } catch (err: any) {
@@ -120,11 +120,11 @@ const register = async () => {
 
 const registerWithGoogle = async () => {
   error.value = ''
-  
+
   try {
     loading.value = true
     await authStore.loginWithGoogle() // Use the same Google auth for registration
-    
+
     // Navigate to dashboard after successful registration
     router.push('/dashboard')
   } catch (err: any) {

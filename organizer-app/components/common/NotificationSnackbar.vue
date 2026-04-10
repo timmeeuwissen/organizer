@@ -25,16 +25,16 @@ import { useNotificationStore } from '~/stores/notification'
 defineProps({
   multiLine: {
     type: Boolean,
-    default: false,
+    default: false
   },
   vertical: {
     type: Boolean,
-    default: false,
+    default: false
   },
   showIcons: {
     type: Boolean,
-    default: true,
-  },
+    default: true
+  }
 })
 
 const notificationStore = useNotificationStore()
@@ -53,13 +53,13 @@ watch(
 
 const snackbarColor = computed(() => {
   const t = active.value?.type
-  if (t === 'success') return 'success'
-  if (t === 'error') return 'error'
-  if (t === 'warning') return 'warning'
+  if (t === 'success') { return 'success' }
+  if (t === 'error') { return 'error' }
+  if (t === 'warning') { return 'warning' }
   return 'info'
 })
 
-function getIconForType(type: string) {
+function getIconForType (type: string) {
   switch (type) {
     case 'success':
       return 'mdi-check-circle'
@@ -74,7 +74,7 @@ function getIconForType(type: string) {
   }
 }
 
-function closeCurrent() {
+function closeCurrent () {
   const id = active.value?.id
   if (id) {
     snackbarVisible.value = false
@@ -82,7 +82,7 @@ function closeCurrent() {
   }
 }
 
-function onVisibilityChange(visible: boolean) {
+function onVisibilityChange (visible: boolean) {
   if (!visible && active.value) {
     notificationStore.dismiss(active.value.id)
   }

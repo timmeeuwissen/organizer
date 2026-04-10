@@ -115,17 +115,17 @@ const emit = defineEmits<{
 }>()
 
 const entityRoutes: Record<string, string> = {
-  person:   '/people',
-  project:  '/projects',
-  task:     '/tasks',
+  person: '/people',
+  project: '/projects',
+  task: '/tasks',
   behavior: '/behaviors',
-  meeting:  '/meetings',
-  team:     '/teams',
-  coaching: '/coaching',
+  meeting: '/meetings',
+  team: '/teams',
+  coaching: '/coaching'
 }
 
 const entityRoute = computed(() => {
-  if (!props.node?.entityId) return null
+  if (!props.node?.entityId) { return null }
   const base = entityRoutes[props.node.type]
   return base ? `${base}/${props.node.entityId}` : null
 })
@@ -135,27 +135,27 @@ const nodeColor = computed(() =>
 )
 
 const nodeIcons: Record<string, string> = {
-  person:    'mdi-account',
-  project:   'mdi-folder-multiple',
-  task:      'mdi-checkbox-marked-outline',
-  behavior:  'mdi-account-cog',
-  meeting:   'mdi-account-group-outline',
-  team:      'mdi-account-multiple-outline',
-  coaching:  'mdi-account-heart',
-  knowledge: 'mdi-lightbulb-outline',
+  person: 'mdi-account',
+  project: 'mdi-folder-multiple',
+  task: 'mdi-checkbox-marked-outline',
+  behavior: 'mdi-account-cog',
+  meeting: 'mdi-account-group-outline',
+  team: 'mdi-account-multiple-outline',
+  coaching: 'mdi-account-heart',
+  knowledge: 'mdi-lightbulb-outline'
 }
 
 const nodeIcon = computed(() =>
   props.node ? nodeIcons[props.node.type] ?? 'mdi-circle' : ''
 )
 
-function certaintyColor(certainty: number): string {
-  if (certainty >= 0.8) return 'success'
-  if (certainty >= 0.6) return 'warning'
+function certaintyColor (certainty: number): string {
+  if (certainty >= 0.8) { return 'success' }
+  if (certainty >= 0.6) { return 'warning' }
   return 'error'
 }
 
-function formatDate(date: Date): string {
+function formatDate (date: Date): string {
   return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }).format(new Date(date))
 }
 </script>

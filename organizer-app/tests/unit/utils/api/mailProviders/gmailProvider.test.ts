@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { GmailProvider } from '~/utils/api/mailProviders/GmailProvider'
 import { googleIntegrationAccount } from '../../../helpers/mockIntegrationAccount'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { GmailProvider } from '~/utils/api/mailProviders/GmailProvider'
 
 describe('GmailProvider', () => {
   beforeEach(() => {
@@ -15,8 +15,8 @@ describe('GmailProvider', () => {
     const acc = googleIntegrationAccount({
       oauthData: {
         ...googleIntegrationAccount().oauthData,
-        scope: 'https://www.googleapis.com/auth/gmail.readonly',
-      },
+        scope: 'https://www.googleapis.com/auth/gmail.readonly'
+      }
     })
     vi.mocked(fetch).mockResolvedValue(
       jsonResponse({ resultSizeEstimate: 12 })
@@ -43,8 +43,8 @@ describe('GmailProvider', () => {
     const acc = googleIntegrationAccount({
       oauthData: {
         ...googleIntegrationAccount().oauthData,
-        scope: 'https://www.googleapis.com/auth/calendar.readonly',
-      },
+        scope: 'https://www.googleapis.com/auth/calendar.readonly'
+      }
     })
     const p = new GmailProvider(acc)
     expect(p.isAuthenticated()).toBe(false)

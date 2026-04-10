@@ -6,7 +6,7 @@ export default defineNuxtConfig({
      * incorrectly treats `state` as a named export, so `#imports` re-exports
      * `state` from `stores/auth.ts` and the app 500s ("does not provide an export named 'state'").
      */
-    'imports:extend'(imports) {
+    'imports:extend' (imports) {
       for (let i = imports.length - 1; i >= 0; i--) {
         const imp = imports[i]
         if (
@@ -17,7 +17,7 @@ export default defineNuxtConfig({
           imports.splice(i, 1)
         }
       }
-    },
+    }
   },
 
   devtools: { enabled: true },
@@ -25,17 +25,17 @@ export default defineNuxtConfig({
   css: [
     'vuetify/lib/styles/main.sass',
     '@mdi/font/css/materialdesignicons.min.css',
-    '~/assets/scss/main.scss',
+    '~/assets/scss/main.scss'
   ],
 
   build: {
-    transpile: ['vuetify', 'vue-i18n'],
+    transpile: ['vuetify', 'vue-i18n']
   },
 
   modules: [
-    '@pinia/nuxt',
+    '@pinia/nuxt'
   ],
-  
+
   plugins: [
     '~/plugins/vuetify',
     '~/plugins/firebase',
@@ -43,7 +43,7 @@ export default defineNuxtConfig({
     '~/plugins/pinia-persistence',
     '~/plugins/oidc',
     '~/plugins/unsaved-navigation.client',
-    '~/plugins/allow-popups.client',
+    '~/plugins/allow-popups.client'
   ],
 
   runtimeConfig: {
@@ -57,7 +57,7 @@ export default defineNuxtConfig({
         storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
         messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
         appId: process.env.FIREBASE_APP_ID || '',
-        measurementId: process.env.FIREBASE_MEASUREMENT_ID || '',
+        measurementId: process.env.FIREBASE_MEASUREMENT_ID || ''
       },
       google: {
         clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -65,14 +65,14 @@ export default defineNuxtConfig({
       },
       microsoft: {
         clientId: process.env.MICROSOFT_CLIENT_ID || '',
-        tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
+        tenantId: process.env.MICROSOFT_TENANT_ID || 'common'
       },
       // Debug options
       debugAuthRedirect: process.env.DEBUG_AUTH_REDIR || 'false',
       /** Max project file upload size (bytes). Client enforces before upload; align with storage.rules. */
       projectFileMaxBytes: Number(
         process.env.NUXT_PUBLIC_PROJECT_FILE_MAX_BYTES || 50 * 1024 * 1024
-      ),
+      )
     }
   },
 

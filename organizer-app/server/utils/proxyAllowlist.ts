@@ -11,17 +11,17 @@ const ALLOWED_PREFIXES = [
   'https://api.openai.com/',
   'https://api.x.ai/',
   'https://graph.microsoft.com/',
-  'https://login.microsoftonline.com/',
+  'https://login.microsoftonline.com/'
 ]
 
-export function isAllowedProxyUrl(url: string): boolean {
+export function isAllowedProxyUrl (url: string): boolean {
   try {
     const parsed = new URL(url)
     if (parsed.protocol !== 'https:') {
       return false
     }
     const normalized = `${parsed.origin}${parsed.pathname}`
-    return ALLOWED_PREFIXES.some((p) => url.startsWith(p) || normalized.startsWith(p))
+    return ALLOWED_PREFIXES.some(p => url.startsWith(p) || normalized.startsWith(p))
   } catch {
     return false
   }

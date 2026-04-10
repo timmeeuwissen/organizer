@@ -3,7 +3,7 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('statistics.title') }}
-      
+
   v-row
     v-col(cols="12" md="3")
       v-card(class="mb-4")
@@ -16,7 +16,7 @@ v-container(fluid)
             variant="outlined"
             density="comfortable"
           )
-          
+
           v-select(
             v-model="chartType"
             :items="chartTypeOptions"
@@ -24,7 +24,7 @@ v-container(fluid)
             variant="outlined"
             density="comfortable"
           )
-          
+
   v-row
     v-col(cols="12" xl="6")
       v-card(class="mb-4")
@@ -32,28 +32,28 @@ v-container(fluid)
         v-card-text
           v-alert(v-if="loading" type="info") {{ $t('common.loading') }}
           v-alert(v-else-if="!hasData" type="info") {{ $t('statistics.noData') }}
-          
+
           div(
             v-else
             ref="timeDistributionChart"
             style="height: 400px"
           )
             canvas(ref="timeDistributionCanvas")
-    
+
     v-col(cols="12" xl="6")
       v-card(class="mb-4")
         v-card-title {{ $t('statistics.taskCompletion') }}
         v-card-text
           v-alert(v-if="loading" type="info") {{ $t('common.loading') }}
           v-alert(v-else-if="!hasTaskData" type="info") {{ $t('statistics.noTaskData') }}
-          
+
           div(
             v-else
             ref="taskCompletionChart"
             style="height: 400px"
           )
             canvas(ref="taskCompletionCanvas")
-  
+
   v-row
     v-col(cols="12" md="6")
       v-card(class="mb-4")
@@ -61,7 +61,7 @@ v-container(fluid)
         v-card-text
           v-alert(v-if="loading" type="info") {{ $t('common.loading') }}
           v-alert(v-else-if="!hasProjectData" type="info") {{ $t('statistics.noProjectData') }}
-          
+
           div(v-else)
             v-list(v-if="projectStats.length > 0")
               v-list-item(
@@ -71,15 +71,15 @@ v-container(fluid)
                 template(v-slot:prepend)
                   v-avatar(size="36" :color="getRandomColor(project.id)")
                     span {{ project.title.charAt(0) }}
-                
+
                 v-list-item-title {{ project.title }}
-                
+
                 template(v-slot:append)
                   v-chip(
                     :color="getProgressColor(project.progress)"
                     text-color="white"
                   ) {{ project.progress }}%
-                
+
                 template(v-slot:subtitle)
                   v-progress-linear(
                     :model-value="project.progress"
@@ -87,21 +87,21 @@ v-container(fluid)
                     height="8"
                     class="mt-1"
                   )
-    
+
     v-col(cols="12" md="6")
       v-card(class="mb-4")
         v-card-title {{ $t('statistics.behaviorsTracking') }}
         v-card-text
           v-alert(v-if="loading" type="info") {{ $t('common.loading') }}
           v-alert(v-else-if="!hasBehaviorData" type="info") {{ $t('statistics.noBehaviorData') }}
-          
+
           div(
             v-else
             ref="behaviorChart"
             style="height: 400px"
           )
             canvas(ref="behaviorCanvas")
-  
+
   v-row
     v-col(cols="12")
       v-card
@@ -110,7 +110,7 @@ v-container(fluid)
           v-tab(value="projects") {{ $t('projects.title') }}
           v-tab(value="meetings") {{ $t('meetings.title') }}
           v-tab(value="tasks") {{ $t('tasks.title') }}
-        
+
         v-window(v-model="timeTab")
           v-window-item(value="projects")
             v-card-text
@@ -121,7 +121,7 @@ v-container(fluid)
               )
                 template(v-slot:item.timeSpent="{ item }")
                   span {{ formatTime(item.timeSpent) }}
-                
+
                 template(v-slot:item.percentage="{ item }")
                   v-progress-linear(
                     :model-value="item.percentage"
@@ -130,7 +130,7 @@ v-container(fluid)
                   )
                     template(v-slot:default="{ value }")
                       span {{ Math.round(value) }}%
-          
+
           v-window-item(value="meetings")
             v-card-text
               v-data-table(
@@ -140,7 +140,7 @@ v-container(fluid)
               )
                 template(v-slot:item.timeSpent="{ item }")
                   span {{ formatTime(item.timeSpent) }}
-                
+
                 template(v-slot:item.percentage="{ item }")
                   v-progress-linear(
                     :model-value="item.percentage"
@@ -149,7 +149,7 @@ v-container(fluid)
                   )
                     template(v-slot:default="{ value }")
                       span {{ Math.round(value) }}%
-          
+
           v-window-item(value="tasks")
             v-card-text
               v-data-table(
@@ -159,14 +159,14 @@ v-container(fluid)
               )
                 template(v-slot:item.timeSpent="{ item }")
                   span {{ formatTime(item.timeSpent) }}
-                
+
                 template(v-slot:item.status="{ item }")
                   v-chip(
                     :color="getStatusColor(item.status)"
                     text-color="white"
                     size="small"
                   ) {{ item.status }}
-                
+
                 template(v-slot:item.percentage="{ item }")
                   v-progress-linear(
                     :model-value="item.percentage"
@@ -285,10 +285,10 @@ const behaviorStats = computed(() => {
 
 // Generate mock time data
 const projectTimeData = computed(() => {
-  const projects = projectsStore.projects.map(project => {
+  const projects = projectsStore.projects.map((project) => {
     // Generate mock time spent (1-20 hours in minutes)
     const timeSpent = Math.round((1 + Math.random() * 19) * 60)
-    
+
     return {
       id: project.id,
       title: project.title,
@@ -297,7 +297,7 @@ const projectTimeData = computed(() => {
       percentage: 0 // Will be calculated below
     }
   })
-  
+
   // Calculate percentages
   const totalTime = projects.reduce((sum, project) => sum + project.timeSpent, 0)
   return projects.map(project => ({
@@ -309,10 +309,10 @@ const projectTimeData = computed(() => {
 const meetingTimeData = computed(() => {
   // Group meetings by category
   const categories = {}
-  
-  meetingsStore.meetings.forEach(meeting => {
+
+  meetingsStore.meetings.forEach((meeting) => {
     const category = meeting.category || 'uncategorized'
-    
+
     if (!categories[category]) {
       categories[category] = {
         category,
@@ -320,9 +320,9 @@ const meetingTimeData = computed(() => {
         timeSpent: 0
       }
     }
-    
+
     categories[category].count++
-    
+
     // Calculate meeting duration in minutes
     if (meeting.startTime && meeting.endTime) {
       const duration = Math.round((meeting.endTime.getTime() - meeting.startTime.getTime()) / (60 * 1000))
@@ -332,9 +332,9 @@ const meetingTimeData = computed(() => {
       categories[category].timeSpent += 60
     }
   })
-  
+
   const result = Object.values(categories)
-  
+
   // Calculate percentages
   const totalTime = result.reduce((sum: number, cat: any) => sum + cat.timeSpent, 0)
   return result.map((cat: any) => ({
@@ -344,10 +344,10 @@ const meetingTimeData = computed(() => {
 })
 
 const taskTimeData = computed(() => {
-  const tasks = tasksStore.tasks.map(task => {
+  const tasks = tasksStore.tasks.map((task) => {
     // Generate mock time spent (15min - 4 hours in minutes)
     const timeSpent = Math.round((0.25 + Math.random() * 3.75) * 60)
-    
+
     return {
       id: task.id,
       title: task.title,
@@ -357,7 +357,7 @@ const taskTimeData = computed(() => {
       percentage: 0 // Will be calculated below
     }
   })
-  
+
   // Calculate percentages
   const totalTime = tasks.reduce((sum, task) => sum + task.timeSpent, 0)
   return tasks.map(task => ({
@@ -373,7 +373,7 @@ const getRandomColor = (id: string) => {
   for (let i = 0; i < id.length; i++) {
     hash = id.charCodeAt(i) + ((hash << 5) - hash)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }
@@ -392,7 +392,7 @@ const getColorForCategory = (category: string) => {
     brainstorming: '#FF5722',
     uncategorized: '#9E9E9E'
   }
-  
+
   return categoryColors[category] || getRandomColor(category)
 }
 
@@ -418,16 +418,16 @@ const getPriorityColor = (priority: string) => {
 }
 
 const getProgressColor = (progress: number) => {
-  if (progress < 25) return 'error'
-  if (progress < 50) return 'warning'
-  if (progress < 75) return 'info'
+  if (progress < 25) { return 'error' }
+  if (progress < 50) { return 'warning' }
+  if (progress < 75) { return 'info' }
   return 'success'
 }
 
 const formatTime = (minutes: number) => {
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
-  
+
   if (hours === 0) {
     return `${mins}m`
   } else if (mins === 0) {
@@ -460,33 +460,33 @@ const initCharts = async () => {
       // Create a mock Chart object for demo purposes
       Chart = {
         register: () => {},
-        defaults: {},
+        defaults: {}
       }
     }
   }
-  
+
   await nextTick()
-  
+
   // Initialize time distribution chart
   if (timeDistributionCanvas.value && hasData.value) {
     if (timeDistributionChart.value) {
       timeDistributionChart.value.destroy()
     }
-    
+
     const ctx = timeDistributionCanvas.value.getContext('2d')
-    
-    const labels = period.value === 'week' 
+
+    const labels = period.value === 'week'
       ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
       : period.value === 'month'
         ? Array.from({ length: 30 }, (_, i) => (i + 1).toString())
         : period.value === 'quarter'
           ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].slice(0, 3)
           : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    
+
     const projectData = labels.map(() => Math.floor(Math.random() * 5 * 60)) // 0-5 hours in minutes
     const meetingData = labels.map(() => Math.floor(Math.random() * 3 * 60)) // 0-3 hours in minutes
     const taskData = labels.map(() => Math.floor(Math.random() * 4 * 60)) // 0-4 hours in minutes
-    
+
     timeDistributionChart.value = new Chart(ctx, {
       type: chartType.value,
       data: {
@@ -518,47 +518,52 @@ const initCharts = async () => {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: chartType.value === 'bar' || chartType.value === 'line' ? {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                return formatTime(Number(value))
+        scales: chartType.value === 'bar' || chartType.value === 'line'
+          ? {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function (value) {
+                    return formatTime(Number(value))
+                  }
+                }
               }
             }
-          }
-        } : undefined
+          : undefined
       }
     })
   }
-  
+
   // Initialize task completion chart
   if (taskCompletionCanvas.value && hasTaskData.value) {
     if (taskCompletionChart.value) {
       taskCompletionChart.value.destroy()
     }
-    
+
     const ctx = taskCompletionCanvas.value.getContext('2d')
-    
+
     // Group tasks by status
     const statusGroups = {}
-    tasksStore.tasks.forEach(task => {
+    tasksStore.tasks.forEach((task) => {
       if (!statusGroups[task.status]) {
         statusGroups[task.status] = 0
       }
       statusGroups[task.status]++
     })
-    
+
     const labels = Object.keys(statusGroups)
     const data = Object.values(statusGroups)
-    const backgroundColors = labels.map(status => {
+    const backgroundColors = labels.map((status) => {
       const color = getStatusColor(status)
-      return color === 'info' ? '#2196F3' : 
-             color === 'success' ? '#4CAF50' : 
-             color === 'warning' ? '#FF9800' : 
-             color === 'error' ? '#F44336' : '#9E9E9E'
+      return color === 'info'
+        ? '#2196F3'
+        : color === 'success'
+          ? '#4CAF50'
+          : color === 'warning'
+            ? '#FF9800'
+            : color === 'error' ? '#F44336' : '#9E9E9E'
     })
-    
+
     taskCompletionChart.value = new Chart(ctx, {
       type: 'pie',
       data: {
@@ -578,29 +583,29 @@ const initCharts = async () => {
       }
     })
   }
-  
+
   // Initialize behavior chart
   if (behaviorCanvas.value && hasBehaviorData.value) {
     if (behaviorChart.value) {
       behaviorChart.value.destroy()
     }
-    
+
     const ctx = behaviorCanvas.value.getContext('2d')
-    
+
     // Group behaviors by type
     const behaviorsByType = {
-      'doWell': [],
-      'wantToDoBetter': [],
-      'needToImprove': []
+      doWell: [],
+      wantToDoBetter: [],
+      needToImprove: []
     }
-    
-    behaviorsStore.behaviors.forEach(behavior => {
+
+    behaviorsStore.behaviors.forEach((behavior) => {
       if (behaviorsByType[behavior.type]) {
         behaviorsByType[behavior.type].push(behavior)
       }
     })
-    
-    const labels = Object.keys(behaviorsByType).map(type => {
+
+    const labels = Object.keys(behaviorsByType).map((type) => {
       switch (type) {
         case 'doWell': return 'Doing Well'
         case 'wantToDoBetter': return 'Want to Do Better'
@@ -608,14 +613,14 @@ const initCharts = async () => {
         default: return type
       }
     })
-    
+
     const data = Object.values(behaviorsByType).map(behaviors => behaviors.length)
     const backgroundColors = [
       'rgba(76, 175, 80, 0.5)', // green for doWell
       'rgba(33, 150, 243, 0.5)', // blue for wantToDoBetter
-      'rgba(255, 152, 0, 0.5)'  // orange for needToImprove
+      'rgba(255, 152, 0, 0.5)' // orange for needToImprove
     ]
-    
+
     behaviorChart.value = new Chart(ctx, {
       type: 'bar',
       data: {

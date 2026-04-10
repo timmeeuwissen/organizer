@@ -8,7 +8,7 @@ const BodySchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
   page: z.number().int().nonnegative().optional().default(0),
-  pageSize: z.number().int().positive().optional().default(50),
+  pageSize: z.number().int().positive().optional().default(50)
 })
 
 /**
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid request body',
-      data: parsed.error.flatten(),
+      data: parsed.error.flatten()
     })
   }
 
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
     const client = new POP3Client(port, host, {
       tlserrs: false,
       enabletls: encryption === 'tls',
-      debug: false,
+      debug: false
     })
 
     const emails: any[] = await new Promise((resolve, reject) => {
@@ -101,7 +101,7 @@ export default defineEventHandler(async (event) => {
               folder: 'inbox',
               body: '',
               attachments: [],
-              accountId: username,
+              accountId: username
             })
           }
           fetched++
@@ -120,12 +120,12 @@ export default defineEventHandler(async (event) => {
       totalCount: emails.length,
       page,
       pageSize,
-      hasMore: false, // POP3 doesn't support server-side pagination reliably
+      hasMore: false // POP3 doesn't support server-side pagination reliably
     }
   } catch (err: any) {
     throw createError({
       statusCode: 500,
-      statusMessage: err.message || 'POP3 fetch failed',
+      statusMessage: err.message || 'POP3 fetch failed'
     })
   }
 })

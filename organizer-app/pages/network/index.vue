@@ -127,7 +127,7 @@ const labelDepth = ref(30)
 const knowledgeFormOpen = ref(false)
 const knowledgeFormNode = ref<GraphNode | null>(null)
 const visibleTypes = ref<NodeType[]>([
-  'person', 'project', 'task', 'behavior', 'meeting', 'team', 'coaching', 'knowledge',
+  'person', 'project', 'task', 'behavior', 'meeting', 'team', 'coaching', 'knowledge'
 ])
 
 // Derived
@@ -170,7 +170,7 @@ const filteredEdges = computed(() =>
 
 // Step 3: optionally hide orphans (nodes with no edges in the current view)
 const filteredNodes = computed(() => {
-  if (!hideOrphans.value) return visibleNodes.value
+  if (!hideOrphans.value) { return visibleNodes.value }
   const connectedIds = new Set<string>()
   for (const e of filteredEdges.value) {
     connectedIds.add(e.sourceId)
@@ -180,33 +180,33 @@ const filteredNodes = computed(() => {
 })
 
 const selectedNodeKnowledge = computed((): KnowledgeNode[] => {
-  if (!selectedNode.value || !selectedNode.value.entityId) return []
+  if (!selectedNode.value || !selectedNode.value.entityId) { return [] }
   return knowledgeStore
     .connectionsForEntity(selectedNode.value.type as NodeType, selectedNode.value.entityId)
     .map(c => c.knowledge)
 })
 
 const selectedNodeConnections = computed(() => {
-  if (!selectedNode.value) return []
+  if (!selectedNode.value) { return [] }
   const id = selectedNode.value.id
   return networkStore.edges
     .filter(e => e.sourceId === id || e.targetId === id)
-    .map(e => {
+    .map((e) => {
       const neighbourId = e.sourceId === id ? e.targetId : e.sourceId
       const node = networkStore.getNode(neighbourId)
-      if (!node) return null
+      if (!node) { return null }
       return { node, edgeType: e.type, edgeLabel: e.label }
     })
     .filter((c): c is { node: GraphNode; edgeType: string; edgeLabel?: string } => !!c)
 })
 
 // Handlers
-function selectNode(node: GraphNode) {
+function selectNode (node: GraphNode) {
   selectedNode.value = node
   pathNodes.value = []
 }
 
-function togglePin(node: GraphNode | string) {
+function togglePin (node: GraphNode | string) {
   const id = typeof node === 'string' ? node : node.id
   const idx = pinnedNodeIds.value.indexOf(id)
   if (idx >= 0) {
@@ -216,48 +216,57 @@ function togglePin(node: GraphNode | string) {
   }
 }
 
-function unpinNode(nodeId: string) {
+function unpinNode (nodeId: string) {
   pinnedNodeIds.value = pinnedNodeIds.value.filter(id => id !== nodeId)
 }
 
-function toggleType(type: NodeType, visible: boolean) {
+function toggleType (type: NodeType, visible: boolean) {
   if (visible) {
-    if (!visibleTypes.value.includes(type)) visibleTypes.value.push(type)
+    if (!visibleTypes.value.includes(type)) { visibleTypes.value.push(type) }
   } else {
     visibleTypes.value = visibleTypes.value.filter(t => t !== type)
   }
 }
 
-function navigateToRecord(node: GraphNode) {
-  if (!node.entityId) return
+function navigateToRecord (node: GraphNode) {
+  if (!node.entityId) { return }
   const routes: Record<string, string> = {
-    person: '/people', project: '/projects', task: '/tasks',
-    behavior: '/behaviors', meeting: '/meetings', team: '/teams', coaching: '/coaching',
+    person: '/people',
+    project: '/projects',
+    task: '/tasks',
+    behavior: '/behaviors',
+    meeting: '/meetings',
+    team: '/teams',
+    coaching: '/coaching'
   }
   const base = routes[node.type]
-  if (base) router.push(`${base}/${node.entityId}`)
+  if (base) { router.push(`${base}/${node.entityId}`) }
 }
 
-function openContextMenu(_node: GraphNode, _event: MouseEvent) {
+function openContextMenu (_node: GraphNode, _event: MouseEvent) {
   // Placeholder — context menu added in Plan 2
 }
 
-function openAddKnowledge(node: GraphNode) {
+function openAddKnowledge (node: GraphNode) {
   knowledgeFormNode.value = node
   knowledgeFormOpen.value = true
 }
 
-async function handleKnowledgeSubmit(data: {
+async function handleKnowledgeSubmit (data: {
   content: string; subtype: any; certainty: number; certaintyDate: Date
   tags: string[]; relationType: any; relationLabel?: string
 }) {
   const node = knowledgeFormNode.value
-  if (!node || !node.entityId) return
+  if (!node || !node.entityId) { return }
   try {
     const kNode = await knowledgeStore.create({
-      content: data.content, subtype: data.subtype, source: 'manual' as const,
-      certainty: data.certainty, certaintyDate: data.certaintyDate,
-      tags: data.tags, label: data.content.slice(0, 60),
+      content: data.content,
+      subtype: data.subtype,
+      source: 'manual' as const,
+      certainty: data.certainty,
+      certaintyDate: data.certaintyDate,
+      tags: data.tags,
+      label: data.content.slice(0, 60)
     })
     if (kNode) {
       await knowledgeStore.connect(kNode.id, node.type as any, node.entityId, data.relationType, data.relationLabel)
@@ -269,23 +278,23 @@ async function handleKnowledgeSubmit(data: {
   }
 }
 
-function findPath() {
-  if (!selectedNode.value || !pathToId.value) return
+function findPath () {
+  if (!selectedNode.value || !pathToId.value) { return }
   pathNodes.value = networkStore.shortestPath(selectedNode.value.id, pathToId.value)
   if (pathNodes.value.length === 0) {
     useNotificationStore().info('network.noPath')
   }
 }
 
-function clearPath() {
+function clearPath () {
   pathNodes.value = []
   pathToId.value = null
 }
 
-async function handleSync() {
+async function handleSync () {
   try {
     const stats = await networkStore.syncFromStores()
-    if (!stats) return
+    if (!stats) { return }
 
     const totalNodes = Object.values(stats.nodesAdded).reduce((s, n) => s + n, 0)
 

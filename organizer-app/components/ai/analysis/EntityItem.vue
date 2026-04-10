@@ -7,7 +7,7 @@ div
     template(v-slot:prepend)
       v-avatar(:color="entityColor" size="36")
         v-icon(color="white") {{ entityIcon }}
-    
+
     template(v-slot:append)
       v-btn-group
         v-btn(
@@ -17,12 +17,12 @@ div
           :title="$t('ai.createNew')"
         )
           v-icon mdi-plus
-        
+
         // Edit icon appears next to "create new" when "add" is selected
         template(v-if="action === 'add'")
           v-btn(
             variant="text"
-            :color="isEdited ? 'primary' : ''" 
+            :color="isEdited ? 'primary' : ''"
             @click="toggleEdit"
             :title="$t('common.edit')"
           )
@@ -36,7 +36,7 @@ div
               color="error"
               class="validation-error-icon"
             ) mdi-alert-circle
-        
+
         v-btn(
           variant="text"
           :color="getActionButtonColor('relate')"
@@ -44,7 +44,7 @@ div
           :title="$t('ai.relateExisting')"
         )
           v-icon mdi-link
-        
+
         v-btn(
           variant="text"
           :color="getActionButtonColor('ignore')"
@@ -52,7 +52,7 @@ div
           :title="$t('ai.ignore')"
         )
           v-icon mdi-close
-    
+
     // Select dropdown appears when "relate" is selected
     template(v-if="action === 'relate'")
       v-autocomplete(
@@ -70,10 +70,10 @@ div
       )
         template(v-slot:item="{ item, props: slotProps }")
           v-list-item(v-bind="slotProps" :title="getItemTitle(item.raw)")
-        
+
         template(v-slot:selection="{ item }")
           span {{ getItemTitle(item) }}
-  
+
   // Entity details editor appears indented under the list item when editing
   v-expand-transition
     v-sheet(
@@ -86,7 +86,7 @@ div
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   entity: {
@@ -125,64 +125,64 @@ const props = defineProps({
     type: Boolean,
     default: false
   }
-});
+})
 
-const emit = defineEmits(['update:action', 'update:relation', 'edit']);
+const emit = defineEmits(['update:action', 'update:relation', 'edit'])
 
 // Create a computed property to access the action prop more directly
-const action = computed(() => props.action);
+const action = computed(() => props.action)
 
 // State for editing
-const isEditing = ref(false);
-const isEdited = ref(false);
+const isEditing = ref(false)
+const isEdited = ref(false)
 
 // Watch for action changes
 watch(() => props.action, () => {
-  console.log('Action changed:', props.action);
+  console.log('Action changed:', props.action)
   // If action changes, reset editing state
   if (props.action !== 'add') {
-    isEditing.value = false;
-    isEdited.value = false;
+    isEditing.value = false
+    isEdited.value = false
   }
-});
+})
 
 // Methods
-function selectAction(action) {
-  emit('update:action', action);
-  
+function selectAction (action) {
+  emit('update:action', action)
+
   // If changing away from 'relate', clear relation
   if (action !== 'relate') {
-    emit('update:relation', null);
+    emit('update:relation', null)
   }
-  
+
   // If switching to 'add', start editing by default
   if (action === 'add') {
-    isEditing.value = true;
+    isEditing.value = true
   }
 }
 
-function toggleEdit() {
-  isEditing.value = !isEditing.value;
+function toggleEdit () {
+  isEditing.value = !isEditing.value
   // If starting to edit, emit edit event
   if (isEditing.value) {
-    emit('edit', props.entity);
+    emit('edit', props.entity)
   }
 }
 
-function markAsEdited() {
-  isEdited.value = true;
+function markAsEdited () {
+  isEdited.value = true
 }
 
-function getActionButtonColor(action) {
+function getActionButtonColor (action) {
   if (props.action === action) {
-    return action === 'ignore' ? 'error' : 'primary';
+    return action === 'ignore' ? 'error' : 'primary'
   } else {
-    return 'default';
+    return 'default'
   }
 }
 
-function getItemTitle(item) {
-  return item && item[props.itemTitle] ? item[props.itemTitle] : '';
+function getItemTitle (item) {
+  return item && item[props.itemTitle] ? item[props.itemTitle] : ''
 }
 </script>
 

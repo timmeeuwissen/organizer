@@ -19,7 +19,7 @@ const props = defineProps<{
   selectedNodeId: string | null
   pinnedNodeIds: string[]
   loading?: boolean
-  labelDepth: number  // 0 = no labels, 100 = all labels fully opaque
+  labelDepth: number // 0 = no labels, 100 = all labels fully opaque
 }>()
 
 const emit = defineEmits<{
@@ -43,7 +43,7 @@ const DBL_CLICK_MS = 300
 const labelSpriteMap = new Map<string, { sprite: any; material: any }>()
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function createLabelSprite(text: string, THREE: any): any {
+function createLabelSprite (text: string, THREE: any): any {
   const canvas = document.createElement('canvas')
   canvas.width = 512
   canvas.height = 64
@@ -62,21 +62,21 @@ function createLabelSprite(text: string, THREE: any): any {
     map: texture,
     transparent: true,
     depthTest: false,
-    opacity: 0,
+    opacity: 0
   })
   const sprite = new THREE.Sprite(material)
   sprite.scale.set(80, 16, 1)
-  sprite.position.set(0, -20, 0)  // below the node sphere
+  sprite.position.set(0, -20, 0) // below the node sphere
   return sprite
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function startLabelLoop(THREE: any) {
+function startLabelLoop (THREE: any) {
   const tmpVec = new THREE.Vector3()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function tick() {
+
+  function tick () {
     animFrameId = requestAnimationFrame(tick)
-    if (!graph || labelSpriteMap.size === 0) return
+    if (!graph || labelSpriteMap.size === 0) { return }
 
     if (props.labelDepth === 0) {
       labelSpriteMap.forEach(({ material }) => { material.opacity = 0 })
@@ -88,7 +88,7 @@ function startLabelLoop(THREE: any) {
     }
 
     const camera = graph.camera?.()
-    if (!camera) return
+    if (!camera) { return }
 
     // Collect distances from camera to each sprite world position
     const entries: Array<{ material: any; dist: number }> = []
@@ -97,12 +97,12 @@ function startLabelLoop(THREE: any) {
       entries.push({ material, dist: camera.position.distanceTo(tmpVec) })
     })
 
-    if (entries.length === 0) return
+    if (entries.length === 0) { return }
 
-    let minDist = Infinity, maxDist = 0
+    let minDist = Infinity; let maxDist = 0
     for (const e of entries) {
-      if (e.dist < minDist) minDist = e.dist
-      if (e.dist > maxDist) maxDist = e.dist
+      if (e.dist < minDist) { minDist = e.dist }
+      if (e.dist > maxDist) { maxDist = e.dist }
     }
     const range = maxDist - minDist || 1
 
@@ -112,7 +112,7 @@ function startLabelLoop(THREE: any) {
     const fadeWidth = 0.15
 
     for (const { material, dist } of entries) {
-      const norm = (dist - minDist) / range  // 0 = closest, 1 = farthest
+      const norm = (dist - minDist) / range // 0 = closest, 1 = farthest
       const opacity = Math.max(0, Math.min(1, (threshold - norm + fadeWidth) / fadeWidth))
       material.opacity = opacity
     }
@@ -125,26 +125,26 @@ const graphData = computed(() => ({
   links: props.edges.map(e => ({
     ...e,
     source: e.sourceId,
-    target: e.targetId,
-  })),
+    target: e.targetId
+  }))
 }))
 
 onMounted(async () => {
-  if (!containerEl.value) return
+  if (!containerEl.value) { return }
   const { default: ForceGraph3D } = await import('3d-force-graph')
   const THREE = await import('three')
 
   graph = new ForceGraph3D(containerEl.value)
     .backgroundColor('#11111b')
     .nodeColor((n: any) => {
-      if (props.selectedNodeId === n.id) return '#ffffff'
+      if (props.selectedNodeId === n.id) { return '#ffffff' }
       return NODE_COLORS[n.type as GraphNode['type']] ?? '#888888'
     })
     .nodeVal((n: any) => {
       const base = NODE_BASE_SIZES[n.type as GraphNode['type']] ?? 4
       return base + (props.pinnedNodeIds.includes(n.id) ? 3 : 0)
     })
-    .nodeLabel(() => '')   // disable built-in hover label (we have sprites)
+    .nodeLabel(() => '') // disable built-in hover label (we have sprites)
     .nodeThreeObjectExtend(true)
     .nodeThreeObject((n: any) => {
       const sprite = createLabelSprite(n.label, THREE)
@@ -179,7 +179,7 @@ onMounted(async () => {
   graph.d3Force('link')?.distance(80)
 
   resizeObserver = new ResizeObserver(() => {
-    if (!containerEl.value || !graph) return
+    if (!containerEl.value || !graph) { return }
     graph.width(containerEl.value.offsetWidth).height(containerEl.value.offsetHeight)
   })
   resizeObserver.observe(containerEl.value)
@@ -194,10 +194,10 @@ watch(graphData, (data) => {
 })
 
 watch([() => props.selectedNodeId, () => props.pinnedNodeIds], () => {
-  if (!graph) return
+  if (!graph) { return }
   graph
     .nodeColor((n: any) => {
-      if (props.selectedNodeId === n.id) return '#ffffff'
+      if (props.selectedNodeId === n.id) { return '#ffffff' }
       return NODE_COLORS[n.type as GraphNode['type']] ?? '#888888'
     })
     .nodeVal((n: any) => {
@@ -211,7 +211,7 @@ onUnmounted(() => {
   labelSpriteMap.clear()
   resizeObserver?.disconnect()
   resizeObserver = null
-  if (singleClickTimer) clearTimeout(singleClickTimer)
+  if (singleClickTimer) { clearTimeout(singleClickTimer) }
   try { graph?._destructor?.() } catch { /* undocumented teardown hook */ }
   graph = null
 })

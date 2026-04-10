@@ -3,14 +3,14 @@ import {
   readBody,
   createError,
   setResponseHeader,
-  isError,
+  isError
 } from 'h3'
 import { z } from 'zod'
 import { getProvider } from '~/utils/api/aiProviders'
 
 const BodySchema = z.object({
   provider: z.enum(['openai', 'gemini', 'xai', 'claude']),
-  apiKey: z.string().min(1),
+  apiKey: z.string().min(1)
 })
 
 /**
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 400,
         statusMessage: 'Invalid request body',
-        data: parsed.error.flatten(),
+        data: parsed.error.flatten()
       })
     }
 
@@ -43,14 +43,14 @@ export default defineEventHandler(async (event) => {
       connected: false,
       createdAt: new Date()
     }
-    
+
     try {
       // Get the provider implementation using the existing factory function
       const provider = getProvider(testIntegration)
-      
+
       // Test connection using the provider's implementation
       const result = await provider.testConnection()
-      
+
       return {
         success: result,
         error: result ? null : 'Could not connect with the provided API key'
@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error testing AI integration:', error)
     return {
       success: false,
-      error: message || 'An error occurred while testing the integration',
+      error: message || 'An error occurred while testing the integration'
     }
   }
 })

@@ -6,15 +6,15 @@ v-app
       v-divider
       template(v-for="(item, i) in navItems" :key="i")
         v-list-item(
-          :to="item.to" 
-          :prepend-icon="item.icon" 
+          :to="item.to"
+          :prepend-icon="item.icon"
           :title="$t(item.title)"
           :class="{ 'parent-active': isParentActive(item) }"
         )
           template(v-slot:append v-if="item.addAction")
             v-btn(icon variant="text" size="small" @click.stop.prevent="item.addAction")
               v-icon mdi-plus
-        
+
         // Nested menu items
         template(v-if="item.children && isParentActive(item)")
           v-list-item(
@@ -25,7 +25,7 @@ v-app
             :title="$t(child.title)"
             class="nested-item"
           )
-  
+
   v-app-bar(app)
     v-app-bar-nav-icon(v-if="isAuthenticated" @click.stop="drawer = !drawer")
     v-app-bar-title
@@ -41,18 +41,18 @@ v-app
             v-icon mdi-plus
         v-list
           v-list-item(
-            v-for="(item, i) in addMenuItems" 
-            :key="i" 
+            v-for="(item, i) in addMenuItems"
+            :key="i"
             @click.stop.prevent="item.action"
             :to="null"
           )
             template(v-slot:prepend)
               v-icon(:icon="item.icon" :color="item.color")
             v-list-item-title {{ item.title }}
-    
+
     // AI button - only shown if AI integrations are enabled
     AIButton
-    
+
     v-btn(icon @click="toggleTheme")
       v-icon {{ isDarkTheme ? 'mdi-weather-sunny' : 'mdi-weather-night' }}
     v-menu(location="bottom end" :offset="[0, 5]")
@@ -83,30 +83,30 @@ v-app
         v-icon mdi-account-circle
       v-btn(icon @click="logout" title="Logout")
         v-icon mdi-logout
-  
+
   v-main
     v-container(fluid)
       AppBreadcrumbs(v-if="isAuthenticated")
       DemoModeToggle(v-if="authBypassEnabled")
       slot
-      
+
     // Feedback button that appears on all pages when authenticated
     FeedbackButton(v-if="isAuthenticated")
-  
+
   v-footer(app padless)
     v-container
       v-row(justify="center" align="center")
         v-col(cols="12" class="text-center")
           span &copy; {{ new Date().getFullYear() }} — {{ $t('common.appName') }}
-  
+
   // Global form dialogs
   dialog-form(v-model="taskDialog" max-width="800px")
     task-form(
       v-if="taskDialog"
-      :loading="false" 
+      :loading="false"
       @submit="onTaskSubmit"
     )
-    
+
   dialog-form(v-model="personDialog" max-width="600px")
     person-form(
       v-if="personDialog"
@@ -114,50 +114,50 @@ v-app
       :initial-values="personDialogInitialValues"
       @submit="onPersonSubmit"
     )
-    
+
   dialog-form(v-model="calendarDialog" max-width="800px")
     calendar-event-form(
       v-if="calendarDialog"
-      :loading="false" 
+      :loading="false"
       @submit="onCalendarEventSubmit"
     )
-        
+
   dialog-form(v-model="mailDialog" max-width="800px")
     mail-compose-form(
       v-if="mailDialog"
-      :loading="false" 
+      :loading="false"
       @submit="onMailSubmit"
       @close="mailDialog = false"
     )
-    
+
   dialog-form(v-model="behaviorDialog" max-width="700px")
     behavior-form(
       v-if="behaviorDialog"
-      :loading="false" 
+      :loading="false"
       @submit="onBehaviorSubmit"
     )
-    
+
   dialog-form(v-model="projectDialog" max-width="800px")
     project-form(
       v-if="projectDialog"
-      :loading="false" 
+      :loading="false"
       @submit="onProjectSubmit"
     )
-    
+
   dialog-form(v-model="meetingDialog" max-width="800px")
     meeting-form(
       v-if="meetingDialog"
-      :loading="false" 
+      :loading="false"
       @submit="onMeetingSubmit"
     )
-    
+
   dialog-form(v-model="coachingDialog" max-width="800px")
     coaching-form(
       v-if="coachingDialog"
-      :loading="false" 
+      :loading="false"
       @submit="onCoachingSubmit"
     )
-    
+
   dialog-form(v-model="knowledgeDialog" max-width="640px" scrollable)
     KnowledgeNodeForm(
       v-if="knowledgeDialog"
@@ -175,22 +175,22 @@ v-app
       @close="knowledgeDocumentDialog = false"
       @saved="onKnowledgeDocumentSaved"
     )
-    
+
   // AI Analysis Dialog
   AIAnalysisDialog(v-model="showAiDialog")
-  
+
   // Global notification system
   NotificationSnackbar
 </template>
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue'
-import type { Person, IntegrationAccount } from '~/types/models'
-import { providePersonDialog } from '~/composables/usePersonDialog'
 import { useI18n } from 'vue-i18n'
 import { useTheme } from 'vuetify'
-import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+import type { Person, IntegrationAccount } from '~/types/models'
+import { providePersonDialog } from '~/composables/usePersonDialog'
+import { useAuthStore } from '~/stores/auth'
 import { useDataRefresh } from '~/composables/useDataRefresh'
 import DemoModeToggle from '~/components/auth/DemoModeToggle.vue'
 import FeedbackButton from '~/components/feedback/FeedbackButton.vue'
@@ -235,7 +235,7 @@ const authBypassEnabled = computed(() => import.meta.env.VITE_AUTH_BYPASS === 't
 
 // Check if user has any enabled AI integrations
 const hasEnabledAiIntegrations = computed(() => {
-  if (!authStore.currentUser?.settings?.aiIntegrations) return false
+  if (!authStore.currentUser?.settings?.aiIntegrations) { return false }
   return authStore.currentUser.settings.aiIntegrations.some(ai => ai.enabled)
 })
 
@@ -244,7 +244,7 @@ const taskDialog = ref(false)
 const personDialog = ref(false)
 const personDialogInitialValues = ref<Partial<Person> | null>(null)
 
-function openAddPersonDialog(prefill?: Partial<Person> | null) {
+function openAddPersonDialog (prefill?: Partial<Person> | null) {
   personDialogInitialValues.value =
     prefill != null && Object.keys(prefill).length > 0 ? { ...prefill } : null
   personDialog.value = true
@@ -263,51 +263,51 @@ const showAiDialog = ref(false)
 
 // Add Button Menu Items
 const addMenuItems = [
-  { 
-    title: i18n.t('behaviors.add'), 
-    icon: 'mdi-account-cog-outline', 
+  {
+    title: i18n.t('behaviors.add'),
+    icon: 'mdi-account-cog-outline',
     color: 'indigo',
     action: () => behaviorDialog.value = true
   },
-  { 
-    title: i18n.t('projects.createProject'), 
-    icon: 'mdi-folder-plus', 
+  {
+    title: i18n.t('projects.createProject'),
+    icon: 'mdi-folder-plus',
     color: 'teal',
     action: () => projectDialog.value = true
   },
-  { 
-    title: i18n.t('tasks.addTask'), 
-    icon: 'mdi-checkbox-marked-outline', 
+  {
+    title: i18n.t('tasks.addTask'),
+    icon: 'mdi-checkbox-marked-outline',
     color: 'primary',
     action: () => taskDialog.value = true
   },
-  { 
-    title: i18n.t('people.addPerson'), 
-    icon: 'mdi-account-plus', 
+  {
+    title: i18n.t('people.addPerson'),
+    icon: 'mdi-account-plus',
     color: 'success',
     action: () => openAddPersonDialog()
   },
-  { 
-    title: i18n.t('teams.createTeam'), 
-    icon: 'mdi-account-multiple-plus', 
+  {
+    title: i18n.t('teams.createTeam'),
+    icon: 'mdi-account-multiple-plus',
     color: 'deep-orange',
     action: () => router.push({ path: '/teams', query: { new: '1' } })
   },
-  { 
-    title: i18n.t('calendar.event'), 
-    icon: 'mdi-calendar-plus', 
+  {
+    title: i18n.t('calendar.event'),
+    icon: 'mdi-calendar-plus',
     color: 'info',
     action: () => calendarDialog.value = true
   },
-  { 
-    title: i18n.t('meetings.title'), 
-    icon: 'mdi-account-group-outline', 
+  {
+    title: i18n.t('meetings.title'),
+    icon: 'mdi-account-group-outline',
     color: 'deep-purple',
     action: () => meetingDialog.value = true
   },
-  { 
-    title: i18n.t('coaching.title'), 
-    icon: 'mdi-account-heart', 
+  {
+    title: i18n.t('coaching.title'),
+    icon: 'mdi-account-heart',
     color: 'pink',
     action: () => coachingDialog.value = true
   },
@@ -315,7 +315,7 @@ const addMenuItems = [
     title: i18n.t('knowledge.add'),
     icon: 'mdi-lightbulb-outline',
     color: 'amber',
-    action: () => knowledgeDialog.value = true,
+    action: () => knowledgeDialog.value = true
   },
   {
     title: 'Knowledge Document',
@@ -323,9 +323,9 @@ const addMenuItems = [
     color: 'cyan',
     action: () => knowledgeDocumentDialog.value = true
   },
-  { 
-    title: i18n.t('mail.compose'), 
-    icon: 'mdi-email-plus', 
+  {
+    title: i18n.t('mail.compose'),
+    icon: 'mdi-email-plus',
     color: 'warning',
     action: () => mailDialog.value = true
   }
@@ -334,81 +334,81 @@ const addMenuItems = [
 // Navigation Items with Add Actions
 // Helper function to determine if a parent route is active
 const isParentActive = (item) => {
-  if (!item.to) return false
-  
+  if (!item.to) { return false }
+
   // Check if current route starts with the parent route path
   const currentPath = window.location.pathname
-  
-  return currentPath.startsWith(item.to) 
+
+  return currentPath.startsWith(item.to)
 }
 
 const navItems = [
   // Dashboard is already linked at the top of the nav drawer, so this avoids the duplicate ID error
   // { title: 'dashboard.title', icon: 'mdi-view-dashboard', to: '/dashboard' },
-  { 
-    title: 'behaviors.title', 
-    icon: 'mdi-account-cog', 
+  {
+    title: 'behaviors.title',
+    icon: 'mdi-account-cog',
     to: '/behaviors',
     addAction: () => behaviorDialog.value = true
   },
-  { 
-    title: 'people.title', 
-    icon: 'mdi-account-group', 
+  {
+    title: 'people.title',
+    icon: 'mdi-account-group',
     to: '/people',
     addAction: () => openAddPersonDialog()
   },
-  { 
-    title: 'teams.title', 
-    icon: 'mdi-account-multiple-outline', 
+  {
+    title: 'teams.title',
+    icon: 'mdi-account-multiple-outline',
     to: '/teams',
     addAction: () => router.push({ path: '/teams', query: { new: '1' } })
   },
-  { 
-    title: 'projects.title', 
-    icon: 'mdi-folder-multiple', 
+  {
+    title: 'projects.title',
+    icon: 'mdi-folder-multiple',
     to: '/projects',
     addAction: () => projectDialog.value = true
   },
-  { 
-    title: 'tasks.title', 
-    icon: 'mdi-checkbox-marked-outline', 
+  {
+    title: 'tasks.title',
+    icon: 'mdi-checkbox-marked-outline',
     to: '/tasks',
     addAction: () => taskDialog.value = true
   },
-  { 
-    title: 'calendar.title', 
-    icon: 'mdi-calendar', 
+  {
+    title: 'calendar.title',
+    icon: 'mdi-calendar',
     to: '/calendar',
     addAction: () => calendarDialog.value = true
   },
-  { 
-    title: 'meetings.title', 
-    icon: 'mdi-account-group-outline', 
+  {
+    title: 'meetings.title',
+    icon: 'mdi-account-group-outline',
     to: '/meetings',
     addAction: () => meetingDialog.value = true,
     children: [
-      { 
+      {
         title: 'meetings.categoriesTitle',
         icon: 'mdi-tag-multiple-outline',
         to: '/meetings/categories'
       }
     ]
   },
-  { 
-    title: 'mail.title', 
-    icon: 'mdi-email', 
+  {
+    title: 'mail.title',
+    icon: 'mdi-email',
     to: '/mail',
     addAction: () => mailDialog.value = true
   },
-  { 
-    title: 'coaching.title', 
-    icon: 'mdi-account-heart', 
+  {
+    title: 'coaching.title',
+    icon: 'mdi-account-heart',
     to: '/coaching',
     addAction: () => coachingDialog.value = true
   },
   { title: 'statistics.title', icon: 'mdi-chart-bar', to: '/statistics' },
   { title: 'network.title', icon: 'mdi-graph', to: '/network' },
-  { title: 'feedback.adminTitle', icon: 'mdi-message-text-outline', to: '/feedback' },
+  { title: 'feedback.adminTitle', icon: 'mdi-message-text-outline', to: '/feedback' }
 ]
 
 const toggleTheme = () => {
@@ -472,7 +472,7 @@ const onPersonSubmit = async (personData) => {
         // Persist in Organizer linked to this account until provider create API exists
         await peopleStore.createPerson({
           ...personData,
-          providerAccountId: integration.id,
+          providerAccountId: integration.id
         })
       } else {
         throw new Error('Selected integration does not support contacts or is not connected')
@@ -590,7 +590,7 @@ const onKnowledgeDocumentSaved = () => {
 }
 
 // Knowledge node quick-add handler
-async function onKnowledgeSubmit(data: {
+async function onKnowledgeSubmit (data: {
   content: string; subtype: any; certainty: number; certaintyDate: Date
   tags: string[]; relationType: any; relationLabel?: string
   entityType?: any; entityId?: string
@@ -598,9 +598,13 @@ async function onKnowledgeSubmit(data: {
   const kStore = useKnowledgeStore()
   try {
     const node = await kStore.create({
-      content: data.content, subtype: data.subtype, source: 'manual' as const,
-      certainty: data.certainty, certaintyDate: data.certaintyDate,
-      tags: data.tags, label: data.content.slice(0, 60),
+      content: data.content,
+      subtype: data.subtype,
+      source: 'manual' as const,
+      certainty: data.certainty,
+      certaintyDate: data.certaintyDate,
+      tags: data.tags,
+      label: data.content.slice(0, 60)
     })
     if (node && data.entityType && data.entityId) {
       await kStore.connect(node.id, data.entityType, data.entityId, data.relationType, data.relationLabel)
@@ -612,12 +616,12 @@ async function onKnowledgeSubmit(data: {
   }
 }
 
-function getIntegrationById(id: string | undefined): IntegrationAccount | undefined {
+function getIntegrationById (id: string | undefined): IntegrationAccount | undefined {
   if (!id || id === 'organizer') {
     return undefined
   }
   const accounts = authStore.currentUser?.settings?.integrationAccounts ?? []
-  return accounts.find((a) => a.id === id)
+  return accounts.find(a => a.id === id)
 }
 
 onMounted(async () => {

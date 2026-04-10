@@ -7,10 +7,10 @@ export interface PersonDialogService {
 
 const personDialogKey: InjectionKey<PersonDialogService> = Symbol('personDialog')
 
-export function providePersonDialog(service: PersonDialogService) {
+export function providePersonDialog (service: PersonDialogService) {
   provide(personDialogKey, service)
 }
 
-export function usePersonDialog(): PersonDialogService | undefined {
+export function usePersonDialog (): PersonDialogService | undefined {
   return inject(personDialogKey)
 }

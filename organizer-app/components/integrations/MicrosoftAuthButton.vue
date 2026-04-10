@@ -23,7 +23,7 @@ const props = defineProps({
   text: { type: String, default: null },
   block: { type: Boolean, default: false },
   size: { type: String, default: 'default' },
-  disabled: { type: Boolean, default: false },
+  disabled: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['auth-success', 'auth-error'])
@@ -32,9 +32,9 @@ const isLoading = ref(false)
 const authWindow = ref(null)
 const messageListener = ref(null)
 
-function decodeJwtPayload(jwt) {
+function decodeJwtPayload (jwt) {
   const part = jwt.split('.')[1]
-  if (!part) return {}
+  if (!part) { return {} }
   const b64 = part.replace(/-/g, '+').replace(/_/g, '/')
   const padded = b64 + '=='.slice(0, (4 - (b64.length % 4)) % 4)
   return JSON.parse(atob(padded))
@@ -58,7 +58,7 @@ onMounted(() => {
           email: null,
           name: null,
           scope: tokenData.scope || null,
-          provider: 'microsoft',
+          provider: 'microsoft'
         }
         if (tokenData.id_token) {
           try {
@@ -96,7 +96,7 @@ onBeforeUnmount(() => {
   }
 })
 
-function handleMicrosoftAuth() {
+function handleMicrosoftAuth () {
   isLoading.value = true
 
   try {
@@ -113,9 +113,9 @@ function handleMicrosoftAuth() {
     }
 
     messageListener.value = (event) => {
-      if (event.origin !== window.location.origin) return
+      if (event.origin !== window.location.origin) { return }
       const { data } = event
-      if (!data.type || (data.source && data.source.includes('devtools'))) return
+      if (!data.type || (data.source && data.source.includes('devtools'))) { return }
 
       if (data.type === 'MICROSOFT_AUTH_SUCCESS') {
         const tokenData = data.tokens
@@ -128,7 +128,7 @@ function handleMicrosoftAuth() {
           email: null,
           name: null,
           scope: tokenData.scope || null,
-          provider: 'microsoft',
+          provider: 'microsoft'
         }
         if (tokenData.id_token) {
           try {
@@ -156,19 +156,19 @@ function handleMicrosoftAuth() {
       JSON.stringify({
         provider: 'microsoft',
         timestamp: Date.now(),
-        origin: window.location.origin,
+        origin: window.location.origin
       })
     )
 
     const authBase = `https://login.microsoftonline.com/${encodeURIComponent(tenantId)}/oauth2/v2.0/authorize`
     const url =
       `${authBase}?client_id=${encodeURIComponent(clientId)}` +
-      `&response_type=code` +
+      '&response_type=code' +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&response_mode=query` +
+      '&response_mode=query' +
       `&scope=${scope}` +
       `&state=${state}` +
-      `&prompt=consent`
+      '&prompt=consent'
 
     const config = useRuntimeConfig()
     if (config.public.debugAuthRedirect === 'true') {

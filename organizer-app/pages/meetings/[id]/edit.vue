@@ -7,13 +7,13 @@ v-container(fluid)
           v-btn(icon variant="text" :to="`/meetings/${meetingId}`")
             v-icon mdi-arrow-left
           span.ml-2 {{ $t('meetings.edit') }}
-        
+
         v-card-text(v-if="loading")
           v-progress-circular(indeterminate)
-        
+
         v-card-text(v-else-if="error")
           v-alert(type="error") {{ error }}
-        
+
         v-card-text(v-else)
           MeetingForm(
             :meeting="meetingFormData"
@@ -27,11 +27,11 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import { useMeetingsStore } from '~/stores/meetings'
 import { useMeetingCategoriesStore } from '~/stores/meetings/categories'
 import { meetingFormToMeetingPayload, meetingToMeetingFormInput } from '~/utils/meetingsForm'
-import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -53,8 +53,8 @@ const meeting = computed(() => meetingsStore.currentMeeting)
 
 // Transform meeting to form data
 const meetingFormData = computed(() => {
-  if (!meeting.value) return null
-  
+  if (!meeting.value) { return null }
+
   return meetingToMeetingFormInput(meeting.value)
 })
 
@@ -62,7 +62,7 @@ const meetingFormData = computed(() => {
 const fetchData = async () => {
   loading.value = true
   error.value = ''
-  
+
   try {
     await meetingsStore.fetchMeeting(meetingId.value)
     await categoriesStore.fetchCategories()
@@ -76,16 +76,16 @@ const fetchData = async () => {
 
 // Handle form submission
 const handleSubmit = async (formData: any) => {
-  if (!meeting.value) return
-  
+  if (!meeting.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     const updateData = meetingFormToMeetingPayload(formData)
-    
+
     await meetingsStore.updateMeeting(meetingId.value, updateData)
-    
+
     // Redirect back to meeting view
     router.push(`/meetings/${meetingId.value}`)
   } catch (error: any) {

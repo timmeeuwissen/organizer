@@ -3,10 +3,9 @@
  * Please use the modular imports from './aiProviders/' directory instead.
  */
 
-import type { AIIntegrationData } from '~/types/models/aiIntegration'
 import type { AIProvider } from './aiProviders/AIProvider'
-import { getProvider as getProviderFromIndex } from './aiProviders/index'
-import { isValidAIIntegration } from './aiProviders/index'
+import { getProvider as getProviderFromIndex, isValidAIIntegration } from './aiProviders/index'
+import type { AIIntegrationData } from '~/types/models/aiIntegration'
 
 // Important: We're not using export * to avoid circular dependency issues
 // Instead, we're explicitly exporting functions needed by the application
@@ -16,7 +15,7 @@ import { isValidAIIntegration } from './aiProviders/index'
  * @param integration The AI integration data
  * @returns Provider implementation for the account type
  */
-export function getProvider(integration: AIIntegrationData): AIProvider {
+export function getProvider (integration: AIIntegrationData): AIProvider {
   return getProviderFromIndex(integration)
 }
 
@@ -25,6 +24,6 @@ export function getProvider(integration: AIIntegrationData): AIProvider {
  * @param integration The AI integration to check
  * @returns True if the integration is valid and can be used
  */
-export function isValidIntegration(integration: AIIntegrationData): boolean {
+export function isValidIntegration (integration: AIIntegrationData): boolean {
   return isValidAIIntegration(integration)
 }

@@ -4,7 +4,7 @@ import {
   TASKS_PAGE_SIZE_OPTIONS,
   mergeTasksUiSettings,
   pruneExpandedTaskIds,
-  TASKS_UI_MAX_EXPANDED_IDS,
+  TASKS_UI_MAX_EXPANDED_IDS
 } from '~/config/tasksUi'
 
 describe('normalizeTasksPageSize', () => {
@@ -31,16 +31,16 @@ describe('mergeTasksUiSettings', () => {
   it('dedupes and keeps order', () => {
     expect(
       mergeTasksUiSettings({
-        expandedTaskIds: ['a', 'b', 'a', 'c'],
-      }),
+        expandedTaskIds: ['a', 'b', 'a', 'c']
+      })
     ).toEqual({ expandedTaskIds: ['a', 'b', 'c'] })
   })
 
   it('drops invalid entries', () => {
     expect(
       mergeTasksUiSettings({
-        expandedTaskIds: ['x', '', 3 as unknown as string, 'y'],
-      }),
+        expandedTaskIds: ['x', '', 3 as unknown as string, 'y']
+      })
     ).toEqual({ expandedTaskIds: ['x', 'y'] })
   })
 })
@@ -66,7 +66,7 @@ describe('mergeTasksUiSettings max cap', () => {
     expect(merged.expandedTaskIds).toHaveLength(TASKS_UI_MAX_EXPANDED_IDS)
     expect(merged.expandedTaskIds![0]).toBe('t-0')
     expect(merged.expandedTaskIds![TASKS_UI_MAX_EXPANDED_IDS - 1]).toBe(
-      `t-${TASKS_UI_MAX_EXPANDED_IDS - 1}`,
+      `t-${TASKS_UI_MAX_EXPANDED_IDS - 1}`
     )
   })
 })

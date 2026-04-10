@@ -1,78 +1,78 @@
 #!/usr/bin/env node
 
-const admin = require('firebase-admin');
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
+const admin = require('firebase-admin')
 
 // Initialize Firebase Admin SDK
-function initializeAdminApp() {
+function initializeAdminApp () {
   try {
     // Check if we're already initialized
     try {
-      return admin.app();
+      return admin.app()
     } catch (e) {
       // App not initialized, continue
     }
 
     // Try to use service account file if it exists
-    const serviceAccountPath = path.join(process.cwd(), 'service-account.json');
-    
+    const serviceAccountPath = path.join(process.cwd(), 'service-account.json')
+
     if (fs.existsSync(serviceAccountPath)) {
-      const serviceAccount = require(serviceAccountPath);
+      const serviceAccount = require(serviceAccountPath)
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
-      });
-      console.log('Initialized Firebase Admin SDK with service account file');
-      return admin.app();
+      })
+      console.log('Initialized Firebase Admin SDK with service account file')
+      return admin.app()
     }
-    
+
     // Otherwise use application default credentials or .env file
-    const dotEnvPath = path.join(process.cwd(), '.env');
-    
+    const dotEnvPath = path.join(process.cwd(), '.env')
+
     if (fs.existsSync(dotEnvPath)) {
       // Load environment variables from .env file
-      require('dotenv').config();
+      require('dotenv').config()
     }
-    
+
     // If FIREBASE_PROJECT_ID is specified in .env, use it
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    
+    const projectId = process.env.FIREBASE_PROJECT_ID
+
     if (projectId) {
       admin.initializeApp({
-        projectId: projectId
-      });
-      console.log(`Initialized Firebase Admin SDK for project: ${projectId}`);
+        projectId
+      })
+      console.log(`Initialized Firebase Admin SDK for project: ${projectId}`)
     } else {
       // Fall back to application default credentials
-      admin.initializeApp();
-      console.log('Initialized Firebase Admin SDK with application default credentials');
+      admin.initializeApp()
+      console.log('Initialized Firebase Admin SDK with application default credentials')
     }
-    
-    return admin.app();
+
+    return admin.app()
   } catch (error) {
-    console.error('Error initializing Firebase Admin SDK:', error);
-    process.exit(1);
+    console.error('Error initializing Firebase Admin SDK:', error)
+    process.exit(1)
   }
 }
 
 // Initialize Firestore database with required collections and documents
-async function initializeDatabase() {
-  const app = initializeAdminApp();
-  const db = admin.firestore();
-  
-  console.log('Initializing Firestore database structure...');
-  
+async function initializeDatabase () {
+  const app = initializeAdminApp()
+  const db = admin.firestore()
+
+  console.log('Initializing Firestore database structure...')
+
   try {
     // Check if we have test users in the database
-    const usersCollection = db.collection('users');
-    const usersSnapshot = await usersCollection.limit(1).get();
-    
+    const usersCollection = db.collection('users')
+    const usersSnapshot = await usersCollection.limit(1).get()
+
     // If no users exist, create some test users
     if (usersSnapshot.empty) {
-      console.log('No users found. Creating sample user...');
-      
+      console.log('No users found. Creating sample user...')
+
       // Create a test user
-      const testUserId = 'test-user-' + Date.now();
+      const testUserId = 'test-user-' + Date.now()
       await usersCollection.doc(testUserId).set({
         id: testUserId,
         email: 'test@example.com',
@@ -88,12 +88,12 @@ async function initializeDatabase() {
           calendarSync: false,
           integrationAccounts: []
         }
-      });
-      
-      console.log('Created sample user: test@example.com');
-      
+      })
+
+      console.log('Created sample user: test@example.com')
+
       // Create a second user with integration sample
-      const userId2 = 'test-user-with-integrations-' + Date.now();
+      const userId2 = 'test-user-with-integrations-' + Date.now()
       await usersCollection.doc(userId2).set({
         id: userId2,
         email: 'integrated@example.com',
@@ -150,36 +150,36 @@ async function initializeDatabase() {
             }
           ]
         }
-      });
-      
-      console.log('Created sample user with integrations: integrated@example.com');
+      })
+
+      console.log('Created sample user with integrations: integrated@example.com')
     } else {
-      console.log('Users collection already initialized');
+      console.log('Users collection already initialized')
     }
 
-    console.log('Firestore database structure initialized successfully');
+    console.log('Firestore database structure initialized successfully')
   } catch (error) {
-    console.error('Error initializing database:', error);
-    process.exit(1);
+    console.error('Error initializing database:', error)
+    process.exit(1)
   }
 }
 
 // Main command handler
-const command = process.argv[2];
+const command = process.argv[2]
 
 if (command === 'initializeDatabase') {
   initializeDatabase()
     .then(() => {
-      console.log('Database initialization completed successfully');
-      process.exit(0);
+      console.log('Database initialization completed successfully')
+      process.exit(0)
     })
-    .catch(error => {
-      console.error('Database initialization error:', error);
-      process.exit(1);
-    });
+    .catch((error) => {
+      console.error('Database initialization error:', error)
+      process.exit(1)
+    })
 } else {
-  console.error(`Unknown command: ${command}`);
-  console.log('Available commands:');
-  console.log('  - initializeDatabase: Initialize Firestore database structure');
-  process.exit(1);
+  console.error(`Unknown command: ${command}`)
+  console.log('Available commands:')
+  console.log('  - initializeDatabase: Initialize Firestore database structure')
+  process.exit(1)
 }

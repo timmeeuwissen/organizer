@@ -1,6 +1,7 @@
 // tests/unit/stores/knowledge.test.ts
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { addDoc, deleteDoc, getDocs, updateDoc } from 'firebase/firestore'
 import type { KnowledgeNode } from '~/types/models/network'
 import type { KnowledgeEdge } from '~/types/models/knowledge'
 
@@ -14,34 +15,47 @@ vi.mock('firebase/firestore', () => ({
   updateDoc: vi.fn(() => Promise.resolve()),
   deleteDoc: vi.fn(() => Promise.resolve()),
   serverTimestamp: vi.fn(() => new Date('2026-01-01')),
-  getFirestore: vi.fn(() => ({})),
+  getFirestore: vi.fn(() => ({}))
 }))
 
 vi.mock('~/stores/auth', () => ({
-  useAuthStore: () => ({ user: { id: 'user-1' } }),
+  useAuthStore: () => ({ user: { id: 'user-1' } })
 }))
 
 vi.mock('~/stores/notification', () => ({
-  useNotificationStore: () => ({ error: vi.fn() }),
+  useNotificationStore: () => ({ error: vi.fn() })
 }))
 
 const now = new Date('2026-01-01')
 
-function makeNode(id: string): KnowledgeNode {
+function makeNode (id: string): KnowledgeNode {
   return {
-    id, userId: 'user-1', type: 'knowledge', entityId: null, label: 'test',
-    content: 'test content', subtype: 'fact', source: 'manual',
-    certainty: 0.8, certaintyDate: now, tags: [],
-    createdAt: now, updatedAt: now,
+    id,
+    userId: 'user-1',
+    type: 'knowledge',
+    entityId: null,
+    label: 'test',
+    content: 'test content',
+    subtype: 'fact',
+    source: 'manual',
+    certainty: 0.8,
+    certaintyDate: now,
+    tags: [],
+    createdAt: now,
+    updatedAt: now
   }
 }
 
-function makeEdge(id: string, knowledgeNodeId: string): KnowledgeEdge {
+function makeEdge (id: string, knowledgeNodeId: string): KnowledgeEdge {
   return {
-    id, userId: 'user-1', knowledgeNodeId,
-    entityType: 'person', entityId: 'p1',
+    id,
+    userId: 'user-1',
+    knowledgeNodeId,
+    entityType: 'person',
+    entityId: 'p1',
     relationType: 'references',
-    createdAt: now, updatedAt: now,
+    createdAt: now,
+    updatedAt: now
   }
 }
 
@@ -82,8 +96,6 @@ describe('useKnowledgeStore — getters', () => {
   })
 })
 
-import { addDoc, deleteDoc, getDocs, updateDoc } from 'firebase/firestore'
-
 describe('useKnowledgeStore — actions', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -95,8 +107,13 @@ describe('useKnowledgeStore — actions', () => {
     const { useKnowledgeStore } = await import('~/stores/knowledge')
     const store = useKnowledgeStore()
     const node = await store.create({
-      content: 'test fact', subtype: 'fact', source: 'manual',
-      certainty: 0.9, certaintyDate: now, tags: [], label: 'test fact',
+      content: 'test fact',
+      subtype: 'fact',
+      source: 'manual',
+      certainty: 0.9,
+      certaintyDate: now,
+      tags: [],
+      label: 'test fact'
     })
     expect(node?.id).toBe('k-new')
     expect(store.nodes).toHaveLength(1)
@@ -115,7 +132,7 @@ describe('useKnowledgeStore — actions', () => {
 
   it('delete removes node and its edges from local state', async () => {
     vi.mocked(getDocs).mockResolvedValue({
-      docs: [{ id: 'e1', data: () => ({}) }],
+      docs: [{ id: 'e1', data: () => ({}) }]
     } as any)
     const { useKnowledgeStore } = await import('~/stores/knowledge')
     const store = useKnowledgeStore()

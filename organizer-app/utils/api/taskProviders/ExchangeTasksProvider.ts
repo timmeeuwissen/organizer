@@ -1,11 +1,11 @@
-import type { Task, IntegrationAccount } from '~/types/models'
+import { useNuxtApp } from '#app'
 import type {
   TaskProvider,
   TaskQuery,
   FetchTasksResponse,
   CreateTaskResponse
 } from './TaskProvider'
-import { useNuxtApp } from '#app'
+import type { Task, IntegrationAccount } from '~/types/models'
 
 // Microsoft Graph API base URL
 const API_BASE_URL = 'https://graph.microsoft.com/v1.0'
@@ -18,7 +18,7 @@ interface ExchangeTask extends Task {
 /**
  * Maps a Microsoft To Do task to our application's Task model
  */
-function mapTodoTaskToTask(todoTask: any, userId: string, taskListId: string): ExchangeTask {
+function mapTodoTaskToTask (todoTask: any, userId: string, taskListId: string): ExchangeTask {
   const dueDate = todoTask.dueDateTime ? new Date(todoTask.dueDateTime.dateTime) : undefined
   const completedAt = todoTask.completedDateTime ? new Date(todoTask.completedDateTime.dateTime) : undefined
   const updatedAt = todoTask.lastModifiedDateTime ? new Date(todoTask.lastModifiedDateTime) : new Date()
@@ -44,7 +44,7 @@ function mapTodoTaskToTask(todoTask: any, userId: string, taskListId: string): E
     if (tagMatches) {
       tagMatches.forEach((tag: string) => {
         const tagValue = tag.substring(1).toLowerCase()
-        if (!tags.includes(tagValue)) tags.push(tagValue)
+        if (!tags.includes(tagValue)) { tags.push(tagValue) }
       })
     }
   }
@@ -84,9 +84,9 @@ function mapTodoTaskToTask(todoTask: any, userId: string, taskListId: string): E
 /**
  * Maps our Task model to a Microsoft To Do task format
  */
-function mapTaskToTodoTask(task: Partial<ExchangeTask>): any {
+function mapTaskToTodoTask (task: Partial<ExchangeTask>): any {
   const todoTask: any = {
-    title: task.title || 'Untitled Task',
+    title: task.title || 'Untitled Task'
   }
 
   if (task.description) {
@@ -137,22 +137,22 @@ export class ExchangeTasksProvider implements TaskProvider {
   private defaultTaskListId: string = ''
   private taskLists: any[] = []
 
-  constructor(account: IntegrationAccount) {
+  constructor (account: IntegrationAccount) {
     this.account = account
   }
 
-  getAccount() {
+  getAccount () {
     return this.account
   }
 
-  isAuthenticated() {
+  isAuthenticated () {
     return !!(
       this.account?.oauthData?.accessToken &&
       this.account?.oauthData?.connected
     )
   }
 
-  async authenticate(): Promise<boolean> {
+  async authenticate (): Promise<boolean> {
     if (!this.account?.oauthData?.refreshToken) {
       console.error('No refresh token available for Exchange account')
       return false
@@ -190,7 +190,7 @@ export class ExchangeTasksProvider implements TaskProvider {
     }
   }
 
-  private async makeRequest(
+  private async makeRequest (
     endpoint: string,
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
     body?: any
@@ -208,7 +208,7 @@ export class ExchangeTasksProvider implements TaskProvider {
       const response = await fetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${this.account.oauthData.accessToken}`,
+          Authorization: `Bearer ${this.account.oauthData.accessToken}`,
           'Content-Type': 'application/json'
         },
         body: body ? JSON.stringify(body) : undefined
@@ -237,7 +237,7 @@ export class ExchangeTasksProvider implements TaskProvider {
     }
   }
 
-  private async getTaskLists(): Promise<any[]> {
+  private async getTaskLists (): Promise<any[]> {
     if (this.taskLists.length > 0) {
       return this.taskLists
     }
@@ -246,7 +246,7 @@ export class ExchangeTasksProvider implements TaskProvider {
     return this.taskLists
   }
 
-  private async getDefaultTaskList(): Promise<string> {
+  private async getDefaultTaskList (): Promise<string> {
     if (this.defaultTaskListId) {
       return this.defaultTaskListId
     }
@@ -266,7 +266,7 @@ export class ExchangeTasksProvider implements TaskProvider {
     return this.defaultTaskListId
   }
 
-  async fetchTasks(query?: TaskQuery): Promise<FetchTasksResponse> {
+  async fetchTasks (query?: TaskQuery): Promise<FetchTasksResponse> {
     try {
       const taskListId = await this.getDefaultTaskList()
       const response = await this.makeRequest(`/me/todo/lists/${taskListId}/tasks`)
@@ -293,7 +293,7 @@ export class ExchangeTasksProvider implements TaskProvider {
     }
   }
 
-  async createTask(task: Partial<Task>): Promise<CreateTaskResponse> {
+  async createTask (task: Partial<Task>): Promise<CreateTaskResponse> {
     try {
       const taskListId = await this.getDefaultTaskList()
       const todoTask = mapTaskToTodoTask(task as Partial<ExchangeTask>)
@@ -309,7 +309,7 @@ export class ExchangeTasksProvider implements TaskProvider {
     }
   }
 
-  async updateTask(taskId: string, updates: Partial<Task>): Promise<boolean> {
+  async updateTask (taskId: string, updates: Partial<Task>): Promise<boolean> {
     try {
       const todoUpdates = updates as Partial<ExchangeTask>
       const taskListId = todoUpdates.providerListId || await this.getDefaultTaskList()
@@ -322,7 +322,7 @@ export class ExchangeTasksProvider implements TaskProvider {
     }
   }
 
-  async deleteTask(taskId: string): Promise<boolean> {
+  async deleteTask (taskId: string): Promise<boolean> {
     try {
       const taskLists = await this.getTaskLists()
       for (const list of taskLists) {
@@ -330,7 +330,7 @@ export class ExchangeTasksProvider implements TaskProvider {
           await this.makeRequest(`/me/todo/lists/${list.id}/tasks/${taskId}`, 'DELETE')
           return true
         } catch (error: any) {
-          if (error.status !== 404) throw error
+          if (error.status !== 404) { throw error }
         }
       }
       return false
@@ -340,7 +340,7 @@ export class ExchangeTasksProvider implements TaskProvider {
     }
   }
 
-  async completeTask(taskId: string): Promise<boolean> {
+  async completeTask (taskId: string): Promise<boolean> {
     try {
       const taskLists = await this.getTaskLists()
       for (const list of taskLists) {
@@ -358,7 +358,7 @@ export class ExchangeTasksProvider implements TaskProvider {
           )
           return true
         } catch (error: any) {
-          if (error.status !== 404) throw error
+          if (error.status !== 404) { throw error }
         }
       }
       return false

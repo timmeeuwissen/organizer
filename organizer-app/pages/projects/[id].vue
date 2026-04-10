@@ -22,88 +22,88 @@ v-container
               @click="showEditDialog"
             )
               v-icon mdi-pencil
-        
+
         v-card-text
           v-row
             v-col(cols="12" md="8")
               v-card(elevation="1" class="mb-4")
                 v-card-title {{ $t('projects.details') }}
                 v-card-text
-                  p.text-body-1.mb-4 
-                    span.font-weight-bold {{ $t('projects.description') }}: 
+                  p.text-body-1.mb-4
+                    span.font-weight-bold {{ $t('projects.description') }}:
                     span {{ project.description || $t('projects.none') }}
-                  
+
                   v-chip(:color="getStatusColorLight(project.status)" class="mr-2 mb-2")
                     v-icon(start) {{ getStatusIcon(project.status) }}
                     | {{ getStatusText(project.status) }}
-                  
+
                   v-chip(:color="getPriorityColor(project.priority)" class="mr-2 mb-2")
                     v-icon(start) mdi-flag
                     | {{ getPriorityText(project.priority) }}
-                  
+
                   div.mt-4(v-if="project.dueDate")
                     v-icon(class="mr-1") mdi-calendar
                     | {{ formatDate(project.dueDate) }}
-              
+
               v-card(elevation="1" class="mb-4")
                 v-card-title {{ $t('projects.progress') }}
                 v-card-text
                   v-progress-linear(
-                    :model-value="project.progress" 
-                    height="24" 
+                    :model-value="project.progress"
+                    height="24"
                     color="primary"
                     bg-color="grey-lighten-3"
                     rounded
                   )
                     template(v-slot:default="{ value }")
                       strong {{ Math.round(value) }}%
-            
+
             v-col(cols="12" md="4")
               v-card(elevation="1" class="mb-4")
                 v-card-title {{ $t('projects.team') }}
                 v-card-text
                   div(v-if="project.members.length === 0") {{ $t('projects.noMembers') }}
-                  
+
                   div.d-flex.flex-wrap.align-center(v-for="memberId in project.members" :key="memberId" class="mb-2")
                     v-avatar(:color="getAvatarColor(memberId)" size="32" class="mr-2") {{ getPersonInitials(memberId) }}
                     span {{ getPersonName(memberId) }}
-              
+
               v-card(elevation="1" class="mb-4")
                 v-card-title {{ $t('projects.stakeholders') }}
                 v-card-text
                   div(v-if="!project.stakeholders || project.stakeholders.length === 0") {{ $t('projects.noStakeholders') }}
-                  
+
                   div.d-flex.flex-wrap.align-center(v-for="stakeholderId in project.stakeholders || []" :key="stakeholderId" class="mb-2")
                     v-avatar(:color="getAvatarColor(stakeholderId)" size="32" class="mr-2") {{ getPersonInitials(stakeholderId) }}
                     span {{ getPersonName(stakeholderId) }}
-              
+
               v-card(elevation="1" class="mb-4")
                 v-card-title {{ $t('projects.tags') }}
                 v-card-text
                   div(v-if="project.tags.length === 0") {{ $t('projects.noTags') }}
                   v-chip(
-                    v-for="tag in project.tags" 
+                    v-for="tag in project.tags"
                     :key="tag"
                     color="primary-lighten-4"
                     class="mr-1 mb-1"
                   ) {{ tag }}
-      
+
       v-card(v-else-if="loading")
         v-card-text
           v-skeleton-loader(type="card" :loading="loading")
-      
+
       v-alert(
         v-else-if="error"
         type="error"
         class="mb-4"
       ) {{ error }}
-      
+
       v-alert(
         v-else
         type="warning"
         class="mb-4"
       ) {{ $t('projects.projectNotFound') }}
-  
+
   v-row
     v-col(cols="12")
       v-tabs(v-model="activeTab")
@@ -132,7 +132,7 @@ v-container
                 @toggle-status="toggleProjectTaskStatus"
                 @add-subtask="addProjectSubtask"
               )
-        
+
         v-window-item(value="notes")
           v-card(elevation="1" class="mt-4")
             v-card-title.d-flex
@@ -153,7 +153,7 @@ v-container
                     v-btn(icon size="small" color="error" @click="confirmRemoveNote(pg)")
                       v-icon mdi-delete
               p(v-else) {{ $t('projects.noNotes') }}
-        
+
         v-window-item(value="meetings")
           v-card(elevation="1" class="mt-4")
             v-card-title.d-flex
@@ -283,7 +283,7 @@ v-container
       v-card-title.d-flex.align-center
         v-icon(:color="project.color || getStatusColor(project.status)" class="mr-2") {{ project.icon || 'mdi-folder-outline' }}
         span {{ $t('projects.edit') }}: {{ project.title }}
-      
+
       project-form(
         :project="project"
         :loading="formLoading"
@@ -291,7 +291,7 @@ v-container
         @submit="updateProject"
         @delete="deleteProject"
       )
-  
+
   // Task dialog
   v-dialog(v-model="taskDialog" max-width="800px")
     v-card(v-if="taskDialog")
@@ -304,7 +304,7 @@ v-container
         @delete="deleteTask"
         @complete="completeTask"
       )
-  
+
   // Note dialog
   v-dialog(v-model="noteDialog" max-width="800px")
     v-card(v-if="noteDialog")
@@ -316,14 +316,14 @@ v-container
             :label="$t('common.title')"
             required
           )
-          
+
           v-textarea(
             v-model="noteContent"
             :label="$t('common.content')"
             rows="5"
             required
           )
-      
+
       v-card-actions
         v-spacer
         v-btn(
@@ -332,7 +332,7 @@ v-container
           :disabled="!canCreateNote || noteLoading"
           @click="submitNote"
         ) {{ editingNoteId ? $t('common.update') : $t('common.save') }}
-  
+
   // Meeting dialog
   v-dialog(v-model="meetingDialog" max-width="800px")
     v-card(v-if="meetingDialog")
@@ -430,7 +430,7 @@ const fileHint = ref('')
 const confirmDialog = reactive({
   open: false,
   title: '',
-  text: '',
+  text: ''
 })
 
 let pendingConfirm: (() => Promise<void>) | null = null
@@ -449,7 +449,7 @@ const projectId = computed(() => route.params.id as string)
 
 // Fetch project
 const fetchProject = async () => {
-  if (!projectId.value) return
+  if (!projectId.value) { return }
 
   loading.value = true
   error.value = ''
@@ -465,7 +465,7 @@ const fetchProject = async () => {
 
 const loadWorkspace = async () => {
   const pid = projectId.value
-  if (!pid) return
+  if (!pid) { return }
   await authStore.checkAuth()
   await fetchProject()
   if (!projectsStore.currentProject) {
@@ -480,9 +480,9 @@ const loadWorkspace = async () => {
   const results = await Promise.allSettled([
     tasksStore.fetchTasks(),
     meetingsStore.fetchMeetings(),
-    attachmentsStore.fetchForProject(pid),
+    attachmentsStore.fetchForProject(pid)
   ])
-  const rejected = results.find((result) => result.status === 'rejected')
+  const rejected = results.find(result => result.status === 'rejected')
   if (rejected && rejected.status === 'rejected') {
     console.error('[projects.loadWorkspace] partial load failure', rejected.reason)
   }
@@ -492,7 +492,7 @@ const loadWorkspace = async () => {
 watch(
   () => [projectId.value, authStore.user?.id, authStore.loading] as const,
   ([pid, uid, authLoading]) => {
-    if (!pid || !uid || authLoading) return
+    if (!pid || !uid || authLoading) { return }
     void loadWorkspace()
   },
   { immediate: true }
@@ -507,14 +507,14 @@ const attachmentLinks = computed(() => attachmentsStore.linksForProject(projectI
 const attachmentFiles = computed(() => attachmentsStore.filesForProject(projectId.value))
 const attachmentMailLinks = computed(() => attachmentsStore.mailLinksForProject(projectId.value))
 
-function meetingDisplayTitle(m: Meeting) {
+function meetingDisplayTitle (m: Meeting) {
   const any = m as Meeting & { subject?: string }
   return any.subject || m.title || t('common.none')
 }
 
-async function submitNewLink() {
+async function submitNewLink () {
   const pid = projectId.value
-  if (!pid || !newLinkUrl.value.trim()) return
+  if (!pid || !newLinkUrl.value.trim()) { return }
   if (!isValidHttpUrlForProject(newLinkUrl.value)) {
     notify.pushError(t('validation.invalidFormat'))
     return
@@ -538,13 +538,13 @@ async function submitNewLink() {
   }
 }
 
-function openEditLink(row: ProjectLink) {
+function openEditLink (row: ProjectLink) {
   editingLinkId.value = row.id
   newLinkUrl.value = row.url
   newLinkTitle.value = row.title || ''
 }
 
-function confirmRemoveLink(row: ProjectLink) {
+function confirmRemoveLink (row: ProjectLink) {
   confirmDialog.title = t('projects.removeLink')
   confirmDialog.text = row.url
   pendingConfirm = async () => {
@@ -554,17 +554,17 @@ function confirmRemoveLink(row: ProjectLink) {
   confirmDialog.open = true
 }
 
-function triggerFilePick() {
+function triggerFilePick () {
   fileInputRef.value?.click()
 }
 
-async function onProjectFileChange(ev: Event) {
+async function onProjectFileChange (ev: Event) {
   const input = ev.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
-  if (!file) return
+  if (!file) { return }
   const pid = projectId.value
-  if (!pid) return
+  if (!pid) { return }
   try {
     await attachmentsStore.uploadFile(pid, file)
     notify.pushSuccess(t('projects.fileUploaded'))
@@ -573,7 +573,7 @@ async function onProjectFileChange(ev: Event) {
   }
 }
 
-async function downloadProjectFile(f: ProjectFile) {
+async function downloadProjectFile (f: ProjectFile) {
   fileDownloadingId.value = f.id
   try {
     const url = await attachmentsStore.getFileDownloadUrl(f.storagePath)
@@ -585,7 +585,7 @@ async function downloadProjectFile(f: ProjectFile) {
   }
 }
 
-function confirmRemoveFile(f: ProjectFile) {
+function confirmRemoveFile (f: ProjectFile) {
   confirmDialog.title = t('projects.removeFile')
   confirmDialog.text = f.name
   pendingConfirm = async () => {
@@ -595,14 +595,14 @@ function confirmRemoveFile(f: ProjectFile) {
   confirmDialog.open = true
 }
 
-function openMailDeepLink(row: ProjectMailLink) {
+function openMailDeepLink (row: ProjectMailLink) {
   navigateTo({
     path: '/mail',
-    query: { accountId: row.accountId, emailId: row.emailId },
+    query: { accountId: row.accountId, emailId: row.emailId }
   })
 }
 
-function confirmRemoveMailLink(row: ProjectMailLink) {
+function confirmRemoveMailLink (row: ProjectMailLink) {
   confirmDialog.title = t('projects.removeMailLink')
   confirmDialog.text = row.subjectSnapshot || row.emailId
   pendingConfirm = async () => {
@@ -625,16 +625,16 @@ const openTaskDialog = () => {
 }
 
 const submitTask = async (taskData: Partial<Task>) => {
-  if (!project.value) return
-  
+  if (!project.value) { return }
+
   taskLoading.value = true
   taskError.value = ''
-  
+
   try {
     const payload = {
       ...taskData,
       relatedProjects: [project.value.id],
-      projectId: project.value.id,
+      projectId: project.value.id
     }
     if (editingTask.value) {
       await tasksStore.updateTask(editingTask.value.id, payload)
@@ -652,33 +652,33 @@ const submitTask = async (taskData: Partial<Task>) => {
       if (!isLinked) {
         await tasksStore.updateTask(createdId, {
           relatedProjects: [project.value.id],
-          projectId: project.value.id,
+          projectId: project.value.id
         })
       }
       // Ensure freshly persisted state is loaded from Firestore (throws on failure).
       await tasksStore.fetchTasks()
-      let visibleAfterReload = tasksStore.getByProject(project.value.id).some((task) => task.id === createdId)
+      let visibleAfterReload = tasksStore.getByProject(project.value.id).some(task => task.id === createdId)
       if (!visibleAfterReload) {
         // Self-heal persisted linkage and retry once.
         await tasksStore.updateTask(createdId, {
           relatedProjects: [project.value.id],
-          projectId: project.value.id,
+          projectId: project.value.id
         })
         await tasksStore.fetchTasks()
-        visibleAfterReload = tasksStore.getByProject(project.value.id).some((task) => task.id === createdId)
+        visibleAfterReload = tasksStore.getByProject(project.value.id).some(task => task.id === createdId)
       }
       if (!visibleAfterReload) {
         // Final fallback: load the created task directly and upsert it locally.
         await tasksStore.fetchTask(createdId)
         const persisted = tasksStore.currentTask
         if (persisted) {
-          const idx = tasksStore.tasks.findIndex((task) => task.id === createdId)
+          const idx = tasksStore.tasks.findIndex(task => task.id === createdId)
           if (idx === -1) {
             tasksStore.tasks.push(persisted)
           } else {
             tasksStore.tasks[idx] = persisted
           }
-          visibleAfterReload = tasksStore.getByProject(project.value.id).some((task) => task.id === createdId)
+          visibleAfterReload = tasksStore.getByProject(project.value.id).some(task => task.id === createdId)
         }
       }
       if (!visibleAfterReload) {
@@ -686,7 +686,7 @@ const submitTask = async (taskData: Partial<Task>) => {
         console.warn('[project-task] created task not immediately visible in project filter', {
           createdId,
           projectId: project.value.id,
-          createdTask: tasksStore.getById(createdId),
+          createdTask: tasksStore.getById(createdId)
         })
       }
       notify.pushSuccess(t('common.save'))
@@ -709,7 +709,7 @@ const openProjectTask = (task: Task) => {
 }
 
 const deleteTask = async () => {
-  if (!editingTask.value) return
+  if (!editingTask.value) { return }
   taskLoading.value = true
   taskError.value = ''
   try {
@@ -725,7 +725,7 @@ const deleteTask = async () => {
 }
 
 const completeTask = async () => {
-  if (!editingTask.value) return
+  if (!editingTask.value) { return }
   taskLoading.value = true
   taskError.value = ''
   try {
@@ -768,16 +768,16 @@ const openNoteDialog = () => {
 const canCreateNote = computed(() => hasTrimmedText(noteTitle.value) && hasTrimmedText(noteContent.value))
 
 const submitNote = async () => {
-  if (!project.value || !canCreateNote.value) return
-  
+  if (!project.value || !canCreateNote.value) { return }
+
   noteLoading.value = true
   noteError.value = ''
-  
+
   try {
     if (editingNoteId.value) {
       await projectsStore.updateProjectPage(editingNoteId.value, {
         title: noteTitle.value.trim(),
-        content: noteContent.value.trim(),
+        content: noteContent.value.trim()
       })
       notify.pushSuccess(t('common.update'))
     } else {
@@ -832,11 +832,11 @@ const openMeetingDialog = () => {
 }
 
 const submitMeeting = async (meetingData: MeetingFormInput) => {
-  if (!project.value) return
-  
+  if (!project.value) { return }
+
   meetingLoading.value = true
   meetingError.value = ''
-  
+
   try {
     // Add the project ID to the related projects array
     const updatedMeetingData = {
@@ -879,19 +879,19 @@ const confirmRemoveMeeting = (meeting: Meeting) => {
 
 // Helper functions
 const formatDate = (date: Date | null) => {
-  if (!date) return ''
+  if (!date) { return '' }
   return new Date(date).toLocaleDateString()
 }
 
 const getPersonInitials = (id: string) => {
   const person = peopleStore.getById(id)
-  if (!person) return '?'
+  if (!person) { return '?' }
   return `${person.firstName.charAt(0)}${person.lastName.charAt(0)}`
 }
 
 const getPersonName = (id: string) => {
   const person = peopleStore.getById(id)
-  if (!person) return t('common.unknown')
+  if (!person) { return t('common.unknown') }
   return `${person.firstName} ${person.lastName}`
 }
 
@@ -912,21 +912,21 @@ const getStatusColor = (status: string) => {
 }
 
 const isLightColor = (colorValue: string) => {
-  if (!colorValue) return false;
-  
+  if (!colorValue) { return false }
+
   // These colors are known to be light
   const lightColors = [
-    'light-blue', 
-    'light-green', 
-    'amber', 
-    'yellow', 
-    'lime', 
-    'grey-lighten-3', 
+    'light-blue',
+    'light-green',
+    'amber',
+    'yellow',
+    'lime',
+    'grey-lighten-3',
     'grey-lighten-4',
     'grey-lighten-5'
-  ];
-  
-  return lightColors.some(c => colorValue?.includes(c));
+  ]
+
+  return lightColors.some(c => colorValue?.includes(c))
 }
 
 const getStatusColorLight = (status: string) => {
@@ -988,11 +988,11 @@ const showEditDialog = () => {
 }
 
 const updateProject = async (projectData: Partial<Project>) => {
-  if (!project.value) return
-  
+  if (!project.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await projectsStore.updateProject(project.value.id, projectData)
     editDialog.value = false
@@ -1004,11 +1004,11 @@ const updateProject = async (projectData: Partial<Project>) => {
 }
 
 const deleteProject = async () => {
-  if (!project.value) return
-  
+  if (!project.value) { return }
+
   formLoading.value = true
   formError.value = ''
-  
+
   try {
     await projectsStore.deleteProject(project.value.id)
     editDialog.value = false

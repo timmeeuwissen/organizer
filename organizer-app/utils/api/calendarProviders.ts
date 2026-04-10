@@ -3,11 +3,11 @@
  * Please use the modular imports from './calendarProviders/' directory instead.
  */
 
-import type { IntegrationAccount } from '~/types/models'
 import type { CalendarProvider } from './calendarProviders/CalendarProvider'
 import { GoogleCalendarProvider } from './calendarProviders/GoogleCalendarProvider'
 import { Office365CalendarProvider } from './calendarProviders/Office365CalendarProvider'
 import { ExchangeCalendarProvider } from './calendarProviders/ExchangeCalendarProvider'
+import type { IntegrationAccount } from '~/types/models'
 
 // Important: We're not using export * to avoid circular dependency issues
 // Instead, we're explicitly exporting functions needed by the application
@@ -17,7 +17,7 @@ import { ExchangeCalendarProvider } from './calendarProviders/ExchangeCalendarPr
  * @param account The integration account
  * @returns Provider implementation for the account type
  */
-export function getCalendarProvider(account: IntegrationAccount): CalendarProvider {
+export function getCalendarProvider (account: IntegrationAccount): CalendarProvider {
   switch (account.type) {
     case 'google':
       return new GoogleCalendarProvider(account)
@@ -34,7 +34,7 @@ export function getCalendarProvider(account: IntegrationAccount): CalendarProvid
  * Alias for getCalendarProvider for backward compatibility
  * @deprecated Use getCalendarProvider instead
  */
-export function createCalendarProvider(account: IntegrationAccount): CalendarProvider {
+export function createCalendarProvider (account: IntegrationAccount): CalendarProvider {
   return getCalendarProvider(account)
 }
 

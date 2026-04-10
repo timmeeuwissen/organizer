@@ -65,7 +65,7 @@ onMounted(async () => {
   loading.value = true
   await Promise.all([
     peopleStore.people.length === 0 ? peopleStore.fetchPeople() : Promise.resolve(),
-    knowledgeStore.bootstrapped ? Promise.resolve() : knowledgeStore.load(),
+    knowledgeStore.bootstrapped ? Promise.resolve() : knowledgeStore.load()
   ])
   loading.value = false
 })

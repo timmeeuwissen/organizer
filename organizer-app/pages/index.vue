@@ -24,7 +24,7 @@ onMounted(async () => {
   try {
     // Check if user is authenticated
     await authStore.checkAuth()
-    
+
     if (authStore.isAuthenticated) {
       // If authenticated, go to dashboard
       router.replace('/dashboard')

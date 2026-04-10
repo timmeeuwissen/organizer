@@ -19,11 +19,11 @@ export interface TeamBoardDisplayOptions {
 export const DEFAULT_TEAM_BOARD_DISPLAY: TeamBoardDisplayOptions = {
   density: 'normal',
   showRecentMail: true,
-  showTasks: true,
+  showTasks: true
 }
 
-export function mergeTeamBoardDisplay(
-  partial: Partial<TeamBoardDisplayOptions> | null | undefined,
+export function mergeTeamBoardDisplay (
+  partial: Partial<TeamBoardDisplayOptions> | null | undefined
 ): TeamBoardDisplayOptions {
   const d = partial?.density
   const density: TeamBoardDensity =
@@ -37,6 +37,6 @@ export function mergeTeamBoardDisplay(
     showTasks:
       typeof partial?.showTasks === 'boolean'
         ? partial.showTasks
-        : DEFAULT_TEAM_BOARD_DISPLAY.showTasks,
+        : DEFAULT_TEAM_BOARD_DISPLAY.showTasks
   }
 }

@@ -7,14 +7,14 @@ v-form(
 )
   v-card
     v-card-title {{ isEdit ? $t('behaviors.edit') : $t('behaviors.add') }}
-    
+
     v-card-text
       v-alert(
         v-if="error"
         type="error"
         class="mb-4"
       ) {{ error }}
-      
+
       v-select(
         v-model="type"
         :items="behaviorTypes"
@@ -25,7 +25,7 @@ v-form(
         required
         data-test="behavior-type"
       )
-      
+
       v-text-field(
         v-model="title"
         :label="$t('behaviors.title')"
@@ -33,7 +33,7 @@ v-form(
         required
         data-test="behavior-title"
       )
-      
+
       v-textarea(
         v-model="rationale"
         :label="$t('behaviors.rationale')"
@@ -42,7 +42,7 @@ v-form(
         rows="3"
         data-test="behavior-rationale"
       )
-      
+
       v-combobox(
         v-model="examples"
         :label="$t('behaviors.examples')"
@@ -53,7 +53,7 @@ v-form(
         persistent-hint
         data-test="behavior-examples"
       )
-      
+
       v-combobox(
         v-model="categories"
         :label="$t('behaviors.category')"
@@ -64,7 +64,7 @@ v-form(
         persistent-hint
         data-test="behavior-categories"
       )
-    
+
     v-card-actions
       v-spacer
       v-btn(
@@ -85,7 +85,7 @@ v-form(
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import type { Behavior } from '~/types/models'
 
 const props = defineProps({
@@ -105,6 +105,8 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'delete'])
 
+const { setNavigationDirty } = useUnsavedChanges()
+
 const form = ref(null)
 const valid = ref(false)
 
@@ -114,6 +116,13 @@ const title = ref(props.behavior?.title || '')
 const rationale = ref(props.behavior?.rationale || '')
 const examples = ref(props.behavior?.examples || [])
 const categories = ref(props.behavior?.categories || [])
+
+// Mark dirty when any form field changes
+watch(
+  [type, title, rationale, examples, categories],
+  () => { setNavigationDirty(true) },
+  { deep: true }
+)
 
 // Behavior types
 const behaviorTypes = [
@@ -132,8 +141,8 @@ const isEdit = computed(() => !!props.behavior)
 
 // Submit function
 const submit = () => {
-  if (!valid.value) return
-  
+  if (!valid.value) { return }
+
   const behaviorData: Partial<Behavior> = {
     type: type.value as 'doWell' | 'wantToDoBetter' | 'needToImprove',
     title: title.value,
@@ -141,7 +150,8 @@ const submit = () => {
     examples: examples.value,
     categories: categories.value
   }
-  
+
+  setNavigationDirty(false)
   emit('submit', behaviorData)
 }
 

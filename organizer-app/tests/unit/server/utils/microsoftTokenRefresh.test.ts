@@ -17,7 +17,7 @@ describe('exchangeMicrosoftRefreshToken', () => {
           access_token: 'at',
           expires_in: 3600,
           token_type: 'Bearer',
-          scope: 'Mail.Read',
+          scope: 'Mail.Read'
         }),
         { status: 200, headers: { 'content-type': 'application/json' } }
       )
@@ -42,7 +42,7 @@ describe('exchangeMicrosoftRefreshToken', () => {
       new Response(
         JSON.stringify({
           error: 'invalid_grant',
-          error_description: 'Refresh token expired',
+          error_description: 'Refresh token expired'
         }),
         { status: 400, headers: { 'content-type': 'application/json' } }
       )
@@ -65,7 +65,7 @@ describe('exchangeMicrosoftRefreshToken', () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response(JSON.stringify({ token_type: 'Bearer' }), {
         status: 200,
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json' }
       })
     )
 

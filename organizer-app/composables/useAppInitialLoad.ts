@@ -19,14 +19,14 @@ const P = {
   pageStart: 58,
   pageFinish: 72,
   fontsReady: 88,
-  done: 100,
+  done: 100
 } as const
 
 /**
  * Tracks the first paint of the Nuxt app after the initial route’s async work
  * (page Suspense resolve / chunk load). Use a fullscreen overlay until this is true.
  */
-export function useAppInitialLoad() {
+export function useAppInitialLoad () {
   const isBootComplete = ref(false)
   const bootProgress = ref(0)
 
@@ -48,7 +48,7 @@ export function useAppInitialLoad() {
   bumpProgress(P.client)
 
   const reveal = () => {
-    if (settled) return
+    if (settled) { return }
     settled = true
     bumpProgress(P.done)
     const wait =
@@ -88,7 +88,7 @@ export function useAppInitialLoad() {
     watch(
       isBootComplete,
       (done) => {
-        if (done) window.clearTimeout(id)
+        if (done) { window.clearTimeout(id) }
       },
       { immediate: true }
     )

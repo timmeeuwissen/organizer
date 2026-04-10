@@ -9,7 +9,7 @@ describe('NotificationSnackbar', () => {
     setActivePinia(createPinia())
   })
 
-  function mount(props = {}) {
+  function mount (props = {}) {
     return shallowMount(NotificationSnackbar, { props })
   }
 

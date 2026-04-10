@@ -6,7 +6,7 @@ const BodySchema = z.object({
   port: z.number().int().positive(),
   encryption: z.enum(['none', 'tls', 'starttls']),
   username: z.string().min(1),
-  password: z.string().min(1),
+  password: z.string().min(1)
 })
 
 /**
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid request body',
-      data: parsed.error.flatten(),
+      data: parsed.error.flatten()
     })
   }
 
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
       secure: encryption === 'tls',
       auth: { user: username, pass: password },
       tls: encryption === 'starttls' ? { rejectUnauthorized: false } : undefined,
-      logger: false,
+      logger: false
     })
 
     await client.connect()
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
   } catch (err: any) {
     throw createError({
       statusCode: 500,
-      statusMessage: err.message || 'IMAP folder listing failed',
+      statusMessage: err.message || 'IMAP folder listing failed'
     })
   }
 })

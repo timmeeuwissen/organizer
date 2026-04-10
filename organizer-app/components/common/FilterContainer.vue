@@ -1,6 +1,6 @@
 <template lang="pug">
 v-card(class="mb-4")
-  v-card-title.d-flex 
+  v-card-title.d-flex
     span {{ title }}
     v-spacer
     v-btn(
@@ -12,7 +12,7 @@ v-card(class="mb-4")
       color="error"
     )
       v-icon mdi-filter-remove
-      
+
   v-card-text
     // Search filter
     v-text-field(
@@ -27,7 +27,7 @@ v-card(class="mb-4")
       clearable
       @update:model-value="$emit('search-change', $event)"
     )
-    
+
     // Provider accounts section
     template(v-if="accounts && accounts.length > 0")
       div.mb-4
@@ -47,7 +47,7 @@ v-card(class="mb-4")
               v-icon(v-if="account.icon" :icon="account.icon" size="small" color="white")
               span(v-else class="text-white") {{ (account.provider || account.name || 'A').substring(0, 1).toUpperCase() }}
             | {{ account.name || account.provider || 'Account' }}
-    
+
     // Select filters (dropdowns)
     template(v-if="selectFilters && selectFilters.length > 0")
       div(v-for="(filter, index) in selectFilters" :key="`select-${index}`" class="mb-4")
@@ -64,7 +64,7 @@ v-card(class="mb-4")
           density="compact"
           @update:model-value="emitFilterChange"
         )
-    
+
     // Switch filters (toggle)
     template(v-if="switchFilters && switchFilters.length > 0")
       div(v-for="(filter, index) in switchFilters" :key="`switch-${index}`" class="mb-2")
@@ -75,12 +75,12 @@ v-card(class="mb-4")
           hide-details
           @update:model-value="emitFilterChange"
         )
-    
+
     // Checkbox filters (with collapsible sections)
     template(v-if="checkboxFilters && checkboxFilters.length > 0")
       v-expansion-panels(variant="accordion")
         v-expansion-panel(
-          v-for="(filter, index) in checkboxFilters" 
+          v-for="(filter, index) in checkboxFilters"
           :key="`checkbox-${index}`"
         )
           v-expansion-panel-title
@@ -104,7 +104,7 @@ v-card(class="mb-4")
               class="mb-2"
               clearable
             )
-            
+
             // Scrollable container for checkbox list
             div(style="max-height: 200px; overflow-y: auto")
               v-checkbox(
@@ -118,12 +118,12 @@ v-card(class="mb-4")
                 class="mb-1"
                 @update:model-value="emitFilterChange"
               )
-    
+
     // Chip filters (tags)
     template(v-if="chipFilters && chipFilters.length > 0")
       v-expansion-panels(variant="accordion")
         v-expansion-panel(
-          v-for="(filter, index) in chipFilters" 
+          v-for="(filter, index) in chipFilters"
           :key="`chip-${index}`"
         )
           v-expansion-panel-title
@@ -147,7 +147,7 @@ v-card(class="mb-4")
               class="mb-2"
               clearable
             )
-            
+
             // Scrollable container for chip list
             div(style="max-height: 200px; overflow-y: auto")
               v-chip-group(v-model="filter.selected" multiple column class="filter-chip-group")
@@ -214,7 +214,7 @@ const props = defineProps({
     type: String,
     required: true
   },
-  
+
   // For main search functionality
   searchable: {
     type: Boolean,
@@ -224,7 +224,7 @@ const props = defineProps({
     type: String,
     default: 'Search'
   },
-  
+
   // Provider accounts
   accounts: {
     type: Array as () => ProviderAccount[],
@@ -238,7 +238,7 @@ const props = defineProps({
     type: String,
     default: 'Accounts'
   },
-  
+
   // Different types of filters
   selectFilters: {
     type: Array as () => SelectFilter[],
@@ -260,8 +260,8 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits([
-  'update:modelValue', 
-  'search-change', 
+  'update:modelValue',
+  'search-change',
   'filter-change',
   'clear-filters'
 ])
@@ -280,13 +280,13 @@ const isProviderSelected = (providerId: string): boolean => {
 const toggleProvider = (providerId: string): void => {
   const newValue = [...props.modelValue]
   const index = newValue.indexOf(providerId)
-  
+
   if (index === -1) {
     newValue.push(providerId)
   } else {
     newValue.splice(index, 1)
   }
-  
+
   emit('update:modelValue', newValue)
   emitFilterChange()
 }
@@ -294,40 +294,40 @@ const toggleProvider = (providerId: string): void => {
 // Computed to determine if any filters are active
 const hasFilters = computed(() => {
   // Check search
-  if (searchText.value) return true
-  
+  if (searchText.value) { return true }
+
   // Check providers
-  if (props.modelValue.length > 0 && props.modelValue.length < props.accounts.length) return true
-  
+  if (props.modelValue.length > 0 && props.modelValue.length < props.accounts.length) { return true }
+
   // Check select filters
   if (props.selectFilters) {
     for (const filter of props.selectFilters) {
-      if (filter.multiple && filter.selected && filter.selected.length > 0) return true
-      if (!filter.multiple && filter.selected) return true
+      if (filter.multiple && filter.selected && filter.selected.length > 0) { return true }
+      if (!filter.multiple && filter.selected) { return true }
     }
   }
-  
+
   // Check switch filters
   if (props.switchFilters) {
     for (const filter of props.switchFilters) {
-      if (filter.selected) return true
+      if (filter.selected) { return true }
     }
   }
-  
+
   // Check checkbox filters
   if (props.checkboxFilters) {
     for (const filter of props.checkboxFilters) {
-      if (filter.selected && filter.selected.length > 0) return true
+      if (filter.selected && filter.selected.length > 0) { return true }
     }
   }
-  
+
   // Check chip filters
   if (props.chipFilters) {
     for (const filter of props.chipFilters) {
-      if (filter.selected && filter.selected.length > 0) return true
+      if (filter.selected && filter.selected.length > 0) { return true }
     }
   }
-  
+
   return false
 })
 
@@ -358,12 +358,12 @@ const getItemLabel = (item: FilterItem | string): string => {
 
 // Filter items based on search
 const getFilteredItems = (items: FilterItem[], index: number): FilterItem[] => {
-  if (!items) return []
-  
+  if (!items) { return [] }
+
   const searchTerm = filterSearches.value[index]
-  if (!searchTerm) return items
-  
-  return items.filter(item => {
+  if (!searchTerm) { return items }
+
+  return items.filter((item) => {
     const label = getItemLabel(item).toLowerCase()
     return label.includes(searchTerm.toLowerCase())
   })
@@ -371,12 +371,12 @@ const getFilteredItems = (items: FilterItem[], index: number): FilterItem[] => {
 
 // Filter chip items based on search
 const getFilteredChipItems = (items: FilterItem[], index: number): FilterItem[] => {
-  if (!items) return []
-  
+  if (!items) { return [] }
+
   const searchTerm = chipFilterSearches.value[index]
-  if (!searchTerm) return items
-  
-  return items.filter(item => {
+  if (!searchTerm) { return items }
+
+  return items.filter((item) => {
     const label = getItemLabel(item).toLowerCase()
     return label.includes(searchTerm.toLowerCase())
   })
@@ -387,11 +387,11 @@ const clearFilters = () => {
   // Clear search
   searchText.value = ''
   emit('search-change', '')
-  
+
   // Clear filter searches
   filterSearches.value = {}
   chipFilterSearches.value = {}
-  
+
   // Emit the clear event for parent to handle
   emit('clear-filters')
 }
@@ -405,7 +405,7 @@ const emitFilterChange = () => {
     checkboxFilters: props.checkboxFilters,
     chipFilters: props.chipFilters
   }
-  
+
   emit('filter-change', filterData)
 }
 

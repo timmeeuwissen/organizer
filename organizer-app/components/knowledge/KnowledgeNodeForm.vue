@@ -136,7 +136,7 @@ const emit = defineEmits<{
 
 const internalModel = computed({
   get: () => props.modelValue,
-  set: (v) => emit('update:modelValue', v),
+  set: v => emit('update:modelValue', v)
 })
 
 const isRelationOnly = computed(() => props.edge !== null && props.knowledge !== null && false)
@@ -154,7 +154,7 @@ const form = ref({
   certaintyDate: new Date() as Date,
   tags: [] as string[],
   relationType: 'references' as EdgeType,
-  relationLabel: '',
+  relationLabel: ''
 })
 
 const attachEntityType = ref<NodeType | null>(null)
@@ -162,7 +162,7 @@ const attachEntityId = ref<string | null>(null)
 
 watch(() => props.modelValue, (open) => {
   saving.value = false
-  if (!open) return
+  if (!open) { return }
   if (props.knowledge) {
     form.value = {
       content: props.knowledge.content,
@@ -171,14 +171,18 @@ watch(() => props.modelValue, (open) => {
       certaintyDate: props.knowledge.certaintyDate instanceof Date ? props.knowledge.certaintyDate : new Date(props.knowledge.certaintyDate),
       tags: [...props.knowledge.tags],
       relationType: (props.edge?.relationType ?? 'references') as EdgeType,
-      relationLabel: props.edge?.label ?? '',
+      relationLabel: props.edge?.label ?? ''
     }
     attachEntityType.value = null
     attachEntityId.value = null
   } else {
     form.value = {
-      content: '', subtype: 'observation', certainty: 0.7,
-      tags: [], relationType: 'references', relationLabel: '',
+      content: '',
+      subtype: 'observation',
+      certainty: 0.7,
+      tags: [],
+      relationType: 'references',
+      relationLabel: ''
     }
     attachEntityType.value = props.lockedEntity?.nodeType ?? null
     attachEntityId.value = props.lockedEntity?.entityId ?? null
@@ -188,14 +192,14 @@ watch(() => props.modelValue, (open) => {
 const subtypeItems = computed(() =>
   (['observation', 'concept', 'reason', 'fact', 'insight', 'pattern'] as KnowledgeSubtype[]).map(v => ({
     title: t(`knowledge.subtypes.${v}`),
-    value: v,
+    value: v
   }))
 )
 
 const entityTypeItems = computed(() =>
   (['person', 'project', 'task', 'behavior', 'meeting', 'team', 'coaching'] as NodeType[]).map(v => ({
     title: t(`network.nodeType.${v}`),
-    value: v,
+    value: v
   }))
 )
 
@@ -203,7 +207,7 @@ const relationTypeItems = computed(() => [
   { title: t('knowledge.relationTypes.references'), value: 'references' },
   { title: t('knowledge.relationTypes.related'), value: 'related' },
   { title: t('knowledge.relationTypes.contains'), value: 'contains' },
-  { title: t('knowledge.relationTypes.stakeholder'), value: 'stakeholder' },
+  { title: t('knowledge.relationTypes.stakeholder'), value: 'stakeholder' }
 ])
 
 const entityItems = computed(() => {
@@ -219,7 +223,7 @@ const entityItems = computed(() => {
   }
 })
 
-async function submit() {
+async function submit () {
   // #region agent log
   debugAgentLog({ hypothesisId: 'H4', location: 'components/knowledge/KnowledgeNodeForm.vue:submit:pre-validate', message: 'Knowledge form submit called', data: { hasKnowledge: !!props.knowledge, contentLength: form.value.content?.length ?? 0, certaintyDateType: typeof form.value.certaintyDate, hasCertaintyDate: !!form.value.certaintyDate, attachEntityType: attachEntityType.value, attachEntityIdPresent: !!attachEntityId.value } })
   // #endregion
@@ -227,7 +231,7 @@ async function submit() {
   // #region agent log
   debugAgentLog({ hypothesisId: 'H1', location: 'components/knowledge/KnowledgeNodeForm.vue:submit:post-validate', message: 'Knowledge form validation result', data: { valid: v, certaintyDateType: typeof form.value.certaintyDate, certaintyDateIso: form.value.certaintyDate instanceof Date ? form.value.certaintyDate.toISOString() : null, tagsCount: Array.isArray(form.value.tags) ? form.value.tags.length : 0 } })
   // #endregion
-  if (!v) return
+  if (!v) { return }
   saving.value = true
   emit('submit', {
     content: form.value.content,
@@ -239,7 +243,7 @@ async function submit() {
     ...(form.value.relationLabel ? { relationLabel: form.value.relationLabel } : {}),
     ...(attachEntityType.value && attachEntityId.value
       ? { entityType: attachEntityType.value, entityId: attachEntityId.value }
-      : {}),
+      : {})
   })
 }
 </script>

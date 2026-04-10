@@ -2,14 +2,14 @@
  * Dev-only agent debug logging: writes NDJSON via Nitro (see server/api/debug/agent-log.post.ts).
  * Avoids cross-origin browser calls to the Cursor ingest server.
  */
-export function debugAgentLog(entry: {
+export function debugAgentLog (entry: {
   hypothesisId: string
   location: string
   message: string
   data?: Record<string, unknown>
   runId?: string
 }) {
-  if (!import.meta.client) return
+  if (!import.meta.client) { return }
   void $fetch('/api/debug/agent-log', {
     method: 'POST',
     body: {
@@ -19,7 +19,7 @@ export function debugAgentLog(entry: {
       location: entry.location,
       message: entry.message,
       data: entry.data,
-      timestamp: Date.now(),
-    },
+      timestamp: Date.now()
+    }
   }).catch(() => {})
 }

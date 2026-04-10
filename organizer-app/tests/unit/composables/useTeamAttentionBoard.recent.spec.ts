@@ -4,18 +4,18 @@ import type { Email } from '~/stores/mail'
 import {
   emailInvolvesPerson,
   recentInboxEmailsForPerson,
-  taskBoardItemsForPerson,
+  taskBoardItemsForPerson
 } from '~/composables/useTeamAttentionBoard'
 import type { TeamBoardItem } from '~/composables/useTeamAttentionBoard'
 
-function em(partial: Partial<Email> & Pick<Email, 'id' | 'subject' | 'date'>): Email {
+function em (partial: Partial<Email> & Pick<Email, 'id' | 'subject' | 'date'>): Email {
   return {
     from: { name: '', email: 'a@x.com' },
     to: [],
     body: '',
     read: true,
     folder: 'inbox',
-    ...partial,
+    ...partial
   }
 }
 
@@ -27,7 +27,7 @@ describe('emailInvolvesPerson', () => {
     lastName: 'L',
     email: 'alice@example.com',
     createdAt: new Date(),
-    updatedAt: new Date(),
+    updatedAt: new Date()
   }
 
   it('matches from address (case-insensitive)', () => {
@@ -35,7 +35,7 @@ describe('emailInvolvesPerson', () => {
       id: '1',
       subject: 'Hi',
       date: new Date(),
-      from: { name: 'A', email: 'Alice@Example.com' },
+      from: { name: 'A', email: 'Alice@Example.com' }
     })
     expect(emailInvolvesPerson(e, alice)).toBe(true)
   })
@@ -46,7 +46,7 @@ describe('emailInvolvesPerson', () => {
       subject: 'Hi',
       date: new Date(),
       from: { name: 'B', email: 'bob@example.com' },
-      to: [{ name: 'A', email: 'alice@example.com' }],
+      to: [{ name: 'A', email: 'alice@example.com' }]
     })
     expect(emailInvolvesPerson(e, alice)).toBe(true)
     const e2 = em({
@@ -55,7 +55,7 @@ describe('emailInvolvesPerson', () => {
       date: new Date(),
       from: { name: 'B', email: 'bob@example.com' },
       to: [],
-      cc: [{ name: 'A', email: 'alice@example.com' }],
+      cc: [{ name: 'A', email: 'alice@example.com' }]
     })
     expect(emailInvolvesPerson(e2, alice)).toBe(true)
   })
@@ -75,7 +75,7 @@ describe('recentInboxEmailsForPerson', () => {
     lastName: 'B',
     email: 'bob@example.com',
     createdAt: new Date(),
-    updatedAt: new Date(),
+    updatedAt: new Date()
   }
 
   it('returns latest inbox threads involving person up to limit', () => {
@@ -87,7 +87,7 @@ describe('recentInboxEmailsForPerson', () => {
         subject: 'old',
         date: older,
         folder: 'inbox',
-        from: { name: 'B', email: 'bob@example.com' },
+        from: { name: 'B', email: 'bob@example.com' }
       }),
       em({
         id: 'b',
@@ -95,28 +95,28 @@ describe('recentInboxEmailsForPerson', () => {
         date: newer,
         folder: 'inbox',
         from: { name: 'X', email: 'x@y.com' },
-        to: [{ name: 'B', email: 'bob@example.com' }],
+        to: [{ name: 'B', email: 'bob@example.com' }]
       }),
       em({
         id: 'c',
         subject: 'sent',
         date: newer,
         folder: 'sent',
-        from: { name: 'B', email: 'bob@example.com' },
-      }),
+        from: { name: 'B', email: 'bob@example.com' }
+      })
     ]
     const r = recentInboxEmailsForPerson(emails, bob, 10)
-    expect(r.map((x) => x.id)).toEqual(['b', 'a'])
+    expect(r.map(x => x.id)).toEqual(['b', 'a'])
   })
 
   it('respects limit', () => {
-    const emails = [1, 2, 3, 4].map((n) =>
+    const emails = [1, 2, 3, 4].map(n =>
       em({
         id: String(n),
         subject: `s${n}`,
         date: new Date(2024, 0, n),
-        from: { name: 'B', email: 'bob@example.com' },
-      }),
+        from: { name: 'B', email: 'bob@example.com' }
+      })
     )
     const r = recentInboxEmailsForPerson(emails, bob, 2)
     expect(r).toHaveLength(2)
@@ -129,7 +129,7 @@ describe('taskBoardItemsForPerson', () => {
   it('filters task items by personId', () => {
     const items = [
       { kind: 'task' as const, task: { id: 't1' } as any, personId: 'a', weight: 1 },
-      { kind: 'task' as const, task: { id: 't2' } as any, personId: 'b', weight: 1 },
+      { kind: 'task' as const, task: { id: 't2' } as any, personId: 'b', weight: 1 }
     ] as TeamBoardItem[]
     expect(taskBoardItemsForPerson(items, 'b')).toHaveLength(1)
     expect(taskBoardItemsForPerson(items, 'b')[0].kind).toBe('task')

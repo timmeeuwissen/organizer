@@ -3,7 +3,7 @@ v-container(fluid)
   v-row
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('calendar.title') }}
-      
+
   template(v-if="!hasCalendarIntegrations")
     v-row(justify="center" align="center" class="mt-4")
       v-col(cols="12" md="8")
@@ -17,7 +17,7 @@ v-container(fluid)
               :to="'/auth/profile'"
               prepend-icon="mdi-account-cog"
             ) {{ $t('calendar.goToProfile') }}
-  
+
   v-row(v-else)
     v-col(cols="12" md="3")
       v-card(class="mb-4")
@@ -27,20 +27,20 @@ v-container(fluid)
           elevation="0"
           width="100%"
         )
-      
+
       ModuleIntegrationAccountFilter(
         module-segment="calendar"
         v-model="selectedProviders"
         class="mb-4"
       )
-        
+
       FilterContainer(
         :title="$t('common.filters')"
         :switchFilters="switchFilters"
         @filter-change="handleFilterChange"
         @clear-filters="clearFilters"
       )
-            
+
     v-col(cols="12" md="9")
       v-card
         v-card-title.d-flex
@@ -49,7 +49,7 @@ v-container(fluid)
             @update:view="currentView = $event"
             @navigate="handleNavigation"
           )
-              
+
         v-card-text
           template(v-if="currentView === 'month'")
             MonthView(
@@ -59,7 +59,7 @@ v-container(fluid)
               @day-click="selectDay"
               @week-click="selectWeek"
             )
-                      
+
           template(v-else-if="currentView === 'week'")
             WeekView(
               :week-view-days="weekViewDays"
@@ -68,7 +68,7 @@ v-container(fluid)
               :get-events-for-hour="getEventsForHour"
               @day-header-click="selectDayFromWeekView"
             )
-                  
+
           template(v-else-if="currentView === 'day'")
             DayView(
               :selected-date="new Date(selectedDate)"
@@ -76,13 +76,13 @@ v-container(fluid)
               :calendars="calendarStore.calendars"
               :get-events-for-hour="getEventsForHour"
             )
-                  
+
           template(v-else)
             ScheduleView(
               :selected-date="new Date(selectedDate)"
               :events="selectedDateEvents"
             )
-        
+
         v-card-actions
           v-spacer
           //- todo: new meetings should be made in a popup
@@ -165,31 +165,30 @@ const hours = Array.from(Array(24).keys())
 onMounted(async () => {
   try {
     loading.value = true
-    
+
     // Fetch tasks
     await tasksStore.fetchTasks()
-    
+
     // Load calendar events from integrations
     if (hasCalendarIntegrations.value) {
       // Set date range for calendar query
       const today = new Date()
       const startDate = new Date(today)
       startDate.setDate(1) // First day of current month
-      
+
       const endDate = new Date(today)
       endDate.setMonth(endDate.getMonth() + 1)
       endDate.setDate(0) // Last day of current month
-      
+
       // Fetch events from calendar integrations
       await calendarStore.fetchEvents({
         startDate,
         endDate
       })
-      
+
       // Fetch available calendars
       await calendarStore.fetchCalendars()
     }
-    
   } catch (error) {
     console.error('Failed to load calendar data:', error)
   } finally {
@@ -245,27 +244,27 @@ watch([showMeetings, showTasks, showCompletedTasks], () => {
 watch(selectedDate, (newDate) => {
   if (hasCalendarIntegrations.value) {
     const date = new Date(newDate)
-    
+
     // When changing months, fetch events for the new month
     if (currentView.value === 'month') {
       const startDate = new Date(date.getFullYear(), date.getMonth(), 1)
       const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0)
-      
+
       calendarStore.fetchEvents({
         startDate,
         endDate
       })
-    } 
+    }
     // For week view, fetch events for that week
     else if (currentView.value === 'week') {
       const day = date.getDay()
       const diff = date.getDate() - day
       const startDate = new Date(date)
       startDate.setDate(diff)
-      
+
       const endDate = new Date(startDate)
       endDate.setDate(startDate.getDate() + 7)
-      
+
       calendarStore.fetchEvents({
         startDate,
         endDate
@@ -276,23 +275,23 @@ watch(selectedDate, (newDate) => {
 
 // Get provider color based on the account ID
 const getProviderColor = (accountId: string | undefined) => {
-  if (!accountId) return 'primary'
-  
+  if (!accountId) { return 'primary' }
+
   const account = connectedAccounts.value.find(acc => acc.id === accountId)
-  if (!account) return 'primary'
-  
+  if (!account) { return 'primary' }
+
   // Check if the account has a predefined color
   if (account.color) {
     return account.color
   }
-  
+
   // Generate deterministic color based on account ID
   let hash = 0
   const id = account.id
   for (let i = 0; i < id.length; i++) {
     hash = id.charCodeAt(i) + ((hash << 5) - hash)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }
@@ -303,24 +302,24 @@ const calendarDays = computed(() => {
   const firstDay = getFirstDayOfMonth(date)
   const daysInMonth = getDaysInMonth(date)
   const weeks = []
-  
+
   // Get the user's preferred week start day (0 = Sunday, 1 = Monday, etc.)
   const weekStartDay = getWeekStartDay()
-  
+
   // Calculate the day of week relative to the user's preferred start day
   // e.g., if week starts on Monday (1) and the first day is Wednesday (3), this would be 2
   let dayOfWeek = (firstDay.getDay() - weekStartDay + 7) % 7
-  
+
   // Create first week with days from previous month if needed
   let week: any[] = []
   const prevMonth = new Date(date)
   prevMonth.setMonth(prevMonth.getMonth() - 1)
   const daysInPrevMonth = getDaysInMonth(prevMonth)
-  
+
   for (let i = 0; i < dayOfWeek; i++) {
     const prevMonthDay: number = daysInPrevMonth - dayOfWeek + i + 1
     const dayDate: Date = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), prevMonthDay)
-    
+
     week.push({
       date: dayDate,
       dayNumber: prevMonthDay,
@@ -331,11 +330,11 @@ const calendarDays = computed(() => {
       hasEvents: getEventsForDay(dayDate).length > 0
     })
   }
-  
+
   // Add days for current month
   for (let day = 1; day <= daysInMonth; day++) {
     const dayDate = new Date(date.getFullYear(), date.getMonth(), day)
-    
+
     week.push({
       date: dayDate,
       dayNumber: day,
@@ -345,9 +344,9 @@ const calendarDays = computed(() => {
       events: getEventsForDay(dayDate),
       hasEvents: getEventsForDay(dayDate).length > 0
     })
-    
+
     dayOfWeek++
-    
+
     // Start a new week
     if (dayOfWeek === 7) {
       weeks.push(week)
@@ -355,7 +354,7 @@ const calendarDays = computed(() => {
       dayOfWeek = 0
     }
   }
-  
+
   // Add days for next month if last week is not complete
   if (week.length > 0 && week.length < 7) {
     const nextMonth = new Date(date)
@@ -364,7 +363,7 @@ const calendarDays = computed(() => {
     for (let i = week.length; i < 7; i++) {
       const nextMonthDay = i - week.length + 1
       const dayDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonthDay)
-      
+
       week.push({
         date: dayDate,
         dayNumber: nextMonthDay,
@@ -375,10 +374,10 @@ const calendarDays = computed(() => {
         hasEvents: getEventsForDay(dayDate).length > 0
       })
     }
-    
+
     weeks.push(week)
   }
-  
+
   return weeks
 })
 
@@ -387,14 +386,14 @@ const weekViewDays = computed(() => {
   const date = new Date(selectedDate.value)
   // Use the helper function to get the first day of the week based on user preference
   const firstDayOfWeek = getFirstDayOfWeek(date)
-  
+
   const days = []
   const dayNamesArray = weekDays.value
-  
+
   for (let i = 0; i < 7; i++) {
     const dayDate = new Date(firstDayOfWeek)
     dayDate.setDate(firstDayOfWeek.getDate() + i)
-    
+
     days.push({
       date: dayDate,
       dayName: dayNamesArray[i],
@@ -403,15 +402,15 @@ const weekViewDays = computed(() => {
       events: getEventsForDay(dayDate)
     })
   }
-  
+
   return days
 })
 
 // Get events for selected date
 const selectedDateEvents = computed(() => {
   return getEventsForDay(new Date(selectedDate.value)).sort((a, b) => {
-    if (!a.startTime) return -1
-    if (!b.startTime) return 1
+    if (!a.startTime) { return -1 }
+    if (!b.startTime) { return 1 }
     return a.startTime.getTime() - b.startTime.getTime()
   })
 })
@@ -419,14 +418,14 @@ const selectedDateEvents = computed(() => {
 // Use computed for combined events to make it reactive to store changes
 const combinedEvents = computed(() => {
   let result: any[] = []
-  
+
   // Add tasks as events
   if (showTasks.value) {
-    tasksStore.tasks.forEach(task => {
+    tasksStore.tasks.forEach((task) => {
       if (!showCompletedTasks.value && task.status === 'completed') {
         return
       }
-      
+
       if (task.dueDate) {
         result.push({
           id: task.id,
@@ -440,10 +439,10 @@ const combinedEvents = computed(() => {
       }
     })
   }
-  
+
   // Add calendar events from integrations
   if (hasCalendarIntegrations.value && showMeetings.value) {
-    calendarStore.events.forEach(event => {
+    calendarStore.events.forEach((event) => {
       result.push({
         ...event,
         type: 'meeting',
@@ -452,18 +451,18 @@ const combinedEvents = computed(() => {
       })
     })
   }
-  
+
   // Filter by provider accounts
   if (selectedProviders.value.length === 0) {
     // If no providers are selected, only show events without a calendarId
     result = result.filter(event => !event.calendarId)
   } else if (connectedAccounts.value.length > 0) {
-    result = result.filter(event => 
+    result = result.filter(event =>
       !event.calendarId || // Include events without calendar ID (like tasks)
       selectedProviders.value.includes(event.calendarId)
     )
   }
-  
+
   return result
 })
 
@@ -480,7 +479,7 @@ const handleNavigation = (direction: string) => {
 
 const navigatePrevious = () => {
   const date = new Date(selectedDate.value)
-  
+
   if (currentView.value === 'month') {
     date.setMonth(date.getMonth() - 1)
   } else if (currentView.value === 'week') {
@@ -488,13 +487,13 @@ const navigatePrevious = () => {
   } else {
     date.setDate(date.getDate() - 1)
   }
-  
+
   selectedDate.value = date.toISOString().slice(0, 10)
 }
 
 const navigateNext = () => {
   const date = new Date(selectedDate.value)
-  
+
   if (currentView.value === 'month') {
     date.setMonth(date.getMonth() + 1)
   } else if (currentView.value === 'week') {
@@ -502,7 +501,7 @@ const navigateNext = () => {
   } else {
     date.setDate(date.getDate() + 1)
   }
-  
+
   selectedDate.value = date.toISOString().slice(0, 10)
 }
 
@@ -513,7 +512,7 @@ const navigateToday = () => {
 // Selection handlers
 const selectDay = (date: Date) => {
   selectedDate.value = date.toISOString().slice(0, 10)
-  
+
   if (currentView.value === 'month') {
     currentView.value = 'day'
   }
@@ -531,10 +530,10 @@ const selectWeek = (date: Date) => {
 
 // Event helpers
 const getEventsForDay = (date: Date | null) => {
-  if (!date) return []
-  
-  return combinedEvents.value.filter(event => {
-    if (!event || !event.date) return false
+  if (!date) { return [] }
+
+  return combinedEvents.value.filter((event) => {
+    if (!event || !event.date) { return false }
     try {
       const eventDate = new Date(event.date)
       return isSameDay(eventDate, date)
@@ -545,25 +544,25 @@ const getEventsForDay = (date: Date | null) => {
 }
 
 const getEventsForHour = (date: Date | null, hour: number | undefined) => {
-  if (!date || hour === undefined) return []
-  
-  return combinedEvents.value.filter(event => {
-    if (!event || !event.date || !event.startTime) return false
-    
+  if (!date || hour === undefined) { return [] }
+
+  return combinedEvents.value.filter((event) => {
+    if (!event || !event.date || !event.startTime) { return false }
+
     try {
       const eventDate = new Date(event.date)
       return isSameDay(eventDate, date) && event.startTime.getHours() === hour
     } catch (e) {
       return false
     }
-  }).map(event => {
+  }).map((event) => {
     // Calculate position and size in the hour slot
     const startTime = event.startTime
     const endTime = event.endTime || new Date(startTime.getTime() + 30 * 60 * 1000)
-    
+
     const minutesFromHourStart = startTime.getMinutes()
     const durationHours = (endTime.getTime() - startTime.getTime()) / (60 * 60 * 1000)
-    
+
     return {
       ...event,
       minutesFromHourStart,

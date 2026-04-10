@@ -13,5 +13,5 @@ export const MICROSOFT_GRAPH_INTEGRATION_SCOPES = [
   'Mail.Send',
   'Calendars.ReadWrite',
   'Contacts.Read',
-  'Tasks.ReadWrite',
+  'Tasks.ReadWrite'
 ].join(' ')

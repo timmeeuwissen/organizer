@@ -5,7 +5,7 @@ v-container(class="fill-height" fluid)
       v-card(class="elevation-12")
         v-toolbar(color="primary" dark)
           v-toolbar-title {{ $t('auth.login') }}
-        
+
         v-card-text
           v-alert(v-if="error" type="error" class="mb-4") {{ error }}
           v-form(ref="form" v-model="valid" @submit.prevent="login")
@@ -30,7 +30,7 @@ v-container(class="fill-height" fluid)
               :label="$t('auth.rememberMe')"
               color="primary"
             )
-        
+
         v-card-actions
           v-btn(
             color="primary"
@@ -39,7 +39,7 @@ v-container(class="fill-height" fluid)
             @click="login"
             block
           ) {{ $t('auth.login') }}
-          
+
         v-card-text(class="text-center")
           v-btn(
             variant="text"
@@ -50,19 +50,19 @@ v-container(class="fill-height" fluid)
             prepend-icon="mdi-google"
             class="mb-2"
           ) {{ $t('auth.googleLogin') }}
-          
+
           v-divider(class="my-3")
-          
+
           v-btn(
-            variant="text" 
+            variant="text"
             to="/auth/forgot-password"
             class="mb-2"
           ) {{ $t('auth.forgotPassword') }}
-          
+
           div {{ $t('auth.noAccount') }}
             v-btn(
-              variant="text" 
-              color="primary" 
+              variant="text"
+              color="primary"
               to="/auth/register"
               class="ml-1"
             ) {{ $t('auth.register') }}
@@ -70,8 +70,8 @@ v-container(class="fill-height" fluid)
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useAuthStore } from '~/stores/auth'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -94,12 +94,12 @@ const rules = {
 
 const login = async () => {
   error.value = ''
-  if (!valid.value) return
-  
+  if (!valid.value) { return }
+
   try {
     loading.value = true
     await authStore.loginWithEmail(email.value, password.value)
-    
+
     // Navigate to the redirect URL or dashboard
     const redirectPath = route.query.redirect as string || '/dashboard'
     router.push(redirectPath)
@@ -112,11 +112,11 @@ const login = async () => {
 
 const loginWithGoogle = async () => {
   error.value = ''
-  
+
   try {
     loading.value = true
     await authStore.loginWithGoogle()
-    
+
     // Navigate to the redirect URL or dashboard
     const redirectPath = route.query.redirect as string || '/dashboard'
     router.push(redirectPath)

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { Office365CalendarProvider } from '~/utils/api/calendarProviders/Office365CalendarProvider'
 import { office365IntegrationAccount } from '../../../helpers/mockIntegrationAccount'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { Office365CalendarProvider } from '~/utils/api/calendarProviders/Office365CalendarProvider'
 
 describe('Office365CalendarProvider', () => {
   beforeEach(() => {
@@ -21,16 +21,16 @@ describe('Office365CalendarProvider', () => {
             subject: 'Sync',
             start: { dateTime: '2024-05-01T09:00:00.0000000', timeZone: 'UTC' },
             end: { dateTime: '2024-05-01T10:00:00.0000000', timeZone: 'UTC' },
-            isAllDay: false,
-          },
-        ],
+            isAllDay: false
+          }
+        ]
       })
     )
 
     const p = new Office365CalendarProvider(acc)
     const res = await p.fetchEvents({
       startDate: new Date('2024-05-01'),
-      endDate: new Date('2024-05-02'),
+      endDate: new Date('2024-05-02')
     })
 
     expect(res.events.length).toBeGreaterThanOrEqual(1)

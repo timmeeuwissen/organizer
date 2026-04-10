@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import type { GraphNode, GraphEdge, NodeType } from '~/types/models/network'
-import type { EdgeType } from '~/types/models/network'
+import type { GraphNode, GraphEdge, NodeType, EdgeType } from '~/types/models/network'
 import { useAuthStore } from '~/stores/auth'
 import { useNotificationStore } from '~/stores/notification'
 
@@ -10,25 +9,25 @@ export const useNetworkStore = defineStore('network', {
     edges: [] as GraphEdge[],
     loading: false,
     bootstrapped: false,
-    syncProgress: null as { percent: number; phase: string } | null,
+    syncProgress: null as { percent: number; phase: string } | null
   }),
 
   persist: true,
 
   getters: {
-    getNode: (storeState) => (id: string) =>
+    getNode: storeState => (id: string) =>
       storeState.nodes.find(n => n.id === id),
 
-    getByEntity: (storeState) => (type: NodeType, entityId: string) =>
+    getByEntity: storeState => (type: NodeType, entityId: string) =>
       storeState.nodes.find(n => n.type === type && n.entityId === entityId),
 
-    getNeighbours: (storeState) => (nodeId: string, depth = 2): GraphNode[] => {
-      if (depth === 0) return []
+    getNeighbours: storeState => (nodeId: string, depth = 2): GraphNode[] => {
+      if (depth === 0) { return [] }
       // Build adjacency map once for this traversal
       const adj = new Map<string, string[]>()
       for (const e of storeState.edges) {
-        if (!adj.has(e.sourceId)) adj.set(e.sourceId, [])
-        if (!adj.has(e.targetId)) adj.set(e.targetId, [])
+        if (!adj.has(e.sourceId)) { adj.set(e.sourceId, []) }
+        if (!adj.has(e.targetId)) { adj.set(e.targetId, []) }
         adj.get(e.sourceId)!.push(e.targetId)
         adj.get(e.targetId)!.push(e.sourceId)
       }
@@ -44,7 +43,7 @@ export const useNetworkStore = defineStore('network', {
             const node = storeState.nodes.find(n => n.id === neighbourId)
             if (node) {
               result.push(node)
-              if (remaining > 1) queue.push({ id: neighbourId, remaining: remaining - 1 })
+              if (remaining > 1) { queue.push({ id: neighbourId, remaining: remaining - 1 }) }
             }
           }
         }
@@ -52,13 +51,13 @@ export const useNetworkStore = defineStore('network', {
       return result
     },
 
-    shortestPath: (storeState) => (fromId: string, toId: string): GraphNode[] => {
-      if (fromId === toId) return []
+    shortestPath: storeState => (fromId: string, toId: string): GraphNode[] => {
+      if (fromId === toId) { return [] }
       // Build adjacency map once for this traversal
       const adj = new Map<string, string[]>()
       for (const e of storeState.edges) {
-        if (!adj.has(e.sourceId)) adj.set(e.sourceId, [])
-        if (!adj.has(e.targetId)) adj.set(e.targetId, [])
+        if (!adj.has(e.sourceId)) { adj.set(e.sourceId, []) }
+        if (!adj.has(e.targetId)) { adj.set(e.targetId, []) }
         adj.get(e.sourceId)!.push(e.targetId)
         adj.get(e.targetId)!.push(e.sourceId)
       }
@@ -71,7 +70,7 @@ export const useNetworkStore = defineStore('network', {
           if (neighbourId === toId) {
             const fullPath = [...path, toId]
             const pathNodes = fullPath.map(nId => storeState.nodes.find(n => n.id === nId))
-            if (pathNodes.some(n => !n)) return []  // missing node — return empty rather than partial path
+            if (pathNodes.some(n => !n)) { return [] } // missing node — return empty rather than partial path
             return pathNodes as GraphNode[]
           }
           if (!visited.has(neighbourId)) {
@@ -83,35 +82,35 @@ export const useNetworkStore = defineStore('network', {
       return []
     },
 
-    nodeDegree: (storeState) => (nodeId: string): number =>
-      storeState.edges.filter(e => e.sourceId === nodeId || e.targetId === nodeId).length,
+    nodeDegree: storeState => (nodeId: string): number =>
+      storeState.edges.filter(e => e.sourceId === nodeId || e.targetId === nodeId).length
   },
 
   actions: {
-    async load() {
+    async load () {
       const { collection, query, where, getDocs, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
       const authStore = useAuthStore()
       const userId = authStore.user?.id
-      if (!userId) return
+      if (!userId) { return }
 
       this.loading = true
       try {
         const [nodeSnap, edgeSnap] = await Promise.all([
           getDocs(query(collection(db, 'graphNodes'), where('userId', '==', userId))),
-          getDocs(query(collection(db, 'graphEdges'), where('userId', '==', userId))),
+          getDocs(query(collection(db, 'graphEdges'), where('userId', '==', userId)))
         ])
         this.nodes = nodeSnap.docs.map(d => ({
           ...(d.data() as Omit<GraphNode, 'id'>),
           id: d.id,
           createdAt: d.data().createdAt?.toDate?.() ?? new Date(),
-          updatedAt: d.data().updatedAt?.toDate?.() ?? new Date(),
+          updatedAt: d.data().updatedAt?.toDate?.() ?? new Date()
         }))
         this.edges = edgeSnap.docs.map(d => ({
           ...(d.data() as Omit<GraphEdge, 'id'>),
           id: d.id,
           createdAt: d.data().createdAt?.toDate?.() ?? new Date(),
-          updatedAt: d.data().updatedAt?.toDate?.() ?? new Date(),
+          updatedAt: d.data().updatedAt?.toDate?.() ?? new Date()
         }))
       } catch (err) {
         useNotificationStore().error('network.loadError')
@@ -121,13 +120,13 @@ export const useNetworkStore = defineStore('network', {
       }
     },
 
-    async syncFromStores(): Promise<{ nodesAdded: Partial<Record<NodeType, number>>; edgesAdded: number } | undefined> {
+    async syncFromStores (): Promise<{ nodesAdded: Partial<Record<NodeType, number>>; edgesAdded: number } | undefined> {
       const { collection, query, where, getDocs, addDoc, serverTimestamp, getFirestore } =
         await import('firebase/firestore')
       const db = getFirestore()
       const authStore = useAuthStore()
       const userId = authStore.user?.id
-      if (!userId) return
+      if (!userId) { return }
 
       const nodesAdded: Partial<Record<NodeType, number>> = {}
       let edgesAdded = 0
@@ -162,7 +161,7 @@ export const useNetworkStore = defineStore('network', {
           behaviorsStore.fetchBehaviors(),
           meetingsStore.fetchMeetings(),
           teamsStore.fetchTeams(),
-          coachingStore.fetchRecords(),
+          coachingStore.fetchRecords()
         ])
         console.log('[network sync] stores loaded:', {
           people: peopleStore.people.length,
@@ -177,7 +176,7 @@ export const useNetworkStore = defineStore('network', {
           behaviorsError: behaviorsStore.error,
           meetingsError: meetingsStore.error,
           teamsError: teamsStore.error,
-          coachingError: coachingStore.error,
+          coachingError: coachingStore.error
         })
 
         // Fetch existing nodes to avoid duplicates (idempotent)
@@ -188,16 +187,20 @@ export const useNetworkStore = defineStore('network', {
         const existingByKey = new Map<string, string>() // "type:entityId" → graphNode id
         for (const d of existingSnap.docs) {
           const data = d.data()
-          if (data.entityId) existingByKey.set(`${data.type}:${data.entityId}`, d.id)
+          if (data.entityId) { existingByKey.set(`${data.type}:${data.entityId}`, d.id) }
         }
         console.log('[network sync] existing nodes in Firestore:', existingSnap.size, '— keys sample:', [...existingByKey.keys()].slice(0, 5))
 
         const upsertNode = async (type: NodeType, entityId: string, label: string): Promise<string> => {
           const key = `${type}:${entityId}`
-          if (existingByKey.has(key)) return existingByKey.get(key)!
+          if (existingByKey.has(key)) { return existingByKey.get(key)! }
           const ref = await addDoc(collection(db, 'graphNodes'), {
-            userId, type, entityId, label,
-            createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+            userId,
+            type,
+            entityId,
+            label,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
           })
           existingByKey.set(key, ref.id)
           newNodes.push({ id: ref.id, userId, type, entityId, label, createdAt: new Date(), updatedAt: new Date() })
@@ -206,25 +209,25 @@ export const useNetworkStore = defineStore('network', {
         }
 
         this.syncProgress = { percent: 28, phase: 'network.syncPhase.person' }
-        for (const p of peopleStore.people) await upsertNode('person', p.id, `${p.firstName} ${p.lastName}`)
+        for (const p of peopleStore.people) { await upsertNode('person', p.id, `${p.firstName} ${p.lastName}`) }
 
         this.syncProgress = { percent: 35, phase: 'network.syncPhase.project' }
-        for (const proj of projectsStore.projects) await upsertNode('project', proj.id, proj.title)
+        for (const proj of projectsStore.projects) { await upsertNode('project', proj.id, proj.title) }
 
         this.syncProgress = { percent: 42, phase: 'network.syncPhase.task' }
-        for (const t of tasksStore.tasks) await upsertNode('task', t.id, t.title)
+        for (const t of tasksStore.tasks) { await upsertNode('task', t.id, t.title) }
 
         this.syncProgress = { percent: 49, phase: 'network.syncPhase.behavior' }
-        for (const b of behaviorsStore.behaviors) await upsertNode('behavior', b.id, b.title)
+        for (const b of behaviorsStore.behaviors) { await upsertNode('behavior', b.id, b.title) }
 
         this.syncProgress = { percent: 55, phase: 'network.syncPhase.meeting' }
-        for (const m of meetingsStore.meetings) await upsertNode('meeting', m.id, m.title)
+        for (const m of meetingsStore.meetings) { await upsertNode('meeting', m.id, m.title) }
 
         this.syncProgress = { percent: 61, phase: 'network.syncPhase.team' }
-        for (const team of teamsStore.teams) await upsertNode('team', team.id, team.name)
+        for (const team of teamsStore.teams) { await upsertNode('team', team.id, team.name) }
 
         this.syncProgress = { percent: 67, phase: 'network.syncPhase.coaching' }
-        for (const c of coachingStore.records) await upsertNode('coaching', c.id, c.title ?? `Coaching ${c.id}`)
+        for (const c of coachingStore.records) { await upsertNode('coaching', c.id, c.title ?? `Coaching ${c.id}`) }
 
         // Fetch existing edges
         this.syncProgress = { percent: 72, phase: 'network.syncPhase.edges' }
@@ -257,13 +260,17 @@ export const useNetworkStore = defineStore('network', {
             return
           }
           const key = `${sourceId}:${targetId}:${type}`
-          if (existingEdgeKeys.has(key)) return
+          if (existingEdgeKeys.has(key)) { return }
           existingEdgeKeys.add(key)
           try {
             const ref = await addDoc(collection(db, 'graphEdges'), {
-              userId, sourceId, targetId, type,
+              userId,
+              sourceId,
+              targetId,
+              type,
               ...(label !== undefined ? { label } : {}),
-              createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
             })
             newEdges.push({ id: ref.id, userId, sourceId, targetId, type, label, createdAt: new Date(), updatedAt: new Date() })
             edgesAdded++
@@ -277,34 +284,34 @@ export const useNetworkStore = defineStore('network', {
 
         this.syncProgress = { percent: 78, phase: 'network.syncPhase.edges' }
         for (const proj of projectsStore.projects) {
-          for (const memberId of proj.members ?? []) await upsertEdge('person', memberId, 'project', proj.id, 'member')
-          for (const sid of proj.stakeholders ?? []) await upsertEdge('person', sid, 'project', proj.id, 'stakeholder')
-          for (const taskId of proj.tasks ?? []) await upsertEdge('project', proj.id, 'task', taskId, 'contains')
+          for (const memberId of proj.members ?? []) { await upsertEdge('person', memberId, 'project', proj.id, 'member') }
+          for (const sid of proj.stakeholders ?? []) { await upsertEdge('person', sid, 'project', proj.id, 'stakeholder') }
+          for (const taskId of proj.tasks ?? []) { await upsertEdge('project', proj.id, 'task', taskId, 'contains') }
         }
 
         this.syncProgress = { percent: 86, phase: 'network.syncPhase.edges' }
         for (const t of tasksStore.tasks) {
-          if (t.assignee) await upsertEdge('task', t.id, 'person', t.assignee, 'assignee')
-          if (t.projectId) await upsertEdge('task', t.id, 'project', t.projectId, 'related')
-          for (const sid of t.subtasks ?? []) await upsertEdge('task', t.id, 'task', sid, 'subtask')
+          if (t.assignee) { await upsertEdge('task', t.id, 'person', t.assignee, 'assignee') }
+          if (t.projectId) { await upsertEdge('task', t.id, 'project', t.projectId, 'related') }
+          for (const sid of t.subtasks ?? []) { await upsertEdge('task', t.id, 'task', sid, 'subtask') }
         }
 
         this.syncProgress = { percent: 91, phase: 'network.syncPhase.edges' }
         for (const m of meetingsStore.meetings) {
-          for (const pid of m.participants ?? []) await upsertEdge('person', pid, 'meeting', m.id, 'participant')
-          for (const projId of m.relatedProjects ?? []) await upsertEdge('meeting', m.id, 'project', projId, 'related')
+          for (const pid of m.participants ?? []) { await upsertEdge('person', pid, 'meeting', m.id, 'participant') }
+          for (const projId of m.relatedProjects ?? []) { await upsertEdge('meeting', m.id, 'project', projId, 'related') }
         }
 
         this.syncProgress = { percent: 95, phase: 'network.syncPhase.edges' }
         for (const b of behaviorsStore.behaviors) {
           for (const plan of b.actionPlans ?? []) {
-            for (const taskId of plan.tasks ?? []) await upsertEdge('behavior', b.id, 'task', taskId, 'action-plan')
+            for (const taskId of plan.tasks ?? []) { await upsertEdge('behavior', b.id, 'task', taskId, 'action-plan') }
           }
         }
 
         this.syncProgress = { percent: 98, phase: 'network.syncPhase.edges' }
         for (const team of teamsStore.teams) {
-          for (const mid of team.memberPersonIds ?? []) await upsertEdge('person', mid, 'team', team.id, 'member')
+          for (const mid of team.memberPersonIds ?? []) { await upsertEdge('person', mid, 'team', team.id, 'member') }
         }
 
         console.log('[network sync] edge phase done — attempts:', edgeAttempts, 'skips:', edgeSkips, 'errors:', edgeErrors, 'created:', edgesAdded)
@@ -312,8 +319,8 @@ export const useNetworkStore = defineStore('network', {
         this.syncProgress = { percent: 100, phase: 'network.syncPhase.done' }
 
         // Batch-apply new nodes and edges — single reactive update to avoid graph flickering
-        if (newNodes.length > 0) this.nodes = [...this.nodes, ...newNodes]
-        if (newEdges.length > 0) this.edges = [...this.edges, ...newEdges]
+        if (newNodes.length > 0) { this.nodes = [...this.nodes, ...newNodes] }
+        if (newEdges.length > 0) { this.edges = [...this.edges, ...newEdges] }
 
         this.bootstrapped = true
 
@@ -327,34 +334,36 @@ export const useNetworkStore = defineStore('network', {
       }
     },
 
-    async createEdge(partial: Omit<GraphEdge, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
+    async createEdge (partial: Omit<GraphEdge, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
       const { collection, addDoc, serverTimestamp, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
       const authStore = useAuthStore()
       const userId = authStore.user?.id
-      if (!userId) return
+      if (!userId) { return }
       const ref = await addDoc(collection(db, 'graphEdges'), {
-        userId, ...partial,
-        createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+        userId,
+        ...partial,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       })
       const edge: GraphEdge = { id: ref.id, userId, ...partial, createdAt: new Date(), updatedAt: new Date() }
       this.edges.push(edge)
       return edge
     },
 
-    async deleteEdge(id: string) {
+    async deleteEdge (id: string) {
       const { doc, deleteDoc, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
       await deleteDoc(doc(db, 'graphEdges', id))
       this.edges = this.edges.filter(e => e.id !== id)
     },
 
-    async updateEdge(id: string, partial: Partial<Pick<GraphEdge, 'type' | 'label'>>) {
+    async updateEdge (id: string, partial: Partial<Pick<GraphEdge, 'type' | 'label'>>) {
       const { doc, updateDoc, serverTimestamp, getFirestore } = await import('firebase/firestore')
       const db = getFirestore()
       await updateDoc(doc(db, 'graphEdges', id), { ...partial, updatedAt: serverTimestamp() })
       const idx = this.edges.findIndex(e => e.id === id)
-      if (idx !== -1) Object.assign(this.edges[idx], { ...partial, updatedAt: new Date() })
-    },
-  },
+      if (idx !== -1) { Object.assign(this.edges[idx], { ...partial, updatedAt: new Date() }) }
+    }
+  }
 })

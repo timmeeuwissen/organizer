@@ -1,7 +1,7 @@
 /**
  * Normalize user-entered URL for storage and opening (https default).
  */
-export function normalizeProjectUrl(input: string): string {
+export function normalizeProjectUrl (input: string): string {
   const trimmed = input.trim()
   if (!trimmed) {
     return ''
@@ -21,14 +21,14 @@ export function normalizeProjectUrl(input: string): string {
   }
 }
 
-export function isValidHttpUrlForProject(input: string): boolean {
+export function isValidHttpUrlForProject (input: string): boolean {
   const trimmed = input.trim()
-  if (!trimmed) return false
+  if (!trimmed) { return false }
   if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed) && !/^https?:\/\//i.test(trimmed)) {
     return false
   }
   const normalized = normalizeProjectUrl(input)
-  if (!normalized) return false
+  if (!normalized) { return false }
   try {
     const u = new URL(normalized)
     return u.protocol === 'http:' || u.protocol === 'https:'

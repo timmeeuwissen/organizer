@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { ExchangeTasksProvider } from '~/utils/api/taskProviders/ExchangeTasksProvider'
 import { exchangeIntegrationAccount } from '../../../helpers/mockIntegrationAccount'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { ExchangeTasksProvider } from '~/utils/api/taskProviders/ExchangeTasksProvider'
 
 describe('ExchangeTasksProvider', () => {
   beforeEach(() => {
@@ -11,7 +11,7 @@ describe('ExchangeTasksProvider', () => {
     vi.unstubAllGlobals()
   })
 
-  function proxyTasksFetch(input: RequestInfo) {
+  function proxyTasksFetch (input: RequestInfo) {
     const raw = typeof input === 'string' ? input : String(input)
     if (!raw.includes('/api/proxy')) {
       return jsonResponse({})
@@ -20,7 +20,7 @@ describe('ExchangeTasksProvider', () => {
     const target = decodeURIComponent(u.searchParams.get('url') || '')
     if (/\/me\/todo\/lists($|\?)/.test(target)) {
       return jsonResponse({
-        value: [{ id: 'exchange-list-1', displayName: 'Tasks' }],
+        value: [{ id: 'exchange-list-1', displayName: 'Tasks' }]
       })
     }
     if (/\/me\/todo\/lists\/[^/]+\/tasks($|\?)/.test(target)) {
@@ -32,9 +32,9 @@ describe('ExchangeTasksProvider', () => {
             status: 'notStarted',
             importance: 'normal',
             createdDateTime: '2024-01-01T00:00:00Z',
-            lastModifiedDateTime: '2024-01-01T00:00:00Z',
-          },
-        ],
+            lastModifiedDateTime: '2024-01-01T00:00:00Z'
+          }
+        ]
       })
     }
     return jsonResponse({ value: [] })
@@ -44,10 +44,10 @@ describe('ExchangeTasksProvider', () => {
     const acc = exchangeIntegrationAccount({
       oauthData: {
         ...exchangeIntegrationAccount().oauthData,
-        tokenExpiry: new Date(Date.now() + 60 * 60 * 1000),
-      },
+        tokenExpiry: new Date(Date.now() + 60 * 60 * 1000)
+      }
     })
-    vi.mocked(fetch).mockImplementation((input) =>
+    vi.mocked(fetch).mockImplementation(input =>
       Promise.resolve(proxyTasksFetch(input as RequestInfo))
     )
 
@@ -55,19 +55,19 @@ describe('ExchangeTasksProvider', () => {
     const res = await p.fetchTasks({})
 
     expect(res.success).toBe(true)
-    expect(res.tasks.some((t) => t.title === 'Exchange Graph task')).toBe(true)
+    expect(res.tasks.some(t => t.title === 'Exchange Graph task')).toBe(true)
   })
 
   it('createTask posts to the default task list', async () => {
     const acc = exchangeIntegrationAccount({
       oauthData: {
         ...exchangeIntegrationAccount().oauthData,
-        tokenExpiry: new Date(Date.now() + 60 * 60 * 1000),
-      },
+        tokenExpiry: new Date(Date.now() + 60 * 60 * 1000)
+      }
     })
     vi.mocked(fetch).mockImplementation((input) => {
       const raw = typeof input === 'string' ? input : String(input)
-      if (!raw.includes('/api/proxy')) return Promise.resolve(jsonResponse({}))
+      if (!raw.includes('/api/proxy')) { return Promise.resolve(jsonResponse({})) }
       const u = new URL(raw, 'http://localhost')
       const target = decodeURIComponent(u.searchParams.get('url') || '')
       if (/\/me\/todo\/lists($|\?)/.test(target)) {

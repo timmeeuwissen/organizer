@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
+import { useNotificationStore } from '~/stores/notification'
 import type { IntegrationAccount } from '~/types/models'
 import { normalizeMailPageSize } from '~/config/mailUi'
 import { hasValidOAuthTokens, refreshOAuthToken } from '~/utils/api/emailUtils'
@@ -47,7 +48,7 @@ export const useMailStore = defineStore('mail', {
       { id: 'sent', name: 'Sent', icon: 'mdi-send' },
       { id: 'drafts', name: 'Drafts', icon: 'mdi-file-document-outline' },
       { id: 'trash', name: 'Trash', icon: 'mdi-delete' },
-      { id: 'spam', name: 'Spam', icon: 'mdi-alert-circle' },
+      { id: 'spam', name: 'Spam', icon: 'mdi-alert-circle' }
     ] as MailFolder[],
     loading: false,
     error: null as string | null,
@@ -61,29 +62,29 @@ export const useMailStore = defineStore('mail', {
     currentQuery: null as EmailQuery | null,
     // Folder counts from server
     folderCounts: {} as Record<string, number>,
-    unreadCounts: {} as Record<string, number>,
+    unreadCounts: {} as Record<string, number>
   }),
 
   getters: {
-    getEmailsByFolder: (storeState) => (folder: string) => {
+    getEmailsByFolder: storeState => (folder: string) => {
       return storeState.emails.filter(email => email.folder === folder)
     },
-    
-    getUnreadCountByFolder: (storeState) => (folder: string) => {
+
+    getUnreadCountByFolder: storeState => (folder: string) => {
       // If we have server-side counts, use those
       if (storeState.unreadCounts[folder] !== undefined) {
-        return storeState.unreadCounts[folder];
+        return storeState.unreadCounts[folder]
       }
       // Fall back to local counts if necessary
       return storeState.emails.filter(email => email.folder === folder && !email.read).length
     },
-    
+
     getConnectedAccounts: () => {
       const authStore = useAuthStore()
       const integrationAccounts = authStore.currentUser?.settings?.integrationAccounts || []
 
       // Only return accounts that are connected and have syncMail and showInMail set to true
-      return integrationAccounts.filter(account => 
+      return integrationAccounts.filter(account =>
         account.oauthData.connected && account.syncMail && account.showInMail
       )
     },
@@ -104,116 +105,116 @@ export const useMailStore = defineStore('mail', {
      * Load folder counts without fetching complete email content
      * This is useful for sidebar unread counts
      */
-    async loadFolderCounts() {
+    async loadFolderCounts () {
       // Only try if we have connected accounts
-      const connectedAccounts = this.getConnectedAccounts;
+      const connectedAccounts = this.getConnectedAccounts
       if (connectedAccounts.length === 0) {
-        return;
+        return
       }
-      
+
       try {
         // Get folder counts from each provider
         const folderCountPromises = connectedAccounts.map(async (account) => {
           try {
             // Get mail provider
-            const mailProvider = getMailProvider(account);
-            
+            const mailProvider = getMailProvider(account)
+
             // Try to authenticate if needed
             if (!mailProvider.isAuthenticated()) {
-              const authenticated = await mailProvider.authenticate();
+              const authenticated = await mailProvider.authenticate()
               if (!authenticated) {
-                console.warn(`Authentication failed for account ${account.oauthData.email}`);
-                return null;
+                console.warn(`Authentication failed for account ${account.oauthData.email}`)
+                return null
               }
             }
-            
+
             // Get folder counts
-            return await mailProvider.getFolderCounts();
+            return await mailProvider.getFolderCounts()
           } catch (error) {
-            console.error(`Error getting folder counts for ${account.oauthData.email}:`, error);
-            return null;
+            console.error(`Error getting folder counts for ${account.oauthData.email}:`, error)
+            return null
           }
-        });
-        
+        })
+
         // Wait for all promises to resolve
-        const allFolderCounts = await Promise.all(folderCountPromises);
-        
+        const allFolderCounts = await Promise.all(folderCountPromises)
+
         // Merge counts from all accounts
-        let totalCounts: Record<string, number> = {};
-        let unreadCounts: Record<string, number> = {};
-        
+        const totalCounts: Record<string, number> = {}
+        const unreadCounts: Record<string, number> = {}
+
         // Initialize with zero counts for all standard folders
         for (const folder of this.folders) {
-          totalCounts[folder.id] = 0;
-          unreadCounts[folder.id] = 0;
+          totalCounts[folder.id] = 0
+          unreadCounts[folder.id] = 0
         }
-        
+
         // Get unread counts for each folder and account
         for (const account of connectedAccounts) {
           try {
             // Get mail provider
-            const mailProvider = getMailProvider(account);
-            
+            const mailProvider = getMailProvider(account)
+
             // Try to authenticate if needed
             if (!mailProvider.isAuthenticated()) {
-              const authenticated = await mailProvider.authenticate();
-              if (!authenticated) continue;
+              const authenticated = await mailProvider.authenticate()
+              if (!authenticated) { continue }
             }
-            
+
             // Check each folder for unread count - we'll do this in parallel for better performance
-            const unreadCountPromises = this.folders.map(async folder => {
+            const unreadCountPromises = this.folders.map(async (folder) => {
               const unreadCount = await mailProvider.countEmails({
                 folder: folder.id,
                 unreadOnly: true
-              });
-              
-              return { folder: folder.id, count: unreadCount };
-            });
-            
+              })
+
+              return { folder: folder.id, count: unreadCount }
+            })
+
             // Wait for all unread counts to complete
-            const folderUnreadCounts = await Promise.all(unreadCountPromises);
-            
+            const folderUnreadCounts = await Promise.all(unreadCountPromises)
+
             // Add the counts to our running total
             for (const { folder, count } of folderUnreadCounts) {
-              unreadCounts[folder] = (unreadCounts[folder] || 0) + count;
-              console.log(`[Mail] Folder ${folder} unread count: ${count} (total now: ${unreadCounts[folder]})`);
+              unreadCounts[folder] = (unreadCounts[folder] || 0) + count
+              console.log(`[Mail] Folder ${folder} unread count: ${count} (total now: ${unreadCounts[folder]})`)
             }
           } catch (error) {
-            console.error(`Error getting unread counts for ${account.oauthData.email}:`, error);
+            console.error(`Error getting unread counts for ${account.oauthData.email}:`, error)
           }
         }
-        
+
         // Add up counts from all accounts
         for (const counts of allFolderCounts) {
           if (counts) {
             for (const [folder, count] of Object.entries(counts)) {
-              totalCounts[folder] = (totalCounts[folder] || 0) + count;
+              totalCounts[folder] = (totalCounts[folder] || 0) + count
             }
           }
         }
-        
-        console.log('Folder counts loaded:', totalCounts);
-        console.log('Unread counts loaded:', unreadCounts);
-        
+
+        console.log('Folder counts loaded:', totalCounts)
+        console.log('Unread counts loaded:', unreadCounts)
+
         // Update counts in store
-        this.folderCounts = totalCounts;
-        this.unreadCounts = unreadCounts;
-        
+        this.folderCounts = totalCounts
+        this.unreadCounts = unreadCounts
+
         // Update total email count in store
-        this.totalEmails = Object.values(totalCounts).reduce((sum, count) => sum + count, 0);
+        this.totalEmails = Object.values(totalCounts).reduce((sum, count) => sum + count, 0)
       } catch (error) {
-        console.error('Error loading folder counts:', error);
+        console.error('Error loading folder counts:', error)
       }
     },
-    
-    async fetchEmails(query?: EmailQuery, pagination?: EmailPagination) {
+
+    async fetchEmails (query?: EmailQuery, pagination?: EmailPagination) {
       this.loading = true
       this.error = null
-      
+
       try {
         // Get connected accounts from auth store
         const connectedAccounts = this.getConnectedAccounts
-        
+
         // If no connected accounts, return without generating mock data
         if (connectedAccounts.length === 0) {
           // No mock data - return empty array
@@ -223,30 +224,30 @@ export const useMailStore = defineStore('mail', {
           this.hasMoreEmails = false
           return
         }
-        
+
         // Store current query parameters for pagination
         this.currentQuery = query || { folder: 'inbox' }
         this.currentFolder = query?.folder || 'inbox'
-        
+
         // Set pagination parameters (coerce so API always gets a valid numeric page size)
         const pageSetting: EmailPagination = {
           page: Math.max(0, Math.floor(Number(pagination?.page ?? this.currentPage)) || 0),
-          pageSize: normalizeMailPageSize(pagination?.pageSize ?? this.pageSize),
+          pageSize: normalizeMailPageSize(pagination?.pageSize ?? this.pageSize)
         }
         this.currentPage = pageSetting.page
         this.pageSize = pageSetting.pageSize
-        
+
         // Clear existing emails when fetching a new query or when on page 0
         if (!pagination || pagination.page === 0) {
           this.emails = []
         }
-        
+
         // Fetch emails from each connected account with the same pagination
         // This means the same page from each account, then merge and sort
-        let allEmails: Email[] = []
+        const allEmails: Email[] = []
         let totalEmailCount = 0
         let anyHasMore = false
-        
+
         for (const account of connectedAccounts) {
           const result = await this.fetchEmailsFromAccount(account, query, pageSetting)
           allEmails.push(...result.emails)
@@ -255,7 +256,7 @@ export const useMailStore = defineStore('mail', {
             anyHasMore = true
           }
         }
-        
+
         // Replace with merged results, sort newest first, then cap to page size for the list UI
         this.emails = allEmails
         this.emails.sort((a, b) => b.date.getTime() - a.date.getTime())
@@ -272,14 +273,15 @@ export const useMailStore = defineStore('mail', {
       } catch (error: any) {
         console.error('Error fetching emails:', error)
         this.error = error.message || 'Failed to fetch emails'
+        useNotificationStore().error('An error occurred. Please try again.')
       } finally {
         this.loading = false
       }
     },
-    
-    async fetchNextPage() {
-      if (!this.hasMoreEmails) return
-      
+
+    async fetchNextPage () {
+      if (!this.hasMoreEmails) { return }
+
       // Increment page and fetch next batch
       const nextPage = this.currentPage + 1
       await this.fetchEmails(this.currentQuery || undefined, {
@@ -287,28 +289,28 @@ export const useMailStore = defineStore('mail', {
         pageSize: this.pageSize
       })
     },
-    
-    async fetchEmailsFromAccount(
-      account: IntegrationAccount, 
+
+    async fetchEmailsFromAccount (
+      account: IntegrationAccount,
       query?: EmailQuery,
       pagination?: EmailPagination
     ): Promise<EmailFetchResult> {
       try {
         console.log(`Connecting to ${account.type} email API for account: ${account.oauthData.email}`)
-        
+
         // Create a copy of the account object to avoid modifying the original
-        let workingAccount = { ...account };
-        
+        const workingAccount = { ...account }
+
         // No special account handling - use actual credentials from the account
-        console.log(`Using real integration for ${account.oauthData.email}`);
-        
+        console.log(`Using real integration for ${account.oauthData.email}`)
+
         // Get the appropriate mail provider with possibly modified account
         const mailProvider = getMailProvider(workingAccount)
-        
+
         // Check if authenticated
         if (!mailProvider.isAuthenticated()) {
           console.log(`Account ${account.oauthData.email} requires authentication`)
-          
+
           // Try to authenticate
           const authenticated = await mailProvider.authenticate()
           if (!authenticated) {
@@ -319,21 +321,20 @@ export const useMailStore = defineStore('mail', {
               page: pagination?.page || 0,
               pageSize: pagination?.pageSize || 20,
               hasMore: false
-            }; // Can't fetch emails without authentication
-          }
-          else console.info(`Authentication succeeded for account ${account.oauthData.email}`)
+            } // Can't fetch emails without authentication
+          } else { console.info(`Authentication succeeded for account ${account.oauthData.email}`) }
         }
-        
+
         // Use the query if provided, otherwise default to inbox
-        const emailQuery = query || { folder: 'inbox' };
-        
+        const emailQuery = query || { folder: 'inbox' }
+
         // Fetch emails with pagination
         try {
-          console.log(`Fetching emails for ${account.oauthData.email} with query:`, emailQuery);
-          const result = await mailProvider.fetchEmails(emailQuery, pagination);
-          return result;
+          console.log(`Fetching emails for ${account.oauthData.email} with query:`, emailQuery)
+          const result = await mailProvider.fetchEmails(emailQuery, pagination)
+          return result
         } catch (error: any) {
-          console.error(`Error fetching emails for ${account.oauthData.email}:`, error);
+          console.error(`Error fetching emails for ${account.oauthData.email}:`, error)
           // Return empty result when there's an error
           return {
             emails: [],
@@ -341,29 +342,29 @@ export const useMailStore = defineStore('mail', {
             page: pagination?.page || 0,
             pageSize: pagination?.pageSize || 20,
             hasMore: false
-          };
+          }
         }
       } catch (error) {
         console.error(`Error fetching emails for account ${account.oauthData.email}:`, error)
         throw error
       }
     },
-    
-    markEmailAsRead(emailId: string, read: boolean = true) {
+
+    markEmailAsRead (emailId: string, read: boolean = true) {
       const email = this.emails.find(e => e.id === emailId)
       if (email) {
         email.read = read
       }
     },
-    
-    moveEmailToFolder(emailId: string, folder: string) {
+
+    moveEmailToFolder (emailId: string, folder: string) {
       const email = this.emails.find(e => e.id === emailId)
       if (email) {
         email.folder = folder
       }
     },
-    
-    deleteEmail(emailId: string) {
+
+    deleteEmail (emailId: string) {
       const email = this.emails.find(e => e.id === emailId)
       if (email) {
         if (email.folder === 'trash') {
@@ -375,15 +376,15 @@ export const useMailStore = defineStore('mail', {
         }
       }
     },
-    
-    async sendEmail(email: Email) {
+
+    async sendEmail (email: Email) {
       // Get the default account to send from
       const connectedAccounts = this.getConnectedAccounts
       if (connectedAccounts.length === 0) {
         console.error('No connected accounts to send email from')
         // Update error state in the store
         this.error = 'No connected email accounts available'
-        
+
         // Still add to sent folder for UI consistency
         const newEmail: Email = {
           ...email,
@@ -395,15 +396,15 @@ export const useMailStore = defineStore('mail', {
         this.emails.unshift(newEmail)
         return newEmail
       }
-      
+
       // Use the first connected account
       const account = connectedAccounts[0]
       const accountId = account.id
-      
+
       try {
         // Get mail provider for this account
         const mailProvider = getMailProvider(account)
-        
+
         // Check if authenticated
         if (!mailProvider.isAuthenticated()) {
           const authenticated = await mailProvider.authenticate()
@@ -412,11 +413,11 @@ export const useMailStore = defineStore('mail', {
             throw new Error('Not authenticated with mail provider')
           }
         }
-        
+
         // Make sure body is defined and not null
         const emailBody = email.body || ''
         console.log('Email body from compose:', emailBody, 'Length:', emailBody.length)
-        
+
         // Create email object with account info
         const newEmail: Email = {
           ...email,
@@ -427,30 +428,31 @@ export const useMailStore = defineStore('mail', {
           date: new Date(),
           accountId
         }
-        
+
         // Send via provider
         const success = await mailProvider.sendEmail(newEmail)
         if (!success) {
           this.error = 'Failed to send email. Please try again'
           throw new Error('Failed to send email')
         }
-        
+
         // Clear any previous errors on success
         this.error = null
-        
+
         // Add to local state
         this.emails.unshift(newEmail)
-        
+
         // Log success - UI will handle showing notifications
         console.log('[Mail] Email sent successfully')
-        
+
         return newEmail
       } catch (error) {
         console.error('Error sending email:', error)
-        
+        useNotificationStore().error('An error occurred. Please try again.')
+
         // Log error message - UI will handle showing error notifications
         console.error('[Mail] Email sending failed:', this.error || 'Failed to send email. Please check your email settings')
-        
+
         // Still add to sent folder for UI consistency, but mark as failed
         const newEmail: Email = {
           ...email,
@@ -465,8 +467,8 @@ export const useMailStore = defineStore('mail', {
         return newEmail
       }
     },
-    
-    async saveDraft(email: Email) {
+
+    async saveDraft (email: Email) {
       // Get the default account to save draft in
       const connectedAccounts = this.getConnectedAccounts
       if (connectedAccounts.length === 0) {
@@ -482,11 +484,11 @@ export const useMailStore = defineStore('mail', {
         this.emails.unshift(newEmail)
         return newEmail
       }
-      
+
       // Add to drafts folder
       const account = connectedAccounts[0]
       const accountId = account.id
-      
+
       const newEmail: Email = {
         ...email,
         id: `draft-${Date.now()}`,
@@ -495,13 +497,13 @@ export const useMailStore = defineStore('mail', {
         date: new Date(),
         accountId
       }
-      
+
       // In a real implementation, we would save the draft via the provider API
       // For now, just add it to local state
       this.emails.unshift(newEmail)
       return newEmail
     }
   },
-  
+
   persist: true
 })

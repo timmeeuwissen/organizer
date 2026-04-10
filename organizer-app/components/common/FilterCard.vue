@@ -1,6 +1,6 @@
 <template lang="pug">
 v-card(class="mb-4")
-  v-card-title.d-flex 
+  v-card-title.d-flex
     span {{ title }}
     v-spacer
     v-btn(
@@ -12,7 +12,7 @@ v-card(class="mb-4")
       color="error"
     )
       v-icon mdi-filter-remove
-      
+
   v-card-text
     slot
 </template>

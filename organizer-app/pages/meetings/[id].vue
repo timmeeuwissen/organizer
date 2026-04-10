@@ -11,16 +11,16 @@ v-container(fluid)
           v-btn(color="primary" :to="`/meetings/${meeting?.id}/edit`" v-if="meeting")
             v-icon(start) mdi-pencil
             span {{ $t('common.edit') }}
-        
+
         v-card-text(v-if="loading")
           v-progress-circular(indeterminate)
-        
+
         v-card-text(v-else-if="error")
           v-alert(type="error") {{ error }}
-        
+
         v-card-text(v-else-if="!meeting")
           v-alert(type="warning") {{ $t('errors.notFound') }}
-        
+
         v-card-text(v-else)
           v-tabs(v-model="activeTab" class="mb-4")
             v-tab(value="details") {{ $t('common.details') }}
@@ -154,10 +154,10 @@ v-container(fluid)
                 node-type="meeting"
                 :entity-id="meeting.id"
               )
-  
+
   // Dialogs for adding participants, tasks and linking to projects
   // (simplified, would normally be implemented)
-  
+
 </template>
 
 <script setup lang="ts">
@@ -196,24 +196,24 @@ const meeting = computed(() => meetingsStore.currentMeeting)
 
 // Get participants, tasks and projects
 const participantsList = computed(() => {
-  if (!meeting.value || !meeting.value.participants) return []
-  
+  if (!meeting.value || !meeting.value.participants) { return [] }
+
   return meeting.value.participants
     .map(id => peopleStore.getById(id))
     .filter(p => p !== null) as Person[]
 })
 
 const tasksList = computed(() => {
-  if (!meeting.value || !meeting.value.tasks) return []
-  
+  if (!meeting.value || !meeting.value.tasks) { return [] }
+
   return meeting.value.tasks
     .map(id => tasksStore.getById(id))
     .filter(t => t !== null) as Task[]
 })
 
 const projectsList = computed(() => {
-  if (!meeting.value || !meeting.value.relatedProjects) return []
-  
+  if (!meeting.value || !meeting.value.relatedProjects) { return [] }
+
   return meeting.value.relatedProjects
     .map(id => projectsStore.getById(id))
     .filter(p => p !== null) as Project[]
@@ -223,10 +223,10 @@ const projectsList = computed(() => {
 const fetchData = async () => {
   loading.value = true
   error.value = ''
-  
+
   try {
     await meetingsStore.fetchMeeting(meetingId.value)
-    
+
     // Load related data
     await Promise.all([
       categoriesStore.fetchCategories(),
@@ -249,12 +249,12 @@ watch(() => route.params.id, () => {
 
 // Utility functions
 const formatDateTime = (dateTime: Date) => {
-  if (!dateTime) return ''
-  
+  if (!dateTime) { return '' }
+
   const date = new Date(dateTime)
-  return date.toLocaleString(undefined, { 
-    year: 'numeric', 
-    month: 'short', 
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
@@ -275,7 +275,7 @@ const getRandomColor = (id: string) => {
   for (let i = 0; i < id.length; i++) {
     hash = id.charCodeAt(i) + ((hash << 5) - hash)
   }
-  
+
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 70%, 60%)`
 }

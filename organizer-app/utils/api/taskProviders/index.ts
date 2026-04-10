@@ -3,11 +3,11 @@
  * @module utils/api/taskProviders
  */
 
-import type { IntegrationAccount } from '~/types/models'
 import { GoogleTasksProvider } from './GoogleTasksProvider'
 import { Office365TasksProvider } from './Office365TasksProvider'
 import { ExchangeTasksProvider } from './ExchangeTasksProvider'
 import type { TaskProvider } from './TaskProvider'
+import type { IntegrationAccount } from '~/types/models'
 
 export * from './TaskProvider'
 export * from './BaseTaskProvider'
@@ -20,7 +20,7 @@ export * from './ExchangeTasksProvider'
  * @param account The integration account
  * @returns Provider implementation for the account type
  */
-export function getTaskProvider(account: IntegrationAccount): TaskProvider {
+export function getTaskProvider (account: IntegrationAccount): TaskProvider {
   switch (account.type) {
     case 'google':
       return new GoogleTasksProvider(account)
@@ -38,6 +38,6 @@ export function getTaskProvider(account: IntegrationAccount): TaskProvider {
  * Alias for getTaskProvider for backward compatibility
  * @deprecated Use getTaskProvider instead
  */
-export function createTasksProvider(account: IntegrationAccount): TaskProvider {
+export function createTasksProvider (account: IntegrationAccount): TaskProvider {
   return getTaskProvider(account)
 }

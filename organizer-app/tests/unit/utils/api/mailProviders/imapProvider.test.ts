@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { ImapProvider } from '~/utils/api/mailProviders/ImapProvider'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { ImapProvider } from '~/utils/api/mailProviders/ImapProvider'
 
-function makeAccount(overrides: Record<string, any> = {}) {
+function makeAccount (overrides: Record<string, any> = {}) {
   return {
     id: 'acc-imap-1',
     type: 'imap',
@@ -29,9 +29,9 @@ function makeAccount(overrides: Record<string, any> = {}) {
       smtpHost: 'smtp.example.com',
       smtpPort: 587,
       smtpEncryption: 'starttls',
-      ...overrides.oauthData,
+      ...overrides.oauthData
     },
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -64,8 +64,8 @@ describe('ImapProvider', () => {
         read: false,
         folder: 'INBOX',
         body: '',
-        attachments: [],
-      },
+        attachments: []
+      }
     ]
     vi.mocked(fetch).mockResolvedValue(
       jsonResponse({ emails: mockEmails, totalCount: 1, page: 0, pageSize: 50, hasMore: false })
@@ -101,7 +101,7 @@ describe('ImapProvider', () => {
       body: 'Hello',
       date: new Date(),
       read: false,
-      folder: 'INBOX',
+      folder: 'INBOX'
     })
     expect(result).toBe(false)
   })

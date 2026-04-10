@@ -4,7 +4,7 @@ v-container(fluid)
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('meetings.categoriesTitle') }}
       p.text-subtitle-1 {{ $t('meetings.categoriesManage') }}
-  
+
   v-row
     v-col(cols="12")
       v-card
@@ -14,9 +14,9 @@ v-container(fluid)
           v-btn(color="primary" @click="createCategory")
             v-icon(start) mdi-plus
             span {{ $t('meetings.createCategory') }}
-        
+
         v-divider
-        
+
         v-card-text
           v-data-table(
             :headers="headers"
@@ -26,7 +26,7 @@ v-container(fluid)
             template(v-slot:item.color="{ item }")
               v-avatar(:color="item.color" :size="30")
                 v-icon(color="white" :icon="item.icon")
-            
+
             template(v-slot:item.name="{ item }")
               span {{ item.name }}
               v-tooltip(location="right")
@@ -38,16 +38,16 @@ v-container(fluid)
                     icon="mdi-information-outline"
                   )
                 span {{ item.description || $t('meetings.noCategoriesYet') }}
-            
+
             template(v-slot:item.meetingsCount="{ item }")
               span {{ getMeetingsCountForCategory(item.id) }}
-            
+
             template(v-slot:item.actions="{ item }")
               v-btn(icon variant="text" @click="editCategory(item)")
                 v-icon(size="small") mdi-pencil
               v-btn(icon variant="text" @click="confirmDeleteCategory(item)" :disabled="getMeetingsCountForCategory(item.id) === 0")
                 v-icon(size="small") mdi-delete
-  
+
   // Category form dialog
   dialog-form(v-model="categoryDialog" :title="isEditing ? $t('meetings.editCategory') : $t('meetings.createCategory')")
     v-card
@@ -60,21 +60,21 @@ v-container(fluid)
             outlined
             :rules="[v => !!v || $t('validation.required')]"
           )
-          
+
           v-textarea(
             v-model="editedCategory.description"
             :label="$t('meetings.categoryDescription')"
             outlined
             rows="3"
           )
-          
+
           v-color-picker(
             v-model="editedCategory.color"
             mode="hex"
             swatches-max-height="200"
             show-swatches
           )
-          
+
           // Icon selector
           .mb-4
             label.text-subtitle-2.mb-2 {{ $t('meetings.categoryIcon') }}
@@ -84,7 +84,7 @@ v-container(fluid)
               :label="$t('meetings.categoryIcon')"
               placeholder="mdi-calendar"
             )
-        
+
       v-card-actions
         v-spacer
         v-btn(
@@ -97,23 +97,23 @@ v-container(fluid)
           @click="categoryDialog = false"
           :disabled="saving"
         ) {{ $t('common.cancel') }}
-  
+
   // Delete confirmation dialog
   v-dialog(v-model="deleteDialog" max-width="500px")
     v-card
       v-card-title {{ $t('meetings.removeConfirmation') }}
       v-card-text
         p {{ $t('meetings.removeWarning') }}
-        p 
+        p
           strong {{ $t('meetings.meetingsInCategory') }}: {{ getMeetingsCountForCategory(selectedCategoryId) }}
-        
+
         v-text-field(
           v-model="confirmationText"
           :label="$t('meetings.typeAgreed')"
           outlined
           :error-messages="confirmationError"
         )
-      
+
       v-card-actions
         v-btn(
           color="success"
@@ -165,13 +165,12 @@ const headers = [
   { title: '', key: 'color', sortable: false, align: 'center', width: '50px' },
   { title: 'Name', key: 'name', sortable: true },
   { title: 'Meetings', key: 'meetingsCount', sortable: false, align: 'center', width: '120px' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end', width: '120px' },
+  { title: 'Actions', key: 'actions', sortable: false, align: 'end', width: '120px' }
 ]
-
 
 // Get count of meetings for a specific category
 const getMeetingsCountForCategory = (categoryId) => {
-  if (!categoryId) return 0
+  if (!categoryId) { return 0 }
   return meetingsStore.meetings.filter(meeting => meeting.category === categoryId).length
 }
 
@@ -203,7 +202,7 @@ const submitCategory = async () => {
       color: editedCategory.value.color,
       icon: editedCategory.value.icon || 'mdi-calendar'
     }
-    
+
     if (isEditing.value) {
       // Update existing category
       await categoriesStore.updateCategory(editedCategory.value.id, categoryData)
@@ -211,7 +210,7 @@ const submitCategory = async () => {
       // Create new category
       await categoriesStore.createCategory(categoryData)
     }
-    
+
     categoryDialog.value = false
   } catch (error) {
     console.error('Error saving category:', error)
@@ -233,23 +232,23 @@ const deleteCategory = async () => {
     confirmationError.value = 'Please type "agreed" to confirm deletion'
     return
   }
-  
-  if (!selectedCategoryId.value) return
-  
+
+  if (!selectedCategoryId.value) { return }
+
   deleting.value = true
   try {
     // Delete the category
     await categoriesStore.deleteCategory(selectedCategoryId.value)
-    
+
     // Update meetings that were using this category
     const affectedMeetings = meetingsStore.meetings.filter(
       meeting => meeting.category === selectedCategoryId.value
     )
-    
+
     for (const meeting of affectedMeetings) {
       await meetingsStore.updateMeeting(meeting.id, { category: null })
     }
-    
+
     deleteDialog.value = false
   } catch (error) {
     console.error('Error deleting category:', error)
@@ -264,7 +263,7 @@ onMounted(async () => {
     categoriesStore.fetchCategories(),
     meetingsStore.fetchMeetings()
   ])
-  
+
   // If no categories exist, seed from the YAML file
   if (categories.value.length === 0) {
     await categoriesStore.seedDefaultCategories()

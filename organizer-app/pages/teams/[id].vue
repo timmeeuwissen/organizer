@@ -319,8 +319,8 @@ v-container(fluid)
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import KnowledgeConnections from '~/components/knowledge/KnowledgeConnections.vue'
 import { useRoute, useRouter } from 'vue-router'
+import KnowledgeConnections from '~/components/knowledge/KnowledgeConnections.vue'
 import { useTeamsStore } from '~/stores/teams'
 import { usePeopleStore } from '~/stores/people'
 import { useMailStore } from '~/stores/mail'
@@ -337,7 +337,7 @@ import {
   unassignedInboxEmails,
   taskPrimaryProjectId,
   recentInboxEmailsForPerson,
-  taskBoardItemsForPerson,
+  taskBoardItemsForPerson
 } from '~/composables/useTeamAttentionBoard'
 import { useTasksStore } from '~/stores/tasks'
 import { useTeamBoardDisplay } from '~/composables/useTeamBoardDisplay'
@@ -377,19 +377,19 @@ const assignProjectId = ref<string | null>(null)
 
 const peopleById = computed(() => {
   const m = new Map<string, (typeof peopleStore.people)[0]>()
-  for (const p of peopleStore.people) m.set(p.id, p)
+  for (const p of peopleStore.people) { m.set(p.id, p) }
   return m
 })
 
 const orderedMembers = computed(() => {
-  if (!team.value) return []
+  if (!team.value) { return [] }
   return orderedTeamMembers(team.value, peopleById.value)
 })
 
 const boardItems = computed(() => {
-  if (!team.value) return []
+  if (!team.value) { return [] }
   const members = team.value.memberPersonIds
-    .map((id) => peopleById.value.get(id))
+    .map(id => peopleById.value.get(id))
     .filter(Boolean) as typeof peopleStore.people
   const meta = teamsStore.mailMetaForTeam(teamId.value)
   return buildAllBoardItems(
@@ -397,7 +397,7 @@ const boardItems = computed(() => {
     mailStore.emails,
     meta,
     members,
-    tasksStore.tasks,
+    tasksStore.tasks
   )
 })
 
@@ -415,7 +415,7 @@ const metaByEmailKey = computed(() => {
 
 const recentEmailsByPersonId = computed(() => {
   const out: Record<string, Email[]> = {}
-  if (!team.value) return out
+  if (!team.value) { return out }
   for (const id of team.value.memberPersonIds) {
     const p = peopleById.value.get(id)
     if (p) {
@@ -426,9 +426,9 @@ const recentEmailsByPersonId = computed(() => {
 })
 
 const unassignedEmails = computed(() => {
-  if (!team.value) return []
+  if (!team.value) { return [] }
   const members = team.value.memberPersonIds
-    .map((id) => peopleById.value.get(id))
+    .map(id => peopleById.value.get(id))
     .filter(Boolean) as typeof peopleStore.people
   const meta = teamsStore.mailMetaForTeam(teamId.value)
   return unassignedInboxEmails(mailStore.emails, team.value, meta, members)
@@ -436,54 +436,54 @@ const unassignedEmails = computed(() => {
 
 const projectItems = computed(() => [
   { title: '—', value: null as string | null },
-  ...projectsStore.projects.map((p) => ({ title: p.title, value: p.id })),
+  ...projectsStore.projects.map(p => ({ title: p.title, value: p.id }))
 ])
 
 const layoutItems = computed(() => [
   { title: t('teams.layoutAlphabetical'), value: 'alphabetical' as TeamColumnLayoutMode },
   { title: t('teams.layoutManual'), value: 'manual' as TeamColumnLayoutMode },
-  { title: t('teams.layoutDrag'), value: 'drag' as TeamColumnLayoutMode },
+  { title: t('teams.layoutDrag'), value: 'drag' as TeamColumnLayoutMode }
 ])
 
 const densityItems = computed(() => [
   { title: t('teams.densityNormal'), value: 'normal' as const },
-  { title: t('teams.densityCompact'), value: 'compact' as const },
+  { title: t('teams.densityCompact'), value: 'compact' as const }
 ])
 
-function emailMetaKey(email: Email) {
+function emailMetaKey (email: Email) {
   return `${email.accountId || ''}::${email.id}`
 }
 
-function teamMailMetaForEmail(email: Email) {
+function teamMailMetaForEmail (email: Email) {
   return metaByEmailKey.value.get(emailMetaKey(email))
 }
 
-function projectIdForTeamEmail(email: Email): string | null {
+function projectIdForTeamEmail (email: Email): string | null {
   return teamMailMetaForEmail(email)?.projectId ?? null
 }
 
-function taskItemsForPerson(personId: string) {
+function taskItemsForPerson (personId: string) {
   return taskBoardItemsForPerson(boardItems.value, personId)
 }
 
-function emailRowKey(em: Email) {
+function emailRowKey (em: Email) {
   return `e-${em.accountId || ''}-${em.id}`
 }
 
-function boardItemKey(item: TeamBoardItem) {
+function boardItemKey (item: TeamBoardItem) {
   if (item.kind === 'email') {
     return `e-${item.email.accountId || ''}-${item.email.id}`
   }
   return `t-${item.task.id}`
 }
 
-function initials(person: { firstName: string; lastName: string }) {
+function initials (person: { firstName: string; lastName: string }) {
   const a = (person.firstName || '?')[0] || ''
   const b = (person.lastName || '')[0] || ''
   return (a + b).toUpperCase()
 }
 
-function formatDate(d: Date) {
+function formatDate (d: Date) {
   try {
     return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(d)
   } catch {
@@ -491,7 +491,7 @@ function formatDate(d: Date) {
   }
 }
 
-function formatLaneDate(d: Date) {
+function formatLaneDate (d: Date) {
   if (display.value.density === 'compact') {
     try {
       return new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(d)
@@ -502,17 +502,17 @@ function formatLaneDate(d: Date) {
   return formatDate(d)
 }
 
-function projectTitle(projectId: string | null) {
-  if (!projectId) return ''
+function projectTitle (projectId: string | null) {
+  if (!projectId) { return '' }
   return projectsStore.getById(projectId)?.title || ''
 }
 
-function taskProjectTitle(task: Task) {
+function taskProjectTitle (task: Task) {
   const pid = taskPrimaryProjectId(task)
   return pid ? projectTitle(pid) : ''
 }
 
-function taskStatusLabel(status: Task['status']) {
+function taskStatusLabel (status: Task['status']) {
   switch (status) {
     case 'todo':
       return t('tasks.todoTasks')
@@ -525,7 +525,7 @@ function taskStatusLabel(status: Task['status']) {
   }
 }
 
-async function load() {
+async function load () {
   await teamsStore.fetchTeam(teamId.value)
   await teamsStore.fetchTeamMailMeta(teamId.value)
   await peopleStore.fetchPeople()
@@ -536,7 +536,7 @@ async function load() {
   }
 }
 
-async function refreshBoard() {
+async function refreshBoard () {
   refreshing.value = true
   try {
     await load()
@@ -545,20 +545,20 @@ async function refreshBoard() {
   }
 }
 
-async function onLayoutChange(v: TeamColumnLayoutMode) {
-  if (!team.value) return
+async function onLayoutChange (v: TeamColumnLayoutMode) {
+  if (!team.value) { return }
   await teamsStore.updateTeam(team.value.id, { columnLayoutMode: v })
   notify.success(t('teams.layoutSaved'))
 }
 
-async function moveMember(personId: string, dir: -1 | 1) {
-  if (!team.value) return
+async function moveMember (personId: string, dir: -1 | 1) {
+  if (!team.value) { return }
   await teamsStore.moveMember(team.value.id, personId, dir)
   await teamsStore.fetchTeam(team.value.id)
 }
 
-async function removeMember(personId: string) {
-  if (!team.value) return
+async function removeMember (personId: string) {
+  if (!team.value) { return }
   await teamsStore.removeMember(team.value.id, personId)
   notify.success(t('teams.memberRemoved'))
 }
@@ -566,26 +566,26 @@ async function removeMember(personId: string) {
 const peopleToAdd = computed(() => {
   const ids = new Set(team.value?.memberPersonIds || [])
   return peopleStore.people
-    .filter((p) => !ids.has(p.id))
-    .map((p) => ({
+    .filter(p => !ids.has(p.id))
+    .map(p => ({
       id: p.id,
-      label: `${p.firstName} ${p.lastName}${p.email ? ` · ${p.email}` : ''}`,
+      label: `${p.firstName} ${p.lastName}${p.email ? ` · ${p.email}` : ''}`
     }))
 })
 
 const memberSelectItems = computed(() =>
-  orderedMembers.value.map((p) => ({
+  orderedMembers.value.map(p => ({
     title: `${p.firstName} ${p.lastName}`,
-    value: p.id,
-  })),
+    value: p.id
+  }))
 )
 
-function openAddTaskFor(personId: string) {
+function openAddTaskFor (personId: string) {
   addTaskForPersonId.value = personId
   addTaskDialog.value = true
 }
 
-async function onAddTaskSubmit(taskData: Partial<Task>) {
+async function onAddTaskSubmit (taskData: Partial<Task>) {
   addTaskLoading.value = true
   addTaskError.value = ''
   try {
@@ -601,15 +601,15 @@ async function onAddTaskSubmit(taskData: Partial<Task>) {
   }
 }
 
-async function addMember() {
-  if (!team.value || !selectedPersonToAdd.value) return
+async function addMember () {
+  if (!team.value || !selectedPersonToAdd.value) { return }
   await teamsStore.addMember(team.value.id, selectedPersonToAdd.value)
   selectedPersonToAdd.value = null
   openAddMember.value = false
   notify.success(t('teams.memberAdded'))
 }
 
-function onBoardItemClick(item: TeamBoardItem) {
+function onBoardItemClick (item: TeamBoardItem) {
   if (item.kind === 'email') {
     router.push({ path: '/mail' })
     return
@@ -617,50 +617,50 @@ function onBoardItemClick(item: TeamBoardItem) {
   router.push({ path: '/tasks', query: { id: item.task.id } })
 }
 
-function onRecentEmailClick(_em: Email) {
+function onRecentEmailClick (_em: Email) {
   router.push({ path: '/mail' })
 }
 
-async function setEmailProjectForPerson(email: Email, personId: string, projectId: string | null) {
-  if (!team.value) return
+async function setEmailProjectForPerson (email: Email, personId: string, projectId: string | null) {
+  if (!team.value) { return }
   await teamsStore.upsertTeamMailMeta({
     teamId: team.value.id,
     accountId: email.accountId || '',
     emailId: email.id,
     personId,
-    projectId: projectId || null,
+    projectId: projectId || null
   })
   notify.success(t('teams.projectLinked'))
   await teamsStore.fetchTeamMailMeta(team.value.id)
 }
 
-async function setTaskBoardProject(item: TeamBoardItem, projectId: string | null) {
-  if (item.kind !== 'task') return
+async function setTaskBoardProject (item: TeamBoardItem, projectId: string | null) {
+  if (item.kind !== 'task') { return }
   const pid = projectId || undefined
   await tasksStore.updateTask(item.task.id, {
     projectId: pid,
-    relatedProjects: pid ? [pid] : [],
+    relatedProjects: pid ? [pid] : []
   })
   await tasksStore.fetchTasks()
   notify.success(t('teams.projectLinked'))
 }
 
-function openAssignOne(em: Email) {
+function openAssignOne (em: Email) {
   assignOneEmail.value = em
   assignPersonId.value = orderedMembers.value[0]?.id ?? null
   assignProjectId.value = null
   assignOneOpen.value = true
 }
 
-async function submitAssignOne() {
-  if (!team.value || !assignOneEmail.value || !assignPersonId.value) return
+async function submitAssignOne () {
+  if (!team.value || !assignOneEmail.value || !assignPersonId.value) { return }
   const em = assignOneEmail.value
   await teamsStore.upsertTeamMailMeta({
     teamId: team.value.id,
     accountId: em.accountId || '',
     emailId: em.id,
     personId: assignPersonId.value,
-    projectId: assignProjectId.value,
+    projectId: assignProjectId.value
   })
   assignOneOpen.value = false
   assignOneEmail.value = null
@@ -669,8 +669,8 @@ async function submitAssignOne() {
   await teamsStore.fetchTeamMailMeta(team.value.id)
 }
 
-async function deleteTeam() {
-  if (!team.value) return
+async function deleteTeam () {
+  if (!team.value) { return }
   const id = team.value.id
   await teamsStore.deleteTeam(id)
   confirmDelete.value = false
@@ -680,7 +680,7 @@ async function deleteTeam() {
 
 watch(
   () => route.params.id as string,
-  () => load(),
+  () => load()
 )
 
 onMounted(() => load())

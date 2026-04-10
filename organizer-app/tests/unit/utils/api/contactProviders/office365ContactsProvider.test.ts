@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { Office365ContactsProvider } from '~/utils/api/contactProviders/Office365ContactsProvider'
 import { office365IntegrationAccount } from '../../../helpers/mockIntegrationAccount'
 import { jsonResponse } from '../../../helpers/mockFetch'
+import { Office365ContactsProvider } from '~/utils/api/contactProviders/Office365ContactsProvider'
 
 describe('Office365ContactsProvider', () => {
   beforeEach(() => {
@@ -20,9 +20,9 @@ describe('Office365ContactsProvider', () => {
             id: 'c1',
             givenName: 'Pat',
             surname: 'Lee',
-            emailAddresses: [{ address: 'pat@example.com' }],
-          },
-        ],
+            emailAddresses: [{ address: 'pat@example.com' }]
+          }
+        ]
       })
     )
 

@@ -6,20 +6,20 @@ import { useAuthStore } from '~/stores/auth'
  * @param account The integration account to check
  * @returns Boolean indicating if the account has valid tokens
  */
-export function hasValidOAuthTokens(account: IntegrationAccount): boolean {
+export function hasValidOAuthTokens (account: IntegrationAccount): boolean {
   // Must have access token
   if (!account.oauthData.accessToken) {
     console.log(`[OAuth] ${account.oauthData.email}: No access token found`)
     return false
   }
-  
+
   // Check if token is expired
   if (account.oauthData.tokenExpiry) {
     const now = new Date()
     // Add 30-second buffer to account for network latency and clock differences
     const bufferedNow = new Date(now.getTime() + 30 * 1000)
     const expiryDate = new Date(account.oauthData.tokenExpiry)
-    
+
     if (bufferedNow > expiryDate) {
       console.log(`[OAuth] ${account.oauthData.email}: Token expired at ${expiryDate.toISOString()}, current time: ${now.toISOString()}`)
       // We no longer return true just because there's a refresh token
@@ -31,7 +31,7 @@ export function hasValidOAuthTokens(account: IntegrationAccount): boolean {
     console.log(`[OAuth] ${account.oauthData.email}: No token expiry date, assuming expired`)
     return false
   }
-  
+
   return true
 }
 
@@ -40,20 +40,20 @@ export function hasValidOAuthTokens(account: IntegrationAccount): boolean {
  * @param account The integration account to check
  * @returns Status message for the account
  */
-export function getAccountStatusMessage(account: IntegrationAccount): string {
+export function getAccountStatusMessage (account: IntegrationAccount): string {
   if (!account.oauthData.connected) {
     return 'Not connected'
   }
-  
+
   if (!hasValidOAuthTokens(account)) {
     return 'Authentication required'
   }
-  
+
   // Check that proper scopes are granted for mail access
   if (account.type === 'google' && account.oauthData.scope) {
-    if (!account.oauthData.scope.includes('gmail.readonly') && 
-        !account.oauthData.scope.includes('gmail.send') && 
-        !account.oauthData.scope.includes('gmail.modify') && 
+    if (!account.oauthData.scope.includes('gmail.readonly') &&
+        !account.oauthData.scope.includes('gmail.send') &&
+        !account.oauthData.scope.includes('gmail.modify') &&
         !account.oauthData.scope.includes('gmail.labels') &&
         !account.oauthData.scope.includes('https://www.googleapis.com/auth/gmail.readonly')) {
       return 'Gmail permissions required'
@@ -63,7 +63,7 @@ export function getAccountStatusMessage(account: IntegrationAccount): string {
       return 'Mail access permissions required'
     }
   }
-  
+
   return 'Connected'
 }
 
@@ -72,21 +72,21 @@ export function getAccountStatusMessage(account: IntegrationAccount): string {
  * @param account The integration account
  * @returns Color name for the status
  */
-export function getAccountStatusColor(account: IntegrationAccount): string {
+export function getAccountStatusColor (account: IntegrationAccount): string {
   if (!account.oauthData.connected) {
     return 'error'
   }
-  
+
   if (!hasValidOAuthTokens(account)) {
     return 'warning'
   }
-  
+
   // Check scopes
   if (account.type === 'google' && account.oauthData.scope) {
-    if (!account.oauthData.scope.includes('gmail.readonly') && 
-        !account.oauthData.scope.includes('gmail.send') && 
-        !account.oauthData.scope.includes('gmail.modify') && 
-        !account.oauthData.scope.includes('gmail.labels') && 
+    if (!account.oauthData.scope.includes('gmail.readonly') &&
+        !account.oauthData.scope.includes('gmail.send') &&
+        !account.oauthData.scope.includes('gmail.modify') &&
+        !account.oauthData.scope.includes('gmail.labels') &&
         !account.oauthData.scope.includes('https://www.googleapis.com/auth/gmail.readonly')) {
       return 'warning'
     }
@@ -95,7 +95,7 @@ export function getAccountStatusColor(account: IntegrationAccount): string {
       return 'warning'
     }
   }
-  
+
   return 'success'
 }
 
@@ -105,14 +105,14 @@ export function getAccountStatusColor(account: IntegrationAccount): string {
  * @returns Updated account with new access token
  * @throws Error if token refresh fails
  */
-export async function refreshOAuthToken(account: IntegrationAccount): Promise<IntegrationAccount> {
+export async function refreshOAuthToken (account: IntegrationAccount): Promise<IntegrationAccount> {
   if (!account.oauthData.refreshToken) {
     console.error(`[OAuth] No refresh token available for ${account.oauthData.email}`)
     throw new Error(`No refresh token available for ${account.oauthData.email}`)
   }
-  
+
   console.log(`[OAuth] Refreshing token for ${account.type} account: ${account.oauthData.email}`)
-  
+
   let provider = ''
   if (account.type === 'google') {
     provider = 'google'
@@ -121,24 +121,24 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
   } else {
     throw new Error(`Unsupported account type: ${account.type}`)
   }
-  
+
   try {
     // Use a single code path for all provider types
     console.log(`[OAuth] Refreshing ${provider} token for ${account.oauthData.email} using server-side endpoint`)
-    
+
     const response = await fetch('/api/auth/refresh', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       },
       body: JSON.stringify({
         refreshToken: account.oauthData.refreshToken,
         provider,
         email: account.oauthData.email
-      }),
+      })
     })
-    
+
     // Validate response format
     const contentType = response.headers.get('content-type')
     if (!contentType || !contentType.includes('application/json')) {
@@ -146,12 +146,12 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
       console.error(`[OAuth] Server returned non-JSON response for ${account.oauthData.email}:`, errorText)
       throw new Error(`Server returned non-JSON response: ${errorText}`)
     }
-    
+
     // Check response status
     if (!response.ok) {
       const errorData = await response.json()
       console.error(`[OAuth] Token refresh failed for ${account.oauthData.email}:`, errorData)
-      
+
       // Handle specific error cases
       if (errorData.error === 'invalid_grant') {
         // This indicates the refresh token is expired or revoked
@@ -163,11 +163,11 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
             connected: false,
             updatedAt: new Date()
           }
-        };
-        
+        }
+
         // Update in store to reflect disconnected status
         updateAccountInStore(updatedAccount)
-        
+
         // Mark this account for reauthorization
         try {
           const { markAccountForReauth } = await import('../mailProviders/googleAuthUtils')
@@ -175,26 +175,26 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
         } catch (importError) {
           console.error('Failed to import googleAuthUtils:', importError)
         }
-        
+
         throw new Error(
-          `Your Google account authorization has expired or been revoked (invalid_grant). Please re-authorize your account.`
+          'Your Google account authorization has expired or been revoked (invalid_grant). Please re-authorize your account.'
         )
       }
-      
+
       // General error handling for other cases
       throw new Error(`Token refresh failed: ${JSON.stringify(errorData)}`)
     }
-    
+
     // Parse the tokens from the response
     const tokens = await response.json()
     console.log(`[OAuth] Successfully refreshed token for ${account.oauthData.email}`)
-    
+
     // Ensure we have an access token
     if (!tokens.accessToken && !tokens.access_token) {
       console.error(`[OAuth] Token response missing access token for ${account.oauthData.email}`, tokens)
-      throw new Error(`Token refresh failed: Missing access token in response`)
+      throw new Error('Token refresh failed: Missing access token in response')
     }
-    
+
     // Normalize token structure - some servers return snake_case, others camelCase
     const normalizedTokens = {
       accessToken: tokens.accessToken || tokens.access_token,
@@ -203,13 +203,13 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
       tokenType: tokens.token_type || tokens.tokenType || 'Bearer',
       scope: tokens.scope || account.oauthData.scope
     }
-    
+
     console.log(`[OAuth] Processed token for ${account.oauthData.email}, expires in ${normalizedTokens.expiresIn} seconds`)
-    
+
     // Calculate actual expiry time with a 10% safety margin to account for clock skew
     const expiryWithMargin = new Date(Date.now() + (normalizedTokens.expiresIn * 1000 * 0.9))
     console.log(`[OAuth] Token for ${account.oauthData.email} valid until ${expiryWithMargin.toISOString()} (with safety margin)`)
-    
+
     // Return the updated account with new token information
     const updatedAccount = {
       ...account,
@@ -224,10 +224,10 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
         connected: true
       }
     }
-    
+
     // Update in store immediately to ensure it's saved
     updateAccountInStore(updatedAccount)
-    
+
     return updatedAccount
   } catch (error: any) {
     console.error(`[OAuth] Failed to refresh token for ${account.oauthData.email}:`, error)
@@ -240,37 +240,37 @@ export async function refreshOAuthToken(account: IntegrationAccount): Promise<In
  * Updates the account in Pinia store after refreshing token
  * @param updatedAccount The integration account with refreshed tokens
  */
-export function updateAccountInStore(updatedAccount: IntegrationAccount): void {
+export function updateAccountInStore (updatedAccount: IntegrationAccount): void {
   // Get the auth store instance
-  const authStore = useAuthStore();
-  
+  const authStore = useAuthStore()
+
   if (!authStore.currentUser || !authStore.currentUser.settings) {
-    console.warn('Cannot update account in store: No current user or settings');
-    return;
+    console.warn('Cannot update account in store: No current user or settings')
+    return
   }
-  
+
   try {
     // Find the account in the user's settings
-    const integrationAccounts = authStore.currentUser.settings.integrationAccounts || [];
-    const accountIndex = integrationAccounts.findIndex(acc => acc.id === updatedAccount.id);
-    
+    const integrationAccounts = authStore.currentUser.settings.integrationAccounts || []
+    const accountIndex = integrationAccounts.findIndex(acc => acc.id === updatedAccount.id)
+
     // If the account exists, update it
     if (accountIndex >= 0) {
       // Create new settings object with updated integration account
-      const updatedIntegrationAccounts = [...integrationAccounts];
-      updatedIntegrationAccounts[accountIndex] = updatedAccount;
-      
+      const updatedIntegrationAccounts = [...integrationAccounts]
+      updatedIntegrationAccounts[accountIndex] = updatedAccount
+
       // Update the settings in the store
       authStore.updateUserSettings({
         ...authStore.currentUser.settings,
         integrationAccounts: updatedIntegrationAccounts
-      });
-      
-      console.log(`Updated account ${updatedAccount.oauthData.email} in auth store with refreshed token`);
+      })
+
+      console.log(`Updated account ${updatedAccount.oauthData.email} in auth store with refreshed token`)
     } else {
-      console.warn(`Could not find account ${updatedAccount.oauthData.email} in auth store`);
+      console.warn(`Could not find account ${updatedAccount.oauthData.email} in auth store`)
     }
   } catch (error) {
-    console.error('Error updating account in store:', error);
+    console.error('Error updating account in store:', error)
   }
 }
