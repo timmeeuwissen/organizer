@@ -139,6 +139,7 @@ export interface Project {
   color?: string; // Color name for project (e.g., 'primary', 'green', etc.)
   createdAt: Date;
   updatedAt: Date;
+  lastActivity?: Date;
 }
 
 export interface ProjectPage {
@@ -150,6 +151,22 @@ export interface ProjectPage {
   tags?: string[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface AuditEvent {
+  id: string;
+  projectId: string;
+  userId: string;
+  timestamp: Date;
+  entity: 'project' | 'task' | 'note' | 'meeting' | 'file' | 'mail';
+  entityId: string;
+  entityTitle: string;
+  action: 'created' | 'updated' | 'deleted' | 'completed' | 'uncompleted' | 'linked' | 'unlinked';
+  changes?: {
+    field: string;
+    from: string;
+    to: string;
+  }[];
 }
 
 export interface Task {
