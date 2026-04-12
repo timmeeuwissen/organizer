@@ -492,7 +492,7 @@ export default {
     fileUploaded: 'File uploaded',
     fileDeleted: 'File deleted',
     mailUnlinked: 'Mail unlinked',
-    projectUpdated: 'Project updated',
+    projectUpdated: 'Project updated'
   },
   tasks: {
     title: 'Tasks',

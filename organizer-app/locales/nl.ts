@@ -455,7 +455,7 @@ export default {
     fileUploaded: 'Bestand geüpload',
     fileDeleted: 'Bestand verwijderd',
     mailUnlinked: 'E-mail ontkoppeld',
-    projectUpdated: 'Project bijgewerkt',
+    projectUpdated: 'Project bijgewerkt'
   },
   tasks: {
     title: 'Taken',
