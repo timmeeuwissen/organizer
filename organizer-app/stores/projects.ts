@@ -10,12 +10,13 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  orderBy
-  , getFirestore
+  orderBy,
+  limit,
+  getFirestore
 } from 'firebase/firestore'
 import { useAuthStore } from './auth'
 import { useNotificationStore } from '~/stores/notification'
-import type { Project, ProjectPage } from '~/types/models'
+import type { Project, ProjectPage, AuditEvent } from '~/types/models'
 
 export const useProjectsStore = defineStore('projects', {
   state: () => ({
@@ -75,6 +76,72 @@ export const useProjectsStore = defineStore('projects', {
   },
 
   actions: {
+    async writeAuditEvent (
+      projectId: string,
+      event: {
+        entity: AuditEvent['entity']
+        entityId: string
+        entityTitle: string
+        action: AuditEvent['action']
+        changes?: AuditEvent['changes']
+      }
+    ) {
+      const authStore = useAuthStore()
+      if (!authStore.user) { return }
+
+      try {
+        const db = getFirestore()
+        const auditRef = collection(db, 'projects', projectId, 'auditEvents')
+        const projectRef = doc(db, 'projects', projectId)
+
+        await Promise.all([
+          addDoc(auditRef, {
+            projectId,
+            userId: authStore.user.id,
+            timestamp: serverTimestamp(),
+            entity: event.entity,
+            entityId: event.entityId,
+            entityTitle: event.entityTitle,
+            action: event.action,
+            ...(event.changes ? { changes: event.changes } : {})
+          }),
+          updateDoc(projectRef, { lastActivity: serverTimestamp() })
+        ])
+
+        const now = new Date()
+        const idx = this.projects.findIndex(p => p.id === projectId)
+        if (idx !== -1) { this.projects[idx].lastActivity = now }
+        if (this.currentProject?.id === projectId) { this.currentProject.lastActivity = now }
+      } catch (error) {
+        // Audit failures must not block the main operation
+        console.warn('[audit] failed to write audit event', error)
+      }
+    },
+
+    async fetchAuditEvents (projectId: string): Promise<AuditEvent[]> {
+      const authStore = useAuthStore()
+      if (!authStore.user) { return [] }
+
+      try {
+        const db = getFirestore()
+        const auditRef = collection(db, 'projects', projectId, 'auditEvents')
+        const q = query(auditRef, orderBy('timestamp', 'desc'), limit(100))
+        const snap = await getDocs(q)
+
+        return snap.docs.map((d) => {
+          const data = d.data()
+          return {
+            ...data,
+            id: d.id,
+            timestamp: data.timestamp?.toDate() || new Date()
+          } as AuditEvent
+        })
+      } catch (error) {
+        console.warn('[audit] failed to fetch audit events', error)
+        return []
+      }
+    },
+
     async fetchProjects () {
       const authStore = useAuthStore()
       if (!authStore.user) { return }
