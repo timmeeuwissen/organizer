@@ -574,6 +574,12 @@ async function onProjectFileChange (ev: Event) {
   try {
     await attachmentsStore.uploadFile(pid, file)
     notify.pushSuccess(t('projects.fileUploaded'))
+    await projectsStore.writeAuditEvent(pid, {
+      entity: 'file',
+      entityId: file.name,
+      entityTitle: file.name,
+      action: 'created'
+    })
   } catch (e: unknown) {
     notify.pushError(e instanceof Error ? e.message : t('errors.generic'))
   }
@@ -596,6 +602,12 @@ function confirmRemoveFile (f: ProjectFile) {
   confirmDialog.text = f.name
   pendingConfirm = async () => {
     await attachmentsStore.deleteFile(projectId.value, f)
+    await projectsStore.writeAuditEvent(projectId.value, {
+      entity: 'file',
+      entityId: f.id,
+      entityTitle: f.name,
+      action: 'deleted'
+    })
     notify.pushSuccess(t('projects.fileRemoved'))
   }
   confirmDialog.open = true
@@ -613,6 +625,12 @@ function confirmRemoveMailLink (row: ProjectMailLink) {
   confirmDialog.text = row.subjectSnapshot || row.emailId
   pendingConfirm = async () => {
     await attachmentsStore.deleteMailLink(projectId.value, row.id, row.accountId, row.emailId)
+    await projectsStore.writeAuditEvent(projectId.value, {
+      entity: 'mail',
+      entityId: row.emailId,
+      entityTitle: row.subjectSnapshot || row.emailId,
+      action: 'unlinked'
+    })
     notify.pushSuccess(t('projects.mailUnlinked'))
   }
   confirmDialog.open = true
