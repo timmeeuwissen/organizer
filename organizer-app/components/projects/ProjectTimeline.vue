@@ -48,7 +48,7 @@ import { useProjectsStore } from '~/stores/projects'
 import type { AuditEvent } from '~/types/models'
 
 const props = defineProps<{ projectId: string }>()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const projectsStore = useProjectsStore()
 
 const loading = ref(false)
@@ -56,8 +56,11 @@ const events = ref<AuditEvent[]>([])
 
 const load = async (id: string) => {
   loading.value = true
-  events.value = await projectsStore.fetchAuditEvents(id)
-  loading.value = false
+  try {
+    events.value = await projectsStore.fetchAuditEvents(id)
+  } finally {
+    loading.value = false
+  }
 }
 
 watch(() => props.projectId, (id) => { if (id) { void load(id) } }, { immediate: true })
@@ -118,5 +121,5 @@ const formatRelativeTime = (date: Date): string => {
   return formatFullDate(date)
 }
 
-const formatFullDate = (date: Date): string => new Date(date).toLocaleString()
+const formatFullDate = (date: Date): string => new Date(date).toLocaleString(locale.value)
 </script>
