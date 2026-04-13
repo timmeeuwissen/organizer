@@ -166,7 +166,8 @@ export const useProjectsStore = defineStore('projects', {
             id: doc.id,
             dueDate: data.dueDate?.toDate() || null,
             createdAt: data.createdAt?.toDate() || new Date(),
-            updatedAt: data.updatedAt?.toDate() || new Date()
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            lastActivity: data.lastActivity?.toDate() || undefined
           } as Project
         })
       } catch (error: any) {
@@ -203,7 +204,8 @@ export const useProjectsStore = defineStore('projects', {
             id: projectSnap.id,
             dueDate: data.dueDate?.toDate() || null,
             createdAt: data.createdAt?.toDate() || new Date(),
-            updatedAt: data.updatedAt?.toDate() || new Date()
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            lastActivity: data.lastActivity?.toDate() || undefined
           } as Project
         } else {
           this.error = 'Project not found'
