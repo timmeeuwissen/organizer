@@ -114,6 +114,7 @@ v-container
         v-tab(value="files") {{ $t('projects.files') }}
         v-tab(value="mail") {{ $t('projects.connectedMail') }}
         v-tab(value="knowledge") {{ $t('knowledge.title') }}
+        v-tab(value="timeline") {{ $t('projects.timeline') }}
 
       v-window(v-model="activeTab")
         v-window-item(value="tasks")
@@ -277,6 +278,9 @@ v-container
                 :entity-id="project.id"
               )
 
+        v-window-item(value="timeline")
+          ProjectTimeline(v-if="project" :project-id="projectId")
+
   // Project edit dialog
   v-dialog(v-model="editDialog" max-width="800px")
     v-card(v-if="editDialog && project")
@@ -374,6 +378,7 @@ import TaskForm from '~/components/tasks/TaskForm.vue'
 import TasksOverviewTable from '~/components/tasks/TasksOverviewTable.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import KnowledgeConnections from '~/components/knowledge/KnowledgeConnections.vue'
+import ProjectTimeline from '~/components/projects/ProjectTimeline.vue'
 
 definePageMeta({ middleware: 'auth' })
 
