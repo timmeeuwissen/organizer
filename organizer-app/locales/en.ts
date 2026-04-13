@@ -492,7 +492,11 @@ export default {
     fileUploaded: 'File uploaded',
     fileDeleted: 'File deleted',
     mailUnlinked: 'Mail unlinked',
-    projectUpdated: 'Project updated'
+    projectUpdated: 'Project updated',
+    justNow: 'just now',
+    minutesAgo: '{n}m ago',
+    hoursAgo: '{n}h ago',
+    daysAgo: '{n}d ago'
   },
   tasks: {
     title: 'Tasks',

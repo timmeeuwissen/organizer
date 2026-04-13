@@ -455,7 +455,11 @@ export default {
     fileUploaded: 'Bestand geüpload',
     fileDeleted: 'Bestand verwijderd',
     mailUnlinked: 'E-mail ontkoppeld',
-    projectUpdated: 'Project bijgewerkt'
+    projectUpdated: 'Project bijgewerkt',
+    justNow: 'zojuist',
+    minutesAgo: '{n}m geleden',
+    hoursAgo: '{n}h geleden',
+    daysAgo: '{n}d geleden'
   },
   tasks: {
     title: 'Taken',

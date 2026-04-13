@@ -109,12 +109,12 @@ const getTitle = (event: AuditEvent): string => {
 const formatRelativeTime = (date: Date): string => {
   const diff = Date.now() - new Date(date).getTime()
   const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) { return 'just now' }
-  if (minutes < 60) { return `${minutes}m ago` }
+  if (minutes < 1) { return t('timeline.justNow') }
+  if (minutes < 60) { return t('timeline.minutesAgo', { n: minutes }) }
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) { return `${hours}h ago` }
+  if (hours < 24) { return t('timeline.hoursAgo', { n: hours }) }
   const days = Math.floor(hours / 24)
-  if (days < 7) { return `${days}d ago` }
+  if (days < 7) { return t('timeline.daysAgo', { n: days }) }
   return formatFullDate(date)
 }
 
