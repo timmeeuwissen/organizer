@@ -296,6 +296,9 @@ export const useProjectsStore = defineStore('projects', {
           throw new Error('Unauthorized access to project')
         }
 
+        // Capture state before update for audit diff
+        const beforeProject = this.projects.find(p => p.id === id)
+
         // Build update payload excluding undefined values and immutable fields
         const updateData: Record<string, unknown> = { updatedAt: serverTimestamp() }
         for (const [key, value] of Object.entries(updates)) {
@@ -305,6 +308,30 @@ export const useProjectsStore = defineStore('projects', {
         }
 
         await updateDoc(projectRef, updateData)
+
+        // Write audit event for meaningful field changes
+        const watchedFields = ['status', 'priority', 'title', 'members', 'tags'] as const
+        type WatchedField = typeof watchedFields[number]
+        const auditChanges: NonNullable<AuditEvent['changes']> = []
+        const serialize = (val: unknown): string =>
+          Array.isArray(val) ? (val as string[]).join(', ') : String(val ?? '')
+        for (const field of watchedFields) {
+          if (!(field in updates)) { continue }
+          const fromStr = serialize(beforeProject?.[field as WatchedField])
+          const toStr = serialize(updates[field as WatchedField])
+          if (fromStr !== toStr) {
+            auditChanges.push({ field, from: fromStr, to: toStr })
+          }
+        }
+        if (auditChanges.length > 0) {
+          await this.writeAuditEvent(id, {
+            entity: 'project',
+            entityId: id,
+            entityTitle: String(updates.title ?? beforeProject?.title ?? id),
+            action: 'updated',
+            changes: auditChanges
+          })
+        }
 
         // Update local state
         const index = this.projects.findIndex(p => p.id === id)
@@ -491,6 +518,13 @@ export const useProjectsStore = defineStore('projects', {
         const updatedPages = [...project.pages, docRef.id]
         await this.updateProject(projectId, { pages: updatedPages })
 
+        await this.writeAuditEvent(projectId, {
+          entity: 'note',
+          entityId: docRef.id,
+          entityTitle: newPage.title || 'Note',
+          action: 'created'
+        })
+
         // Create page object for return
         const addedPage = {
           ...pageData,
@@ -638,6 +672,13 @@ export const useProjectsStore = defineStore('projects', {
         }
 
         await deleteDoc(pageRef)
+
+        await this.writeAuditEvent(project.id, {
+          entity: 'note',
+          entityId: id,
+          entityTitle: pageData.title || 'Note',
+          action: 'deleted'
+        })
 
         // Remove page ID from the project
         const updatedPages = project.pages.filter(pageId => pageId !== id)
