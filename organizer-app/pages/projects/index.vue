@@ -4,8 +4,24 @@ v-container(fluid)
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('projects.title') }}
 
-  v-row
-    v-col(cols="12" md="3")
+  .d-flex.align-start.mt-2(style="gap:0")
+    CollapsableFilterPanel(
+      :title="$t('projects.filters')"
+      storage-key="projects"
+    )
+      v-card(class="mb-4")
+        v-card-title {{ $t('projects.sortBy') }}
+        v-card-text
+          v-select(
+            v-model="sortBy"
+            :items="sortOptions"
+            item-title="label"
+            item-value="value"
+            density="compact"
+            variant="outlined"
+            hide-details
+          )
+
       v-card(class="mb-4")
         v-card-title {{ $t('projects.status') }}
         v-card-text
@@ -77,7 +93,7 @@ v-container(fluid)
             @click="toggleTag(tag)"
           ) {{ tag }}
 
-    v-col(cols="12" md="9")
+    div(style="flex:1;min-width:0;padding-left:12px")
       v-card
         v-card-title.d-flex
           span {{ getStatusLabel(selectedStatus) }}
@@ -158,6 +174,17 @@ const selectedProject = ref<Project | null>(null)
 const search = ref('')
 const selectedStatus = ref('all')
 const selectedTags = ref<string[]>([])
+const sortBy = ref('lastActivity')
+
+const sortOptions = computed(() => [
+  { label: t('projects.sortLastActivity'), value: 'lastActivity' },
+  { label: t('projects.sortPriority'), value: 'priority' },
+  { label: t('projects.sortDueDate'), value: 'dueDate' },
+  { label: t('projects.sortCreatedDate'), value: 'createdAt' },
+  { label: t('projects.sortAlphabetical'), value: 'title' },
+  { label: t('projects.sortProgress'), value: 'progress' },
+  { label: t('projects.sortTaskCount'), value: 'taskCount' }
+])
 
 // Initialize data
 onMounted(async () => {
@@ -200,8 +227,40 @@ const filteredProjects = computed(() => {
     })
   }
 
-  const rank: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 }
-  result.sort((a, b) => (rank[a.priority] || 99) - (rank[b.priority] || 99))
+  const priorityRank: Record<string, number> = { low: 1, medium: 2, high: 3, urgent: 4 }
+
+  switch (sortBy.value) {
+    case 'priority':
+      result.sort((a, b) => (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0))
+      break
+    case 'dueDate':
+      result.sort((a, b) => {
+        if (!a.dueDate) { return 1 }
+        if (!b.dueDate) { return -1 }
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      })
+      break
+    case 'createdAt':
+      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      break
+    case 'title':
+      result.sort((a, b) => a.title.localeCompare(b.title))
+      break
+    case 'progress':
+      result.sort((a, b) => (b.progress || 0) - (a.progress || 0))
+      break
+    case 'taskCount':
+      result.sort((a, b) => (b.tasks?.length || 0) - (a.tasks?.length || 0))
+      break
+    case 'lastActivity':
+    default:
+      result.sort((a, b) => {
+        const aTime = new Date(a.lastActivity ?? a.createdAt).getTime()
+        const bTime = new Date(b.lastActivity ?? b.createdAt).getTime()
+        return bTime - aTime
+      })
+      break
+  }
 
   return result
 })
