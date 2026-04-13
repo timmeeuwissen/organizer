@@ -146,6 +146,7 @@ v-container(fluid)
             @edit="openTask"
             @toggle-status="toggleTaskStatus"
             @add-subtask="addSubtask"
+            @delete="deleteTask"
           )
 
   AdminCard(:items="filteredTasks" class="mt-2")
@@ -184,6 +185,7 @@ import type { Task } from '~/types/models'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 import TasksOverviewTable from '~/components/tasks/TasksOverviewTable.vue'
 import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
+import FilterContainer from '~/components/common/FilterContainer.vue'
 import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
 import {
   TASKS_PAGE_SIZE_OPTIONS,
