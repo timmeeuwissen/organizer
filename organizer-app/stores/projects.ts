@@ -297,7 +297,14 @@ export const useProjectsStore = defineStore('projects', {
         }
 
         // Capture state before update for audit diff
-        const beforeProject = this.projects.find(p => p.id === id)
+        const beforeProject = {
+          ...projectData,
+          id: projectSnap.id,
+          dueDate: projectData.dueDate?.toDate() || null,
+          createdAt: projectData.createdAt?.toDate() || new Date(),
+          updatedAt: projectData.updatedAt?.toDate() || new Date(),
+          lastActivity: projectData.lastActivity?.toDate() || undefined
+        } as Project
 
         // Build update payload excluding undefined values and immutable fields
         const updateData: Record<string, unknown> = { updatedAt: serverTimestamp() }
