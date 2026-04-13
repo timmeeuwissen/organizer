@@ -761,16 +761,20 @@ const confirmDeleteTask = (task: Task) => {
   confirmDialog.title = t('common.delete')
   confirmDialog.text = task.title
   pendingConfirm = async () => {
-    await tasksStore.deleteTask(task.id)
-    if (project.value) {
-      await projectsStore.writeAuditEvent(project.value.id, {
-        entity: 'task',
-        entityId: task.id,
-        entityTitle: task.title,
-        action: 'deleted'
-      })
+    try {
+      await tasksStore.deleteTask(task.id)
+      if (project.value) {
+        await projectsStore.writeAuditEvent(project.value.id, {
+          entity: 'task',
+          entityId: task.id,
+          entityTitle: task.title,
+          action: 'deleted'
+        })
+      }
+      notify.pushSuccess(t('common.delete'))
+    } catch (error: unknown) {
+      notify.pushError(error instanceof Error ? error.message : t('errors.generic'))
     }
-    notify.pushSuccess(t('common.delete'))
   }
   confirmDialog.open = true
 }
@@ -792,28 +796,32 @@ const completeTask = async () => {
 }
 
 const toggleProjectTaskStatus = async (task: Task) => {
-  if (task.status === 'completed') {
-    await tasksStore.markInProgress(task.id)
-    notify.pushSuccess(t('common.update'))
+  try {
+    if (task.status === 'completed') {
+      await tasksStore.markInProgress(task.id)
+      notify.pushSuccess(t('common.update'))
+      if (project.value) {
+        await projectsStore.writeAuditEvent(project.value.id, {
+          entity: 'task',
+          entityId: task.id,
+          entityTitle: task.title,
+          action: 'uncompleted'
+        })
+      }
+      return
+    }
+    await tasksStore.markComplete(task.id)
+    notify.pushSuccess(t('tasks.markComplete'))
     if (project.value) {
       await projectsStore.writeAuditEvent(project.value.id, {
         entity: 'task',
         entityId: task.id,
         entityTitle: task.title,
-        action: 'uncompleted'
+        action: 'completed'
       })
     }
-    return
-  }
-  await tasksStore.markComplete(task.id)
-  notify.pushSuccess(t('tasks.markComplete'))
-  if (project.value) {
-    await projectsStore.writeAuditEvent(project.value.id, {
-      entity: 'task',
-      entityId: task.id,
-      entityTitle: task.title,
-      action: 'completed'
-    })
+  } catch (error: unknown) {
+    notify.pushError(error instanceof Error ? error.message : t('errors.generic'))
   }
 }
 
