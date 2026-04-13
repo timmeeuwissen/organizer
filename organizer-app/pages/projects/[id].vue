@@ -132,6 +132,7 @@ v-container
                 @edit="openProjectTask"
                 @toggle-status="toggleProjectTaskStatus"
                 @add-subtask="addProjectSubtask"
+                @delete="confirmDeleteTask"
               )
 
         v-window-item(value="notes")
@@ -695,6 +696,15 @@ const submitTask = async (taskData: Partial<Task>) => {
         })
       }
       notify.pushSuccess(t('common.save'))
+      const createdTask = tasksStore.getById(createdId)
+      if (project.value && createdTask) {
+        await projectsStore.writeAuditEvent(project.value.id, {
+          entity: 'task',
+          entityId: createdId,
+          entityTitle: createdTask.title,
+          action: 'created'
+        })
+      }
     }
     taskDialog.value = false
     editingTask.value = null
@@ -729,6 +739,24 @@ const deleteTask = async () => {
   }
 }
 
+const confirmDeleteTask = (task: Task) => {
+  confirmDialog.title = t('common.delete')
+  confirmDialog.text = task.title
+  pendingConfirm = async () => {
+    await tasksStore.deleteTask(task.id)
+    if (project.value) {
+      await projectsStore.writeAuditEvent(project.value.id, {
+        entity: 'task',
+        entityId: task.id,
+        entityTitle: task.title,
+        action: 'deleted'
+      })
+    }
+    notify.pushSuccess(t('common.delete'))
+  }
+  confirmDialog.open = true
+}
+
 const completeTask = async () => {
   if (!editingTask.value) { return }
   taskLoading.value = true
@@ -749,10 +777,26 @@ const toggleProjectTaskStatus = async (task: Task) => {
   if (task.status === 'completed') {
     await tasksStore.markInProgress(task.id)
     notify.pushSuccess(t('common.update'))
+    if (project.value) {
+      await projectsStore.writeAuditEvent(project.value.id, {
+        entity: 'task',
+        entityId: task.id,
+        entityTitle: task.title,
+        action: 'uncompleted'
+      })
+    }
     return
   }
   await tasksStore.markComplete(task.id)
   notify.pushSuccess(t('tasks.markComplete'))
+  if (project.value) {
+    await projectsStore.writeAuditEvent(project.value.id, {
+      entity: 'task',
+      entityId: task.id,
+      entityTitle: task.title,
+      action: 'completed'
+    })
+  }
 }
 
 const addProjectSubtask = (parentTask: Task) => {
@@ -854,6 +898,15 @@ const submitMeeting = async (meetingData: MeetingFormInput) => {
     } else {
       await meetingsStore.createMeeting(updatedMeetingData)
       notify.pushSuccess(t('common.save'))
+      if (project.value) {
+        const meetingPayload = meetingFormToMeetingPayload(meetingData)
+        await projectsStore.writeAuditEvent(project.value.id, {
+          entity: 'meeting',
+          entityId: '',
+          entityTitle: meetingPayload.title || meetingPayload.subject || t('common.unknown'),
+          action: 'linked'
+        })
+      }
     }
     meetingDialog.value = false
     editingMeetingId.value = null
@@ -877,6 +930,14 @@ const confirmRemoveMeeting = (meeting: Meeting) => {
   confirmDialog.text = meetingDisplayTitle(meeting)
   pendingConfirm = async () => {
     await meetingsStore.deleteMeeting(meeting.id)
+    if (project.value) {
+      await projectsStore.writeAuditEvent(project.value.id, {
+        entity: 'meeting',
+        entityId: meeting.id,
+        entityTitle: meetingDisplayTitle(meeting),
+        action: 'unlinked'
+      })
+    }
     notify.pushSuccess(t('common.delete'))
   }
   confirmDialog.open = true
