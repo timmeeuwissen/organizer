@@ -24,7 +24,6 @@ div
                 :model-value="task.status === 'completed'"
                 color="success"
                 @click.stop="$emit('toggle-status', task)"
-                :disabled="task.status === 'completed'"
               )
           td.tasks-overview__title-cell
             .d-flex.align-center.min-w-0
@@ -78,24 +77,34 @@ div
               :color="getTypeColor(task.type)"
             ) {{ getTypeText(task.type) }}
           td(style="width: 160px")
-            v-btn(icon size="small" color="primary" @click.stop="$emit('edit', task)")
+            v-btn(icon size="x-small" variant="text" color="grey-darken-1" @click.stop="$emit('edit', task)")
               v-icon mdi-pencil
             v-btn(
               v-if="task.status !== 'completed'"
               icon
-              size="small"
+              size="x-small"
+              variant="text"
+              color="grey-darken-1"
               @click.stop="$emit('toggle-status', task)"
-              color="success"
             )
               v-icon mdi-check
             v-btn(
               v-if="!task.hasSubtasks"
               icon
-              size="small"
+              size="x-small"
+              variant="text"
+              color="grey-darken-1"
               @click.stop="$emit('add-subtask', task)"
-              color="info"
             )
               v-icon mdi-plus-circle-outline
+            v-btn(
+              icon
+              size="x-small"
+              variant="text"
+              color="grey-darken-1"
+              @click.stop="$emit('delete', task)"
+            )
+              v-icon mdi-delete
   div.d-flex.align-center.justify-space-between.px-2.py-3(
     v-if="!loading && tasks.length > 0 && totalTaskRows > 0"
   )
@@ -149,6 +158,7 @@ defineEmits<{
   edit: [task: Task]
   'toggle-status': [task: Task]
   'add-subtask': [task: Task]
+  delete: [task: Task]
 }>()
 
 const expandedTasks = reactive(new Set<string>())
