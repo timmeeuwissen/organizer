@@ -52,6 +52,7 @@ export interface RoadmapMilestone {
 export interface Roadmap {
   id: string
   projectId: string
+  userId: string          // owner — used for Firestore security rules
   granularity: 'day' | 'week' | 'month' | 'quarter'
   phases: RoadmapPhase[]
   activities: RoadmapActivity[]
@@ -67,6 +68,8 @@ roadmapId?: string   // set when a roadmap doc is first created for this project
 ```
 
 **Persistence:** One Firestore document per project at `projects/{projectId}/roadmap/default`. This is a full-document replace on save, debounced 1 second after any local change.
+
+`userId` is set from `authStore.user.id` when the roadmap is first created and is never updated. The Firestore security rule for this subcollection must enforce `request.auth.uid == resource.data.userId` — matching the pattern used for all other collections. `fetchRoadmap` verifies `roadmap.userId === authStore.user.id` after loading and throws if they don't match (defence-in-depth).
 
 ---
 
