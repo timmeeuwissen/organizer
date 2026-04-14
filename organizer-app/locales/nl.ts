@@ -443,6 +443,57 @@ export default {
     sortProgress: 'Voortgang',
     sortTaskCount: 'Aantal taken'
   },
+  roadmap: {
+    title: 'Roadmap',
+    addActivity: 'Activiteit toevoegen',
+    addPhase: 'Fase toevoegen',
+    addMilestone: 'Mijlpaal toevoegen',
+    shiftAll: 'Alles verschuiven',
+    shiftAllDialog: 'Gehele roadmap verschuiven',
+    shiftDays: 'Dagen te verschuiven (negatief = eerder)',
+    noRoadmap: 'Nog geen roadmap. Voeg een activiteit toe om te beginnen.',
+    linkedItems: 'Gekoppelde items',
+    linkItem: 'Item koppelen',
+    noLinkedItems: 'Geen gekoppelde items',
+    granularity: {
+      day: 'Dag',
+      week: 'Week',
+      month: 'Maand',
+      quarter: 'Kwartaal'
+    },
+    activity: {
+      title: 'Activiteit',
+      edit: 'Activiteit bewerken',
+      delete: 'Activiteit verwijderen',
+      confirmDelete: 'Deze activiteit verwijderen? Gekoppelde items worden niet verwijderd.',
+      name: 'Naam activiteit',
+      startDate: 'Startdatum',
+      endDate: 'Einddatum',
+      phase: 'Fase (optioneel)',
+      color: 'Kleur'
+    },
+    phase: {
+      title: 'Fase',
+      edit: 'Fase bewerken',
+      delete: 'Fase verwijderen',
+      confirmDelete: 'Deze fase verwijderen?',
+      name: 'Naam fase',
+      startDate: 'Startdatum',
+      endDate: 'Einddatum',
+      color: 'Kleur'
+    },
+    milestone: {
+      title: 'Mijlpaal',
+      edit: 'Mijlpaal bewerken',
+      delete: 'Mijlpaal verwijderen',
+      confirmDelete: 'Deze mijlpaal verwijderen?',
+      name: 'Naam mijlpaal',
+      description: 'Omschrijving (getoond in tooltip)',
+      date: 'Datum',
+      activity: 'Activiteitrij (optioneel)',
+      color: 'Kleur'
+    }
+  },
   timeline: {
     taskAdded: 'Taak toegevoegd',
     taskDeleted: 'Taak verwijderd',

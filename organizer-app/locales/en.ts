@@ -480,6 +480,57 @@ export default {
     sortProgress: 'Progress',
     sortTaskCount: 'Task count'
   },
+  roadmap: {
+    title: 'Roadmap',
+    addActivity: 'Add activity',
+    addPhase: 'Add phase',
+    addMilestone: 'Add milestone',
+    shiftAll: 'Shift all',
+    shiftAllDialog: 'Shift entire roadmap',
+    shiftDays: 'Days to shift (negative = earlier)',
+    noRoadmap: 'No roadmap yet. Add an activity to get started.',
+    linkedItems: 'Linked items',
+    linkItem: 'Link item',
+    noLinkedItems: 'No linked items',
+    granularity: {
+      day: 'Day',
+      week: 'Week',
+      month: 'Month',
+      quarter: 'Quarter'
+    },
+    activity: {
+      title: 'Activity',
+      edit: 'Edit activity',
+      delete: 'Delete activity',
+      confirmDelete: 'Delete this activity? Linked items will not be deleted.',
+      name: 'Activity name',
+      startDate: 'Start date',
+      endDate: 'End date',
+      phase: 'Phase (optional)',
+      color: 'Color'
+    },
+    phase: {
+      title: 'Phase',
+      edit: 'Edit phase',
+      delete: 'Delete phase',
+      confirmDelete: 'Delete this phase?',
+      name: 'Phase name',
+      startDate: 'Start date',
+      endDate: 'End date',
+      color: 'Color'
+    },
+    milestone: {
+      title: 'Milestone',
+      edit: 'Edit milestone',
+      delete: 'Delete milestone',
+      confirmDelete: 'Delete this milestone?',
+      name: 'Milestone name',
+      description: 'Description (shown in tooltip)',
+      date: 'Date',
+      activity: 'Activity row (optional)',
+      color: 'Color'
+    }
+  },
   timeline: {
     taskAdded: 'Task added',
     taskDeleted: 'Task deleted',
