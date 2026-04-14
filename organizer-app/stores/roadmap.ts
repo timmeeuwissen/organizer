@@ -10,13 +10,14 @@ import { useAuthStore } from './auth'
 import { useNotificationStore } from '~/stores/notification'
 import type { Roadmap, RoadmapActivity, RoadmapPhase, RoadmapMilestone, RoadmapGranularity } from '~/types/models/roadmap'
 
-let _saveTimer: ReturnType<typeof setTimeout> | null = null
-
 export const useRoadmapStore = defineStore('roadmap', {
+  persist: false, // roadmap is always fetched fresh from Firestore on tab activation
+
   state: () => ({
     roadmap: null as Roadmap | null,
     loading: false,
-    error: null as string | null
+    error: null as string | null,
+    _saveTimerId: null as ReturnType<typeof setTimeout> | null
   }),
 
   actions: {
@@ -42,18 +43,18 @@ export const useRoadmapStore = defineStore('roadmap', {
           this.roadmap = {
             ...data,
             id: snap.id,
-            phases: (data.phases || []).map((p: any) => ({
+            phases: (data.phases || []).map((p: any): RoadmapPhase => ({
               ...p,
               startDate: p.startDate?.toDate() || new Date(),
               endDate: p.endDate?.toDate() || new Date()
             })),
-            activities: (data.activities || []).map((a: any) => ({
+            activities: (data.activities || []).map((a: any): RoadmapActivity => ({
               ...a,
               startDate: a.startDate?.toDate() || new Date(),
               endDate: a.endDate?.toDate() || new Date(),
               links: a.links || []
             })),
-            milestones: (data.milestones || []).map((m: any) => ({
+            milestones: (data.milestones || []).map((m: any): RoadmapMilestone => ({
               ...m,
               date: m.date?.toDate() || new Date()
             })),
@@ -90,11 +91,12 @@ export const useRoadmapStore = defineStore('roadmap', {
 
       this.roadmap = newRoadmap
       await this._persistRoadmap(projectId)
+      useNotificationStore().info('Roadmap created')
     },
 
     scheduleSave (projectId: string): void {
-      if (_saveTimer) { clearTimeout(_saveTimer) }
-      _saveTimer = setTimeout(() => { void this._persistRoadmap(projectId) }, 1000)
+      if (this._saveTimerId) { clearTimeout(this._saveTimerId) }
+      this._saveTimerId = setTimeout(() => { void this._persistRoadmap(projectId) }, 1000)
     },
 
     async _persistRoadmap (projectId: string): Promise<void> {
