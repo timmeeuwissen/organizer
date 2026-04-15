@@ -17,8 +17,8 @@ div.project-roadmap
           | {{ $t('common.add') }}
       v-list(density="compact")
         v-list-item(prepend-icon="mdi-chart-gantt" :title="$t('roadmap.addActivity')" @click="openAddActivity")
-        v-list-item(prepend-icon="mdi-flag" :title="$t('roadmap.addPhase')" @click="phaseDialog = true; editingPhase = undefined")
-        v-list-item(prepend-icon="mdi-diamond-stone" :title="$t('roadmap.addMilestone')" @click="milestoneDialog = true; editingMilestone = undefined")
+        v-list-item(prepend-icon="mdi-flag" :title="$t('roadmap.addPhase')" @click="openAddPhase")
+        v-list-item(prepend-icon="mdi-diamond-stone" :title="$t('roadmap.addMilestone')" @click="openAddMilestone")
 
   //- Empty state
   v-alert(v-if="!roadmap || (!roadmap.activities.length && !roadmap.phases.length)" type="info" variant="tonal" class="ma-4")
@@ -40,7 +40,7 @@ div.project-roadmap
           :phases="roadmap.phases"
           :start-date="chartStart"
           :granularity="granularity"
-          @edit-phase="p => { editingPhase = p; phaseDialog = true }"
+          @edit-phase="onEditPhase"
         )
         RoadmapTimeAxis(
           :start-date="chartStart"
@@ -238,9 +238,9 @@ function onMouseMove (e: MouseEvent) {
   const deltaCols = Math.round((e.clientX - dragStartX.value) / colWidth)
   if (deltaCols === 0) { return }
 
-  const msPerCol = colWidth === COLUMN_WIDTH.day ? 86400000
-    : colWidth === COLUMN_WIDTH.week ? 7 * 86400000
-      : colWidth === COLUMN_WIDTH.month ? 30 * 86400000
+  const msPerCol = granularity.value === 'day' ? 86400000
+    : granularity.value === 'week' ? 7 * 86400000
+      : granularity.value === 'month' ? 30 * 86400000
         : 90 * 86400000
 
   const orig = dragOriginalActivity.value
@@ -262,7 +262,11 @@ function onMouseMove (e: MouseEvent) {
 
   const idx = roadmap.value.activities.findIndex(a => a.id === dragActivityId.value)
   if (idx !== -1) {
-    roadmap.value.activities[idx] = { ...roadmap.value.activities[idx], startDate: newStart, endDate: newEnd }
+    roadmapStore.$patch(state => {
+      if (state.roadmap) {
+        state.roadmap.activities[idx] = { ...state.roadmap.activities[idx], startDate: newStart, endDate: newEnd }
+      }
+    })
   }
 }
 
@@ -300,6 +304,21 @@ const shiftDays = ref(0)
 function openAddActivity () {
   editingActivity.value = undefined
   activityDialog.value = true
+}
+
+function openAddPhase () {
+  editingPhase.value = undefined
+  phaseDialog.value = true
+}
+
+function openAddMilestone () {
+  editingMilestone.value = undefined
+  milestoneDialog.value = true
+}
+
+function onEditPhase (phase: RoadmapPhase) {
+  editingPhase.value = phase
+  phaseDialog.value = true
 }
 
 function onSaveActivity (activity: Omit<RoadmapActivity, 'order'>) {
