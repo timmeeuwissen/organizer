@@ -452,6 +452,7 @@ export default {
     shiftAllDialog: 'Gehele roadmap verschuiven',
     shiftDays: 'Dagen te verschuiven (negatief = eerder)',
     noRoadmap: 'Nog geen roadmap. Voeg een activiteit toe om te beginnen.',
+    milestonesRow: 'Mijlpalen',
     linkedItems: 'Gekoppelde items',
     linkItem: 'Item koppelen',
     noLinkedItems: 'Geen gekoppelde items',

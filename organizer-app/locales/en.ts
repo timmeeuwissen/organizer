@@ -489,6 +489,7 @@ export default {
     shiftAllDialog: 'Shift entire roadmap',
     shiftDays: 'Days to shift (negative = earlier)',
     noRoadmap: 'No roadmap yet. Add an activity to get started.',
+    milestonesRow: 'Milestones',
     linkedItems: 'Linked items',
     linkItem: 'Link item',
     noLinkedItems: 'No linked items',

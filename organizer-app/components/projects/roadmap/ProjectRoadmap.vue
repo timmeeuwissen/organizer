@@ -68,7 +68,7 @@ div.project-roadmap
       //- Standalone milestones row
       RoadmapActivityRow(
         v-if="standaloneMilestones.length"
-        label="Milestones"
+        :label="$t('roadmap.milestonesRow')"
         :milestones="standaloneMilestones"
         :start-date="chartStart"
         :granularity="granularity"
