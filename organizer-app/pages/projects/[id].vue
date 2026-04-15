@@ -115,6 +115,9 @@ v-container
         v-tab(value="mail") {{ $t('projects.connectedMail') }}
         v-tab(value="knowledge") {{ $t('knowledge.title') }}
         v-tab(value="timeline") {{ $t('projects.timeline') }}
+        v-tab(value="roadmap")
+          v-icon(start) mdi-chart-gantt
+          | {{ $t('roadmap.title') }}
 
       v-window(v-model="activeTab")
         v-window-item(value="tasks")
@@ -282,6 +285,9 @@ v-container
         v-window-item(value="timeline")
           ProjectTimeline(v-if="project" :project-id="projectId")
 
+        v-window-item(value="roadmap")
+          ProjectRoadmap(v-if="project" :project-id="project.id")
+
   // Project edit dialog
   v-dialog(v-model="editDialog" max-width="800px")
     v-card(v-if="editDialog && project")
@@ -380,6 +386,7 @@ import TasksOverviewTable from '~/components/tasks/TasksOverviewTable.vue'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import KnowledgeConnections from '~/components/knowledge/KnowledgeConnections.vue'
 import ProjectTimeline from '~/components/projects/ProjectTimeline.vue'
+import ProjectRoadmap from '~/components/projects/roadmap/ProjectRoadmap.vue'
 
 definePageMeta({ middleware: 'auth' })
 
