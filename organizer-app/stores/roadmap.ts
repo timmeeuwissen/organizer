@@ -58,6 +58,7 @@ export const useRoadmapStore = defineStore('roadmap', {
               ...m,
               date: m.date?.toDate() || new Date()
             })),
+            createdAt: data.createdAt?.toDate() || new Date(),
             updatedAt: data.updatedAt?.toDate() || new Date()
           } as Roadmap
         } else {

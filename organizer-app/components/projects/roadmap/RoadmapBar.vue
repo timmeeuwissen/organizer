@@ -26,8 +26,8 @@ div.roadmap-bar-wrap(
     @mousedown.left.stop="onHandleMousedown('right', $event)"
   )
 
-  //- Context menu
-  v-menu(v-model="showMenu" :style="{ position: 'absolute', top: 0, left: 0 }")
+  //- Context menu (activator="parent" anchors it to the bar in Vuetify 3)
+  v-menu(v-model="showMenu" activator="parent")
     v-list(density="compact")
       v-list-item(prepend-icon="mdi-pencil" :title="$t('roadmap.activity.edit')" @click="$emit('edit')")
       v-list-item(prepend-icon="mdi-link-plus" :title="$t('roadmap.linkItem')" @click="$emit('link')")

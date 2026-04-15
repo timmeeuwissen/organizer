@@ -44,13 +44,11 @@ function phaseStyle (phase: RoadmapPhase) {
 
 <style lang="sass">
 .roadmap-phase-header
-  position: sticky
-  top: 0
+  position: relative
   height: 40px
   z-index: 4
   background: rgb(var(--v-theme-surface))
   border-bottom: 1px solid rgba(0,0,0,0.12)
-  position: relative
 
 .roadmap-phase-header__cell
   position: absolute

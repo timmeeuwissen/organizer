@@ -140,7 +140,6 @@ export interface Project {
   createdAt: Date;
   updatedAt: Date;
   lastActivity?: Date;
-  roadmapId?: string; // set when roadmap doc is first created for this project
 }
 
 export interface ProjectPage {
