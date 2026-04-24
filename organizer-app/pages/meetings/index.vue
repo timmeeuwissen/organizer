@@ -4,8 +4,11 @@ v-container(fluid)
     v-col(cols="12")
       h1.text-h4.mb-4 {{ $t('meetings.title') }}
 
-  v-row
-    v-col(cols="12" md="3")
+  .d-flex.align-start.mt-2(style="gap:0")
+    CollapsableFilterPanel(
+      :title="$t('meetings.filters')"
+      storage-key="meetings"
+    )
       ModuleIntegrationAccountFilter(
         module-segment="meetings"
         v-model="selectedProviders"
@@ -28,7 +31,7 @@ v-container(fluid)
             v-icon(start) mdi-tag-multiple
             span {{ $t('meetings.categoriesManage') }}
 
-    v-col(cols="12" md="9")
+    div(style="flex:1;min-width:0;padding-left:12px")
       v-row
         v-col(cols="12")
           v-card(class="mb-4")

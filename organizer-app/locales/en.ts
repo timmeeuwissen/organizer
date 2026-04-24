@@ -80,7 +80,11 @@ export default {
     deleteTitle: 'Confirm Delete',
     deleteReferencesWarning: 'This record is referenced by the following items. Deleting it may affect these records:',
     deleteAnyway: 'Delete Anyway',
-    noReferences: 'No other records reference this item.'
+    noReferences: 'No other records reference this item.',
+    collapse: 'Collapse',
+    expand: 'Expand',
+    showHelp: 'Show help',
+    hideHelp: 'Hide help'
   },
   auth: {
     login: 'Login',
@@ -196,6 +200,7 @@ export default {
     integrationModuleOff: '{module} is not enabled for this integration.',
     apiAccess: 'API Access',
     apiAccessDescription: 'Use this token to access the organizer API from external tools such as Home Assistant or Claude. Keep it secret.',
+    apiAccessHelpText: 'Your API token lets external tools — such as Home Assistant automations or Claude — authenticate with the Organizer on your behalf without sharing your password. Copy the token and paste it into the external tool\'s configuration wherever an API key or bearer token is required. Treat the token like a password: anyone who holds it can access your data. If you suspect it has been exposed, use "Regenerate Token" immediately — this invalidates the old token and all integrations using it will need to be updated.',
     noApiToken: 'No API token generated yet.',
     generateToken: 'Generate Token',
     regenerateToken: 'Regenerate Token',
@@ -713,14 +718,18 @@ export default {
       reason: 'Reason',
       fact: 'Fact',
       insight: 'Insight',
-      pattern: 'Pattern'
+      pattern: 'Pattern',
+      decision: 'Decision'
     },
     relationTypes: {
       references: 'References',
       related: 'Related',
       contains: 'Contains',
-      stakeholder: 'Stakeholder'
+      stakeholder: 'Stakeholder',
+      reason: 'Reason'
     },
+    relations: 'Relations',
+    addRelation: 'Add relation',
     sources: {
       manual: 'Manual',
       ai: 'AI',
@@ -970,6 +979,14 @@ export default {
     claudeHint: 'Connect to Anthropic Claude API (requires API key from console.anthropic.com)',
     claudeKeyHint: 'Enter your Anthropic API key from console.anthropic.com',
     claudeInstructions: '1. Sign up or sign in at console.anthropic.com\n2. Navigate to API keys section\n3. Create a new API key\n4. Copy and paste the API key here',
-    claudeUrl: 'https://console.anthropic.com/settings/keys'
+    claudeUrl: 'https://console.anthropic.com/settings/keys',
+    viewRawOutput: 'View AI Output',
+    hideRawOutput: 'Hide AI Output',
+    entityRelated: 'Linked to {name}',
+    saveResultsSuccess: 'Changes applied successfully',
+    analysisHistory: 'Analysis History',
+    historyManagementNote: 'Future feature: manage stored AI analyses, search history, and delete old entries.',
+    metadataProvider: 'Provider',
+    metadataDuration: 'Duration'
   }
 }

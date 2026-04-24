@@ -32,6 +32,14 @@ v-dialog(
           v-icon(start) {{ getProviderIcon(availableIntegrations[0].provider) }}
           | {{ availableIntegrations[0].name }}
 
+      v-btn(
+        v-if="analysisResult"
+        icon
+        @click="showRawOutput = !showRawOutput"
+        :title="showRawOutput ? $t('ai.hideRawOutput') : $t('ai.viewRawOutput')"
+      )
+        v-icon {{ showRawOutput ? 'mdi-eye-off' : 'mdi-eye' }}
+
       v-btn(icon @click="close")
         v-icon mdi-close
 
@@ -94,8 +102,24 @@ v-dialog(
           div.text-h6.mt-4 {{ $t('ai.analyzing') }}
           div.text-body-2.mt-2 {{ $t('ai.analyzingDescription') }}
 
+    // Raw output section
+    v-card-text(v-if="!isAnalyzing && analysisResult && showRawOutput" class="pa-4")
+      .d-flex.align-center.mb-3
+        v-chip(size="small" class="mr-2")
+          v-icon(start size="small") mdi-robot
+          | {{ lastCallMetadata?.provider || selectedIntegration?.provider || 'AI' }}
+        v-chip(v-if="lastCallMetadata?.durationMs" size="small" class="mr-2")
+          v-icon(start size="small") mdi-timer
+          | {{ lastCallMetadata.durationMs }}ms
+      pre.json-viewer(v-html="highlightedJson")
+
+    v-card-actions(v-if="!isAnalyzing && analysisResult && showRawOutput")
+      v-btn(variant="text" color="primary" @click="newAnalysis") {{ $t('ai.newAnalysis') }}
+      v-spacer
+      v-btn(variant="text" @click="close") {{ $t('common.close') }}
+
     // Results section
-    template(v-if="!isAnalyzing && analysisResult")
+    template(v-if="!isAnalyzing && analysisResult && !showRawOutput")
       v-card-text
         // Summary and original text section
         text-summary(
@@ -379,6 +403,8 @@ import { useProjectsStore } from '~/stores/projects'
 import { useTasksStore } from '~/stores/tasks'
 import { useBehaviorsStore } from '~/stores/behaviors'
 import { useMeetingsStore } from '~/stores/meetings'
+import { useAIHistoryStore } from '~/stores/aiHistory'
+import { useNotificationStore } from '~/stores/notification'
 
 // Import our custom components
 
@@ -415,6 +441,9 @@ const invalidItems = ref({
   meetings: []
 })
 
+const showRawOutput = ref(false)
+const lastCallMetadata = ref(null)
+
 // Validation rules
 const rules = {
   required: v => !!v || 'This field is required'
@@ -427,6 +456,8 @@ const projectsStore = useProjectsStore()
 const tasksStore = useTasksStore()
 const behaviorsStore = useBehaviorsStore()
 const meetingsStore = useMeetingsStore()
+const aiHistoryStore = useAIHistoryStore()
+const notify = useNotificationStore()
 const i18n = useI18n()
 
 // Available entities from stores for relation selection
@@ -488,6 +519,28 @@ const canSaveResults = computed(() => {
   const noValidationErrors = Object.values(invalidItems.value).every(arr => arr.length === 0)
 
   return allHaveActions && noValidationErrors
+})
+
+// JSON syntax highlighter for raw output view
+const highlightedJson = computed(() => {
+  if (!analysisResult.value) { return '' }
+  const data = { metadata: lastCallMetadata.value, result: analysisResult.value }
+  let json = JSON.stringify(data, null, 2)
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return json.replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    (match) => {
+      let cls = 'json-number'
+      if (/^"/.test(match)) {
+        cls = /:$/.test(match) ? 'json-key' : 'json-string'
+      } else if (/true|false/.test(match)) {
+        cls = 'json-boolean'
+      } else if (/null/.test(match)) {
+        cls = 'json-null'
+      }
+      return `<span class="${cls}">${match}</span>`
+    }
+  )
 })
 
 // Helper to get all entities across all tabs
@@ -639,7 +692,8 @@ async function analyzeText () {
 
       // Update the analysis result
       analysisResult.value = response.result
-      console.log('the server responded with the following message:', response)
+      lastCallMetadata.value = response.metadata || { provider: integration.provider, durationMs: 0 }
+      showRawOutput.value = false
 
       // Initialize actions as 'ignore' for all entities
       if (analysisResult.value) {
@@ -647,6 +701,9 @@ async function analyzeText () {
         allEntities.forEach((entity, index) => {
           entityActions.value[index] = 'ignore'
         })
+
+        // Persist to history (fire-and-forget, don't block UI)
+        aiHistoryStore.addEntry(textToAnalyze.value, analysisResult.value, lastCallMetadata.value)
       }
     } catch (fetchErr) {
       console.error('AI analysis fetch error:', fetchErr)
@@ -719,28 +776,30 @@ function validateRelationships () {
 }
 
 // Save all results
-function saveResults () {
+async function saveResults () {
   if (!canSaveResults.value) { return }
 
   const allEntities = getAllEntities()
+  const promises = []
 
-  // Process each entity based on its action
   allEntities.forEach((entity, index) => {
     const action = entityActions.value[index]
     const entityType = getEntityType(entity)
 
     if (action === 'add') {
-      // Create new entity
-      createNewEntity(entityType, entity)
+      promises.push(createNewEntity(entityType, entity))
     } else if (action === 'relate') {
-      // Relate to existing entity
-      relateToEntity(entityType, entity, entityRelations.value[index])
+      promises.push(relateToEntity(entityType, entity, entityRelations.value[index]))
     }
-    // Ignore action does nothing
   })
 
-  // Close dialog after saving
-  close()
+  try {
+    await Promise.all(promises)
+    notify.success(i18n.t('ai.saveResultsSuccess'))
+    close()
+  } catch (err) {
+    error.value = err.message || i18n.t('errors.generic')
+  }
 }
 
 // Helper to determine entity type
@@ -763,34 +822,28 @@ function getEntityType (entity) {
 }
 
 // Create a new entity in the appropriate store
-function createNewEntity (type, entity) {
-  console.log('Creating new entity:', { type, entity })
-
-  // TODO: In a real implementation, this would create the entity in the appropriate store
-  // For example:
+async function createNewEntity (type, entity) {
   if (type === 'person') {
-    peopleStore.createPerson(entity.details)
+    await peopleStore.createPerson(entity.details)
   } else if (type === 'project') {
-    projectsStore.createProject(entity.details)
+    await projectsStore.createProject(entity.details)
   } else if (type === 'task') {
-    tasksStore.createTask(entity.details)
+    await tasksStore.createTask(entity.details)
   } else if (type === 'behavior') {
-    behaviorsStore.createBehavior(entity.details)
+    await behaviorsStore.createBehavior(entity.details)
   } else if (type === 'meeting') {
-    meetingsStore.createMeeting(entity.details)
+    await meetingsStore.createMeeting(entity.details)
   }
 }
 
-// Relate to an existing entity
-function relateToEntity (type, entity, relatedEntity) {
-  console.log('Relating to existing entity:', { type, entity, relatedEntity })
-
-  // TODO: Create relationship between entities
-  // This would depend on the specific data model of the application
+// Relate to an existing entity — confirms the AI-extracted entity maps to an existing record.
+// The full mapping is captured in AI history. Future: enrich the existing record with extracted details.
+async function relateToEntity (type, entity, relatedEntity) {
+  const name = relatedEntity?.name || relatedEntity?.title || relatedEntity?.id || ''
+  notify.info(i18n.t('ai.entityRelated', { name }))
 }
 
 function close () {
-  // Reset state and close the dialog
   emit('update:modelValue', false)
   textToAnalyze.value = ''
   analysisResult.value = null
@@ -805,10 +858,11 @@ function close () {
     meetings: []
   }
   error.value = ''
+  showRawOutput.value = false
+  lastCallMetadata.value = null
 }
 
 function newAnalysis () {
-  // Reset state but keep the dialog open
   textToAnalyze.value = ''
   analysisResult.value = null
   selectedItemDetails.value = { type: null, entity: null }
@@ -822,6 +876,8 @@ function newAnalysis () {
     meetings: []
   }
   error.value = ''
+  showRawOutput.value = false
+  lastCallMetadata.value = null
 }
 </script>
 
@@ -829,4 +885,24 @@ function newAnalysis () {
 .max-width-200 {
   max-width: 200px;
 }
+
+.json-viewer {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  padding: 16px;
+  border-radius: 8px;
+  overflow: auto;
+  max-height: 520px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre;
+  width: 100%;
+}
+
+:deep(.json-key) { color: #89b4fa; }
+:deep(.json-string) { color: #a6e3a1; }
+:deep(.json-number) { color: #fab387; }
+:deep(.json-boolean) { color: #89dceb; }
+:deep(.json-null) { color: #f38ba8; }
 </style>

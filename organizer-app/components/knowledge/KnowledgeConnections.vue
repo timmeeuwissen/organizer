@@ -141,6 +141,7 @@ async function handleFormSubmit (data: {
   tags: string[]
   relationType: EdgeType
   relationLabel?: string
+  relations?: Array<{ relationType: EdgeType; label?: string }>
   entityType?: NodeType
   entityId?: string
 }) {
@@ -167,11 +168,19 @@ async function handleFormSubmit (data: {
       // #region agent log
       debugAgentLog({ hypothesisId: 'H2', location: 'components/knowledge/KnowledgeConnections.vue:handleFormSubmit:after-addKnowledge', message: 'addKnowledge result', data: { createdNodeId: createdNode?.id ?? null, createdNodeLabel: createdNode?.label ?? null } })
       // #endregion
-      // Also connect to optional extra entity
-      if (createdNode && data.entityType && data.entityId) {
+      if (createdNode) {
         const { useKnowledgeStore } = await import('~/stores/knowledge')
         const kStore = useKnowledgeStore()
-        await kStore.connect(createdNode.id, data.entityType, data.entityId, data.relationType, data.relationLabel)
+        // Connect additional relations (skip first one already created via addKnowledge)
+        if (data.relations && data.relations.length > 1) {
+          for (const rel of data.relations.slice(1)) {
+            await kStore.connect(createdNode.id, props.nodeType, props.entityId, rel.relationType, rel.label)
+          }
+        }
+        // Also connect to optional extra entity
+        if (data.entityType && data.entityId) {
+          await kStore.connect(createdNode.id, data.entityType, data.entityId, data.relationType, data.relationLabel)
+        }
       }
     }
     formOpen.value = false

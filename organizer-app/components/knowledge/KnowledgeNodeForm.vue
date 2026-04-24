@@ -72,21 +72,55 @@ v-dialog(v-model="internalModel" max-width="640px" scrollable)
             class="mb-3"
           )
 
-        v-select(
-          v-model="form.relationType"
-          :items="relationTypeItems"
-          :label="$t('knowledge.relationType')"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-        )
-        v-text-field(
-          v-model="form.relationLabel"
-          :label="$t('knowledge.relationLabel')"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-        )
+        template(v-if="!props.knowledge")
+          .text-caption.text-medium-emphasis.mb-1 {{ $t('knowledge.relations') }}
+          v-table(density="compact" class="mb-3")
+            thead
+              tr
+                th {{ $t('knowledge.relationType') }}
+                th {{ $t('knowledge.relationLabel') }}
+                th(style="width:40px")
+            tbody
+              tr(v-for="(rel, i) in form.relations" :key="i")
+                td
+                  v-select(
+                    v-model="rel.relationType"
+                    :items="relationTypeItems"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                  )
+                td
+                  v-text-field(
+                    v-model="rel.label"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                    :placeholder="$t('knowledge.relationLabel')"
+                  )
+                td
+                  v-btn(icon size="x-small" variant="text" color="error" :disabled="form.relations.length <= 1" @click="form.relations.splice(i, 1)")
+                    v-icon mdi-delete
+              tr
+                td(colspan="3")
+                  v-btn(size="small" variant="text" prepend-icon="mdi-plus" @click="form.relations.push({ relationType: 'references', label: '' })") {{ $t('knowledge.addRelation') }}
+
+        template(v-else)
+          v-select(
+            v-model="form.relationType"
+            :items="relationTypeItems"
+            :label="$t('knowledge.relationType')"
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          )
+          v-text-field(
+            v-model="form.relationLabel"
+            :label="$t('knowledge.relationLabel')"
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          )
 
     v-divider
     v-card-actions
@@ -128,6 +162,7 @@ const emit = defineEmits<{
     tags: string[]
     relationType: EdgeType
     relationLabel?: string
+    relations?: Array<{ relationType: EdgeType; label?: string }>
     entityType?: NodeType
     entityId?: string
   }]
@@ -154,7 +189,8 @@ const form = ref({
   certaintyDate: new Date() as Date,
   tags: [] as string[],
   relationType: 'references' as EdgeType,
-  relationLabel: ''
+  relationLabel: '',
+  relations: [{ relationType: 'references' as EdgeType, label: '' }] as Array<{ relationType: EdgeType; label: string }>
 })
 
 const attachEntityType = ref<NodeType | null>(null)
@@ -171,7 +207,8 @@ watch(() => props.modelValue, (open) => {
       certaintyDate: props.knowledge.certaintyDate instanceof Date ? props.knowledge.certaintyDate : new Date(props.knowledge.certaintyDate),
       tags: [...props.knowledge.tags],
       relationType: (props.edge?.relationType ?? 'references') as EdgeType,
-      relationLabel: props.edge?.label ?? ''
+      relationLabel: props.edge?.label ?? '',
+      relations: [{ relationType: (props.edge?.relationType ?? 'references') as EdgeType, label: props.edge?.label ?? '' }]
     }
     attachEntityType.value = null
     attachEntityId.value = null
@@ -180,9 +217,11 @@ watch(() => props.modelValue, (open) => {
       content: '',
       subtype: 'observation',
       certainty: 0.7,
+      certaintyDate: new Date(),
       tags: [],
       relationType: 'references',
-      relationLabel: ''
+      relationLabel: '',
+      relations: [{ relationType: 'references' as EdgeType, label: '' }]
     }
     attachEntityType.value = props.lockedEntity?.nodeType ?? null
     attachEntityId.value = props.lockedEntity?.entityId ?? null
@@ -190,7 +229,7 @@ watch(() => props.modelValue, (open) => {
 })
 
 const subtypeItems = computed(() =>
-  (['observation', 'concept', 'reason', 'fact', 'insight', 'pattern'] as KnowledgeSubtype[]).map(v => ({
+  (['observation', 'concept', 'reason', 'fact', 'insight', 'pattern', 'decision'] as KnowledgeSubtype[]).map(v => ({
     title: t(`knowledge.subtypes.${v}`),
     value: v
   }))
@@ -207,7 +246,8 @@ const relationTypeItems = computed(() => [
   { title: t('knowledge.relationTypes.references'), value: 'references' },
   { title: t('knowledge.relationTypes.related'), value: 'related' },
   { title: t('knowledge.relationTypes.contains'), value: 'contains' },
-  { title: t('knowledge.relationTypes.stakeholder'), value: 'stakeholder' }
+  { title: t('knowledge.relationTypes.stakeholder'), value: 'stakeholder' },
+  { title: t('knowledge.relationTypes.reason'), value: 'reason' }
 ])
 
 const entityItems = computed(() => {
@@ -233,14 +273,18 @@ async function submit () {
   // #endregion
   if (!v) { return }
   saving.value = true
+  const firstRelation = props.knowledge
+    ? { relationType: form.value.relationType as EdgeType, label: form.value.relationLabel }
+    : (form.value.relations[0] ?? { relationType: 'references' as EdgeType, label: '' })
   emit('submit', {
     content: form.value.content,
     subtype: form.value.subtype,
     certainty: form.value.certainty,
     certaintyDate: form.value.certaintyDate,
     tags: form.value.tags,
-    relationType: form.value.relationType as EdgeType,
-    ...(form.value.relationLabel ? { relationLabel: form.value.relationLabel } : {}),
+    relationType: firstRelation.relationType,
+    ...(firstRelation.label ? { relationLabel: firstRelation.label } : {}),
+    ...(!props.knowledge ? { relations: form.value.relations } : {}),
     ...(attachEntityType.value && attachEntityId.value
       ? { entityType: attachEntityType.value, entityId: attachEntityId.value }
       : {})

@@ -9,7 +9,7 @@ div
       :entity-color="entityColor"
       :entity-icon="entityIcon"
       :available-items="availableItems"
-      :item-title-prop="itemTitleProp"
+      :item-title="itemTitleProp"
       :action="entityActions[index] || 'ignore'"
       :relation="entityRelations[index] || null"
       :invalid="isItemInvalid(index)"

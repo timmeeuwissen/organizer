@@ -1,7 +1,7 @@
 <template lang="pug">
 v-container
   v-row
-    v-col(cols="12" md="8" offset-md="2")
+    v-col(cols="12")
       v-card
         v-card-title {{ $t('auth.userProfile') }}
         v-card-subtitle(v-if="user") {{ user.email }}
@@ -81,164 +81,143 @@ v-container
               )
 
       // AI integrations
-      v-card(class="mt-4")
-        v-card-title
-          | {{ $t('ai.manageAIIntegrations') }}
-          v-spacer
+      CollapsibleCard.mt-4(:title="$t('ai.manageAIIntegrations')")
+        template(#header-actions)
           v-btn(
             color="primary"
             icon
+            size="small"
+            variant="text"
             @click="openAIIntegrationDialog()"
             :disabled="isSaving"
           )
             v-icon mdi-plus
+        template(v-if="aiIntegrationsInput.length === 0")
+          v-alert(type="info" variant="tonal") {{ $t('ai.noAIIntegrations') }}
+        template(v-else)
+          v-list
+            v-list-item(
+              v-for="(integration, index) in aiIntegrationsInput"
+              :key="index"
+              :active="false"
+            )
+              template(v-slot:prepend)
+                v-avatar(:color="getIntegrationColor(integration.provider)")
+                  v-icon(color="white") {{ getIntegrationIcon(integration.provider) }}
 
-        v-card-text
-          template(v-if="aiIntegrationsInput.length === 0")
-            v-alert(type="info" variant="tonal")
-              | {{ $t('ai.noAIIntegrations') }}
-              div.text-center.mt-3
+              v-list-item-title {{ integration.name }}
+
+              v-list-item-subtitle
+                | {{ getProviderName(integration.provider) }}
+                v-chip(
+                  :color="integration.enabled ? 'success' : 'error'"
+                  size="x-small"
+                  class="ml-2"
+                ) {{ integration.enabled ? $t('settings.enabled') : $t('settings.disabled') }}
+
+              template(v-slot:append)
                 v-btn(
-                  color="primary"
-                  @click="openAIIntegrationDialog()"
-                  :disabled="isSaving"
-                ) {{ $t('ai.addYourFirstAIIntegration') }}
+                  icon
+                  variant="text"
+                  size="small"
+                  @click="openAIIntegrationDialog(integration, index)"
+                  :title="$t('common.edit')"
+                )
+                  v-icon mdi-pencil
 
-          template(v-else)
-            v-list
-              v-list-item(
-                v-for="(integration, index) in aiIntegrationsInput"
-                :key="index"
-                :active="false"
-              )
-                template(v-slot:prepend)
-                  v-avatar(:color="getIntegrationColor(integration.provider)")
-                    v-icon(color="white") {{ getIntegrationIcon(integration.provider) }}
-
-                v-list-item-title {{ integration.name }}
-
-                v-list-item-subtitle
-                  | {{ getProviderName(integration.provider) }}
-                  v-chip(
-                    :color="integration.enabled ? 'success' : 'error'"
-                    size="x-small"
-                    class="ml-2"
-                  ) {{ integration.enabled ? $t('settings.enabled') : $t('settings.disabled') }}
-
-                template(v-slot:append)
-                  v-btn(
-                    icon
-                    variant="text"
-                    size="small"
-                    @click="openAIIntegrationDialog(integration, index)"
-                    :title="$t('common.edit')"
-                  )
-                    v-icon mdi-pencil
-
-                  v-btn(
-                    icon
-                    variant="text"
-                    size="small"
-                    color="error"
-                    @click="removeAIIntegration(index)"
-                    :title="$t('common.delete')"
-                  )
-                    v-icon mdi-delete
+                v-btn(
+                  icon
+                  variant="text"
+                  size="small"
+                  color="error"
+                  @click="removeAIIntegration(index)"
+                  :title="$t('common.delete')"
+                )
+                  v-icon mdi-delete
 
       // External service integrations
-      v-card(class="mt-4")
-        v-card-title
-          | {{ $t('settings.integrations') }}
-          v-spacer
+      CollapsibleCard.mt-4(:title="$t('settings.integrations')")
+        template(#header-actions)
           v-btn(
             color="primary"
             icon
+            size="small"
+            variant="text"
             @click="showAddIntegrationDialog"
             :disabled="isSaving"
           )
             v-icon mdi-plus
-
         v-alert(v-if="integrationErrorMsg" type="error" class="mx-4 mt-2") {{ integrationErrorMsg }}
         v-alert(v-if="integrationSuccessMsg" type="success" class="mx-4 mt-2") {{ integrationSuccessMsg }}
+        template(v-if="integrationAccounts.length === 0")
+          v-alert(type="info" variant="tonal") {{ $t('settings.noIntegrations') }}
+        template(v-else)
+          v-list
+            v-list-item(
+              v-for="account in integrationAccounts"
+              :key="account.id"
+              :active="false"
+            )
+              template(v-slot:prepend)
+                v-avatar(:color="account.color")
+                  v-icon(color="white") {{ getAccountIcon(account.type) }}
 
-        v-card-text
-          template(v-if="integrationAccounts.length === 0")
-            v-alert(type="info" variant="tonal")
-              | {{ $t('settings.noIntegrations') }}
-              div.text-center.mt-3
+              .flex-grow-1.min-width-0.pr-2
+                v-list-item-title {{ account.oauthData.name }}
+                v-list-item-subtitle
+                  span {{ getAccountTypeName(account.type) }} | {{ account.oauthData.email }}
+                  v-chip(
+                    :color="account.oauthData.connected ? 'success' : 'error'"
+                    size="x-small"
+                    class="ml-2"
+                  ) {{ account.oauthData.connected ? $t('settings.connected') : $t('settings.disconnected') }}
+                .d-flex.flex-wrap.gap-1.mt-2
+                  v-chip(
+                    v-for="mod in getIntegrationModuleUsage(account)"
+                    :key="mod.key"
+                    size="x-small"
+                    :prepend-icon="integrationModuleIcon(mod.key)"
+                    :color="integrationModuleChipColor(mod.state)"
+                    :variant="mod.state === 'off' ? 'tonal' : 'flat'"
+                    :title="integrationModuleTooltip(mod)"
+                  ) {{ integrationModuleLabel(mod.key) }}
+
+              template(v-slot:append)
+                // Color picker
+                v-menu(location="bottom")
+                  template(v-slot:activator="{ props }")
+                    v-btn(
+                      icon
+                      variant="text"
+                      size="small"
+                      v-bind="props"
+                      :title="$t('settings.changeColor')"
+                    )
+                      v-icon mdi-palette
+
+                  v-card(min-width="300" class="pa-3")
+                    v-card-title(class="text-subtitle-1 pb-0") {{ $t('settings.changeColor') }}
+                    v-color-picker(
+                      :model-value="account.color"
+                      :swatches="colorSwatches"
+                      show-swatches
+                      hide-inputs
+                      hide-canvas
+                      @update:model-value="updateIntegrationColor(account.id, $event)"
+                    )
+
+                // Delete button
                 v-btn(
-                  color="primary"
-                  @click="showAddIntegrationDialog"
-                  :disabled="isSaving"
-                ) {{ $t('settings.addYourFirstIntegration') }}
+                  icon
+                  variant="text"
+                  size="small"
+                  color="error"
+                  @click.stop="confirmDeleteIntegration(account)"
+                  :title="$t('common.delete')"
+                )
+                  v-icon mdi-delete
 
-          template(v-else)
-            v-list
-              v-list-item(
-                v-for="account in integrationAccounts"
-                :key="account.id"
-                :active="false"
-              )
-                template(v-slot:prepend)
-                  v-avatar(:color="account.color")
-                    v-icon(color="white") {{ getAccountIcon(account.type) }}
-
-                .flex-grow-1.min-width-0.pr-2
-                  v-list-item-title {{ account.oauthData.name }}
-                  v-list-item-subtitle
-                    span {{ getAccountTypeName(account.type) }} | {{ account.oauthData.email }}
-                    v-chip(
-                      :color="account.oauthData.connected ? 'success' : 'error'"
-                      size="x-small"
-                      class="ml-2"
-                    ) {{ account.oauthData.connected ? $t('settings.connected') : $t('settings.disconnected') }}
-                  .d-flex.flex-wrap.gap-1.mt-2
-                    v-chip(
-                      v-for="mod in getIntegrationModuleUsage(account)"
-                      :key="mod.key"
-                      size="x-small"
-                      :prepend-icon="integrationModuleIcon(mod.key)"
-                      :color="integrationModuleChipColor(mod.state)"
-                      :variant="mod.state === 'off' ? 'tonal' : 'flat'"
-                      :title="integrationModuleTooltip(mod)"
-                    ) {{ integrationModuleLabel(mod.key) }}
-
-                template(v-slot:append)
-                  // Color picker
-                  v-menu(location="bottom")
-                    template(v-slot:activator="{ props }")
-                      v-btn(
-                        icon
-                        variant="text"
-                        size="small"
-                        v-bind="props"
-                        :title="$t('settings.changeColor')"
-                      )
-                        v-icon mdi-palette
-
-                    v-card(min-width="300" class="pa-3")
-                      v-card-title(class="text-subtitle-1 pb-0") {{ $t('settings.changeColor') }}
-                      v-color-picker(
-                        :model-value="account.color"
-                        :swatches="colorSwatches"
-                        show-swatches
-                        hide-inputs
-                        hide-canvas
-                        @update:model-value="updateIntegrationColor(account.id, $event)"
-                      )
-
-                  // Delete button
-                  v-btn(
-                    icon
-                    variant="text"
-                    size="small"
-                    color="error"
-                    @click.stop="confirmDeleteIntegration(account)"
-                    :title="$t('common.delete')"
-                  )
-                    v-icon mdi-delete
-
-        v-card-actions
+        v-card-actions.px-0
           v-spacer
           v-btn(
             color="primary"
@@ -247,48 +226,49 @@ v-container
             :disabled="!hasProfileChanges || isSaving"
           ) {{ $t('common.save') }}
 
-  // API Access section
-  v-card(class="mt-4")
-    v-card-title {{ $t('settings.apiAccess') }}
-    v-card-text
-      p.text-body-2.mb-4 {{ $t('settings.apiAccessDescription') }}
-      .d-flex.align-center.mb-3(v-if="apiToken")
-        v-text-field(
-          :value="apiTokenVisible ? apiToken : apiToken.replace(/./g, '•')"
-          readonly
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="mr-2"
-          append-inner-icon="mdi-content-copy"
-          @click:append-inner="copyApiToken"
-        )
-        v-btn(icon variant="text" size="small" @click="apiTokenVisible = !apiTokenVisible")
-          v-icon {{ apiTokenVisible ? 'mdi-eye-off' : 'mdi-eye' }}
-      v-alert(v-else type="info" variant="tonal" class="mb-3") {{ $t('settings.noApiToken') }}
-    v-card-actions
-      v-btn(
-        v-if="apiToken"
-        color="warning"
-        variant="tonal"
-        :loading="apiTokenLoading"
-        @click="regenerateApiToken"
-      ) {{ $t('settings.regenerateToken') }}
-      v-btn(
-        v-else
-        color="primary"
-        variant="tonal"
-        :loading="apiTokenLoading"
-        @click="generateApiToken"
-      ) {{ $t('settings.generateToken') }}
-      v-spacer
-      v-btn(
-        v-if="apiToken"
-        color="error"
-        variant="text"
-        :loading="apiTokenLoading"
-        @click="revokeApiToken"
-      ) {{ $t('settings.revokeToken') }}
+      // API Access section
+      CollapsibleCard.mt-4(
+        :title="$t('settings.apiAccess')"
+        :help-text="$t('settings.apiAccessHelpText')"
+      )
+        template(#header-actions)
+          v-btn(
+            v-if="!apiToken"
+            icon
+            size="small"
+            variant="text"
+            :loading="apiTokenLoading"
+            @click="generateApiToken"
+          )
+            v-icon mdi-plus
+        .d-flex.align-center.mb-3(v-if="apiToken")
+          v-text-field(
+            :value="apiTokenVisible ? apiToken : apiToken.replace(/./g, '•')"
+            readonly
+            variant="outlined"
+            density="compact"
+            hide-details
+            class="mr-2"
+            append-inner-icon="mdi-content-copy"
+            @click:append-inner="copyApiToken"
+          )
+          v-btn(icon variant="text" size="small" @click="apiTokenVisible = !apiTokenVisible")
+            v-icon {{ apiTokenVisible ? 'mdi-eye-off' : 'mdi-eye' }}
+        v-alert(v-else type="info" variant="tonal" class="mb-3") {{ $t('settings.noApiToken') }}
+        v-card-actions.px-0(v-if="apiToken")
+          v-btn(
+            color="warning"
+            variant="tonal"
+            :loading="apiTokenLoading"
+            @click="regenerateApiToken"
+          ) {{ $t('settings.regenerateToken') }}
+          v-spacer
+          v-btn(
+            color="error"
+            variant="text"
+            :loading="apiTokenLoading"
+            @click="revokeApiToken"
+          ) {{ $t('settings.revokeToken') }}
 
   // Integration account dialog (only for adding new integrations)
   integration-account-dialog(
@@ -332,6 +312,7 @@ import { getAuth, updateProfile } from 'firebase/auth'
 import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import { v4 as uuidv4 } from 'uuid'
 import { useNetworkStatus } from '~/composables/useNetworkStatus'
+import CollapsibleCard from '~/components/common/CollapsibleCard.vue'
 import IntegrationAccountDialog from '~/components/integrations/IntegrationAccountDialog.vue'
 import AIIntegrationDialog from '~/components/integrations/AIIntegrationDialog.vue'
 import { useAuthStore } from '~/stores/auth'

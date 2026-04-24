@@ -5,10 +5,10 @@ export type NodeType =
 export type EdgeType =
   | 'member' | 'assignee' | 'contains' | 'participant'
   | 'references' | 'related' | 'subtask' | 'stakeholder'
-  | 'action-plan' | string
+  | 'action-plan' | 'reason' | string
 
 export type KnowledgeSubtype =
-  | 'observation' | 'concept' | 'reason' | 'fact' | 'insight' | 'pattern'
+  | 'observation' | 'concept' | 'reason' | 'fact' | 'insight' | 'pattern' | 'decision'
 
 export type KnowledgeSource = 'manual' | 'ai' | 'email' | 'note'
 

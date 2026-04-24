@@ -12,7 +12,7 @@ export default defineNuxtConfig({
         if (
           imp.name === 'state' &&
           typeof imp.from === 'string' &&
-          /[/\\]stores[/\\]auth\.ts$/.test(imp.from.replace(/\\/g, '/'))
+          /[/\\]stores[/\\][^/\\]+\.ts$/.test(imp.from.replace(/\\/g, '/'))
         ) {
           imports.splice(i, 1)
         }

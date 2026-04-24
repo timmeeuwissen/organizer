@@ -76,35 +76,34 @@ div
               size="small"
               :color="getTypeColor(task.type)"
             ) {{ getTypeText(task.type) }}
-          td(style="width: 160px")
-            v-btn(icon size="x-small" variant="text" color="grey-darken-1" @click.stop="$emit('edit', task)")
-              v-icon mdi-pencil
+          td(style="width: 140px")
+            v-btn(icon size="x-small" variant="plain" color="grey" @click.stop="$emit('edit', task)")
+              v-icon(size="small") mdi-pencil
             v-btn(
-              v-if="task.status !== 'completed'"
               icon
               size="x-small"
-              variant="text"
-              color="grey-darken-1"
+              variant="plain"
+              color="grey"
               @click.stop="$emit('toggle-status', task)"
             )
-              v-icon mdi-check
+              v-icon(size="small") {{ task.status === 'completed' ? 'mdi-undo-variant' : 'mdi-check' }}
             v-btn(
               v-if="!task.hasSubtasks"
               icon
               size="x-small"
-              variant="text"
-              color="grey-darken-1"
+              variant="plain"
+              color="grey"
               @click.stop="$emit('add-subtask', task)"
             )
-              v-icon mdi-plus-circle-outline
+              v-icon(size="small") mdi-plus-circle-outline
             v-btn(
               icon
               size="x-small"
-              variant="text"
-              color="grey-darken-1"
+              variant="plain"
+              color="grey"
               @click.stop="$emit('delete', task)"
             )
-              v-icon mdi-delete
+              v-icon(size="small") mdi-delete
   div.d-flex.align-center.justify-space-between.px-2.py-3(
     v-if="!loading && tasks.length > 0 && totalTaskRows > 0"
   )

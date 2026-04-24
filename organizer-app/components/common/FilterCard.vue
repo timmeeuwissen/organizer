@@ -1,23 +1,20 @@
 <template lang="pug">
-v-card(class="mb-4")
-  v-card-title.d-flex
-    span {{ title }}
-    v-spacer
+CollapsibleCard(:title="title")
+  template(v-if="hasFilters" #header-actions)
     v-btn(
-      v-if="hasFilters"
       icon
       variant="text"
       size="small"
-      @click="$emit('clear-filters')"
       color="error"
+      @click="$emit('clear-filters')"
     )
       v-icon mdi-filter-remove
-
-  v-card-text
-    slot
+  slot
 </template>
 
 <script setup lang="ts">
+import CollapsibleCard from '~/components/common/CollapsibleCard.vue'
+
 defineProps({
   title: {
     type: String,

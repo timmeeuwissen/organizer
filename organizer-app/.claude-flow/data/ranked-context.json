@@ -1,15 +1,40 @@
 {
   "version": 1,
-  "computedAt": 1775603540131,
+  "computedAt": 1776865470538,
   "entries": [
+    {
+      "id": "insight-1775603436133-t82e",
+      "content": "File unknown was edited 53 times this session — likely a hot path worth monitoring.",
+      "summary": "Frequently edited: unknown (53x)",
+      "category": "insights",
+      "confidence": 0.515,
+      "pageRank": 0.2,
+      "accessCount": 1,
+      "words": [
+        "file",
+        "unknown",
+        "edited",
+        "times",
+        "session",
+        "likely",
+        "hot",
+        "path",
+        "worth",
+        "monitoring",
+        "frequently",
+        "edited",
+        "unknown",
+        "53x"
+      ]
+    },
     {
       "id": "mem-MEMORY-memory-index",
       "content": "- [User profile](user_profile.md) — Tim's role, solo dev on organizer app, uses Claude Code as primary AI assistant\n- [AI workflow frustrations](feedback_workflow.md) — provider abstraction confusion, large batched sessions cause fix-up commits\n- [Project state](project_state.md) — architecture overview, known gaps (ESLint missing, thin tests, partial OpenAPI)",
       "summary": "Memory Index",
       "category": "core",
-      "confidence": 0.5,
+      "confidence": 0.505,
       "pageRank": 0.2,
-      "accessCount": 0,
+      "accessCount": 1,
       "words": [
         "user",
         "profile",
@@ -62,9 +87,9 @@
       "content": "name: AI workflow frustrations and patterns\ndescription: Patterns from git history showing where AI assistance tends to fail or succeed on this project\ntype: feedback\n---\n\nAI sometimes fails on complex multi-provider integrations. Commit messages like \"AI messes up with tasks, I'll have to step in\" and \"AI didn't understand a couple of things wrt storage\" suggest the model sometimes gets confused with Firebase Firestore patterns and the multi-provider strategy architecture.\n\n**Why:** The provide",
       "summary": "---",
       "category": "feedback_workflow",
-      "confidence": 0.5,
+      "confidence": 0.505,
       "pageRank": 0.2,
-      "accessCount": 0,
+      "accessCount": 1,
       "words": [
         "name",
         "workflow",
@@ -122,9 +147,9 @@
       "content": "name: Organizer app project state\ndescription: Key facts about the organizer app architecture, current state, and known gaps\ntype: project\n---\n\nThe organizer app is a personal productivity tool built with Nuxt 4, Vue 3, Vuetify 3, Pinia, Firebase (Firestore + Auth). It runs in the organizer-app/ directory under the organizer/ repo.\n\nKey architecture facts:\n- All commands run via `make` (not npm directly) — Makefile is in organizer-app/\n- Provider abstraction in utils/api/ with strategy pattern (",
       "summary": "---",
       "category": "project_state",
-      "confidence": 0.5,
+      "confidence": 0.505,
       "pageRank": 0.2,
-      "accessCount": 0,
+      "accessCount": 1,
       "words": [
         "name",
         "organizer",
@@ -189,9 +214,9 @@
       "content": "name: User profile\ndescription: Tim's role, working style, and context as the developer of the organizer app\ntype: user\n---\n\nTim Meeuwissen is a software developer building a personal productivity organizer app (Nuxt 4 + Firebase). He works solo on this project across sessions using Claude Code as his primary AI coding assistant.\n\nHe has previously used Cursor (with Claude 3.7) and has switched to Claude Code. His git history shows he is comfortable switching between AI tools and has reasonable ",
       "summary": "---",
       "category": "user_profile",
-      "confidence": 0.5,
+      "confidence": 0.505,
       "pageRank": 0.2,
-      "accessCount": 0,
+      "accessCount": 1,
       "words": [
         "name",
         "user",
@@ -248,31 +273,6 @@
         "tools",
         "reasonable",
         "---"
-      ]
-    },
-    {
-      "id": "insight-1775603436133-t82e",
-      "content": "File unknown was edited 53 times this session — likely a hot path worth monitoring.",
-      "summary": "Frequently edited: unknown (53x)",
-      "category": "insights",
-      "confidence": 0.5,
-      "pageRank": 0.2,
-      "accessCount": 0,
-      "words": [
-        "file",
-        "unknown",
-        "edited",
-        "times",
-        "session",
-        "likely",
-        "hot",
-        "path",
-        "worth",
-        "monitoring",
-        "frequently",
-        "edited",
-        "unknown",
-        "53x"
       ]
     }
   ]

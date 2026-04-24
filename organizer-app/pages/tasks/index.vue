@@ -737,20 +737,21 @@ const updateTask = async (taskData: Partial<Task>) => {
   }
 }
 
-const deleteTask = async () => {
-  if (!selectedTask.value) { return }
+const deleteTask = async (task?: Task) => {
+  const taskToDelete = task ?? selectedTask.value
+  if (!taskToDelete) { return }
 
   formLoading.value = true
   formError.value = ''
 
   try {
     // Check if this is a provider-synced task
-    if (selectedTask.value.providerId && selectedTask.value.providerAccountId) {
+    if (taskToDelete.providerId && taskToDelete.providerAccountId) {
       // Delete with provider
-      await tasksStore.deleteTaskWithProvider(selectedTask.value.id)
+      await tasksStore.deleteTaskWithProvider(taskToDelete.id)
     } else {
       // Regular delete
-      await tasksStore.deleteTask(selectedTask.value.id)
+      await tasksStore.deleteTask(taskToDelete.id)
     }
 
     taskDialog.value = false

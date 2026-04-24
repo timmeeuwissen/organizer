@@ -1,0 +1,23 @@
+{
+  "id": "session-1775826137414",
+  "startedAt": "2026-04-10T13:02:17.414Z",
+  "cwd": "/Users/timmeeuwissen/organizer/organizer-app",
+  "context": {
+    "lastMatchedPatterns": [
+      "mem-MEMORY-memory-index",
+      "mem-project_state----",
+      "mem-feedback_workflow----",
+      "mem-user_profile----",
+      "insight-1775603436133-t82e"
+    ]
+  },
+  "metrics": {
+    "edits": 6,
+    "commands": 0,
+    "tasks": 0,
+    "errors": 0
+  },
+  "updatedAt": "2026-04-10T13:06:06.403Z",
+  "endedAt": "2026-04-10T17:57:04.705Z",
+  "duration": 17687297
+}

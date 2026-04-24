@@ -50,6 +50,7 @@ export default defineEventHandler(async (event) => {
     try {
       const provider = getProvider(integration)
       let result
+      const startTime = Date.now()
       try {
         result = await provider.analyzeText(text)
       } catch (analysisError: unknown) {
@@ -76,10 +77,15 @@ export default defineEventHandler(async (event) => {
           throw analysisError
         }
       }
+      const durationMs = Date.now() - startTime
 
       return {
         success: true,
-        result
+        result,
+        metadata: {
+          provider: integration.provider,
+          durationMs
+        }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err)

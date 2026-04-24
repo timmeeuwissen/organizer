@@ -18,8 +18,11 @@ v-container(fluid)
               prepend-icon="mdi-account-cog"
             ) {{ $t('calendar.goToProfile') }}
 
-  v-row(v-else)
-    v-col(cols="12" md="3")
+  .d-flex.align-start.mt-2(v-else style="gap:0")
+    CollapsableFilterPanel(
+      :title="$t('common.filters')"
+      storage-key="calendar"
+    )
       v-card(class="mb-4")
         v-card-title {{ $t('calendar.today') }}
         v-date-picker(
@@ -41,7 +44,7 @@ v-container(fluid)
         @clear-filters="clearFilters"
       )
 
-    v-col(cols="12" md="9")
+    div(style="flex:1;min-width:0;padding-left:12px")
       v-card
         v-card-title.d-flex
           CalendarHeader(

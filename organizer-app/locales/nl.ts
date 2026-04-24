@@ -57,7 +57,11 @@ export default {
     deleteTitle: 'Verwijderen bevestigen',
     deleteReferencesWarning: 'Dit record wordt gebruikt door de volgende items. Het verwijderen kan deze records beïnvloeden:',
     deleteAnyway: 'Toch verwijderen',
-    noReferences: 'Geen andere records verwijzen naar dit item.'
+    noReferences: 'Geen andere records verwijzen naar dit item.',
+    collapse: 'Inklappen',
+    expand: 'Uitklappen',
+    showHelp: 'Help tonen',
+    hideHelp: 'Help verbergen'
   },
   auth: {
     login: 'Inloggen',
@@ -172,6 +176,7 @@ export default {
     integrationModuleOff: '{module} staat niet aan voor deze integratie.',
     apiAccess: 'API-toegang',
     apiAccessDescription: 'Gebruik dit token om toegang te krijgen tot de organizer API vanuit externe tools zoals Home Assistant of Claude. Houd het geheim.',
+    apiAccessHelpText: 'Met je API-token kunnen externe tools — zoals Home Assistant-automatiseringen of Claude — namens jou verbinding maken met de Organizer, zonder dat je je wachtwoord hoeft te delen. Kopieer het token en plak het in de configuratie van de externe tool, op de plek waar een API-sleutel of bearer-token wordt gevraagd. Behandel het token als een wachtwoord: iedereen die het bezit kan bij je gegevens. Als je vermoedt dat het token is uitgelekt, gebruik dan direct "Token vernieuwen" — het oude token wordt dan ongeldig en alle integraties die er gebruik van maken moeten worden bijgewerkt.',
     noApiToken: 'Nog geen API-token aangemaakt.',
     generateToken: 'Token aanmaken',
     regenerateToken: 'Token vernieuwen',
@@ -676,14 +681,18 @@ export default {
       reason: 'Reden',
       fact: 'Feit',
       insight: 'Inzicht',
-      pattern: 'Patroon'
+      pattern: 'Patroon',
+      decision: 'Beslissing'
     },
     relationTypes: {
       references: 'Referentie',
       related: 'Gerelateerd',
       contains: 'Bevat',
-      stakeholder: 'Belanghebbende'
+      stakeholder: 'Belanghebbende',
+      reason: 'Reden'
     },
+    relations: 'Relaties',
+    addRelation: 'Relatie toevoegen',
     sources: {
       manual: 'Handmatig',
       ai: 'AI',
@@ -923,6 +932,14 @@ export default {
     openaiUrl: 'https://platform.openai.com/account/api-keys',
     geminiUrl: 'https://aistudio.google.com/app/apikey',
     xaiUrl: 'https://x.ai',
-    claudeUrl: 'https://console.anthropic.com/settings/keys'
+    claudeUrl: 'https://console.anthropic.com/settings/keys',
+    viewRawOutput: 'AI-uitvoer bekijken',
+    hideRawOutput: 'AI-uitvoer verbergen',
+    entityRelated: 'Gekoppeld aan {name}',
+    saveResultsSuccess: 'Wijzigingen succesvol toegepast',
+    analysisHistory: 'Analysegeschiedenis',
+    historyManagementNote: 'Toekomstige functie: beheer opgeslagen AI-analyses, zoek in geschiedenis en verwijder oude items.',
+    metadataProvider: 'Provider',
+    metadataDuration: 'Duur'
   }
 }
