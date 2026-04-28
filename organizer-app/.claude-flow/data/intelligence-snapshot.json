@@ -397,5 +397,62 @@
         "accessCount": 1
       }
     ]
+  },
+  {
+    "timestamp": 1777371053956,
+    "nodes": 5,
+    "edges": 0,
+    "pageRankSum": 1,
+    "confidences": [
+      0.7550000000000002,
+      0.7550000000000002,
+      0.7550000000000002,
+      0.7550000000000002,
+      0.7650000000000002
+    ],
+    "accessCounts": [
+      6,
+      6,
+      6,
+      6,
+      6
+    ],
+    "topPatterns": [
+      {
+        "id": "insight-1775603436133-t82e",
+        "summary": "Frequently edited: unknown (53x)",
+        "confidence": 0.7650000000000002,
+        "pageRank": 0.2,
+        "accessCount": 6
+      },
+      {
+        "id": "mem-MEMORY-memory-index",
+        "summary": "Memory Index",
+        "confidence": 0.7550000000000002,
+        "pageRank": 0.2,
+        "accessCount": 6
+      },
+      {
+        "id": "mem-feedback_workflow----",
+        "summary": "---",
+        "confidence": 0.7550000000000002,
+        "pageRank": 0.2,
+        "accessCount": 6
+      },
+      {
+        "id": "mem-project_state----",
+        "summary": "---",
+        "confidence": 0.7550000000000002,
+        "pageRank": 0.2,
+        "accessCount": 6
+      },
+      {
+        "id": "mem-user_profile----",
+        "summary": "---",
+        "confidence": 0.7550000000000002,
+        "pageRank": 0.2,
+        "accessCount": 6
+      }
+    ]
   }
 ]

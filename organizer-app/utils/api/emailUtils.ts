@@ -40,7 +40,8 @@ export function getAccountStatusMessage (account: IntegrationAccount): string {
     return 'Not connected'
   }
 
-  if (!hasValidOAuthTokens(account)) {
+  const isCredentialBased = account.type === 'imap' || account.type === 'pop3' || account.type === 'todoist'
+  if (!isCredentialBased && !hasValidOAuthTokens(account)) {
     return 'Authentication required'
   }
 

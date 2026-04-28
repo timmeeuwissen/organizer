@@ -49,8 +49,35 @@ v-form(ref="form" v-model="formValid")
         persistent-hint
       )
 
+    // Todoist API token configuration
+    template(v-if="accountType === 'todoist' && !isConnected")
+      v-col(cols="12")
+        v-alert(type="info" variant="tonal" class="mb-2" density="compact")
+          | {{ $t('settings.todoistTasksOnly') }}
+      v-col(cols="12")
+        v-text-field(
+          v-model="todoistApiToken"
+          :label="$t('settings.todoistApiToken')"
+          prepend-icon="mdi-key"
+          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="showPassword ? 'text' : 'password'"
+          :rules="[rules.required]"
+          :disabled="isLoading"
+          :hint="$t('settings.todoistApiTokenHint')"
+          persistent-hint
+          @click:append="showPassword = !showPassword"
+        )
+
     // IMAP / POP3 server configuration
     template(v-if="(accountType === 'imap' || accountType === 'pop3') && !isConnected")
+      v-col(cols="12")
+        v-select(
+          v-model="imapEncryption"
+          :items="encryptionOptions"
+          :label="$t('settings.encryption')"
+          prepend-icon="mdi-lock"
+          :disabled="isConnected || isLoading"
+        )
       v-col(cols="12" md="8")
         v-text-field(
           v-model="imapHost"
@@ -73,18 +100,18 @@ v-form(ref="form" v-model="formValid")
           persistent-hint
         )
       v-col(cols="12")
-        v-select(
-          v-model="imapEncryption"
-          :items="encryptionOptions"
-          :label="$t('settings.encryption')"
-          prepend-icon="mdi-lock"
-          :disabled="isConnected || isLoading"
-        )
-      v-col(cols="12")
         v-expansion-panels(variant="accordion")
           v-expansion-panel(:title="$t('settings.smtpSettings')")
             v-expansion-panel-text
               v-row
+                v-col(cols="12")
+                  v-select(
+                    v-model="smtpEncryption"
+                    :items="encryptionOptions"
+                    :label="$t('settings.encryption')"
+                    prepend-icon="mdi-lock"
+                    :disabled="isConnected || isLoading"
+                  )
                 v-col(cols="12" md="8")
                   v-text-field(
                     v-model="smtpHost"
@@ -92,8 +119,6 @@ v-form(ref="form" v-model="formValid")
                     prepend-icon="mdi-email-arrow-right"
                     :disabled="isConnected || isLoading"
                     placeholder="smtp.example.com"
-                    :hint="$t('settings.smtpDefaultPort')"
-                    persistent-hint
                   )
                 v-col(cols="12" md="4")
                   v-text-field(
@@ -104,21 +129,13 @@ v-form(ref="form" v-model="formValid")
                     :disabled="isConnected || isLoading"
                     placeholder="587"
                   )
-                v-col(cols="12")
-                  v-select(
-                    v-model="smtpEncryption"
-                    :items="encryptionOptions"
-                    :label="$t('settings.encryption')"
-                    prepend-icon="mdi-lock"
-                    :disabled="isConnected || isLoading"
-                  )
 
     // Connection test error
     v-col(cols="12" v-if="testError")
       v-alert(type="error" variant="tonal" closable @click:close="testError = ''") {{ testError }}
 
-    // Basic Auth section - only visible when creating new non-OAuth accounts
-    template(v-if="!useOAuth && !isConnected")
+    // Basic Auth section - only visible when creating new non-OAuth, non-Todoist accounts
+    template(v-if="!useOAuth && !isConnected && accountType !== 'todoist'")
       v-col(cols="12")
         v-text-field(
           v-model="username"
@@ -221,7 +238,7 @@ v-form(ref="form" v-model="formValid")
     v-col(cols="12")
       span {{ $t('settings.syncSettings') }}
 
-    v-col(cols="6" v-if="!isCredentialAccount")
+    v-col(cols="6" v-if="!isCredentialAccount && !isTaskOnlyAccount")
       v-switch(
         v-model="syncCalendar"
         :label="$t('settings.syncCalendar')"
@@ -229,7 +246,7 @@ v-form(ref="form" v-model="formValid")
         :disabled="isLoading"
       )
 
-    v-col(cols="6" v-if="!isCredentialAccount")
+    v-col(cols="6" v-if="!isCredentialAccount && !isTaskOnlyAccount")
       v-switch(
         v-model="showInCalendar"
         :label="$t('settings.showInCalendar')"
@@ -237,7 +254,7 @@ v-form(ref="form" v-model="formValid")
         :disabled="isLoading || !syncCalendar"
       )
 
-    v-col(cols="6")
+    v-col(cols="6" v-if="!isCredentialAccount && !isTaskOnlyAccount")
       v-switch(
         v-model="syncMail"
         :label="$t('settings.syncMail')"
@@ -245,7 +262,7 @@ v-form(ref="form" v-model="formValid")
         :disabled="isLoading"
       )
 
-    v-col(cols="6")
+    v-col(cols="6" v-if="!isCredentialAccount && !isTaskOnlyAccount")
       v-switch(
         v-model="showInMail"
         :label="$t('settings.showInMail')"
@@ -269,7 +286,7 @@ v-form(ref="form" v-model="formValid")
         :disabled="isLoading || !syncTasks"
       )
 
-    v-col(cols="6" v-if="!isCredentialAccount")
+    v-col(cols="6" v-if="!isCredentialAccount && !isTaskOnlyAccount")
       v-switch(
         v-model="syncContacts"
         :label="$t('settings.syncContacts')"
@@ -277,7 +294,7 @@ v-form(ref="form" v-model="formValid")
         :disabled="isLoading"
       )
 
-    v-col(cols="6" v-if="!isCredentialAccount")
+    v-col(cols="6" v-if="!isCredentialAccount && !isTaskOnlyAccount")
       v-switch(
         v-model="showInContacts"
         :label="$t('settings.showInContacts')"
@@ -299,7 +316,7 @@ v-form(ref="form" v-model="formValid")
     template(v-if="!isConnected")
       v-col(cols="12")
         v-btn(
-          color="primary"
+          :color="(accountType === 'imap' || accountType === 'pop3') ? (connectionTested === 'success' ? 'success' : connectionTested === 'error' ? 'error' : 'primary') : 'primary'"
           block
           :loading="isLoading"
           :disabled="!formValid || isLoading"
@@ -357,7 +374,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['save', 'test', 'sync', 'disconnect', 'update:account'])
+const emit = defineEmits(['save', 'test', 'testReset', 'sync', 'disconnect', 'update:account'])
 
 // State
 const form = ref(null)
@@ -366,6 +383,7 @@ const showPassword = ref(false)
 const isSyncing = ref(false)
 const isLoading = ref(false)
 const testError = ref('')
+const connectionTested = ref('idle') // 'idle' | 'success' | 'error'
 
 // Properties for display
 const name = ref('')
@@ -378,7 +396,7 @@ const accountType = ref(props.initialType)
 const server = ref('')
 const username = ref('')
 const password = ref('')
-const useOAuth = ref(!['imap', 'pop3'].includes(props.initialType))
+const useOAuth = ref(!['imap', 'pop3', 'todoist'].includes(props.initialType))
 const syncCalendar = ref(true)
 const syncMail = ref(true)
 const syncTasks = ref(true)
@@ -396,6 +414,9 @@ const refreshToken = ref('')
 const accessToken = ref('')
 const tokenExpiry = ref(null)
 const oauthScope = ref('')
+
+// Todoist API token
+const todoistApiToken = ref('')
 
 // IMAP / POP3 credential fields
 const imapHost = ref('')
@@ -421,7 +442,8 @@ const accountTypes = [
   { text: i18n.t('settings.exchange'), value: 'exchange' },
   { text: i18n.t('settings.office365'), value: 'office365' },
   { text: i18n.t('settings.imap'), value: 'imap' },
-  { text: i18n.t('settings.pop3'), value: 'pop3' }
+  { text: i18n.t('settings.pop3'), value: 'pop3' },
+  { text: i18n.t('settings.todoist'), value: 'todoist' }
 ]
 
 // Encryption options for IMAP/POP3/SMTP
@@ -458,6 +480,9 @@ const usernameHint = computed(() => {
 const isCredentialAccount = computed(() =>
   accountType.value === 'imap' || accountType.value === 'pop3'
 )
+
+// Todoist only supports tasks
+const isTaskOnlyAccount = computed(() => accountType.value === 'todoist')
 
 // Get the OAuth provider based on account type
 const getOAuthProvider = computed(() => {
@@ -572,21 +597,28 @@ watch(() => props.account, () => {
       imapPort.value = props.account.oauthData?.port || (accountType.value === 'imap' ? 993 : 995)
       imapEncryption.value = props.account.oauthData?.encryption || 'tls'
       username.value = props.account.oauthData?.username || ''
+      password.value = props.account.oauthData?.password || ''
       smtpHost.value = props.account.oauthData?.smtpHost || ''
       smtpPort.value = props.account.oauthData?.smtpPort || 587
       smtpEncryption.value = props.account.oauthData?.smtpEncryption || 'starttls'
     }
 
-    // Set OAuth switch based on account type and available tokens
-    useOAuth.value =
-      accountType.value === 'google' ||
-      accountType.value === 'office365' ||
-      (accountType.value === 'exchange' && server.value?.includes('office365')) ||
-      (!!clientId.value && !!refreshToken.value)
-
-    // IMAP/POP3 never use OAuth
-    if (accountType.value === 'imap' || accountType.value === 'pop3') {
+    // Load Todoist API token
+    if (accountType.value === 'todoist') {
+      todoistApiToken.value = props.account.oauthData?.accessToken || ''
       useOAuth.value = false
+    } else {
+      // Set OAuth switch based on account type and available tokens
+      useOAuth.value =
+        accountType.value === 'google' ||
+        accountType.value === 'office365' ||
+        (accountType.value === 'exchange' && server.value?.includes('office365')) ||
+        (!!clientId.value && !!refreshToken.value)
+
+      // IMAP/POP3 never use OAuth
+      if (accountType.value === 'imap' || accountType.value === 'pop3') {
+        useOAuth.value = false
+      }
     }
   }
 }, { immediate: true })
@@ -598,6 +630,38 @@ watch(accountType, (type) => {
     imapPort.value = type === 'pop3' ? 995 : 993
   } else if (type === 'google' || type === 'office365') {
     useOAuth.value = true
+  } else if (type === 'todoist') {
+    useOAuth.value = false
+  }
+})
+
+watch(imapEncryption, (enc) => {
+  const isPop3 = accountType.value === 'pop3'
+  if (enc === 'tls') {
+    imapPort.value = isPop3 ? 995 : 993
+  } else {
+    imapPort.value = isPop3 ? 110 : 143
+  }
+})
+
+watch(smtpEncryption, (enc) => {
+  if (enc === 'tls') {
+    smtpPort.value = 465
+  } else if (enc === 'starttls') {
+    smtpPort.value = 587
+  } else {
+    smtpPort.value = 25
+  }
+})
+
+const imapConnectionKey = computed(() =>
+  `${imapHost.value}|${imapPort.value}|${imapEncryption.value}|${username.value}|${password.value}|${smtpHost.value}|${smtpPort.value}|${smtpEncryption.value}`
+)
+
+watch(imapConnectionKey, () => {
+  if ((accountType.value === 'imap' || accountType.value === 'pop3') && connectionTested.value !== 'idle') {
+    connectionTested.value = 'idle'
+    emit('testReset')
   }
 })
 
@@ -683,12 +747,26 @@ function getAccountData () {
       smtpPort: smtpPort.value || undefined,
       smtpEncryption: smtpEncryption.value || undefined
     })
-    // Default IMAP/POP3 to mail-only
+    // IMAP/POP3 is mail-only
     baseAccountData.syncCalendar = false
     baseAccountData.syncTasks = false
     baseAccountData.syncContacts = false
     baseAccountData.showInCalendar = false
     baseAccountData.showInTasks = false
+    baseAccountData.showInContacts = false
+  }
+
+  // Todoist: store API token as accessToken, tasks only
+  if (accountType.value === 'todoist') {
+    baseAccountData.oauthData = removeUndefined({
+      ...baseAccountData.oauthData,
+      accessToken: todoistApiToken.value
+    })
+    baseAccountData.syncCalendar = false
+    baseAccountData.syncMail = false
+    baseAccountData.syncContacts = false
+    baseAccountData.showInCalendar = false
+    baseAccountData.showInMail = false
     baseAccountData.showInContacts = false
   }
 
@@ -727,14 +805,16 @@ async function testConnection () {
       const data = await res.json()
       if (data.success) {
         testError.value = ''
-        isConnected.value = true
+        connectionTested.value = 'success'
         name.value = username.value
         email.value = username.value
-        lastSync.value = new Date()
         emit('test', getAccountData())
       } else {
+        connectionTested.value = 'error'
         testError.value = data.error || i18n.t('settings.connectionFailed')
       }
+    } else if (accountType.value === 'todoist') {
+      await testTodoistConnection()
     } else if (accountType.value === 'exchange') {
       // Exchange can use basic auth or OAuth, depending on the server
       if (server.value && server.value.includes('office365')) {
@@ -749,6 +829,28 @@ async function testConnection () {
     console.error('Error testing connection:', err)
   } finally {
     isLoading.value = false
+  }
+}
+
+// Todoist API token verification
+async function testTodoistConnection () {
+  try {
+    await $fetch('/api/proxy', {
+      params: { url: 'https://api.todoist.com/api/v1/tasks' },
+      headers: { Authorization: `Bearer ${todoistApiToken.value}` }
+    })
+    testError.value = ''
+    name.value = 'Todoist'
+    email.value = todoistApiToken.value.substring(0, 8) + '…'
+    isConnected.value = true
+    lastSync.value = new Date()
+    emit('test', getAccountData())
+  } catch (err) {
+    console.error('Todoist connection test error:', err)
+    const status = err?.statusCode || err?.response?.status
+    testError.value = status === 401 || status === 403
+      ? i18n.t('settings.connectionFailed') + ' (invalid token)'
+      : i18n.t('settings.connectionFailed')
   }
 }
 
@@ -918,7 +1020,7 @@ function formatDate (date) {
 // Watch for form changes to update the parent component
 watch([accountType, email, server, username, syncCalendar, syncMail, syncTasks, syncContacts,
   showInCalendar, showInMail, showInTasks, showInContacts, color, isConnected,
-  name, lastSync, accessToken, refreshToken, clientId, clientSecret], () => {
+  name, lastSync, accessToken, refreshToken, clientId, clientSecret, todoistApiToken], () => {
   emit('update:account', getAccountData())
 }, { deep: true })
 </script>

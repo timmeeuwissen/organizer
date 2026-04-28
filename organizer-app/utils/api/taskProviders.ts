@@ -7,6 +7,7 @@ import type { TaskProvider } from './taskProviders/TaskProvider'
 import { GoogleTasksProvider } from './taskProviders/GoogleTasksProvider'
 import { Office365TasksProvider } from './taskProviders/Office365TasksProvider'
 import { ExchangeTasksProvider } from './taskProviders/ExchangeTasksProvider'
+import { TodoistTasksProvider } from './taskProviders/TodoistTasksProvider'
 import type { IntegrationAccount } from '~/types/models'
 
 // Important: We're not using export * to avoid circular dependency issues
@@ -25,6 +26,8 @@ export function getTaskProvider (account: IntegrationAccount): TaskProvider {
       return new Office365TasksProvider(account)
     case 'exchange':
       return new ExchangeTasksProvider(account)
+    case 'todoist':
+      return new TodoistTasksProvider(account)
     default:
       throw new Error(`Unsupported account type: ${account.type}`)
   }
@@ -40,4 +43,4 @@ export function createTasksProvider (account: IntegrationAccount): TaskProvider 
 
 // Re-export the types and classes that might be needed
 export type { TaskProvider }
-export { GoogleTasksProvider, Office365TasksProvider, ExchangeTasksProvider }
+export { GoogleTasksProvider, Office365TasksProvider, ExchangeTasksProvider, TodoistTasksProvider }

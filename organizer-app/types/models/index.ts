@@ -27,7 +27,7 @@ export interface IntegrationOAuthData {
 
 export interface IntegrationAccount {
   id: string;
-  type: 'exchange' | 'google' | 'office365' | 'imap' | 'pop3';
+  type: 'exchange' | 'google' | 'office365' | 'imap' | 'pop3' | 'todoist';
   color: string; // Color for visual identification in UI
 
   // Application-specific preferences

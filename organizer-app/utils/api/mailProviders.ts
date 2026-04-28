@@ -7,6 +7,8 @@ import type { MailProvider } from './mailProviders/MailProvider'
 import { GmailProvider } from './mailProviders/GmailProvider'
 import { Office365Provider } from './mailProviders/Office365Provider'
 import { ExchangeProvider } from './mailProviders/ExchangeProvider'
+import { ImapProvider } from './mailProviders/ImapProvider'
+import { Pop3Provider } from './mailProviders/Pop3Provider'
 import type { IntegrationAccount } from '~/types/models'
 
 // Important: We're not using export * to avoid circular dependency issues
@@ -24,8 +26,11 @@ export function getMailProvider (account: IntegrationAccount): MailProvider {
     case 'office365':
       return new Office365Provider(account)
     case 'exchange':
-      // Exchange provider delegates to Office365Provider internally
       return new ExchangeProvider(account)
+    case 'imap':
+      return new ImapProvider(account)
+    case 'pop3':
+      return new Pop3Provider(account)
     default:
       throw new Error(`Unsupported account type: ${account.type}`)
   }
@@ -41,4 +46,4 @@ export function createMailProvider (account: IntegrationAccount): MailProvider {
 
 // Re-export the types and classes that might be needed
 export type { MailProvider }
-export { GmailProvider, Office365Provider, ExchangeProvider }
+export { GmailProvider, Office365Provider, ExchangeProvider, ImapProvider, Pop3Provider }

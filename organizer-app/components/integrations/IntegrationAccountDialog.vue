@@ -43,6 +43,22 @@ v-dialog(
           integration-account-form(
             initial-type="imap"
             @test="handleCredentialTestSuccess"
+            @testReset="handleCredentialTestReset"
+          )
+
+      // Todoist API token form
+      v-row(v-else-if="showTodoistForm")
+        v-col(cols="12")
+          v-btn(
+            variant="text"
+            prepend-icon="mdi-arrow-left"
+            @click="showTodoistForm = false"
+            class="mb-2"
+          ) {{ $t('common.back') }}
+        v-col(cols="12")
+          integration-account-form(
+            initial-type="todoist"
+            @test="handleTodoistTestSuccess"
           )
 
       // OAuth provider selection
@@ -98,9 +114,34 @@ v-dialog(
               @click="showCredentialForm = true"
             ) {{ $t('settings.connectCredentials') }}
 
+          // Todoist
+          v-col(cols="12" class="d-flex align-center justify-center my-3")
+            v-btn(
+              color="red-darken-3"
+              variant="outlined"
+              block
+              prepend-icon="mdi-format-list-checks"
+              @click="showTodoistForm = true"
+            ) {{ $t('settings.todoist') }}
+
     v-card-actions
       v-spacer
+      v-btn(
+        v-if="showCredentialForm"
+        :color="pendingImapAccount ? 'success' : undefined"
+        variant="flat"
+        :disabled="!pendingImapAccount || isSaving"
+        :loading="isSaving"
+        @click="savePendingImap"
+      ) {{ $t('common.save') }}
       v-btn(color="error" variant="text" @click="close") {{ $t('common.cancel') }}
+      v-btn(
+        v-if="pendingTodoistAccount"
+        color="primary"
+        variant="flat"
+        :loading="isSaving"
+        @click="savePendingTodoist"
+      ) {{ $t('common.save') }}
 </template>
 
 <script setup>
@@ -144,6 +185,9 @@ const errorMsg = ref('')
 const successMsg = ref('')
 const isSaving = ref(false)
 const showCredentialForm = ref(false)
+const showTodoistForm = ref(false)
+const pendingTodoistAccount = ref(null)
+const pendingImapAccount = ref(null)
 
 // Composables
 const i18n = useI18n()
@@ -345,10 +389,61 @@ async function handleMicrosoftAuthSuccess (tokens) {
   }
 }
 
-async function handleCredentialTestSuccess (account) {
+function handleTodoistTestSuccess (account) {
+  pendingTodoistAccount.value = account
+  successMsg.value = i18n.t('settings.connectionSuccessful')
+}
+
+async function savePendingTodoist () {
+  if (!pendingTodoistAccount.value) { return }
+  isSaving.value = true
   try {
     if (!authStore.isAuthenticated || !authStore.currentUser) {
       throw new Error('User not authenticated')
+    }
+
+    const currentAccounts = [...(authStore.currentUser.settings?.integrationAccounts || [])]
+    const existingIndex = currentAccounts.findIndex(acc => acc.id === pendingTodoistAccount.value.id)
+
+    if (existingIndex >= 0) {
+      currentAccounts[existingIndex] = pendingTodoistAccount.value
+    } else {
+      currentAccounts.push(pendingTodoistAccount.value)
+    }
+
+    await authStore.updateUserSettings({ integrationAccounts: currentAccounts })
+
+    notificationStore.success(i18n.t('settings.connectionSuccessful'))
+    emit('save', pendingTodoistAccount.value)
+    dialogVisible.value = false
+  } catch (error) {
+    notificationStore.error(error.message || 'Failed to save Todoist account')
+  } finally {
+    isSaving.value = false
+  }
+}
+
+function handleCredentialTestSuccess (account) {
+  pendingImapAccount.value = account
+  successMsg.value = i18n.t('settings.connectionSuccessful')
+}
+
+function handleCredentialTestReset () {
+  pendingImapAccount.value = null
+  successMsg.value = ''
+}
+
+async function savePendingImap () {
+  if (!pendingImapAccount.value) { return }
+  isSaving.value = true
+  try {
+    if (!authStore.isAuthenticated || !authStore.currentUser) {
+      throw new Error('User not authenticated')
+    }
+
+    const account = {
+      ...pendingImapAccount.value,
+      oauthData: { ...pendingImapAccount.value.oauthData, connected: true }
     }
 
     const currentAccounts = [...(authStore.currentUser.settings?.integrationAccounts || [])]
@@ -368,7 +463,9 @@ async function handleCredentialTestSuccess (account) {
     emit('save', account)
     dialogVisible.value = false
   } catch (error) {
-    notificationStore.error(error.message || 'Failed to save credential account')
+    notificationStore.error(error.message || 'Failed to save IMAP account')
+  } finally {
+    isSaving.value = false
   }
 }
 
@@ -516,6 +613,8 @@ function close () {
   errorMsg.value = ''
   successMsg.value = ''
   showCredentialForm.value = false
+  showTodoistForm.value = false
+  pendingTodoistAccount.value = null
 }
 
 async function connectAndClose () {

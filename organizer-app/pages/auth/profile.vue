@@ -575,6 +575,8 @@ function getAccountIcon (type) {
       return 'mdi-email-sync'
     case 'pop3':
       return 'mdi-email-receive'
+    case 'todoist':
+      return 'mdi-format-list-checks'
     default:
       return 'mdi-account'
   }
@@ -592,6 +594,8 @@ function getAccountTypeName (type) {
       return i18n.t('settings.imap')
     case 'pop3':
       return i18n.t('settings.pop3')
+    case 'todoist':
+      return i18n.t('settings.todoist')
     default:
       return type
   }

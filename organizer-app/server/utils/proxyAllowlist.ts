@@ -11,7 +11,8 @@ const ALLOWED_PREFIXES = [
   'https://api.openai.com/',
   'https://api.x.ai/',
   'https://graph.microsoft.com/',
-  'https://login.microsoftonline.com/'
+  'https://login.microsoftonline.com/',
+  'https://api.todoist.com/'
 ]
 
 export function isAllowedProxyUrl (url: string): boolean {
