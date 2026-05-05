@@ -187,6 +187,7 @@ import TasksOverviewTable from '~/components/tasks/TasksOverviewTable.vue'
 import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
 import FilterContainer from '~/components/common/FilterContainer.vue'
 import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
+import { resolveInitialSelection, useModuleIntegrationFilterPersistence } from '~/composables/useModuleIntegrationFilterPersistence'
 import {
   TASKS_PAGE_SIZE_OPTIONS,
   mergeTasksUiSettings,
@@ -247,10 +248,33 @@ const syncLoading = ref(false)
 const syncError = ref('')
 
 const { accounts: connectedAccounts } = useModuleIntegrationAccounts('tasks')
+const moduleFilterReady = ref(false)
+const {
+  availableAccountIds,
+  initializeSelection: initializeProviderSelection,
+  schedulePersist: scheduleProviderSelectionPersist,
+  persistNow: persistProviderSelectionNow
+} = useModuleIntegrationFilterPersistence('tasks', selectedProviders, connectedAccounts)
 
 // Watch for changes in selectedProviders
 watch(selectedProviders, (newProviders) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
   console.log('Task provider filter changed:', newProviders)
+  scheduleProviderSelectionPersist(newProviders)
+})
+
+watch(availableAccountIds, async (ids) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
+  const normalized = resolveInitialSelection(selectedProviders.value, ids)
+  const changed = normalized.join('\0') !== selectedProviders.value.join('\0')
+  if (changed) {
+    selectedProviders.value = normalized
+    await persistProviderSelectionNow(normalized)
+  }
 })
 
 // FilterContainer configurations
@@ -330,6 +354,9 @@ onMounted(async () => {
   loading.value = true
 
   try {
+    selectedProviders.value = initializeProviderSelection()
+    moduleFilterReady.value = true
+
     // Get integration accounts
     const { $firebase } = useNuxtApp()
     const auth = useAuthStore()
@@ -344,12 +371,8 @@ onMounted(async () => {
         const accounts = userSnap.data().settings.integrationAccounts
         integrationAccounts.value = accounts.filter((a: any) => a.syncTasks && a.oauthData.connected)
         providerSyncEnabled.value = integrationAccounts.value.length > 0
-
         // Set the accounts in the tasks store
         tasksStore.setIntegrationAccounts(integrationAccounts.value)
-
-        // Initialize selectedProviders with all providers
-        selectedProviders.value = connectedAccounts.value.map(account => account.id)
       }
     }
 
@@ -671,7 +694,7 @@ const clearFilters = () => {
   selectedProjects.value = []
   selectedAssignees.value = []
   // Reset providers to select all
-  selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  selectedProviders.value = [...availableAccountIds.value]
   search.value = ''
 }
 

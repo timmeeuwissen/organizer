@@ -1,6 +1,7 @@
 import type { AIIntegrationData } from './aiIntegration'
 import type { MailColumnKey, MailPageSize } from '~/config/mailUi'
 import type { TasksUiSettings } from '~/config/tasksUi'
+import type { ModuleIntegrationSegment } from '~/config/moduleIntegration'
 
 export interface IntegrationOAuthData {
   accessToken?: string; // OAuth access token
@@ -53,6 +54,28 @@ export interface MailUiSettings {
   visibleColumns?: Partial<Record<MailColumnKey, boolean>>;
 }
 
+export interface MailSignatureSettingsItem {
+  id: string;
+  name: string;
+  content: string;
+  isDefault?: boolean;
+}
+
+export interface MailComposeSettings {
+  defaultAccountId?: string;
+  defaultBodyFormat?: 'html' | 'plain';
+  defaultSignatureId?: string;
+  signatures?: MailSignatureSettingsItem[];
+}
+
+export interface ModuleIntegrationFilterSettings {
+  selectedAccountIds?: string[];
+}
+
+export type ModuleIntegrationFiltersSettings = Partial<
+Record<ModuleIntegrationSegment, ModuleIntegrationFilterSettings>
+>
+
 export interface UserSettings {
   defaultLanguage: string;
   darkMode: boolean;
@@ -62,7 +85,9 @@ export interface UserSettings {
   integrationAccounts: IntegrationAccount[];
   aiIntegrations?: AIIntegrationData[]; // AI integrations like XAI, OpenAI, Gemini
   mailUi?: MailUiSettings;
+  mailCompose?: MailComposeSettings;
   tasksUi?: TasksUiSettings;
+  moduleIntegrationFilters?: ModuleIntegrationFiltersSettings;
 }
 
 export interface User {

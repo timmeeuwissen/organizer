@@ -207,13 +207,14 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MeetingForm from '~/components/meetings/MeetingForm.vue'
 import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
 import FilterContainer from '~/components/common/FilterContainer.vue'
 import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
 import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
+import { resolveInitialSelection, useModuleIntegrationFilterPersistence } from '~/composables/useModuleIntegrationFilterPersistence'
 import { useMeetingsStore } from '~/stores/meetings'
 import { usePeopleStore } from '~/stores/people'
 import { useProjectsStore } from '~/stores/projects'
@@ -250,19 +251,34 @@ const calendarFormError = ref('')
 const pendingMeetingId = ref<string | null>(null)
 
 const { accounts: connectedAccounts } = useModuleIntegrationAccounts('meetings')
-
-// Initialize selectedProviders with all providers by default
-onMounted(() => {
-  // After the accounts are loaded, select all by default
-  nextTick(() => {
-    selectedProviders.value = connectedAccounts.value.map(account => account.id)
-  })
-})
+const moduleFilterReady = ref(false)
+const {
+  availableAccountIds,
+  initializeSelection: initializeProviderSelection,
+  schedulePersist: scheduleProviderSelectionPersist,
+  persistNow: persistProviderSelectionNow
+} = useModuleIntegrationFilterPersistence('meetings', selectedProviders, connectedAccounts)
 
 // Watch for changes in selectedProviders
 watch(selectedProviders, (newProviders) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
   console.log('Provider filter changed:', newProviders)
   // The filteredPeople computed property will automatically update
+  scheduleProviderSelectionPersist(newProviders)
+})
+
+watch(availableAccountIds, async (ids) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
+  const normalized = resolveInitialSelection(selectedProviders.value, ids)
+  const changed = normalized.join('\0') !== selectedProviders.value.join('\0')
+  if (changed) {
+    selectedProviders.value = normalized
+    await persistProviderSelectionNow(normalized)
+  }
 })
 
 // Meeting categories from store
@@ -352,7 +368,7 @@ const clearFilters = () => {
   periodFilter.value = 'all'
   search.value = ''
   // Reset providers to select all
-  selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  selectedProviders.value = [...availableAccountIds.value]
 }
 
 // Filtered meetings
@@ -602,6 +618,8 @@ const getRandomColor = (id: string) => {
 
 // Load data
 onMounted(async () => {
+  selectedProviders.value = initializeProviderSelection()
+  moduleFilterReady.value = true
   try {
     await Promise.all([
       meetingsStore.fetchMeetings(),

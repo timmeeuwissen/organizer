@@ -89,4 +89,26 @@ describe('Pop3Provider', () => {
     const p = new Pop3Provider(makeAccount({ oauthData: { password: undefined } }))
     expect(p.isAuthenticated()).toBe(false)
   })
+
+  it('sendEmail posts bcc/bodyFormat to smtp route', async () => {
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ success: true }))
+    const p = new Pop3Provider(makeAccount())
+    const ok = await p.sendEmail({
+      id: 'mail-1',
+      subject: 'Subject',
+      from: { name: 'Me', email: 'me@example.com' },
+      to: [{ name: 'You', email: 'you@example.com' }],
+      bcc: [{ name: 'BCC', email: 'bcc@example.com' }],
+      body: 'Hello',
+      bodyFormat: 'plain',
+      date: new Date(),
+      read: true,
+      folder: 'sent'
+    })
+    expect(ok).toBe(true)
+    const req = vi.mocked(fetch).mock.calls[0]
+    const payload = JSON.parse(String(req?.[1]?.body || '{}'))
+    expect(payload.email.bcc).toHaveLength(1)
+    expect(payload.email.bodyFormat).toBe('plain')
+  })
 })

@@ -17,6 +17,8 @@ const BodySchema = z.object({
     from: EmailPersonSchema,
     to: z.array(EmailPersonSchema),
     cc: z.array(EmailPersonSchema).optional(),
+    bcc: z.array(EmailPersonSchema).optional(),
+    bodyFormat: z.enum(['html', 'plain']).optional(),
     body: z.string()
   })
 })
@@ -54,8 +56,9 @@ export default defineEventHandler(async (event) => {
       from: `"${email.from.name}" <${email.from.email}>`,
       to: email.to.map(r => `"${r.name}" <${r.email}>`).join(', '),
       cc: email.cc?.map(r => `"${r.name}" <${r.email}>`).join(', '),
+      bcc: email.bcc?.map(r => `"${r.name}" <${r.email}>`).join(', '),
       subject: email.subject,
-      text: email.body
+      ...(email.bodyFormat === 'plain' ? { text: email.body } : { html: email.body })
     })
 
     return { success: true }

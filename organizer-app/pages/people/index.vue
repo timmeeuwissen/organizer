@@ -155,7 +155,7 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePeopleStore } from '~/stores/people'
 import { useDeleteWithReferences } from '~/composables/useDeleteWithReferences'
@@ -164,6 +164,7 @@ import PersonForm from '~/components/people/PersonForm.vue'
 import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
 import FilterContainer from '~/components/common/FilterContainer.vue'
 import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
+import { resolveInitialSelection, useModuleIntegrationFilterPersistence } from '~/composables/useModuleIntegrationFilterPersistence'
 
 const peopleStore = usePeopleStore()
 const route = useRoute()
@@ -226,6 +227,13 @@ const headers = [
 ]
 
 const { accounts: connectedAccounts } = useModuleIntegrationAccounts('people')
+const moduleFilterReady = ref(false)
+const {
+  availableAccountIds,
+  initializeSelection: initializeProviderSelection,
+  schedulePersist: scheduleProviderSelectionPersist,
+  persistNow: persistProviderSelectionNow
+} = useModuleIntegrationFilterPersistence('people', selectedProviders, connectedAccounts)
 
 const openPerson = (person: Person) => {
   selectedPerson.value = person
@@ -255,6 +263,8 @@ watch(
 
 // Initialize data
 onMounted(async () => {
+  selectedProviders.value = initializeProviderSelection()
+  moduleFilterReady.value = true
   const q = route.query.search
   if (typeof q === 'string' && q.trim()) {
     search.value = q.trim()
@@ -267,15 +277,28 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-  nextTick(() => {
-    selectedProviders.value = connectedAccounts.value.map(account => account.id)
-  })
 })
 
 // Watch for changes in selectedProviders
 watch(selectedProviders, (newProviders) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
   console.log('Provider filter changed:', newProviders)
   // The filteredPeople computed property will automatically update
+  scheduleProviderSelectionPersist(newProviders)
+})
+
+watch(availableAccountIds, async (ids) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
+  const normalized = resolveInitialSelection(selectedProviders.value, ids)
+  const changed = normalized.join('\0') !== selectedProviders.value.join('\0')
+  if (changed) {
+    selectedProviders.value = normalized
+    await persistProviderSelectionNow(normalized)
+  }
 })
 
 // Helper functions for accounts
@@ -422,7 +445,7 @@ const clearFilters = () => {
   selectedTeams.value = []
   selectedRoles.value = []
   // Reset providers to select all
-  selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  selectedProviders.value = [...availableAccountIds.value]
 }
 
 // CRUD operations

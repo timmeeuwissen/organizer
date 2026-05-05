@@ -78,7 +78,8 @@ export function getAccountStatusColor (account: IntegrationAccount): string {
     return 'error'
   }
 
-  if (!hasValidOAuthTokens(account)) {
+  const isCredentialBased = account.type === 'imap' || account.type === 'pop3' || account.type === 'todoist'
+  if (!isCredentialBased && !hasValidOAuthTokens(account)) {
     return 'warning'
   }
 

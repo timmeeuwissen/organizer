@@ -7,6 +7,14 @@ import type { Email } from '~/stores/mail'
  * that connect to the IMAP/SMTP server using imapflow and nodemailer.
  */
 export class ImapProvider extends BaseMailProvider {
+  private static readonly APP_TO_IMAP_FOLDER: Record<string, string[]> = {
+    inbox: ['INBOX', 'Inbox'],
+    sent: ['Sent', 'Sent Items', 'INBOX.Sent', 'INBOX.Sent Items'],
+    drafts: ['Drafts', 'INBOX.Drafts'],
+    trash: ['Trash', 'Deleted Items', 'INBOX.Trash'],
+    spam: ['Junk', 'Spam', 'INBOX.Spam']
+  }
+
   private get creds () {
     const o = this.account.oauthData
     return {
@@ -43,18 +51,23 @@ export class ImapProvider extends BaseMailProvider {
 
   async fetchEmails (query?: EmailQuery, pagination?: EmailPagination): Promise<EmailFetchResult> {
     try {
+      const appFolder = (query?.folder ?? 'inbox').toLowerCase()
+      const requestedFolder = ImapProvider.APP_TO_IMAP_FOLDER[appFolder]?.[0] ?? query?.folder ?? 'INBOX'
       const res = await fetch('/api/mail/imap/fetch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...this.creds,
-          folder: query?.folder ?? 'INBOX',
+          folder: requestedFolder,
           page: pagination?.page ?? 0,
           pageSize: pagination?.pageSize ?? 50
         })
       })
 
-      if (!res.ok) { throw new Error(`IMAP fetch error: ${res.statusText}`) }
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        throw new Error(errBody?.statusMessage || errBody?.message || `IMAP fetch failed (${res.status})`)
+      }
 
       const data = await res.json()
       return {
@@ -68,16 +81,15 @@ export class ImapProvider extends BaseMailProvider {
         pageSize: data.pageSize ?? 50,
         hasMore: data.hasMore ?? false
       }
-    } catch (err) {
-      console.error('ImapProvider.fetchEmails failed:', err)
-      return { emails: [], totalCount: 0, page: 0, pageSize: 50, hasMore: false }
+    } catch (err: any) {
+      throw new Error(err.message || 'IMAP fetch failed')
     }
   }
 
   async countEmails (query?: EmailQuery): Promise<number> {
     try {
       const folders = await this.getFolderCounts()
-      const folder = query?.folder ?? 'INBOX'
+      const folder = (query?.folder ?? 'inbox').toLowerCase()
       return folders[folder] ?? 0
     } catch {
       return 0
@@ -93,7 +105,24 @@ export class ImapProvider extends BaseMailProvider {
       })
       if (!res.ok) { throw new Error(`IMAP folders error: ${res.statusText}`) }
       const data = await res.json()
-      return data.folders ?? {}
+      const rawFolders = data.folders ?? {}
+      const normalized: Record<string, number> = {}
+
+      for (const [key, value] of Object.entries(rawFolders)) {
+        const folderName = key.trim().toLowerCase()
+        let mappedKey = key
+
+        for (const [appFolder, aliases] of Object.entries(ImapProvider.APP_TO_IMAP_FOLDER)) {
+          if (aliases.some(alias => alias.toLowerCase() === folderName)) {
+            mappedKey = appFolder
+            break
+          }
+        }
+
+        normalized[mappedKey] = (normalized[mappedKey] || 0) + Number(value || 0)
+      }
+
+      return normalized
     } catch (err) {
       console.error('ImapProvider.getFolderCounts failed:', err)
       return {}

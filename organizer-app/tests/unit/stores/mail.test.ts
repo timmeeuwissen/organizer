@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
+const mockAuthStoreState = {
+  user: { id: 'u1' },
+  currentUser: { id: 'u1', settings: { integrationAccounts: [] as any[], mailCompose: { signatures: [] as any[] } } },
+  updateUserSettings: vi.fn()
+}
+
 vi.mock('firebase/firestore', () => ({
   collection: vi.fn(),
   query: vi.fn(),
@@ -17,11 +23,7 @@ vi.mock('firebase/firestore', () => ({
 }))
 
 vi.mock('~/stores/auth', () => ({
-  useAuthStore: vi.fn(() => ({
-    user: { id: 'u1' },
-    currentUser: { id: 'u1', settings: { integrationAccounts: [] } },
-    updateUserSettings: vi.fn()
-  }))
+  useAuthStore: vi.fn(() => mockAuthStoreState)
 }))
 
 vi.mock('~/stores/notification', () => ({
@@ -57,6 +59,8 @@ describe('useMailStore — initial state', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    mockAuthStoreState.currentUser.settings.integrationAccounts = []
+    mockAuthStoreState.currentUser.settings.mailCompose = { signatures: [] }
   })
 
   it('initializes with the correct default folders', async () => {
@@ -97,6 +101,8 @@ describe('useMailStore — pure state mutations', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    mockAuthStoreState.currentUser.settings.integrationAccounts = []
+    mockAuthStoreState.currentUser.settings.mailCompose = { signatures: [] }
   })
 
   it('markEmailAsRead updates the read flag in local state', async () => {
@@ -210,6 +216,8 @@ describe('useMailStore — fetchEmails with no connected accounts', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    mockAuthStoreState.currentUser.settings.integrationAccounts = []
+    mockAuthStoreState.currentUser.settings.mailCompose = { signatures: [] }
   })
 
   it('returns empty emails when no accounts are connected', async () => {
@@ -228,6 +236,7 @@ describe('useMailStore — getters', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    mockAuthStoreState.currentUser.settings.integrationAccounts = []
   })
 
   it('getEmailsByFolder filters emails to the requested folder', async () => {
@@ -262,5 +271,164 @@ describe('useMailStore — getters', () => {
 
     expect(store.paginationInfo.totalPages).toBe(3)
     expect(store.paginationInfo.totalEmails).toBe(45)
+  })
+})
+
+describe('useMailStore — account scoped pagination', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    mockAuthStoreState.currentUser.settings.mailCompose = { signatures: [] }
+  })
+
+  it('fetchEmails only queries selected account IDs and totals match active scope', async () => {
+    const { useMailStore } = await import('~/stores/mail')
+    const { getMailProvider } = await import('~/utils/api/mailProviders')
+    const store = useMailStore()
+
+    const accounts = [
+      {
+        id: 'acc-a',
+        type: 'imap',
+        color: '#000',
+        syncCalendar: false,
+        syncMail: true,
+        syncTasks: false,
+        syncContacts: false,
+        showInCalendar: false,
+        showInMail: true,
+        showInTasks: false,
+        showInContacts: false,
+        oauthData: { connected: true, email: 'a@example.com', name: 'A' },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'acc-b',
+        type: 'imap',
+        color: '#111',
+        syncCalendar: false,
+        syncMail: true,
+        syncTasks: false,
+        syncContacts: false,
+        showInCalendar: false,
+        showInMail: true,
+        showInTasks: false,
+        showInContacts: false,
+        oauthData: { connected: true, email: 'b@example.com', name: 'B' },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]
+    mockAuthStoreState.currentUser.settings.integrationAccounts = accounts as any[]
+
+    vi.mocked(getMailProvider).mockImplementation((account: any) => ({
+      isAuthenticated: vi.fn(() => true),
+      authenticate: vi.fn(() => Promise.resolve(true)),
+      fetchEmails: vi.fn(() => Promise.resolve({
+        emails: [{
+          id: `email-${account.id}`,
+          subject: account.id,
+          from: { name: 'Test', email: 'test@example.com' },
+          to: [],
+          body: '',
+          date: new Date(),
+          read: false,
+          folder: 'inbox',
+          accountId: account.id
+        }],
+        totalCount: account.id === 'acc-a' ? 7 : 12,
+        page: 0,
+        pageSize: 20,
+        hasMore: false
+      })),
+      sendEmail: vi.fn(() => Promise.resolve(true)),
+      getFolderCounts: vi.fn(() => Promise.resolve({ inbox: 1 })),
+      countEmails: vi.fn(() => Promise.resolve(1))
+    }))
+
+    await store.fetchEmails({ folder: 'inbox' }, { page: 0, pageSize: 20 }, ['acc-a'])
+
+    expect(store.totalEmails).toBe(7)
+    expect(store.emails).toHaveLength(1)
+    expect(store.emails[0].accountId).toBe('acc-a')
+  })
+})
+
+describe('useMailStore — compose payload handling', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('sendEmail uses selected account and appends selected signature', async () => {
+    const { useMailStore } = await import('~/stores/mail')
+    const { getMailProvider } = await import('~/utils/api/mailProviders')
+    const store = useMailStore()
+
+    const accounts = [
+      {
+        id: 'acc-a',
+        type: 'imap',
+        color: '#000',
+        syncCalendar: false,
+        syncMail: true,
+        syncTasks: false,
+        syncContacts: false,
+        showInCalendar: false,
+        showInMail: true,
+        showInTasks: false,
+        showInContacts: false,
+        oauthData: { connected: true, email: 'a@example.com', name: 'A' },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'acc-b',
+        type: 'imap',
+        color: '#111',
+        syncCalendar: false,
+        syncMail: true,
+        syncTasks: false,
+        syncContacts: false,
+        showInCalendar: false,
+        showInMail: true,
+        showInTasks: false,
+        showInContacts: false,
+        oauthData: { connected: true, email: 'b@example.com', name: 'B' },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]
+    mockAuthStoreState.currentUser.settings.integrationAccounts = accounts as any[]
+    mockAuthStoreState.currentUser.settings.mailCompose = {
+      signatures: [{ id: 'sig-1', name: 'Main', content: '-- Signature' }]
+    }
+
+    const sendEmail = vi.fn(() => Promise.resolve(true))
+    vi.mocked(getMailProvider).mockReturnValue({
+      isAuthenticated: vi.fn(() => true),
+      authenticate: vi.fn(() => Promise.resolve(true)),
+      fetchEmails: vi.fn(() => Promise.resolve({ emails: [], totalCount: 0, page: 0, pageSize: 20, hasMore: false })),
+      sendEmail,
+      getFolderCounts: vi.fn(() => Promise.resolve({})),
+      countEmails: vi.fn(() => Promise.resolve(0))
+    } as any)
+
+    await store.sendEmail({
+      to: [{ name: 'You', email: 'you@example.com' }],
+      subject: 'Hello',
+      body: 'Body',
+      accountId: 'acc-b',
+      signatureId: 'sig-1',
+      bodyFormat: 'plain'
+    })
+
+    expect(getMailProvider).toHaveBeenCalledWith(expect.objectContaining({ id: 'acc-b' }))
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      accountId: 'acc-b',
+      body: 'Body\n\n-- Signature',
+      bodyFormat: 'plain'
+    }))
   })
 })

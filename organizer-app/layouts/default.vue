@@ -127,6 +127,7 @@ v-app
       v-if="mailDialog"
       :loading="false"
       @submit="onMailSubmit"
+      @save-draft="onMailSaveDraft"
       @close="mailDialog = false"
     )
 
@@ -204,6 +205,7 @@ import { useProjectsStore } from '~/stores/projects'
 import { useCoachingStore } from '~/stores/coaching'
 import { useKnowledgeStore } from '~/stores/knowledge'
 import { useNotificationStore } from '~/stores/notification'
+import { useMailStore } from '~/stores/mail'
 import CalendarEventForm from '~/components/calendar/CalendarEventForm.vue'
 import MailComposeForm from '~/components/mail/MailComposeForm.vue'
 import BehaviorForm from '~/components/behaviors/BehaviorForm.vue'
@@ -434,6 +436,7 @@ const peopleStore = usePeopleStore()
 const behaviorsStore = useBehaviorsStore()
 const projectsStore = useProjectsStore()
 const coachingStore = useCoachingStore()
+const mailStore = useMailStore()
 
 // Form submission handlers
 const onTaskSubmit = async (taskData) => {
@@ -514,27 +517,19 @@ const onCalendarEventSubmit = async (eventData) => {
 
 const onMailSubmit = async (mailData) => {
   try {
-    // Check if we're using an external provider
-    if (mailData.storageProvider === 'organizer') {
-      // Store in organizer (Firestore)
-      console.log('Mail stored/sent in Organizer:', mailData)
-      // In a real implementation, this would call a mail store method
-      // e.g., mailStore.sendMail(mailData)
-    } else {
-      // Find the integration that matches the provider ID
-      const integration = getIntegrationById(mailData.storageProvider)
-      if (integration?.oauthData?.connected && integration.syncMail) {
-        // Handle external provider
-        console.log(`Sending mail through ${integration.type} (${integration.oauthData.email}):`, mailData)
-        // In a real implementation, this would call the appropriate provider API
-        // e.g., mailStore.sendExternalMail(integration, mailData)
-      } else {
-        throw new Error('Selected integration does not support mail or is not connected')
-      }
-    }
+    await mailStore.sendEmail(mailData)
     mailDialog.value = false
   } catch (error) {
     console.error('Failed to send mail:', error)
+  }
+}
+
+const onMailSaveDraft = async (mailData) => {
+  try {
+    await mailStore.saveDraft(mailData)
+    mailDialog.value = false
+  } catch (error) {
+    console.error('Failed to save draft:', error)
   }
 }
 

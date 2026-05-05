@@ -80,6 +80,81 @@ v-container
                 @change="handleSettingsChange"
               )
 
+      CollapsibleCard.mt-4(:title="$t('mail.signatures')")
+        v-row
+          v-col(cols="12" md="6")
+            v-select(
+              v-model="mailDefaultBodyFormatInput"
+              :items="mailBodyFormatOptions"
+              :label="$t('mail.defaultBodyFormat')"
+              item-title="title"
+              item-value="value"
+              @update:model-value="handleSettingsChange"
+            )
+          v-col(cols="12" md="6")
+            v-select(
+              v-model="mailDefaultAccountIdInput"
+              :items="mailAccountOptions"
+              :label="$t('mail.defaultSendFrom')"
+              item-title="title"
+              item-value="value"
+              clearable
+              @update:model-value="handleSettingsChange"
+            )
+
+        v-select(
+          v-model="mailDefaultSignatureIdInput"
+          :items="mailSignatureOptions"
+          :label="$t('mail.defaultSignature')"
+          item-title="title"
+          item-value="value"
+          clearable
+          class="mb-2"
+          @update:model-value="handleSettingsChange"
+        )
+
+        v-divider(class="my-2")
+        v-btn(
+          color="primary"
+          variant="text"
+          prepend-icon="mdi-plus"
+          @click="addMailSignature"
+        ) {{ $t('mail.addSignature') }}
+
+        template(v-if="mailSignaturesInput.length === 0")
+          v-alert(type="info" variant="tonal" class="mt-3") {{ $t('mail.noSignaturesConfigured') }}
+        template(v-else)
+          v-card.mt-3(
+            v-for="signature in mailSignaturesInput"
+            :key="signature.id"
+            variant="outlined"
+            class="mb-3"
+          )
+            v-card-text
+              v-text-field(
+                v-model="signature.name"
+                :label="$t('mail.signatureName')"
+                class="mb-2"
+                @update:model-value="handleSettingsChange"
+              )
+              v-textarea(
+                v-model="signature.content"
+                :label="$t('mail.signatureContent')"
+                rows="4"
+                auto-grow
+                @update:model-value="handleSettingsChange"
+              )
+            v-card-actions
+              v-spacer
+              v-btn(
+                icon
+                variant="text"
+                color="error"
+                :title="$t('common.delete')"
+                @click="removeMailSignature(signature.id)"
+              )
+                v-icon mdi-delete
+
       // AI integrations
       CollapsibleCard.mt-4(:title="$t('ai.manageAIIntegrations')")
         template(#header-actions)
@@ -316,6 +391,7 @@ import CollapsibleCard from '~/components/common/CollapsibleCard.vue'
 import IntegrationAccountDialog from '~/components/integrations/IntegrationAccountDialog.vue'
 import AIIntegrationDialog from '~/components/integrations/AIIntegrationDialog.vue'
 import { useAuthStore } from '~/stores/auth'
+import type { MailSignatureSettingsItem } from '~/types/models'
 import {
   getIntegrationModuleUsage,
   type IntegrationModuleKey,
@@ -402,6 +478,10 @@ const weekStartsDayInput = ref(1) // Default to Monday
 const emailNotificationsInput = ref(true)
 const calendarSyncInput = ref(false)
 const aiIntegrationsInput = ref([])
+const mailDefaultBodyFormatInput = ref<'html' | 'plain'>('html')
+const mailDefaultAccountIdInput = ref<string | null>(null)
+const mailDefaultSignatureIdInput = ref<string | null>(null)
+const mailSignaturesInput = ref<MailSignatureSettingsItem[]>([])
 
 // Week start day options
 const weekDayOptions = [
@@ -488,8 +568,33 @@ const hasProfileChanges = computed(() => {
   const aiIntegrationsChanged = aiIntegrationsInput.value.length !== userAIIntegrations.length ||
     JSON.stringify(aiIntegrationsInput.value) !== JSON.stringify(userAIIntegrations)
 
-  return basicSettingsChanged || integrationsChanged || aiIntegrationsChanged
+  const currentMailCompose = user.value.settings?.mailCompose || {}
+  const mailComposeChanged =
+    (mailDefaultBodyFormatInput.value || 'html') !== (currentMailCompose.defaultBodyFormat || 'html') ||
+    (mailDefaultAccountIdInput.value || '') !== (currentMailCompose.defaultAccountId || '') ||
+    (mailDefaultSignatureIdInput.value || '') !== (currentMailCompose.defaultSignatureId || '') ||
+    JSON.stringify(mailSignaturesInput.value) !== JSON.stringify(currentMailCompose.signatures || [])
+
+  return basicSettingsChanged || integrationsChanged || aiIntegrationsChanged || mailComposeChanged
 })
+
+const mailBodyFormatOptions = computed(() => [
+  { title: String(i18n.t('mail.richText')), value: 'html' },
+  { title: String(i18n.t('mail.plainText')), value: 'plain' }
+])
+
+const mailAccountOptions = computed(() => integrationAccounts.value
+  .filter(account => account.oauthData.connected && account.syncMail && account.showInMail)
+  .map(account => ({
+    title: account.oauthData.name || account.oauthData.email,
+    value: account.id
+  }))
+)
+
+const mailSignatureOptions = computed(() => mailSignaturesInput.value.map(signature => ({
+  title: signature.name,
+  value: signature.id
+})))
 
 // Available languages
 const languageList = [
@@ -560,7 +665,32 @@ function loadUserData () {
     aiIntegrationsInput.value = Array.isArray(user.value.settings?.aiIntegrations)
       ? JSON.parse(JSON.stringify(user.value.settings.aiIntegrations))
       : []
+
+    const compose = user.value.settings?.mailCompose
+    mailDefaultBodyFormatInput.value = compose?.defaultBodyFormat || 'html'
+    mailDefaultAccountIdInput.value = compose?.defaultAccountId || null
+    mailDefaultSignatureIdInput.value = compose?.defaultSignatureId || null
+    mailSignaturesInput.value = Array.isArray(compose?.signatures)
+      ? JSON.parse(JSON.stringify(compose.signatures))
+      : []
   }
+}
+
+function addMailSignature () {
+  mailSignaturesInput.value.push({
+    id: uuidv4(),
+    name: String(i18n.t('mail.newSignature')),
+    content: ''
+  })
+  handleSettingsChange()
+}
+
+function removeMailSignature (signatureId: string) {
+  mailSignaturesInput.value = mailSignaturesInput.value.filter(signature => signature.id !== signatureId)
+  if (mailDefaultSignatureIdInput.value === signatureId) {
+    mailDefaultSignatureIdInput.value = null
+  }
+  handleSettingsChange()
 }
 
 function getAccountIcon (type) {
@@ -974,7 +1104,19 @@ async function updateUserSettings () {
       emailNotifications: emailNotificationsInput.value,
       calendarSync: calendarSyncInput.value,
       integrationAccounts: integrationAccounts.value,
-      aiIntegrations: aiIntegrationsInput.value
+      aiIntegrations: aiIntegrationsInput.value,
+      mailCompose: {
+        defaultBodyFormat: mailDefaultBodyFormatInput.value || 'html',
+        defaultAccountId: mailDefaultAccountIdInput.value || undefined,
+        defaultSignatureId: mailDefaultSignatureIdInput.value || undefined,
+        signatures: mailSignaturesInput.value
+          .map(signature => ({
+            id: signature.id,
+            name: (signature.name || '').trim(),
+            content: signature.content || ''
+          }))
+          .filter(signature => signature.name.length > 0)
+      }
     }
 
     // The auth store now handles cleaning undefined values internally

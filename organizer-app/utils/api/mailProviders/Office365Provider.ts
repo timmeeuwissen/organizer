@@ -392,17 +392,24 @@ export class Office365Provider extends BaseMailProvider {
           name: recipient.name
         }
       })) || []
+      const bccRecipients = email.bcc?.map(recipient => ({
+        emailAddress: {
+          address: recipient.email,
+          name: recipient.name
+        }
+      })) || []
 
       // Prepare the email payload
       const payload = {
         message: {
           subject: email.subject,
           body: {
-            contentType: 'HTML',
+            contentType: email.bodyFormat === 'plain' ? 'Text' : 'HTML',
             content: email.body || ''
           },
           toRecipients,
-          ccRecipients
+          ccRecipients,
+          bccRecipients
         },
         saveToSentItems: true
       }

@@ -414,15 +414,20 @@ export class GmailProvider extends BaseMailProvider {
       const ccAddresses = email.cc?.map(recipient =>
         `${recipient.name} <${recipient.email}>`
       ).join(', ')
+      const bccAddresses = email.bcc?.map(recipient =>
+        `${recipient.name} <${recipient.email}>`
+      ).join(', ')
+      const mimeType = email.bodyFormat === 'plain' ? 'text/plain' : 'text/html'
 
       // Build RFC822 email
       const rawEmail = [
         `From: ${email.from.name} <${email.from.email}>`,
         `To: ${toAddresses}`,
         email.cc?.length ? `Cc: ${ccAddresses}` : '',
+        email.bcc?.length ? `Bcc: ${bccAddresses}` : '',
         `Subject: ${email.subject}`,
         'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=utf-8',
+        `Content-Type: ${mimeType}; charset=utf-8`,
         '',
         email.body || ''
       ].filter(Boolean).join('\r\n')

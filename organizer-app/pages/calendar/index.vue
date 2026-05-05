@@ -101,7 +101,7 @@ v-container(fluid)
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useTasksStore } from '~/stores/tasks'
 import { useCalendarStore } from '~/stores/calendar'
 import { useCalendarHelpers } from '~/composables/useCalendarHelpers'
@@ -115,6 +115,7 @@ import ScheduleView from '~/components/calendar/ScheduleView.vue'
 import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
 import FilterContainer from '~/components/common/FilterContainer.vue'
 import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
+import { resolveInitialSelection, useModuleIntegrationFilterPersistence } from '~/composables/useModuleIntegrationFilterPersistence'
 
 // Stores
 const tasksStore = useTasksStore()
@@ -136,18 +137,33 @@ const { accounts: connectedAccounts } = useModuleIntegrationAccounts('calendar')
 
 // Provider filters
 const selectedProviders = ref<string[]>([])
-
-// Initialize selectedProviders with all providers by default
-onMounted(() => {
-  // After the accounts are loaded, select all by default
-  nextTick(() => {
-    selectedProviders.value = connectedAccounts.value.map(account => account.id)
-  })
-})
+const moduleFilterReady = ref(false)
+const {
+  availableAccountIds,
+  initializeSelection: initializeProviderSelection,
+  schedulePersist: scheduleProviderSelectionPersist,
+  persistNow: persistProviderSelectionNow
+} = useModuleIntegrationFilterPersistence('calendar', selectedProviders, connectedAccounts)
 
 // Watch for changes in selectedProviders
 watch(selectedProviders, (newProviders) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
   console.log('Calendar provider filter changed:', newProviders)
+  scheduleProviderSelectionPersist(newProviders)
+})
+
+watch(availableAccountIds, async (ids) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
+  const normalized = resolveInitialSelection(selectedProviders.value, ids)
+  const changed = normalized.join('\0') !== selectedProviders.value.join('\0')
+  if (changed) {
+    selectedProviders.value = normalized
+    await persistProviderSelectionNow(normalized)
+  }
 })
 
 const hasCalendarIntegrations = computed(() => connectedAccounts.value.length > 0)
@@ -166,6 +182,8 @@ const hours = Array.from(Array(24).keys())
 
 // Load data
 onMounted(async () => {
+  selectedProviders.value = initializeProviderSelection()
+  moduleFilterReady.value = true
   try {
     loading.value = true
 
@@ -235,7 +253,7 @@ const clearFilters = () => {
   showTasks.value = true
   showCompletedTasks.value = false
   // Reset providers to select all
-  selectedProviders.value = connectedAccounts.value.map(account => account.id)
+  selectedProviders.value = [...availableAccountIds.value]
 }
 
 // Watch for filter changes

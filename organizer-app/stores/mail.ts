@@ -25,12 +25,27 @@ export interface Email {
   from: EmailPerson
   to: EmailPerson[]
   cc?: EmailPerson[]
+  bcc?: EmailPerson[]
   body: string
+  bodyFormat?: 'html' | 'plain'
+  signatureId?: string
   date: Date
   read: boolean
   folder: string
   attachments?: EmailAttachment[]
   labels?: string[]
+  accountId?: string
+}
+
+export interface MailComposePayload {
+  from?: EmailPerson
+  to: EmailPerson[]
+  cc?: EmailPerson[]
+  bcc?: EmailPerson[]
+  subject: string
+  body: string
+  bodyFormat?: 'html' | 'plain'
+  signatureId?: string
   accountId?: string
 }
 
@@ -101,14 +116,72 @@ export const useMailStore = defineStore('mail', {
   },
 
   actions: {
+    resolveComposeBody (payload: MailComposePayload): string {
+      const authStore = useAuthStore()
+      const signatures = authStore.currentUser?.settings?.mailCompose?.signatures ?? []
+      const pickedSignature = signatures.find(sig => sig.id === payload.signatureId)
+      const signatureContent = pickedSignature?.content?.trim()
+      if (!signatureContent) {
+        return payload.body || ''
+      }
+      if (payload.bodyFormat === 'plain') {
+        return `${payload.body || ''}\n\n${signatureContent}`
+      }
+      return `${payload.body || ''}<br><br>${signatureContent}`
+    },
+
+    resolveSenderAccount (requestedAccountId?: string): IntegrationAccount | null {
+      const connectedAccounts = this.getConnectedAccounts
+      if (connectedAccounts.length === 0) {
+        return null
+      }
+
+      if (requestedAccountId) {
+        const matched = connectedAccounts.find(account => account.id === requestedAccountId)
+        if (matched) {
+          return matched
+        }
+      }
+
+      const authStore = useAuthStore()
+      const defaultAccountId = authStore.currentUser?.settings?.mailCompose?.defaultAccountId
+      if (defaultAccountId) {
+        const defaultMatched = connectedAccounts.find(account => account.id === defaultAccountId)
+        if (defaultMatched) {
+          return defaultMatched
+        }
+      }
+
+      return connectedAccounts[0]
+    },
+
+    senderPersonFromAccount (account: IntegrationAccount): EmailPerson {
+      return {
+        name: account.oauthData.name || account.oauthData.email,
+        email: account.oauthData.email
+      }
+    },
+
+    getScopedConnectedAccounts (accountIds?: string[]): IntegrationAccount[] {
+      const connectedAccounts = this.getConnectedAccounts
+      if (!accountIds) {
+        return connectedAccounts
+      }
+      const selected = new Set(accountIds)
+      return connectedAccounts.filter(account => selected.has(account.id))
+    },
+
     /**
      * Load folder counts without fetching complete email content
      * This is useful for sidebar unread counts
      */
-    async loadFolderCounts () {
+    async loadFolderCounts (accountIds?: string[]) {
       // Only try if we have connected accounts
-      const connectedAccounts = this.getConnectedAccounts
+      const connectedAccounts = this.getScopedConnectedAccounts(accountIds)
       if (connectedAccounts.length === 0) {
+        this.folderCounts = {}
+        this.unreadCounts = {}
+        this.totalEmails = 0
         return
       }
 
@@ -207,13 +280,13 @@ export const useMailStore = defineStore('mail', {
       }
     },
 
-    async fetchEmails (query?: EmailQuery, pagination?: EmailPagination) {
+    async fetchEmails (query?: EmailQuery, pagination?: EmailPagination, accountIds?: string[]) {
       this.loading = true
       this.error = null
 
       try {
         // Get connected accounts from auth store
-        const connectedAccounts = this.getConnectedAccounts
+        const connectedAccounts = this.getScopedConnectedAccounts(accountIds)
 
         // If no connected accounts, return without generating mock data
         if (connectedAccounts.length === 0) {
@@ -279,7 +352,7 @@ export const useMailStore = defineStore('mail', {
       }
     },
 
-    async fetchNextPage () {
+    async fetchNextPage (accountIds?: string[]) {
       if (!this.hasMoreEmails) { return }
 
       // Increment page and fetch next batch
@@ -287,7 +360,7 @@ export const useMailStore = defineStore('mail', {
       await this.fetchEmails(this.currentQuery || undefined, {
         page: nextPage,
         pageSize: this.pageSize
-      })
+      }, accountIds)
     },
 
     async fetchEmailsFromAccount (
@@ -309,33 +382,35 @@ export const useMailStore = defineStore('mail', {
 
         // Check if authenticated
         if (!mailProvider.isAuthenticated()) {
-          console.log(`Account ${account.oauthData.email} requires authentication`)
-
-          // Try to authenticate
           const authenticated = await mailProvider.authenticate()
           if (!authenticated) {
-            console.warn(`Authentication failed for account ${account.oauthData.email}`)
+            const isCredential = account.type === 'imap' || account.type === 'pop3'
+            useNotificationStore().warning(
+              isCredential
+                ? `Could not connect to ${account.oauthData.email} — please check your IMAP/POP3 credentials in the profile settings.`
+                : `Authentication failed for ${account.oauthData.email}.`
+            )
             return {
               emails: [],
               totalCount: 0,
               page: pagination?.page || 0,
               pageSize: pagination?.pageSize || 20,
               hasMore: false
-            } // Can't fetch emails without authentication
-          } else { console.info(`Authentication succeeded for account ${account.oauthData.email}`) }
+            }
+          }
         }
 
         // Use the query if provided, otherwise default to inbox
         const emailQuery = query || { folder: 'inbox' }
 
-        // Fetch emails with pagination
         try {
-          console.log(`Fetching emails for ${account.oauthData.email} with query:`, emailQuery)
           const result = await mailProvider.fetchEmails(emailQuery, pagination)
           return result
         } catch (error: any) {
           console.error(`Error fetching emails for ${account.oauthData.email}:`, error)
-          // Return empty result when there's an error
+          useNotificationStore().error(
+            `Failed to fetch emails for ${account.oauthData.email}: ${error.message || 'unknown error'}`
+          )
           return {
             emails: [],
             totalCount: 0,
@@ -377,17 +452,20 @@ export const useMailStore = defineStore('mail', {
       }
     },
 
-    async sendEmail (email: Email) {
+    async sendEmail (payload: MailComposePayload | Email) {
       // Get the default account to send from
-      const connectedAccounts = this.getConnectedAccounts
-      if (connectedAccounts.length === 0) {
+      const account = this.resolveSenderAccount(payload.accountId)
+      if (!account) {
         console.error('No connected accounts to send email from')
         // Update error state in the store
         this.error = 'No connected email accounts available'
 
         // Still add to sent folder for UI consistency
         const newEmail: Email = {
-          ...email,
+          ...payload,
+          from: payload.from ?? this.senderPersonFromAccount(account),
+          body: this.resolveComposeBody(payload),
+          bodyFormat: payload.bodyFormat ?? 'html',
           id: `email-${Date.now()}`,
           folder: 'sent',
           read: true,
@@ -397,8 +475,6 @@ export const useMailStore = defineStore('mail', {
         return newEmail
       }
 
-      // Use the first connected account
-      const account = connectedAccounts[0]
       const accountId = account.id
 
       try {
@@ -415,13 +491,15 @@ export const useMailStore = defineStore('mail', {
         }
 
         // Make sure body is defined and not null
-        const emailBody = email.body || ''
+        const emailBody = this.resolveComposeBody(payload)
         console.log('Email body from compose:', emailBody, 'Length:', emailBody.length)
 
         // Create email object with account info
         const newEmail: Email = {
-          ...email,
+          ...payload,
+          from: payload.from ?? this.senderPersonFromAccount(account),
           body: emailBody, // Ensure body is not undefined or null
+          bodyFormat: payload.bodyFormat ?? 'html',
           id: `email-${Date.now()}`,
           folder: 'sent',
           read: true,
@@ -455,8 +533,10 @@ export const useMailStore = defineStore('mail', {
 
         // Still add to sent folder for UI consistency, but mark as failed
         const newEmail: Email = {
-          ...email,
-          body: email.body || '', // Ensure body is not undefined or null
+          ...payload,
+          from: payload.from ?? this.senderPersonFromAccount(account),
+          body: this.resolveComposeBody(payload),
+          bodyFormat: payload.bodyFormat ?? 'html',
           id: `email-${Date.now()}`,
           folder: 'sent',
           read: true,
@@ -468,14 +548,16 @@ export const useMailStore = defineStore('mail', {
       }
     },
 
-    async saveDraft (email: Email) {
+    async saveDraft (payload: MailComposePayload | Email) {
       // Get the default account to save draft in
-      const connectedAccounts = this.getConnectedAccounts
-      if (connectedAccounts.length === 0) {
+      const account = this.resolveSenderAccount(payload.accountId)
+      if (!account) {
         console.error('No connected accounts to save draft in')
         // Still add to drafts folder for UI consistency
         const newEmail: Email = {
-          ...email,
+          ...payload,
+          from: payload.from ?? { name: 'Me', email: 'me@example.com' },
+          bodyFormat: payload.bodyFormat ?? 'html',
           id: `draft-${Date.now()}`,
           folder: 'drafts',
           read: true,
@@ -486,11 +568,12 @@ export const useMailStore = defineStore('mail', {
       }
 
       // Add to drafts folder
-      const account = connectedAccounts[0]
       const accountId = account.id
 
       const newEmail: Email = {
-        ...email,
+        ...payload,
+        from: payload.from ?? this.senderPersonFromAccount(account),
+        bodyFormat: payload.bodyFormat ?? 'html',
         id: `draft-${Date.now()}`,
         folder: 'drafts',
         read: true,

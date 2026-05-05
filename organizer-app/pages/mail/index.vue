@@ -321,83 +321,15 @@ v-container(fluid)
 
       // Compose dialog
       v-dialog(v-model="showComposeDialog" max-width="800px")
-        v-card
-          v-card-title
-            span {{ $t('mail.compose') }}
-            v-spacer
-            v-btn(icon variant="text" @click="showComposeDialog = false")
-              v-icon mdi-close
-
-          v-divider
-
-          v-card-text
-            v-form(ref="composeForm")
-              v-text-field(
-                v-model="composeData.to"
-                :label="$t('mail.to')"
-                variant="outlined"
-                density="comfortable"
-                class="mb-2"
-                required
-              )
-
-              v-text-field(
-                v-model="composeData.cc"
-                :label="$t('mail.cc')"
-                variant="outlined"
-                density="comfortable"
-                class="mb-2"
-              )
-
-              v-text-field(
-                v-model="composeData.subject"
-                :label="$t('mail.subject')"
-                variant="outlined"
-                density="comfortable"
-                class="mb-2"
-                required
-              )
-
-              v-textarea(
-                v-model="composeData.body"
-                :label="$t('mail.body')"
-                variant="outlined"
-                auto-grow
-                rows="10"
-                required
-              )
-
-              v-file-input(
-                v-model="composeData.attachments"
-                :label="$t('mail.attachments')"
-                variant="outlined"
-                density="comfortable"
-                multiple
-                chips
-                prepend-icon="mdi-paperclip"
-              )
-
-          v-divider
-
-          v-card-actions
-            v-btn(
-              color="primary"
-              prepend-icon="mdi-send"
-              @click="sendEmail"
-            ) {{ $t('mail.send') }}
-
-            v-btn(
-              variant="outlined"
-              prepend-icon="mdi-content-save"
-              @click="saveDraft"
-            ) {{ $t('mail.saveDraft') }}
-
-            v-spacer
-
-            v-btn(
-              variant="text"
-              @click="showComposeDialog = false"
-            ) {{ $t('common.cancel') }}
+        MailComposeForm(
+          v-if="showComposeDialog"
+          :email="composeData"
+          :loading="loading"
+          :error="mailStore.error || ''"
+          @submit="sendEmail"
+          @save-draft="saveDraft"
+          @close="showComposeDialog = false"
+        )
 
       v-dialog(v-model="showLinkProjectDialog" max-width="480px")
         v-card
@@ -438,8 +370,10 @@ import type { Person, IntegrationAccount, MailUiSettings } from '~/types/models'
 import type { Email, MailFolder, EmailPerson, EmailAttachment } from '~/stores/mail'
 import { getAccountStatusMessage, getAccountStatusColor } from '~/utils/api/emailUtils'
 import GoogleReauthManager from '~/components/mail/GoogleReauthManager.vue'
+import MailComposeForm from '~/components/mail/MailComposeForm.vue'
 import ModuleIntegrationAccountFilter from '~/components/integrations/ModuleIntegrationAccountFilter.vue'
 import { useModuleIntegrationAccounts } from '~/composables/useModuleIntegrationAccounts'
+import { resolveInitialSelection, useModuleIntegrationFilterPersistence } from '~/composables/useModuleIntegrationFilterPersistence'
 import {
   MAIL_COLUMNS_FOR_PICKER,
   MAIL_PAGE_SIZE_OPTIONS,
@@ -492,6 +426,13 @@ const emailHeaders = computed(() => {
 const emailSearch = ref('')
 const contactSearch = ref('')
 const selectedProviders = ref<string[]>([])
+const moduleFilterReady = ref(false)
+const {
+  availableAccountIds,
+  initializeSelection: initializeProviderSelection,
+  schedulePersist: scheduleProviderSelectionPersist,
+  persistNow: persistProviderSelectionNow
+} = useModuleIntegrationFilterPersistence('mail', selectedProviders, connectedAccounts)
 
 const showLinkProjectDialog = ref(false)
 const linkProjectId = ref<string | null>(null)
@@ -499,13 +440,15 @@ const linkProjectId = ref<string | null>(null)
 // Dialog state
 const showComposeDialog = ref(false)
 const composeData = ref({
-  to: '',
-  cc: '',
+  to: [] as EmailPerson[],
+  cc: [] as EmailPerson[],
+  bcc: [] as EmailPerson[],
   subject: '',
   body: '',
-  attachments: []
+  accountId: '',
+  bodyFormat: 'html' as 'html' | 'plain',
+  signatureId: undefined as string | undefined
 })
-const composeForm = ref(null)
 
 // Computed
 const filteredEmails = computed(() => {
@@ -519,8 +462,7 @@ const filteredEmails = computed(() => {
 
   // Filter by provider accounts
   if (selectedProviders.value.length === 0) {
-    // If no providers are selected, only show emails without an account ID
-    result = result.filter(email => !email.accountId)
+    return []
   } else if (connectedAccounts.value.length > 0) {
     result = result.filter(email =>
       !email.accountId || // Include emails without an account ID (shouldn't happen normally)
@@ -561,7 +503,8 @@ async function commitMailPageSize (raw: unknown) {
   selectedEmail.value = null
   await mailStore.fetchEmails(
     mailStore.currentQuery || { folder: selectedFolder.value },
-    { page: 0, pageSize: size }
+    { page: 0, pageSize: size },
+    selectedProviders.value
   )
   schedulePersistMailUi()
 }
@@ -778,41 +721,68 @@ const getEmailProviderColor = (email: Email) => {
 watch(selectedFolder, (newFolder) => {
   mailStore.fetchEmails(
     { folder: newFolder },
-    { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) }
+    { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) },
+    selectedProviders.value
   )
 })
 
 // Watch for changes in selectedProviders
-watch(selectedProviders, (newProviders) => {
+watch(selectedProviders, async (newProviders) => {
+  if (!moduleFilterReady.value) {
+    return
+  }
   console.log('Mail provider filter changed:', newProviders)
-  // The filteredEmails computed property will automatically update
+  selectedEmail.value = null
+  scheduleProviderSelectionPersist(newProviders)
+  await mailStore.fetchEmails(
+    mailStore.currentQuery || { folder: selectedFolder.value },
+    { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) },
+    newProviders
+  )
+  await mailStore.loadFolderCounts(newProviders)
 })
+
+watch(
+  availableAccountIds,
+  async (ids) => {
+    if (!moduleFilterReady.value) {
+      return
+    }
+    const normalized = resolveInitialSelection(selectedProviders.value, ids)
+    const changed = normalized.join('\0') !== selectedProviders.value.join('\0')
+    if (changed) {
+      selectedProviders.value = normalized
+      await persistProviderSelectionNow(normalized)
+    }
+  }
+)
 
 // Load data
 onMounted(async () => {
   applyMailUiFromUserSettings()
 
   try {
+    selectedProviders.value = initializeProviderSelection()
+    moduleFilterReady.value = true
+
     // Load people data (needed for People link column)
     await peopleStore.fetchPeople()
 
     // First load folder counts (faster) to populate sidebar with unread counts
     console.log('Loading folder counts for sidebar...')
-    await mailStore.loadFolderCounts()
+    await mailStore.loadFolderCounts(selectedProviders.value)
 
     // Then fetch the actual emails for the current folder
     console.log('Fetching emails for current folder...')
     await mailStore.fetchEmails(
       { folder: selectedFolder.value },
-      { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) }
+      { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) },
+      selectedProviders.value
     )
 
     // Display integrated accounts info if available
     console.log(`Connected to ${connectedAccounts.value.length} mail account(s)`)
 
-    // Initialize selectedProviders with all providers by default
-    await nextTick()
-    selectedProviders.value = connectedAccounts.value.map(account => account.id)
     await tryApplyMailDeepLink()
   } finally {
     // Must stay true even when a step fails, or page-size changes never refetch
@@ -826,7 +796,7 @@ const refreshUnreadCountsTimer = setInterval(() => {
     // Use setTimeout to prevent Vue from tracking this as a reactive dependency
     setTimeout(async () => {
       console.log('Refreshing unread counts...')
-      await mailStore.loadFolderCounts()
+      await mailStore.loadFolderCounts(selectedProviders.value)
     }, 0)
   }
 }, 300000) // refresh every 5 minutes instead of every minute
@@ -928,14 +898,15 @@ const deleteEmail = (email?: Email) => {
 const refreshEmails = async () => {
   await mailStore.fetchEmails(
     { folder: selectedFolder.value },
-    { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) }
+    { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) },
+    selectedProviders.value
   )
 }
 
 const loadNextPage = async () => {
   console.log('Loading next page...')
   selectedEmail.value = null // Clear selection before page change
-  await mailStore.fetchNextPage()
+  await mailStore.fetchNextPage(selectedProviders.value)
   console.log(`After fetchNextPage: page ${mailStore.currentPage + 1}, ${mailStore.emails.length} emails`)
 }
 
@@ -947,7 +918,8 @@ const loadPreviousPage = async () => {
   const prevPage = mailStore.currentPage - 1
   await mailStore.fetchEmails(
     mailStore.currentQuery || { folder: selectedFolder.value },
-    { page: prevPage, pageSize: normalizeMailPageSize(mailPageSize.value) }
+    { page: prevPage, pageSize: normalizeMailPageSize(mailPageSize.value) },
+    selectedProviders.value
   )
   console.log(`After loadPreviousPage: page ${mailStore.currentPage + 1}, ${mailStore.emails.length} emails`)
 }
@@ -961,7 +933,11 @@ const performSearch = async () => {
 
   console.log('Performing search at provider level:', query)
 
-  await mailStore.fetchEmails(query, { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) })
+  await mailStore.fetchEmails(
+    query,
+    { page: 0, pageSize: normalizeMailPageSize(mailPageSize.value) },
+    selectedProviders.value
+  )
 }
 
 const getContactInitials = (contact: Person) => {
@@ -999,11 +975,11 @@ const getRandomColor = (id: string) => {
 const composeToContact = (contact: Person) => {
   if (!contact.email) { return }
 
-  composeData.value.to = `${contact.firstName} ${contact.lastName} <${contact.email}>`
+  composeData.value.to = [{ name: `${contact.firstName} ${contact.lastName}`.trim(), email: contact.email }]
   composeData.value.subject = ''
   composeData.value.body = ''
-  composeData.value.cc = ''
-  composeData.value.attachments = []
+  composeData.value.cc = []
+  composeData.value.bcc = []
 
   showComposeDialog.value = true
 }
@@ -1011,11 +987,11 @@ const composeToContact = (contact: Person) => {
 const replyToEmail = () => {
   if (!selectedEmail.value) { return }
 
-  composeData.value.to = `${selectedEmail.value.from.name} <${selectedEmail.value.from.email}>`
+  composeData.value.to = [{ ...selectedEmail.value.from }]
   composeData.value.subject = `RE: ${selectedEmail.value.subject}`
   composeData.value.body = `<br><br>On ${formatDatetime(selectedEmail.value.date)}, ${selectedEmail.value.from.name} wrote:<br><blockquote style="padding-left: 1em; border-left: 4px solid #ccc">${selectedEmail.value.body}</blockquote>`
-  composeData.value.cc = ''
-  composeData.value.attachments = []
+  composeData.value.cc = []
+  composeData.value.bcc = []
 
   showComposeDialog.value = true
 }
@@ -1023,103 +999,39 @@ const replyToEmail = () => {
 const forwardEmail = () => {
   if (!selectedEmail.value) { return }
 
-  composeData.value.to = ''
+  composeData.value.to = []
   composeData.value.subject = `FW: ${selectedEmail.value.subject}`
   composeData.value.body = `<br><br>---------- Forwarded message ----------<br>From: ${selectedEmail.value.from.name} <${selectedEmail.value.from.email}><br>Date: ${formatDatetime(selectedEmail.value.date)}<br>Subject: ${selectedEmail.value.subject}<br><br>${selectedEmail.value.body}`
-  composeData.value.cc = ''
-  composeData.value.attachments = []
+  composeData.value.cc = []
+  composeData.value.bcc = []
 
   showComposeDialog.value = true
 }
 
-const sendEmail = () => {
-  // Log the body content to help debug
-  console.log('Compose body before sending:', composeData.value.body)
-
-  // Create email from form data
-  const newEmail: Email = {
-    id: `sent-${Date.now()}`,
-    subject: composeData.value.subject || '(No subject)',
-    from: {
-      name: 'Me',
-      email: 'me@example.com'
-    },
-    to: composeData.value.to.split(',').map((recipient) => {
-      const match = recipient.match(/(.*)<(.*)>/)
-      if (match) {
-        return {
-          name: match[1].trim(),
-          email: match[2].trim()
-        }
-      }
-      return {
-        name: recipient.trim(),
-        email: recipient.trim()
-      }
-    }),
-    body: composeData.value.body || '',
-    date: new Date(),
-    read: true,
-    folder: 'sent'
-  }
-
-  // Double-check email has body
-  console.log('Email object body before sending:', newEmail.body)
-
-  // Use mail store to send the email
-  console.log('Sending email via mailStore.sendEmail with body:', newEmail.body)
-  mailStore.sendEmail(newEmail)
+const sendEmail = async (mailData = composeData.value) => {
+  await mailStore.sendEmail(mailData)
   showComposeDialog.value = false
 
-  // Reset compose data
-  composeData.value = {
-    to: '',
-    cc: '',
-    subject: '',
-    body: '',
-    attachments: []
-  }
+  resetComposeData()
 }
 
-const saveDraft = () => {
-  // Create draft email from form data
-  const newEmail: Email = {
-    id: `draft-${Date.now()}`,
-    subject: composeData.value.subject || '(No subject)',
-    from: {
-      name: 'Me',
-      email: 'me@example.com'
-    },
-    to: composeData.value.to.split(',').map((recipient) => {
-      const match = recipient.match(/(.*)<(.*)>/)
-      if (match) {
-        return {
-          name: match[1].trim(),
-          email: match[2].trim()
-        }
-      }
-      return {
-        name: recipient.trim(),
-        email: recipient.trim()
-      }
-    }),
-    body: composeData.value.body || '',
-    date: new Date(),
-    read: true,
-    folder: 'drafts'
-  }
-
-  // Use mail store to save the draft
-  mailStore.saveDraft(newEmail)
+const saveDraft = async (mailData = composeData.value) => {
+  await mailStore.saveDraft(mailData)
   showComposeDialog.value = false
 
-  // Reset compose data
+  resetComposeData()
+}
+
+function resetComposeData () {
   composeData.value = {
-    to: '',
-    cc: '',
+    to: [],
+    cc: [],
+    bcc: [],
     subject: '',
     body: '',
-    attachments: []
+    accountId: '',
+    bodyFormat: 'html',
+    signatureId: undefined
   }
 }
 </script>

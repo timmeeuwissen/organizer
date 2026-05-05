@@ -42,8 +42,25 @@ export default defineEventHandler(async (event) => {
     })
 
     await client.connect()
+    const folderAliases: Record<string, string[]> = {
+      inbox: ['INBOX', 'Inbox'],
+      sent: ['Sent', 'Sent Items', 'INBOX.Sent', 'INBOX.Sent Items'],
+      drafts: ['Drafts', 'INBOX.Drafts'],
+      trash: ['Trash', 'Deleted Items', 'INBOX.Trash'],
+      spam: ['Junk', 'Spam', 'INBOX.Spam']
+    }
+    const listedMailboxes = await client.list()
+    const listedPaths = listedMailboxes.map(m => m.path)
+    const requested = folder.trim()
+    const appKey = requested.toLowerCase()
+    const candidates = folderAliases[appKey] ?? [requested]
+    const requestedLower = requested.toLowerCase()
+    const resolvedFolder = listedPaths.find(path => {
+      const lower = path.toLowerCase()
+      return lower === requestedLower || candidates.some(candidate => candidate.toLowerCase() === lower)
+    }) ?? listedPaths.find(path => path.toLowerCase() === 'inbox') ?? 'INBOX'
 
-    const mailbox = await client.mailboxOpen(folder)
+    const mailbox = await client.mailboxOpen(resolvedFolder)
     const totalCount = mailbox.exists
 
     const emails: any[] = []
@@ -70,7 +87,7 @@ export default defineEventHandler(async (event) => {
           to: (env?.to || []).map((a: any) => ({ name: a.name || '', email: a.address || '' })),
           date: env?.date || new Date(),
           read: msg.flags.has('\\Seen'),
-          folder,
+          folder: appKey,
           body: '',
           attachments: [],
           accountId: username

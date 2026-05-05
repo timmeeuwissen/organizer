@@ -72,4 +72,30 @@ describe('Office365Provider', () => {
     expect(res.emails).toEqual([])
     expect(res.totalCount).toBe(0)
   })
+
+  it('sendEmail forwards bcc and plain text format to Graph payload', async () => {
+    const acc = office365IntegrationAccount()
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({}, { status: 202 }))
+    const p = new Office365Provider(acc)
+
+    const ok = await p.sendEmail({
+      id: 'e-1',
+      subject: 'Subj',
+      from: { name: 'Me', email: 'me@example.com' },
+      to: [{ name: 'You', email: 'you@example.com' }],
+      cc: [{ name: 'Cc', email: 'cc@example.com' }],
+      bcc: [{ name: 'Bcc', email: 'bcc@example.com' }],
+      body: 'hello',
+      bodyFormat: 'plain',
+      date: new Date(),
+      read: true,
+      folder: 'sent'
+    })
+
+    expect(ok).toBe(true)
+    const call = vi.mocked(fetch).mock.calls[0]
+    const payload = JSON.parse(String((call[1] as RequestInit).body))
+    expect(payload.message.body.contentType).toBe('Text')
+    expect(payload.message.bccRecipients).toHaveLength(1)
+  })
 })
